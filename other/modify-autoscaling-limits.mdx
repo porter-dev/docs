@@ -1,0 +1,23 @@
+---
+title: "Modify Autoscaling Limits"
+---
+
+Porter clusters work in conjunction with autoscaling systems exposed by public clouds, to allow your cluster to provision more nodes, if your existing workloads run out of resources. But sometimes, you might want to adjust the limits placed on these autoscaling groups, in order to provision more nodes for situations where you might want burstable performance. This doc will guide you through the process for adjusting autoscaling limits for clusters provisioned by Porter on AWS.
+
+## AWS[](#aws "Direct link to heading")
+
+1. Navigate to the EC2 dashboard for your cluster's region on your AWS account, and select `Auto Scaling Groups` on the pane on the left.
+
+![step-one](/images/other/173298175-e4e20494-5a80-4697-9ac5-34bb410c0ee7.png)
+
+1. Now click on the autoscaling group you'd like to modify.
+
+![step-two](/images/other/173298259-c9c8afcb-902e-4ade-b1e9-430351b011cd.png)
+
+1. In the details that open up, the first section shows the desired capacity of the autoscaling group, as well as the minimum and maximum instances the group can contain. Click `Edit`.
+
+![step-three](/images/other/173298340-2e21129c-e266-483f-8eda-070435131a1e.png)
+
+1. A dialog box opens up, allowing you to modify the desired capcity and the minimum and maximum instances for this group. After making your changes and clicking `Update`, the autoscaling group will automatically resize itself.
+
+![step-four](/images/other/173298416-21714d79-ca1d-43bc-a4c1-cd11c1461f5c.png)

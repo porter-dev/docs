@@ -1,0 +1,20 @@
+---
+title: "porter auth"
+---
+
+`porter auth` contains commands for authenticating with a Porter instance.
+
+### `porter auth login`[](#porter-auth-login "Direct link to heading")
+
+Logs a user in to the Porter instance. This command will by default attempt to open your default browser to authenticate you. If this does not succeed, the command will output a URL to visit which will redirect you to the Porter instance.
+
+If you would like to log in via a cookie-based mechanism by inputting an email/password, run:
+
+```
+porter auth login --manual
+
+```
+
+### `porter auth logout`[](#porter-auth-logout "Direct link to heading")
+
+Logs a user out from a Porter instance.

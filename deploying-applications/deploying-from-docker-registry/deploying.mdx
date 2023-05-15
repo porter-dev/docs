@@ -1,0 +1,63 @@
+---
+title: "Deploying from an Existing Docker Registry"
+---
+
+## Deploying your Docker Image[](#deploying-your-docker-image "Direct link to heading")
+
+<Card title="Prerequisites">
+  If you would like to deploy from a private Docker registry, make sure that you've following the guide for [linking an existing registry](/deploying-applications/deploying-from-docker-registry/linking-existing-registry).
+</Card>
+
+To deploy your application, first navigate to the **Launch** tab, where you will see three types of applications to deploy: web, worker, or job. To understand the difference between these three application types, see the description of the [types of applications](/deploying-applications/overview#types-of-applications). After selecting your application type and selecting **Launch Template**, you should select the **Docker Registry** option:
+
+![Registry Option](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/fd395d4a-0ccc-4f24-8d3b-eea5a7d54300/large)
+
+Next, you can either select a public or private Docker image to deploy from:
+
+<Tabs>
+  <Tab title="Private">
+    To deploy from a private image, make sure you have [linked a private registry](/deploying-applications/deploying-from-docker-registry/linking-existing-registry). Then, simply select the image repo and tag you would like to use:
+    ![Image repo selection](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/2c228f1f-4a5d-4807-246b-808af156f300/large "Screen Shot 2021-03-18 at 11.26.45 AM.png")
+    Select "Continue" after specifying your image.
+  </Tab>
+  <Tab title="Public">
+    To deploy from a public registry, you can input the name of a public Docker image. For images from Docker Hub, you can simply specify their name without a URI, for example `ubuntu:latest`:
+    ![Ubuntu](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/b6c06c45-0939-4bb3-1ae7-8b242ed41700/large "Ubuntu Deployment")
+    For other registries, input the image repository domain and path. For example, to deploy from the public ECR LTS Ubuntu image, you can input `public.ecr.aws/lts/ubuntu:latest`.
+    Select "Continue" after specifying your image.
+  </Tab>
+</Tabs>
+
+Under **Additional Settings**, you can configure remaining options like your service's port and computing resources. Once you're ready, click the **Deploy** button to launch. You will be redirected to the cluster dashboard where you should see your newly deployed service.
+
+## Updating your Docker Image[](#updating-your-docker-image "Direct link to heading")
+
+### Manual Updates[](#manual-updates "Direct link to heading")
+
+To update the Docker image which your application is running, open the application on the Porter dashboard. If your Docker image has a unique image tag, you can navigate to the **Settings** tab and select a new tag for your image:
+
+![Tag](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/373dd8d6-b477-415d-493f-43a69adc9300/large "Settings Tab Tag")
+
+If your Docker image tag is `latest` (or you re-use the same image tag for different images), there are different options depending on if you are running an web/worker or a job:
+
+<Tabs>
+  <Tab title="Web/Worker">
+    If running a **web or worker** application, navigate to the **Main** tab and hit "Deploy" with no configuration changes:
+    ![Web/Worker Redeploy](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/367a5fa1-4ba6-4804-546c-dc6718f71b00/large "Web/Worker Redeployment")
+    This will re-pull the image by default.
+  </Tab>
+  <Tab title="Job">
+    If running a **Job** application, make sure that you have set the `Image Pull Policy` option in the **Advanced** tab to `Always`, and hit **Save Config**:
+    ![Job Redeploy](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/df232973-a490-49aa-8604-5c446a5c5800/large "Job Redeployment")
+    Subsequent job runs will re-pull the image every time.
+    <Warning>If you are running a large amount of jobs, pulling the image on each job run may incur a large cost. Consult your image registry pricing to ensure that you do not get charged excessively.</Warning>
+  </Tab>
+</Tabs>
+
+### Programmatic Updates[](#programmatic-updates "Direct link to heading")
+
+To programmatically redeploy your service (for instance, from a CI pipeline), you will need to call your service's custom webhook. You can find your webhook by expanding your deployed service and going to the **Settings** tab.
+
+![Webhook](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/378409ad-73e4-41fe-a149-2b76b32bf800/large "webhook in the settings tab")
+
+Make sure to replace the `YOUR_COMMIT_HASH` field with the tag of your Docker image.

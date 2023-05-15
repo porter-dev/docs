@@ -1,0 +1,40 @@
+---
+title: "Deleting Dangling Resources"
+---
+
+When you delete your project or clusters, Porter automatically destroys your resources so you don't get charged for any unused resources. Sometimes, this automatic destruction occurs only partially and results in dangling resources. This is a guide with specific steps on how to delete these resources for each cloud provider.
+
+## AWS[](#aws "Direct link to heading")
+
+Please note that the instructions in the following sections need to be used in the order they're specified in; not following the sequence will result in errors whilst trying to delete resources that may be dependent on other resources within your account.
+
+### Deleting EKS[](#deleting-eks "Direct link to heading")
+
+Go to the **EKS** section on your AWS console, and delete the cluster in question, if it's visible.
+
+![EKS](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/86a228b3-68d5-4e42-912b-a34a51f6d600/large "Screen Shot 2021-03-26 at 4.16.01 PM.png")
+
+### Removing Auto Scaling Groups & Launch Configurations[](#removing-auto-scaling-groups--launch-configurations "Direct link to heading")
+
+On the **EC2** dashboard, navigate to the **Auto Scaling Groups** section, and remove any auto scaling groups that contain your cluster's name. Once they're deleted, you need to delete any launch configurations that may be left over, containing your cluster's name.
+
+![Autoscaling group](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/33c10eca-b30b-44c3-8f43-3deae40da300/large "Screen Shot 2021-03-26 at 4.24.08 PM.png")
+
+### Removing Load Balancers & Elastic IPs[](#removing-load-balancers--elastic-ips "Direct link to heading")
+
+First, navigate to the **VPC** section in your AWS console to see the VPC's that are currently in use. Select the VPC that belongs to the cluster you've provisioned, and copy the VPC ID. Then go to the **Load Balancers** section on the **EC2** dashboard, and locate the load balancer for your cluster using the VPC ID you just copied as a filter - delete any load balancers found.
+
+### Terminating EC2 nodes[](#terminating-ec2-nodes "Direct link to heading")
+
+Deleting the EKS cluster and associated auto scaling groups and launch configurations will ensure your EC2 nodes are also terminated; you can navigate to the **Instances** section on the EC2 dashboard to confirm.
+
+### Removing VPC Resources[](#removing-vpc-resources "Direct link to heading")
+
+Navigate to the **VPC** section in your AWS console to see the VPC's that are currently in use. Select the VPC that belongs to the cluster you've provisioned, and copy the VPC ID.
+
+1. Click on **NAT Gateways**, and use the VPC ID to filter out the NAT Gateway for your cluster; select it and then click on **Actions** \-> **Delete NAT Gateway**.![NAT gateway](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/29bcf96e-84ff-4d9d-d3b5-1e15a5554900/large "Screen Shot 2021-03-26 at 4.09.51 PM.png")
+2. After ensuring the NAT Gateway was deleted, navigate to **Internet Gateways**, and use the VPC ID to locate the Internet Gateway for your cluster; select it and click on **Actions** \-> **Detach from VPC**. Once the gateway is detached, select **Actions** \-> **Delete Internet gateway**. If detaching the gateway throws an error about unmapped public IPs, go to the **Elastic IPs** section and release any elastic IPs associated with the VPC ID.
+3. After all gateways have been deleted, go to the **Subnets** section, and remove all subnets associated with the cluster VPC, by clicking on **Actions** \-> **Delete subnet**.
+4. Finally, you can delete the VPC by going to **Your VPCs** and deleting the VPC for your cluster, by selecting **Actions** \-> **Delete VPC**.
+
+![Delete VPC](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/e74141e4-6a77-4a08-6ffb-541586499300/large "Screen Shot 2021-03-26 at 4.05.16 PM.png")

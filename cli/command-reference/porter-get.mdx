@@ -1,0 +1,51 @@
+---
+title: "porter get"
+---
+
+##### Prerequisites
+
+* You've logged in to the Porter CLI after running [porter auth login](/cli/command-reference/porter-auth)
+* You're connected to the correct project by running [porter config set-project](/cli/command-reference/porter-config)
+* You're connected to the correct cluster by running [porter config set-cluster](/cli/command-reference/porter-config)
+
+  
+`porter get` fetches basic information about a Porter application. It also supports outputting in the JSON and YAML formats.
+
+#### Examples[](#examples "Direct link to heading")
+
+To get information about a release named `sample-app`, you can run the following:
+
+```
+porter get sample-app
+
+```
+
+This command is namespace-scoped and uses the default namespace. To specify a different namespace, use the `--namespace` flag:
+
+```
+porter get sample-app --namespace custom-namespace
+
+```
+
+To output in a data interchange format such as JSON, use the `--output` flag:
+
+```
+porter get sample-app --output json
+
+```
+
+And similarly for YAML:
+
+```
+porter get sample-app --output yaml
+
+```
+
+### `porter get values`[](#porter-get-values "Direct link to heading")
+
+This command can be used to fetch the Helm values of a release. For instance, to get the Helm values of a release named `sample-app`, you can run the following:
+
+```
+porter get values sample-app
+
+```

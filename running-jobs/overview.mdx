@@ -1,0 +1,8 @@
+---
+title: "Overview"
+---
+
+You can create one-time jobs or cron jobs on Porter, which can be linked [from your Github repo](https://docs.porter.run/deploying-applications/deploying-from-github) or [from an existing Docker image registry](https://docs.porter.run/deploying-applications/deploying-from-docker-registry). Cron jobs are meant to run on a schedule using a specified [cron expression](https://en.wikipedia.org/wiki/Cron#CRON%5Fexpression), while one-time jobs are meant to be triggered manually. Here are some use-cases for each type of job:
+
+* Run one-time jobs for database migration scripts, data processing, or generally scripts that are designed to run to completion on an unpredictable schedule
+* Run cron jobs for tasks that should run on a specified schedule, such as scraping data at a specified interval, cleaning up rows in a database, taking backups of a DB, or sending batch notifications at a specified time every day

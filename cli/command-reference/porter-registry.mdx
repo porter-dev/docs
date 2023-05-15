@@ -1,0 +1,23 @@
+---
+title: "porter registry"
+---
+
+##### Prerequisites
+
+* You've logged in to the Porter CLI after running [porter auth login](/cli/command-reference/porter-auth)
+* You're connected to the correct project by running [porter config set-project](/cli/command-reference/porter-config)
+
+  
+`porter registry` contains commands for interacting with a Docker registry in a project.
+
+### `porter registry list`[](#porter-registry-list "Direct link to heading")
+
+Lists the registries linked to a project. After listing registries, you can set the registry via `porter config set-registry [REGISTRY_ID]`.
+
+### `porter registry repo list`[](#porter-registry-repo-list "Direct link to heading")
+
+Lists the repositories in an image registry. The registry should be set via `porter config set-registry [REGISTRY_ID]`.
+
+### `porter registry image list [repo_name]`[](#porter-registry-image-list-repo%5Fname "Direct link to heading")
+
+Lists the images the specified image repository. The image repository name can be found from `porter registry repo list`. The registry should be set via `porter config set-registry [REGISTRY_ID]`.

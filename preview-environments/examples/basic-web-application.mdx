@@ -1,0 +1,33 @@
+---
+title: "Basic Web Application"
+---
+
+In this example, we'll walk through an example of enabling preview environments for a simple Go application, built via a cloud-native buildpack. The sample repository can be found [here](https://github.com/porter-dev/go-getting-started).
+
+## `porter.yaml` File Walkthrough[](#porteryaml-file-walkthrough "Direct link to heading")
+
+The `porter.yaml` file for this application is as follows:
+
+```
+version: "v1"
+resources:
+  - name: "go-sample"
+    source:
+      name: "web"
+    config:
+      build:
+        method: "pack"
+      values:
+        container:
+          command: "go-getting-started"
+          port: 8080
+          env:
+            normal:
+              BPE_PORT: "8080"
+              BP_KEEP_FILES: "static/*"
+
+```
+
+* `source`: By only setting the `source.name` field to `web`, Porter will deploy this as a `web` application.
+* `config.build`: specifying the `config.build.method` field as `pack` instructs Porter to build this application using cloud-native buildpacks.
+* `config.values`: here, we set common configuration settings, such as the start command, the port that the application runs on, and environment variables for the application.

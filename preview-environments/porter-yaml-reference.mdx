@@ -1,0 +1,168 @@
+---
+title: "Porter YAML Reference"
+---
+
+This document contains a full reference file for `porter.yaml`. Each `porter.yaml` file has the following high-level structure:
+
+* [version](#version) \- the version of the `porter.yaml` file reference to use.
+* [resources](#resources) \- a list of resources to create.  
+   * [name](#resourcename) \- the unique ID of the resource.  
+   * [driver](#resourcedriver) \- the name of the driver to use for the resource.  
+   * [depends\_on](#resourcedepends%5Fon) \- the resources that the target resources depends on.  
+   * [source](#resourcesource) \- the source configuration, specifying the application/addon to use.  
+   * [target](#resourcetarget) \- the target configuration, specifying the specifics of the project, cluster, etc., the application/addon should be deployed to.  
+   * [config](#resourceconfig) \- the build and runtime configuration for the addon or application.
+
+## `version`[](#version "Direct link to heading")
+
+The version of the `porter.yaml` file reference to use. Currently, only `v1` is supported:
+
+```
+version: v1
+
+```
+
+## `resources`[](#resources "Direct link to heading")
+
+A list of resources to create. For example:
+
+```
+---
+resources:
+  - name: "resource-1"
+    source:
+      name: "web"
+  - name: "resource-2"
+    depends_on:
+      - "resource-1"
+    source:
+      name: "web"
+
+```
+
+### `<resource>.name`[](#resourcename "Direct link to heading")
+
+The name of the resource to create.
+
+### `<resource>.driver`[](#resourcedriver "Direct link to heading")
+
+The name of the driver the resource should use. For more about drivers, see the [Drivers section](/preview-environments/drivers) of the documentation.
+
+### `<resource>.depends_on`[](#resourcedepends%5Fon "Direct link to heading")
+
+A list of resources that the target resource depends on.
+
+```
+---
+resources:
+  - name: "resource-1"
+    source:
+      name: "web"
+  - name: "resource-2"
+    depends_on:
+      - "resource-1"
+
+```
+
+### `<resource>.source`[](#resourcesource "Direct link to heading")
+
+The source specifies the application/addon to deploy for this resource. More specifically, it uniquely identifies a Helm chart. It contains the following fields:
+
+* `name` \[`String`, required\] \- the name of the template to use. Since the default source repo is [https://charts.getporter.dev](https://charts.getporter.dev), the names `web`, `worker`, and `job` work by default.
+* `repo` \[`String`, optional\] \- the Helm repository URL to use. Currently supported are `https://charts.getporter.dev` and `https://chart-addons.getporter.dev`.
+* `version` \[`String`, optional\] \- the semver version of the chart to use. If no version is specified, the latest version is used.
+
+For example, to deploy a worker application:
+
+```
+---
+resources:
+  - name: "web-example"
+    source:
+      name: "worker" # this could also be "web" or "job"
+
+```
+
+To deploy `postgresql`, a supported addon:
+
+```
+---
+resources:
+  - name: "postgres"
+    source:
+      name: "postgresql"
+      repo: "https://chart-addons.getporter.dev"
+
+```
+
+### `<resource>.target`[](#resourcetarget "Direct link to heading")
+
+The target specifies the specifics of the project, cluster, etc., the application/addon should be deployed to. More specifically, it contains the following fields:
+
+* `project` \[`Integer`, optional\] \- the Porter project ID to deploy the resource to. This is resolved in the following manner:  
+   * Checks for the `PORTER_PROJECT` environment variable and uses it if it is set to a non-zero value.  
+   * Next, checks for the value of `target.project` in the `porter.yaml` file and uses it if it is set to a non-zero value.  
+   * Lastly, defaults back to the CLI configuration value for the project, set by using the `porter config set-project` command.
+* `cluster` \[`Integer`, optional\] \- the Porter cluster ID in the project to deploy the resource to. This is resolved in the following manner:  
+   * Checks for the `PORTER_CLUSTER` environment variable and uses it if it is set to a non-zero value.  
+   * Next, checks for the value of `target.cluster` in the `porter.yaml` file and uses it if it is set to a non-zero value.  
+   * Lastly, defaults back to the CLI configuration value for the cluster, set by using the `porter config set-cluster` command.
+* `namespace` \[`String`, optional\] \- the namespace in the cluster to deploy the resource to. This is resolved in the following manner:  
+   * Checks for the `PORTER_NAMESPACE` environment variable and uses it if it is set to a non-empty string.  
+   * Next, checks for the value of `target.namespace` in the `porter.yaml` file and uses it if it is set to a non-empty string.  
+   * Lastly, uses the `default` namespace if the above steps do not resolve to a non-empty string value.
+
+**Note:** In some cases, the `target` section can also contain the `app_name` field to denote the Porter release name.
+
+For example, to deploy a resource to a specific project, cluster, and namespace:
+
+```
+---
+resources:
+  - name: "web-example"
+    target:
+      project: 1
+      cluster: 1
+      namespace: "dev"
+
+```
+
+### `<resource>.config`[](#resourceconfig "Direct link to heading")
+
+The `config` block specifies build and runtime configuration for the application or addon.
+
+#### Application Config[](#application-config "Direct link to heading")
+
+If the resource is a `web`, `worker`, or `job` application, the `config` block expects the following fields:
+
+* `build` \[required\] \- the build configuration to use.  
+   * `method` \[`docker`, `pack`, or `registry`\] \- the build/deploy method to use: the Docker daemon, cloud-native buildpacks or deployment from a Docker registry.  
+   * `dockerfile` \[`String`, optional\] \- if the build method is `docker`, the path to the Dockerfile  
+   * `builder` \[`String`, optional\] \- if the build method is `pack`, the builder to use. Leaving this blank will default to `paketobuildpacks/builder:full`. Other well-supported options are `heroku/buildpacks:20` and `heroku/buildpacks:18`.  
+   * `buildpacks` \[`String`, optional\] \- if the build method is `pack`, the buildpacks to use. Leaving this empty will default to the buildpacks supported by `paketo` and `heroku`, depending on the builder.  
+   * `context` \[`String`, optional\] \- if the build method is `docker` or `pack`, the path to the application directory. Defaults to the current (root) directory.  
+   * `image` \[`String`, required if `method=registry`\] \- the image repo URL to deploy from, if the build method is `registry`.
+* `values` \[required\] \- the [runtime configuration](#runtime-configuration) to use.
+
+If the resource is an addon, the `config` block corresponds directly to the [runtime configuration](#runtime-configuration).
+
+#### Runtime Configuration[](#runtime-configuration "Direct link to heading")
+
+The options for the runtime configuration (`config.values` for applications, `config` for addons) corresponds to the default Helm values for the application. If you have experience with Kubernetes/Helm, you can also view all possible configuration options in the `values.yaml` files of the respective applications: [web](https://github.com/porter-dev/porter-charts/blob/master/applications/web/values.yaml), [worker](https://github.com/porter-dev/porter-charts/blob/master/applications/worker/values.yaml), and [job](https://github.com/porter-dev/porter-charts/blob/master/applications/job/values.yaml). If you don't have this experience, please see the [examples](/preview-environments/examples) to view common configuration options.
+
+#### Variable References[](#variable-references "Direct link to heading")
+
+It is possible to reference output values from another resource to set configuration for the current resource. The syntax to reference dependent variables is as follows:
+
+```
+"{ .<resource_name>.<jsonpath> }"
+
+```
+
+The `<jsonpath>` section follows [JSONPath](https://goessner.net/articles/JsonPath/index.html#e2) syntax. Most of the time, this will simply be a set of nested fields. For example, the `postgresql` addon outputs a fields `postgresqlPassword` and `postgresqlUsername`, so a resource named `postgres` can be referenced via:
+
+```
+POSTGRES_USERNAME: "{ .postgres.postgresqlUsername }"
+POSTGRES_PASSWORD: "{ .postgres.postgresqlPassword }"
+
+```

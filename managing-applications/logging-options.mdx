@@ -1,0 +1,71 @@
+---
+title: "Logging Options"
+---
+
+By default, Porter comes with several logging options that will be sufficient for many use-cases. If you'd prefer to use a third-party provider to manage your logs, Porter offers easy deployments of [Datadog](#datadog) or [LogDNA](#logdna).
+
+## Built-In Logging[](#built-in-logging "Direct link to heading")
+
+### Live Logs[](#live-logs "Direct link to heading")
+
+Clicking into a Porter application will bring you to the **Status** tab, which generates live logs for your application. It will retrieve a history of `400` log lines from your application, and will live-stream these logs to the frontend.
+
+![Colored Logs](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/d19fde1c-2288-435b-83d7-c35fd156c100/large "Logs Screenshot")
+
+Note that if your application is re-deployed successfully, these logs will no longer be available.
+
+##### info
+
+You can also stream logs to your terminal by running the [porter logs](/cli/command-reference/porter-logs) command.
+
+### Persistent Logs with Loki[](#persistent-logs-with-loki "Direct link to heading")
+
+In release `v0.40.0`, Porter added support for storing persistent logs via `loki` for EKS clusters. This feature is gradually being rolled out to clusters and will become generally available by December 1st, 2022\. By default, the installation is set up to store logs on an EBS volume with a retention period of 1 week, but this is configurable.
+
+#### Configurating the retention period[](#configurating-the-retention-period "Direct link to heading")
+
+Navigate to the `porter-agent` application in the `porter-agent-system` namespace. Select the **Log Configuration** tab, and input your desired retention period. Then hit **Deploy**:
+
+![Retention period](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/bc411782-2462-449a-bf16-160fa8f19000/large "Retention Period")
+
+#### Storing logs on S3[](#storing-logs-on-s3 "Direct link to heading")
+
+##### info
+
+S3 storage for logs is still a `beta` feature, and will require some additional configuration in your AWS. A future release of Porter will automate the creation of the S3 bucket and S3 user.
+
+For setups that may generate more than 100GB of logs per week, we recommend using an S3 bucket as a logging storage backend. To set this up, you must first create an S3 bucket in your AWS account, and create an IAM user which has access to read and write to this storage bucket. Generate an access key ID and secret key for this user.
+
+Note that if you would like to set a retention period for S3, you will need to configure a separate lifecycle policy for expiry. See [here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-expire-general-considerations.html) for more information. 
+
+Next, navigate to the `porter-agent` application in the `porter-agent-system` namespace. Select the **Log Configuration** tab, and select **S3 Bucket** for the backend storage config. Then, fill out the corresponding fields and hit **Deploy**:
+
+![S3 Log Configuration](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/2833efac-f079-470d-6872-6d442d423200/large "S3 Log Configuration")
+
+### Logs for Failed Applications[](#logs-for-failed-applications "Direct link to heading")
+
+##### Prerequisites
+
+* The `Porter Agent` must be installed in your cluster. This can be installed by navigating to the `Events` tab of an application, and if the agent isn't already installed, you will be given an option to install it.
+
+For application instances that have failed (exited due to non-zero exit code, out-of-memory errors, etc), a 100-line log history will be available for that application. This allows you to debug stack traces or view the logs from the application failure. These logs are available by clicking on the corresponding event in the `Events` tab:
+
+![Events](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/5d676b59-af24-4816-6e80-7799b960e600/large "Events")
+
+## Logging Addons[](#logging-addons "Direct link to heading")
+
+There are several logging addons that can be deployed to preserve logs in a third-party cloud.
+
+### Datadog[](#datadog "Direct link to heading")
+
+[Datadog](https://datadoghq.com) is a powerful monitoring and security platform that gives you visibility into end-to-end traces, application metrics, logs, and infrastructure. You can read more about deploying Datadog on Porter [here](/deploying-addons/datadog).
+
+### LogDNA[](#logdna "Direct link to heading")
+
+[LogDNA](https://www.logdna.com/) is a popular logging management system. This can be deployed by navigating to the **Launch** tab, selecting **Community Add-ons** and selecting the LogDNA chart. You will be prompted for a LogDNA ingestion key: please follow directions from [https://app.logdna.com/pages/add-source](https://app.logdna.com/pages/add-source) to obtain this key:
+
+![LogDNA Deployment](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/e47fbda1-ae3d-46ff-1e71-f1083ee63400/large "LogDNA Deployment")
+
+##### info
+
+LogDNA will forward all Kubernetes logs, not just logs from your applications. Please monitor your LogDNA usage closely to avoid unexpected costs.

@@ -1,0 +1,27 @@
+---
+title: "Datadog"
+---
+
+## About[](#about "Direct link to heading")
+
+[Datadog](https://datadoghq.com) is a powerful monitoring and security platform that gives you visibility into end-to-end traces, application metrics, logs, and infrastructure.
+
+## Deployment[](#deployment "Direct link to heading")
+
+Head to the **Community Add-ons** tab on Porter and select the **Datadog** add-on.
+
+You will be prompted to enter a **DataDog API Token** to connect to your Datadog dashboard. Follow [this guide](https://docs.datadoghq.com/account%5Fmanagement/api-app-keys/) to create a client token.
+
+Copy the generated token and paste it into the **DataDog API Token** field on Porter.
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/8ce20940-2adb-4ec6-a9e3-f000f379a500/large)
+
+## Logging[](#logging "Direct link to heading")
+
+The add-on by default forwards all container logs to your Datadog instance. This will result in additional cost from Datadog. You can filter out the logs and limit ingestion and retention from the Datadog dashboard.
+
+## DogStatsD[](#dogstatsd "Direct link to heading")
+
+The add-on will automatically inject environment variables like `DD_AGENT_HOST` and `DD_ENTITY_ID` into all of your containers using the [Datadog Admission Controller](https://docs.datadoghq.com/agent/cluster%5Fagent/admission%5Fcontroller/). Most dogstatsd libraries will work out of the box using these environment variables.
+
+For details on how the Datadog add-on is configured on Porter, please see [this blog article](https://blog.porter.run/datadog-and-kubernetes/).

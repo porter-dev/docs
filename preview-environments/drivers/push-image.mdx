@@ -1,0 +1,33 @@
+---
+title: "push-image"
+---
+
+##### info
+
+* This driver requires the [target.app\_name](/preview-environments/porter-yaml-reference#resourcetarget) field to be set to the Porter release name.
+* The [source](/preview-environments/porter-yaml-reference#resourcesource) section does not need to be set for this driver.
+
+This preview environments driver can be used to push a local Docker image to a linked registry on Porter. The [config](/preview-environments/porter-yaml-reference#resourceconfig) section, when using this driver, supports the following properties:
+
+* `push` \[`Object`, required\] \- options to push the image, with the following properties:  
+   * `use_pack_cache` \[`Boolean`, optional\] \- whether to use the pack cache when pushing the image  
+   * `image` \[`String`, required\] \- the name of the local Docker image to push
+
+For example, to push a local Docker image to a linked registry, you can use the following:
+
+```
+---
+resources:
+  - name: my-pushed-image
+    driver: push-image
+    target:
+      app_name: my-porter-release
+    config:
+      push:
+        image: us-east1-docker.pkg.dev/my-gcp-project/my-gar-repo/my-image:f00bar1
+
+```
+
+### Outputs[](#outputs "Direct link to heading")
+
+This driver outputs the `image` identifier with the full image URI.

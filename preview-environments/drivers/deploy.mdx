@@ -1,0 +1,28 @@
+---
+title: "deploy (default)"
+---
+
+This preview environments driver can be used to build, push, and deploy an app or addon to Porter. Since this driver does all of this, it is also the default driver. The [config](/preview-environments/porter-yaml-reference#resourceconfig) section, when using this driver, supports the following properties:
+
+* `waitForJob` \[`Boolean`, optional\] \- if set to `true`, the driver will wait for the job to complete before proceeding
+* `onlyCreate` \[`Boolean`, optional\] \- if set to `true`, the driver will only create the app or addon but not update it on subsequent runs
+* `build` \[`Object`, required\] \- options for the build step, with the following properties:  
+   * `useCache` \[`Boolean`, optional\] \- if set to `true`, the driver will use the image cache (if available) for the build  
+   * `method` \[`Boolean`, required\] \- one of `docker`, `pack` ([Cloud Native Buildpacks](https://buildpacks.io)) or `registry`  
+   * `context` \[`String`, optional\] \- the current build context or working directory to use, relative to the root directory. Defaults to the current working directory.  
+   * `dockerfile` \[`String`, required only when `method` is `docker`\] \- path to the Dockerfile to use, relative to the root directory  
+   * `image` \[`String`, required only when `method` is `registry`\] \- the container image URI to use including the full image path and the tag  
+   * `builder` \[`String`, optional\] \- the Buildpacks [builder](https://buildpacks.io/docs/concepts/components/builder/) to use when using the `pack` method. Defaults to `paketobuildpacks/builder:full`.  
+   * `buildpacks` \[`Array of Strings`, optional\] \- the list of [buildpacks](https://buildpacks.io/docs/concepts/components/buildpack/) to use, when using the `pack` method  
+   * `env` \[`Map of String keys to String values`, optional\] \- the environment variables to use for the build
+* `env_groups` \[`Array of Objects`, optional\] \- list of env groups to use to build and deploy the app or addon, supporting the following properties:  
+   * `name` \[`String`, required\] \- the name of the env group  
+   * `namespace` \[`String`, required\] \- the namespace to use for the env group  
+   * `version` \[`Integer`, optional\] \- the version of the env group
+* `values` \[`Map of String keys to Object values`, optional\] \- the Helm chart values to use for the app or addon. For a detailed explanation, please read the section on [Runtime Configuration](/preview-environments/porter-yaml-reference#runtime-configuration).
+
+The [Basic Web Application](/preview-environments/examples/basic-web-application) example uses this driver.
+
+### Outputs[](#outputs "Direct link to heading")
+
+This driver outputs all the values of the underlying [Helm release's](https://helm.sh/docs/intro/using%5Fhelm/) chart.

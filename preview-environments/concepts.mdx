@@ -1,0 +1,43 @@
+---
+title: "Concepts"
+---
+
+This document describes the various concepts used in Porter preview environments.
+
+## Environment[](#environment "Direct link to heading")
+
+A Porter preview environment essentially corresponds to a GitHub repository. Under the hood, Porter creates a [GitHub environment](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment) named `preview` in your GitHub repository to deploy changes via open pull requests. A list of all deployments can be viewed at `https://github.com/<username>/<repository>/deployments/activity_log?environment=preview`.
+
+## Deployment[](#deployment "Direct link to heading")
+
+A preview environment deployment is a collection of apps and addons on Porter. For every pull request in your repository that has Porter preview environments enabled, a new deployment is created with every change to the pull request's head branch.
+
+##### TLDR
+
+An `Environment` is to a GitHub repository just like a `Deployment` is to a pull request in that repository.
+
+## `porter.yaml` file[](#porteryaml-file "Direct link to heading")
+
+To enable deployments to Porter preview environments, you must add a `porter.yaml` file to the root directory of your GitHub repository. A detailed reference can be found in the [Porter YAML Reference](/preview-environments/porter-yaml-reference) document.
+
+## Resource[](#resource "Direct link to heading")
+
+A resource is the basic building block of a `porter.yaml` file and describes the steps to build and deploy the same to Porter. Resources contain information about the kind of Porter release they build.
+
+### Resource Dependencies[](#resource-dependencies "Direct link to heading")
+
+A resource may depend on one or more resources. The resource(s) that a resource depends on will be executed before it.
+
+## Driver[](#driver "Direct link to heading")
+
+A driver instructs a resource to act in a certain way. For example, the default driver ([deploy](/preview-environments/drivers/deploy)) can build and deploy an app or addon to Porter. On another hand, the [os-env](/preview-environments/drivers/os-env) driver helps to read environment variables from the current operating system environment.
+
+### Driver Configuration[](#driver-configuration "Direct link to heading")
+
+Every driver expects a configuration section (in the form of [<resource>.config](/preview-environments/porter-yaml-reference#resourceconfig)) in the `porter.yaml` file. This section may be different for different drivers and provides it with the information required to carry out its operation over the resource attached to the driver.
+
+### Driver Outputs[](#driver-outputs "Direct link to heading")
+
+A driver may choose to output one or more identifiers/variables that can be used by other resources to get information of a previous step.
+
+**Note:** A resource can access the output of another resource only when the former depends on the latter.

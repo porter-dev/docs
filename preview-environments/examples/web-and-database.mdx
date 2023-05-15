@@ -1,0 +1,44 @@
+---
+title: "Web and Database Application"
+---
+
+In this example, we'll walk through an example of enabling preview environments for a Python (Django) application that connects to a Postgres database. The sample repository can be found [here](https://github.com/abelanger5/python-getting-started).
+
+## `porter.yaml` File Walkthrough[](#porteryaml-file-walkthrough "Direct link to heading")
+
+The `porter.yaml` file to define both a Postgres database and a web application is as follows:
+
+```
+version: v1
+resources:
+  - name: postgres
+    source:
+      name: postgresql
+    config:
+      postgresqlPassword: testing
+  - name: web
+    depends_on:
+      - postgres
+    source:
+      name: web
+    config:
+      build:
+        method: pack
+        builder: heroku/buildpacks:20
+      values:
+        container:
+          command: web
+          port: 8000
+          env:
+            normal:
+              POSTGRES_USERNAME: "{ .postgres.postgresqlUsername }"
+              POSTGRES_PASSWORD: "{ .postgres.postgresqlPassword }"
+
+```
+
+* `postgres.source`: by setting the `source.name` field to `postgresql`, Porter will look for a supported addon called `postgresql`.
+* `postgres.config`: the `postgresql` addon accepts the `postgresqlPassword` field to set the default Postgres password.
+* `web.source`: by setting the `source.name` field to `web`, Porter will deploy this resource as a `web` application.
+* `web.depends_on`: by setting the `depends_on` field to include `postgres`, Porter will wait for the `postgres` resource to be created before deploying the web application.
+* `web.config.build`: specifying the `config.build.method` field as `pack` instructs Porter to build this application using cloud-native buildpacks, and setting the `builder` to `heroku/buildpacks:20` means that this buildpack will be used.
+* `web.config.values`: here, we set common configuration settings, such as the start command, the port that the application runs on, and environment variables for the application. Also, note that configuration references an output variable from the `postgres` resource.

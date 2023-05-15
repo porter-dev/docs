@@ -1,0 +1,64 @@
+---
+title: "porter create"
+---
+
+##### info
+
+A detailed guide on creating applications from the CLI can be found [here](/deploying-applications/deploying-from-cli/creating-an-application).
+
+##### Prerequisites
+
+* You've logged in to the Porter CLI after running [porter auth login](/cli/command-reference/porter-auth)
+* You're connected to the correct project by running [porter config set-project](/cli/command-reference/porter-config)
+* You're connected to the correct cluster by running [porter config set-cluster](/cli/command-reference/porter-config)
+
+  
+`porter create` creates a new application with name given by the `--app` flag and a `kind`, which can be one of web, worker, or job. For example:
+
+```
+porter create web --app example-app
+
+```
+
+### Examples[](#examples "Direct link to heading")
+
+To modify the default configuration of the application, you can pass a values.yaml file in via the `--values` flag.
+
+```
+porter create web --app example-app --values values.yaml
+
+```
+
+This command will automatically build from a local path, and will create a new Docker image in your default Docker registry. The path can be configured via the --path flag. For example:
+
+```
+porter create web --app example-app --path ./path/to/app
+
+```
+
+To connect the application to Github, so that the application rebuilds and redeploys on each push to a Github branch, you can specify `--source github`. If your local branch is set to track changes from an upstream remote branch, Porter will try to use the connected remote and remote branch as the Github repository to link to. Otherwise, Porter will use the remote given by origin. For example:
+
+```
+porter create web --app example-app --source github
+
+```
+
+To deploy an application from a Docker registry, use `--source registry` and pass the image in via the `--image` flag. The image flag must be of the form repository:tag. For example:
+
+```
+porter create web --app example-app --source registry --image gcr.io/snowflake-12345/example-app:latest
+
+```
+
+### Flags[](#flags "Direct link to heading")
+
+* `--app` (string) name of the new application/job/worker.
+* `--dockerfile` (string) the path to the dockerfile
+* `-e, --env` (stringArray) Build-time environment variable, in the form 'VAR=VALUE'. These are not available at image runtime.
+* `--image` (string) if the source is "registry", the image to use, in repository:tag format
+* `--method` (string) the build method to use ("docker" or "pack")
+* `--namespace` (string) namespace of the application (default "default")
+* `-p, --path` (string) if local build, the path to the build directory
+* `--registry-url` (string) the registry URL to use (must exist in "porter registries list")
+* `--source` (string) the type of source ("local", "github", or "registry") (default "local")
+* `-v, --values` (string) filepath to a values.yaml file

@@ -1,0 +1,81 @@
+---
+title: "Creating an Application from the CLI"
+---
+
+## Introduction[](#introduction "Direct link to heading")
+
+To create a new application via the Porter CLI, you can run:
+
+```yaml
+porter create [kind] --app [app-name]
+
+```
+
+Required args/flags:
+
+* `kind` can be one of `web`, `worker`, or `job`
+* `app-name` must be a set of lowercase letters or digits separated by `-`
+
+Each `kind` of application has a set of default values which can be overwritten. For example, `web` applications have the port set to `80`. To overwrite this, for example to port `3000`, create the following file `values.yaml`:
+
+```yaml
+container:
+  port: 3000
+
+```
+
+And then run the command:
+
+```yaml
+porter create web --app web-test --values ./values.yaml
+
+```
+
+Go to the [common configuration options](/deploying-applications/deploying-from-cli/common-configuration-options) section to view `values.yaml` files for common use-cases.
+
+<Info>If you have experience with Kubernetes/Helm, you can also view all possible configuration options in the `values.yaml` files of the respective applications: [web](https://github.com/porter-dev/porter-charts/blob/master/applications/web/values.yaml), [worker](https://github.com/porter-dev/porter-charts/blob/master/applications/worker/values.yaml), and [job](https://github.com/porter-dev/porter-charts/blob/master/applications/job/values.yaml).</Info>
+
+## Deploying from Local Files[](#deploying-from-local-files "Direct link to heading")
+
+The default behavior of `porter create` is to use the local filesystem to build, push, and deploy a Docker image. For example, to create a new web application from the current directory, you can simply run:
+
+```
+porter create web --app web-test
+
+```
+
+Porter will look for a `Dockerfile` located at the root of the current directory. If a `Dockerfile` is found, Porter will use the default Docker container registry linked to the Porter project to deploy the application. If a `Dockerfile` is not found, Porter will use a [Heroku-18](https://devcenter.heroku.com/articles/heroku-18-stack) buildpack to build your application.
+
+To point to a Dockerfile, you should pass the **relative path** to the Dockerfile from the root directory of the source code:
+
+```
+porter create web --app web-test --dockerfile /my/nested/Dockerfile
+
+```
+
+To use a cloud-native buildpack instead of a Dockerfile, you can specify the method directly:
+
+```
+porter create web --app web-test --method pack
+
+```
+
+## Deploying from Github[](#deploying-from-github "Direct link to heading")
+
+By default, Porter will use the local filesystem to build, push, and deploy your application. Alternatively, if you have a local Git repository whose origin is set to a Github repository that matches one linked on Porter, you can pass in the `--source` flag to deploy your app:
+
+```
+porter create web --app web-test --source github
+
+```
+
+If your local branch is set to track changes from an upstream remote branch, Porter will try to use the connected `remote` and remote branch as the Github repository to link to. Otherwise, Porter will use the remote given by `origin`, and the same branch name as your local branch.
+
+## Deploying from a Docker Registry[](#deploying-from-a-docker-registry "Direct link to heading")
+
+The CLI also supports deploying directly from a Docker image which is hosted on a [connected Docker registry](/deploying-applications/deploying-from-docker-registry/linking-existing-registry). Simply specify `--source registry` and the application image via the `--image` tag:
+
+```
+porter create web --app web-test --source registry --image gcr.io/snowflake-12345/web-test:latest
+
+```

@@ -1,0 +1,25 @@
+---
+title: "update-config"
+---
+
+##### info
+
+* This driver requires the [target.app\_name](/preview-environments/porter-yaml-reference#resourcetarget) field to be set to the Porter release name.
+* The [source.name](/preview-environments/porter-yaml-reference#resourcesource) field should use the name of the Helm chart that the Porter release is going to use.
+
+This preview environments driver can be used to update a Porter release. The [config](/preview-environments/porter-yaml-reference#resourceconfig) section, when using this driver, supports the following properties:
+
+* `waitForJob` \[`Boolean`, optional\] \- if set to `true`, the driver will wait for the job to complete before proceeding
+* `onlyCreate` \[`Boolean`, optional\] \- if set to `true`, the driver will only create the app or addon but not update it on subsequent runs
+* `update_config` \[`Object`, required\] \- options for updating the Porter release, with the following properties:  
+   * `image` \[`String`, required\] \- name of the image, without the tag  
+   * `tag` \[`String`, required\] \- the tag to be used for the image
+* `env_groups` \[`Array of Objects`, optional\] \- list of env groups to use to deploy the app or addon, supporting the following properties:  
+   * `name` \[`String`, required\] \- the name of the env group  
+   * `namespace` \[`String`, required\] \- the namespace to use for the env group  
+   * `version` \[`Integer`, optional\] \- the version of the env group
+* `values` \[`Map of String keys to Object values`, optional\] \- the Helm chart values to use for the app or addon. For a detailed explanation, please read the section on [Runtime Configuration](/preview-environments/porter-yaml-reference#runtime-configuration).
+
+### Outputs[](#outputs "Direct link to heading")
+
+This driver outputs all the values of the underlying [Helm release's](https://helm.sh/docs/intro/using%5Fhelm/) chart.

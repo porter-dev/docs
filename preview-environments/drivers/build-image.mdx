@@ -1,0 +1,57 @@
+---
+title: "build-image"
+---
+
+##### info
+
+* This driver requires the [target.app\_name](/preview-environments/porter-yaml-reference#resourcetarget) field to be set to the Porter release name.
+* The [source.name](/preview-environments/porter-yaml-reference#resourcesource) field should use the name of the Helm chart that the Porter release is going to use.
+
+This preview environments driver can be used to build a Docker image locally by using some details from the intended Porter release that is being deployed using the built image. The [config](/preview-environments/porter-yaml-reference#resourceconfig) section, when using this driver, supports the following properties:
+
+* `build` \[`Object`, required\] \- options to build the image, with the following properties:  
+   * `use_pack_cache` \[`Boolean`, optional\] \- whether to use the pack cache when building the image, when using the `pack` method  
+   * `method` \[`String`, required\] \- one of `docker`, `pack` ([Cloud Native Buildpacks](https://buildpacks.io)) or `registry`  
+   * `context` \[`String`, optional\] \- the current build context or working directory to use, relative to the root directory. Defaults to the current working directory.  
+   * `dockerfile` \[`String`, required only when `method` is `docker`\] \- path to the Dockerfile to use, relative to the root directory  
+   * `image` \[`String`, required only when `method` is `registry`\] \- the container image URI to use including the full image path and the tag  
+   * `builder` \[`String`, optional\] \- the Buildpacks [builder](https://buildpacks.io/docs/concepts/components/builder/) to use when using the `pack` method. Defaults to `paketobuildpacks/builder:full`.  
+   * `buildpacks` \[`Array of Strings`, optional\] \- the list of [buildpacks](https://buildpacks.io/docs/concepts/components/buildpack/) to use, when using the `pack` method  
+   * `env` \[`Map of String keys to String values`, optional\] \- the environment variables to use for the build
+* `env_groups` \[`Array of Objects`, optional\] \- list of env groups to use to build the app or addon, supporting the following properties:  
+   * `name` \[`String`, required\] \- the name of the env group  
+   * `namespace` \[`String`, required\] \- the namespace to use for the env group  
+   * `version` \[`Integer`, optional\] \- the version of the env group
+* `values` \[`Map of String keys to Object values`, optional\] \- the Helm chart values to use for the app or addon. For a detailed explanation, please read the section on [Runtime Configuration](/preview-environments/porter-yaml-reference#runtime-configuration).
+
+For example, to build a Docker image locally using the `pack` method, you can use the following:
+
+```
+---
+resources:
+  - name: my-image
+    driver: build-image
+    source:
+      name: web
+    target:
+      app_name: my-porter-release
+    config:
+      build:
+        method: pack
+        builder: heroku/builder:20
+      values:
+        container:
+          env:
+            normal:
+              FOO: BAR
+
+```
+
+### Outputs[](#outputs "Direct link to heading")
+
+This driver outputs the following identifiers:
+
+* `registry_url` \- the domain part of the image URI
+* `image_repo` \- the repository name from the image URI
+* `image_tag` \- the image tag
+* `image` \- the full URI of the image

@@ -1,0 +1,145 @@
+---
+title: "Network Configuration Options"
+---
+
+## Customizing Network Settings for an Application[](#customizing-network-settings-for-an-application "Direct link to heading")
+
+Most of the time, you can customize the NGINX configuration by adding an "Ingress Annotation" when deploying a web service. This can be found in the "Advanced" tab of the web template:
+
+![Advanced tab ingress](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/0e1036fe-ef04-4bd5-abe9-8bcee6fc1d00/large "Screen Shot 2021-06-02 at 5.15.26 PM.png")
+
+To add an annotation, simply click "Add row" and add key-value pairs for the annotation.
+
+##### info
+
+This document attempts to cover the most common use-cases. To view the full list of annotations, [go here](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations).
+
+### Setting Custom Read/Write Timeouts[](#setting-custom-readwrite-timeouts "Direct link to heading")
+
+Read/write timeouts are very application-specific, and are subject to change on the Porter templates. For example, if you have a websocket application that does not handle dropped connections gracefully, you may be inclined to set your read/write timeout to be much higher than what is standard (\~30 seconds). For those coming from Heroku, the Heroku router enforces a write timeout of 30 seconds, and will keep a connection alive if a single byte is sent within a 55 second window.
+
+On Porter, you can configure your own read/write timeouts by adding annotations:
+
+```
+nginx.ingress.kubernetes.io/proxy-connect-timeout: "60s"
+nginx.ingress.kubernetes.io/proxy-read-timeout: "60s"
+nginx.ingress.kubernetes.io/proxy-send-timeout: "60s"
+
+```
+
+For an explanation of these values:
+
+| Annotation                                        | Description                                                            |
+| ------------------------------------------------- | ---------------------------------------------------------------------- |
+| nginx.ingress.kubernetes.io/proxy-connect-timeout | The timeout for NGINX to establish a connection with your application. |
+| nginx.ingress.kubernetes.io/proxy-send-timeout    | The timeout for NGINX to transmit a request to your application.       |
+| nginx.ingress.kubernetes.io/proxy-read-timeout    | The timeout for NGINX to read a response from your application.        |
+
+It is thus recommended to set these values with the ordering `proxy-connect-timeout <= proxy-send-timeout <= proxy-read-timeout`.
+
+### Client Max Body Size[](#client-max-body-size "Direct link to heading")
+
+If you are getting undesired `413 Request Entity Too Large` errors, you can increase the maximum size of the client request by setting the field [client\_max\_body\_size](http://nginx.org/en/docs/http/ngx%5Fhttp%5Fcore%5Fmodule.html#client%5Fmax%5Fbody%5Fsize). You can do this by adding the following annotation:
+
+```
+nginx.ingress.kubernetes.io/proxy-body-size: 8m
+
+```
+
+This will set the maximum client request body size to 8 megabytes.
+
+##### info
+
+To learn more about NGINX units, see [this document](http://nginx.org/en/docs/syntax.html).
+
+### Header Size[](#header-size "Direct link to heading")
+
+If you are occasionally getting 500-level errors on certain endpoints, your application may be sending response headers which are too large for NGINX to process. You can try increasing the maximum value of the response header size by setting something like the following (default is `1k`):
+
+```
+nginx.ingress.kubernetes.io/proxy-buffer-size: 10k
+
+```
+
+## Preserving Client IP Addresses[](#preserving-client-ip-addresses "Direct link to heading")
+
+##### info
+
+Note that the preserved client IP will be accessible in the `X-Forwarded-For` header if you implement the configuration below.
+
+### AWS[](#aws "Direct link to heading")
+
+##### caution
+
+Changing this configuration may result in a few minutes of downtime. It is recommended to set up client IP addresses before the application is live, or update it during a maintenance window. For more information, see [this Github issue](https://github.com/porter-dev/porter/issues/632#issuecomment-832939982).
+
+You will need to update your NGINX config to support proxying external IP addresses to Porter.
+
+In the `ingress-nginx` application, you'll be modifying the following Helm values:
+
+```
+controller:
+  config:
+    use-proxy-protocol: "true" # <-- CHANGE
+  metrics:
+    annotations:
+      prometheus.io/port: "10254"
+      prometheus.io/scrape: "true"
+    enabled: true
+  podAnnotations:
+    prometheus.io/port: "10254"
+    prometheus.io/scrape: "true"
+  service:
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*" # <-- CHANGE
+      service.beta.kubernetes.io/aws-load-balancer-type: nlb-ip
+
+```
+
+![AWS nginx config](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/f22c7c1c-e9a4-45d6-6492-2c37e6c31200/large "Screen Shot 2021-05-11 at 10.08.32 AM.png")
+
+##### Update: December 10, 2021
+
+Note that clusters provisioned on Amazon EKS after December 10, 2021 will have support for proxying external IPs configured by default.
+
+### GCP[](#gcp "Direct link to heading")
+
+##### Prerequisites
+
+You must have a health check endpoint for your application. This endpoint must return a `200 OK` status when it is pinged.
+
+On Porter clusters provisioned through GCP, traffic flows through a regional TCP load balancer by default. These load balancers [do not support a proxy protocol](https://kubernetes.github.io/ingress-nginx/deploy/#gce-gke) (only global TCP load balancers or regional/global HTTP(S) load balancers support this), and thus the client IP cannot be accessed by using the default load balancer. As a result, to get client IP addresses to your applications, you must create a new load balancer with a custom IP address. This guide will show you how to do that.
+
+1. You must first create a static global IP address in the GCP console. You can do this by navigating to [External IP addresses](https://console.cloud.google.com/networking/addresses/list) (**VPC Network > External IP Addresses**), and clicking "Reserve External Address". Name this address something like `porter-ip-address` and select "Global" for the type:
+
+![Global LB config](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/f51bd6b7-f441-4a11-33b4-8859e0393800/large "Screen Shot 2021-05-10 at 2.25.04 PM.png")
+
+Copy the created IP address to the clipboard.
+
+1. In your DNS provider, configure a custom domain to point to that IP address, which you can do by creating an A record with your domain as the value. Check that the domain is pointing to the IP address through `nslookup <domain>`, where the address in the response should be the IP address you just created.
+2. Install an HTTPS issuer on the Porter dashboard by going to **Launch > Community Addons > HTTPS Issuer**. Toggle the checkbox **Create GCE Ingress**. If you have already installed the HTTPS issuer, you will have to delete your current issuer and create a new one.
+
+![HTTPS ingress with GCE](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/c37f044c-9528-4531-2fdb-f1bbb7861a00/large "Screen Shot 2021-05-10 at 4.12.27 PM.png")
+
+1. Create the web service by going to the Porter dashboard and navigating to **Launch > Web service**. Link up your source, and then configure the following three settings:
+* Toggle "Configure Custom Domain" at the bottom of the "Main" tab, and add your custom domain.
+* Go to the "Advanced" tab. In the "Ingress Custom Annotations" section, add the following three parameters:
+
+```
+acme.cert-manager.io/http01-edit-in-place: "true"
+cert-manager.io/cluster-issuer: letsencrypt-prod-gce
+cert-manager.io/issue-temporary-certificate: "true"
+kubernetes.io/ingress.class: gce
+kubernetes.io/ingress.global-static-ip-name: porter-ip-address # IMPORTANT: replace this with the name of your static ip address!
+
+```
+
+It should look something like this:
+
+![Deployment config](/images/managing-applications/214151691-31f1631b-479e-43e9-bc47-1f2dd6e07bbe.png "Screenshot showing Porter UI rendering Ingress Annotations")
+
+* Still in the "Advanced" tab, you must set up a custom health check at an application endpoint. This is by default set to `/healthz`, but you can choose whichever path you'd like. This endpoint must return a `200 OK` status when it is pinged.
+
+![Healthz config](/images/managing-applications/214151795-355b0a66-f011-4978-89d5-48765e1ef7eb.png "Readiness checks on Porter")
+
+1. Click "Deploy". It can take up to 10-15 minutes for the load balancer to be created and the certificates to be issued.
