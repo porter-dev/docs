@@ -1,0 +1,40 @@
+---
+title: 'Provisioning Infrastructure'
+sidebarTitle: 'Overview'
+---
+
+Porter provisions and manages the underlying infrastructure in your own cloud. During project creation, Porter will prompt you to provision resources in one of the three cloud providers: Amazon Web Services (AWS), Google Cloud Platform (GCP), and Digital Ocean.
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/cffd8494-a89d-4f82-fe5a-eece998b1400/large)
+
+For step by step instructions on how to provision infrastructure in each cloud provider, see the links below.
+
+<Card
+  title="Provisioning on AWS"
+  icon="aws"
+  href="/getting-started/provisioning-on-aws"
+></Card>
+<Card
+  title="Provisioning on Google Cloud"
+  icon="google"
+  href="/getting-started/provisioning-on-gcp"
+></Card>
+<Card
+  title="Provisioning on Digital Ocean"
+  icon="digital-ocean"
+  href="/getting-started/provisioning-on-do"
+></Card>
+
+As mentioned in the [previous section](/getting-started/linking-application-source), Porter provisions a Kubernetes cluster and an image registry in your cloud provider. It is not necessary to know much about the provisioned resources to use Porter, other than a few basic concepts. For those looking for a brief introduction to Kubernetes, we cover these basic concepts in [Kubernetes 101](/other/kubernetes-101).
+
+## FAQ[](#faq 'Direct link to heading')
+
+### Which instance type should I select?[](#which-instance-type-should-i-select 'Direct link to heading')
+
+The instance type you select depends on how much resources each of your application requires. Each of your application cannot exceed the amount of resources available on a single instance. For example, if you want to run an application with 4GB memory on AWS, the instance type you select should be larger than the `t2.medium` instances because they only have 2 vCPU and 4GB memory.
+
+You can [read more about how resource allocation works on Kubernetes here](/other/kubernetes-101). If you are unsure which instance type you should select, [book a free consultation call with our solution architects](mailto:contact@porter.run).
+
+### How much does the underlying infrastructure cost?[](#how-much-does-the-underlying-infrastructure-cost 'Direct link to heading')
+
+The cost of your infrastructure varies entirely on the amount of resources you use. By default, clusters provisioned by Porter cost around $200 per month on AWS and GCP, and around $100 per month on Digital Ocean.

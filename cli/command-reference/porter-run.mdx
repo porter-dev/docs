@@ -1,0 +1,36 @@
+---
+title: "porter run"
+---
+
+##### info
+
+A guide on using `porter run` can be found [here](/cli/remote-shell-access).
+
+##### Prerequisites
+
+* You've logged in to the Porter CLI after running [porter auth login](/cli/command-reference/porter-auth)
+* You're connected to the correct project by running [porter config set-project](/cli/command-reference/porter-config)
+* You're connected to the correct cluster by running [porter config set-cluster](/cli/command-reference/porter-config)
+
+  
+### `porter run`[](#porter-run "Direct link to heading")
+
+The `porter run` command allows users to execute a command on a remote container:
+
+```
+porter run [APP_NAME] -- [COMMAND] [args...]
+
+```
+
+The `APP_NAME` is the name of the application on the Porter dashboard (this can be a release either in the "Applications" or the "Jobs" tab).
+
+### `porter run cleanup`[](#porter-run-cleanup "Direct link to heading")
+
+It can also cleanup residual instances of applications that may have been left behind as a result of a previous call to `porter run`:
+
+```
+porter run cleanup
+
+```
+
+You may learn more about ephemeral instances in the [Ephemeral Instances](/cli/remote-shell-access#ephemeral-pods) section.

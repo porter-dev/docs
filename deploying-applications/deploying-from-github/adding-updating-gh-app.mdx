@@ -1,0 +1,87 @@
+---
+title: "Adding/Updating the Porter Github App"
+---
+
+In order to be able to deploy applications through GitHub repositories, you must first authorize the Porter GitHub App to access your repositories.
+
+## Adding the Porter Github App[](#adding-the-porter-github-app "Direct link to heading")
+
+### When Creating a New Project[](#when-creating-a-new-project "Direct link to heading")
+
+When you're creating a new project, you will be guided through several steps to get the project set up correctly. The first step is connecting your Github repositories, which looks like the following:
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/b3438d05-de1e-4549-7f48-6ff0f6e86500/large)
+
+Clicking on "Connect to Github" will redirect you to a Github authorization and installation screen. From this screen, you can select which repositories Porter can access, and you can add or request installation in organization repositories:
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/4f7f6e3a-c1fc-4868-bb4b-b8d59a3bea00/large)
+
+After clicking "Install and Authorize," you will be redirected back to the Porter dashboard. You can view which accounts the Porter Github App is able to access by clicking on "Account Settings" through the dropdown on the top right:
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/7bd23937-3bae-402b-24cd-65d2a63a0b00/large)
+
+### When Joining an Existing Project[](#when-joining-an-existing-project "Direct link to heading")
+
+After you've logged in to the Porter dashboard and joined an existing project, you can click on "Account Settings" through the dropdown on the top right, and then click "Connect your Github account":
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/e5fa7b1d-2b11-443f-c841-4a27b0d46e00/large)
+
+The rest of the steps are identical to the [when creating a new project](#when-creating-a-new-project) section above.
+
+## Requesting Installation[](#requesting-installation "Direct link to heading")
+
+If you are trying to install the Github app into an organization repository, but you do not have full permissions for a repository, the Github installation will result in a **requested installation** for the Porter Github App. Your organization admin will be requested to approve this Github App Installation. If you request Github installation for this organization, you can direct users to this document, which should answer any questions that your organization admin may have.
+
+**Approving the Installation as an Organization Admin**
+
+As the organization admin, you should receive an email when a new Github App installation is requested. You can also navigate to your organization settings page and click on the Installed Github Apps tab, where you will see a request as follows:
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/72751615-685b-4a0a-9506-2a82d0efa000/large)
+
+## Verifying Installation[](#verifying-installation "Direct link to heading")
+
+After you have installed the Porter Github App, you can verify that the Github app in the correct repositories by navigating to the "Launch" tab, selecting "Git repository" as the application source, and viewing the linked repositories (**note:** you must have provisioned a cluster in order to view this screen):
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/6358a167-dfdd-400f-e6dd-dd331293c400/large)
+
+## Updating the Porter Github App[](#updating-the-porter-github-app "Direct link to heading")
+
+If the Porter Github App is not installed in the correct repositories, you should navigate to "Account Settings" through the dropdown on the top right, and then click **Install Porter in more repositories**.
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/235c2839-3b43-49e4-a6c2-fc51c583a600/large)
+
+## Porter Github App Permissions[](#porter-github-app-permissions "Direct link to heading")
+
+Note that when you grant access to the Porter Github App, you are granting access through your account, which means that other users invited to your project will **not** be able to view or use any of the personal repositories that you have linked. However, if the user has access to a Github organization, they will be able to use the same Github App installation in the organization, and thus the same organization repositories.
+
+The Porter Github App requires several Github permissions in order to operate properly:
+
+### Repository permissions[](#repository-permissions "Direct link to heading")
+
+**Actions (Read & write):** required for Porter to write Github actions YAML files to the repository.
+
+**Administration (Read & write):** required for Porter to create a new Github environment called `Preview` for deployments. The administration API isn't used otherwise.
+
+**Contents (Read & write):** required for Porter to write Github actions YAML files to the repository.
+
+**Deployments (Read & write):** required for Porter to request Github deployments to the `Preview` environment.
+
+**Environments (Read & write):** required for Porter to create a new Github environment called `Preview` for deployments.
+
+**Metadata (Read-only):** mandatory, required for Github apps that integrate with repositories.
+
+**Pull Requests (Read & write):** required for Porter to add comments to Github PRs.
+
+**Secrets (Read & write):** required for Porter to write a `PORTER_TOKEN` secret to the repository automatically. We **do not** read any secrets from the repository beyond those prefixed with `PORTER_`.
+
+**Webhooks (Read & write):** required for Porter to create a Github repository webhook to trigger new preview environment runs.
+
+**Workflows (Read & write):** required for Porter to write Github actions YAML files to the repository.
+
+### Organization permissions[](#organization-permissions "Direct link to heading")
+
+**Members (read-only)**: required for Porter to create a new Github environment called `Preview` for deployments.
+
+### Account Permissions[](#account-permissions "Direct link to heading")
+
+**Email addresses (read-only)**: required for Porter to read your Github email address for authentication.

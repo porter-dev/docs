@@ -1,0 +1,60 @@
+---
+title: "env-group"
+---
+
+This preview environments driver can be used to fetch an env group from Porter. **Note:** The driver creates the env group if it does not exist. The [config](/preview-environments/porter-yaml-reference#resourceconfig) section, when using this driver, supports the following properties:
+
+* `env_groups` \[`Array of Objects`, required\] \- the list of env groups to fetch from Porter, with the following properties:  
+   * `name` \[`String`, required\] \- the name of the env group  
+   * `namespace` \[`String`, required\] \- the namespace of the env group. If nothing is set then the [target.namespace](/preview-environments/porter-yaml-reference#resourcetarget) is chosen.  
+   * `variables` \[`Map of String keys to String values`, required\] \- the map of variables to create on first run.
+
+This driver requires the Porter project, cluster IDs set via [target](/preview-environments/porter-yaml-reference#resourcetarget) in order to talk to Porter.
+
+For example, to fetch (or create on first run) an env group, the following can be done:
+
+```
+---
+resources:
+  - name: my-env-groups
+    driver: env-group
+    config:
+      env_groups:
+        - name: some-env-group
+          namespace: sample-ns
+          variables:
+            MY_KEY: MY_VALUE
+            ANOTHER_KEY: ANOTHER_VALUE
+
+```
+
+### Outputs[](#outputs "Direct link to heading")
+
+This driver outputs all variables from all the env groups it fetches inside the `<env_group_name>.variables` identifier. The following can be done:
+
+```
+---
+resources:
+  - name: my-env-groups
+    driver: env-group
+    config:
+      env_groups:
+        - name: some-env-group
+          namespace: sample-ns
+          variables:
+            MY_KEY: MY_VALUE
+            ANOTHER_KEY: ANOTHER_VALUE
+  - name: my-deployment
+    depends_on:
+      - my-env-groups
+    source:
+      name: web
+    config:
+      values:
+        container:
+          env:
+            normal:
+              MY_KEY: "{ .my-env-groups.some-env-group.variables.MY_KEY }"
+              ANOTHER_KEY: "{ .my-env-groups.some-env-group.variables.ANOTHER_KEY }"
+
+```

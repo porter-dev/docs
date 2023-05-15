@@ -1,0 +1,226 @@
+---
+title: "Advanced Monitoring"
+---
+
+Each Porter cluster ships with its own Prometheus and alertmanager deployment, allowing you to set up your own monitoring rules and alerting pipelines. This can be quite useful when there's a problem with either the underlying infrastructure, or when you need to be notified when your cluster's nodes are running out of capacity and need to be reconfigured with more CPU/RAM.
+
+This section will walk you through the process of configuring some common monitoring alerts. Please note that these alerts can be modified with values and parameters that you deem to fit your application best.
+
+## Configuring a Monitoring Alert[](#configuring-a-monitoring-alert "Direct link to heading")
+
+Let's say that you need to configure an alert that is triggered when a cluster's nodes are not ready, or are unavailable.
+
+First, navigate to the `Applications` tab on your Porter cluster, and select the `prometheus` application under the `monitoring` namespace.
+
+![Prometheus](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/16ee790c-4d84-4f0e-7703-af290362fa00/large)
+
+Next, click on `Helm Values` \- in case it's not visible, turn on `DevOps Mode`, which allows you to customise your prometheus deployment.
+
+![Helm values for Prometheus](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/d454d703-e8a3-4b5c-358b-90e98df8ed00/large)
+
+In the editor that appears, add the following block to the end of the file:
+
+```
+serverFiles:
+  alerting_rules.yml:
+    groups:
+      - name: Default Alerts
+        rules:
+
+```
+
+Each alert you'd like to add, can be added under the `rules` section. Since we'd like an alert that is triggered when a cluster node is unavailable, the block will look like this:
+
+```
+serverFiles:
+  alerting_rules.yml:
+    groups:
+      - name: Default Alerts
+        rules:
+          - alert: KubernetesNodeReady
+            expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+            for: 10m
+            labels:
+              severity: critical
+            annotations:
+              summary: Kubernetes Node ready (instance {{ $labels.instance }})
+              description: "Node {{ $labels.node }} has been unready for a long time\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+```
+
+The alert we're configuring here consists of a name, a PromQL query as well as a window where Prometheus will check that the alert continues to be active during each evaluation for 10 minutes before firing the alert. This can be customised, as can the actual summary and descriptions.
+
+If you wish to add more alerts, it's as easy as appending them inside the `rules:` object. Let's say you'd now like to add another alert that's triggered when a job fails on your cluster:
+
+```
+serverFiles:
+  alerting_rules.yml:
+    groups:
+      - name: Default Alerts
+        rules:
+          - alert: KubernetesNodeReady
+            expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+            for: 10m
+            labels:
+              severity: critical
+            annotations:
+              summary: Kubernetes Node not ready (instance {{ $labels.instance }})
+              description: "Node {{ $labels.node }} has been unready for a long time\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+          - alert: KubernetesJobFailed
+            expr: kube_job_status_failed > 0
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: Kubernetes Job failed (instance {{ $labels.instance }})
+              description: "Job {{$labels.namespace}}/{{$labels.exported_job}} failed to complete\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+```
+
+Once you've added the alerts you need, click `Deploy`.
+
+##### YAML Syntax
+
+Please be careful about the indentation used in your YAML, whilst configuring these alerts. Improper use of spaces will lead to an error.
+
+## Configuring Notifications[](#configuring-notifications "Direct link to heading")
+
+Once you have configured the alerts you'd like to use on your cluster, the next step is to configure `alertmanager` to deliver messages based on these alerting rules to a channel of your choice, typically Slack. In the steps below, we'll configure `alertmanager` use a Slack webhook for sending notifications.
+
+Inside the Helm values for the `prometheus` application, add the following block at the end:
+
+```
+alertmanagerFiles:
+  alertmanager.yml:
+    global:
+      slack_api_url: >-
+        <SLACK_WEBHOOK>
+    receivers:
+      - name: slack-notifications
+        slack_configs:
+          - channel: "#alerting-notifs"
+            text: >-
+              Note - {{ .GroupLabels.app }} is throwing a
+              {{.GroupLabels.alertname }} alert.
+    route:
+      receiver: slack-notifications
+
+```
+
+Here, `<SLACK_WEBHOOK>` is the incoming webhook `alertmanager` will use to push messages to your Slack organization, to a channel called `#alert-notifs` \- this channel can be named anything you'd like. After adding these details, click `Deploy`. More information on incoming webhooks and how to get started with them for your Slack team can be found on Slack's [official documentation](https://api.slack.com/messaging/webhooks#getting%5Fstarted).
+
+## Common alert configurations[](#common-alert-configurations "Direct link to heading")
+
+This section lists some common alerting rules that help notify you of issues at the cluster level. Do note that you can tweak the default values in these, and we do recommend experimenting with the thresholds and alerting windows in these samples, in order to find the best possible fit for your workloads.
+
+### `Node` Readiness[](#node-readiness "Direct link to heading")
+
+```
+- alert: KubernetesNodeReady
+    expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+    for: 10m
+    labels:
+      severity: critical
+    annotations:
+      summary: Kubernetes Node ready (instance {{ $labels.instance }})
+      description: "Node {{ $labels.node }} has been unready for a long time\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+```
+
+Node readiness issues typically arise when one or more nodes in your Kubernetes cluster are either not running, or are unresponsive. In such situations, it's useful to first navigate to the `Nodes` tab on your cluster dashboard, on Porter; this will give you an idea as to when the node became unavailable, and provide you with some information as to the cause. You can also access the cloud dashboard for the infrastructure provider running your cluster, in order to determine the actual cause in greater detail.
+
+### `Node` Memory Pressure[](#node-memory-pressure "Direct link to heading")
+
+```
+- alert: KubernetesMemoryPressure
+    expr: kube_node_status_condition{condition="MemoryPressure",status="true"} == 1
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: Kubernetes memory pressure (instance {{ $labels.instance }})
+      description: "{{ $labels.node }} has MemoryPressure condition\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+```
+
+Memory pressure errors typically mean that one or more of your nodes are running out of memory. In some cases, this can be handled automatically by the cluster autoscaler, which will add more nodes to your cluster, in order to accommodate workloads whose resource requests can't fit with existing nodes. But it's a good idea to keep an eye on this alert - if raised frequently, it might be due to a resource leak within your workload(s).
+
+### `Pod` CPU Throttling[](#pod-cpu-throttling "Direct link to heading")
+
+```
+- alert: PodCPUThrottling
+    expr: 100 * sum by(container_name, pod_name, namespace) (increase(container_cpu_cfs_throttled_periods_total{container_name!=""}[5m])) / sum by(container_name, pod_name, namespace) (increase(container_cpu_cfs_periods_total[5m])) > 25
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: Kubernetes Pod CPU throttled (instance {{ $labels.instance }})
+      description: "{{ $labels.pod }}'s CPU is throttled\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+```
+
+If set, this alert will be triggered when application `Pods` will see their CPU requests being throttled. This is typically a situation where you'd need to monitor your application logs, to understand the reasons behind constantly high CPU usage.
+
+### `Pod` Out-of-Memory(OOM) Errors[](#pod-out-of-memoryoom-errors "Direct link to heading")
+
+```
+- alert: KubernetesContainerOomKiller
+    expr: (kube_pod_container_status_restarts_total - kube_pod_container_status_restarts_total offset 10m >= 1) and ignoring (reason) min_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}[10m]) == 1
+    for: 0m
+    labels:
+      severity: warning
+    annotations:
+      summary: Kubernetes container oom killer (instance {{ $labels.instance }})
+      description: "Container {{ $labels.container }} in pod {{ $labels.namespace }}/{{ $labels.pod }} has been OOMKilled {{ $value }} times in the last 10 minutes.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+```
+
+This alert is triggered when your application `Pod` runs out of memory. The quickest fix is to increase the amount of RAM allocated to the `Pod`, but frequent instances of this alert could point towards a generalised memory leak in your code.
+
+### Kubernetes `Job` Failures[](#kubernetes-job-failures "Direct link to heading")
+
+```
+- alert: KubernetesJobFailed
+    expr: kube_job_status_failed > 0
+    for: 0m
+    labels:
+      severity: warning
+    annotations:
+      summary: Kubernetes Job failed (instance {{ $labels.instance }})
+      description: "Job {{$labels.namespace}}/{{$labels.exported_job}} failed to complete\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+```
+
+If any jobs set up on Porter fail due to a misconfiguration, or an application-specific error, this alert will be triggered. Viewing the job logs for that particular run on the Porter dashboard will give you significant insight into the reasons behind the failure.
+
+### `Pod` `CrashLoopBackoff` Errors[](#pod-crashloopbackoff-errors "Direct link to heading")
+
+```
+- alert: KubernetesPodCrashLooping
+    expr: increase(kube_pod_container_status_restarts_total[1m]) > 3
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: Kubernetes pod crash looping (instance {{ $labels.instance }})
+      description: "Pod {{ $labels.pod }} is crash looping\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+```
+
+Application `Pods` experience `CrashLoopBackoff` errors when the application tries to boot up and exits with an error code - this error is raised if this happens more than three times. Debugging such errors would require checking the `Events` tab on your application dashboard on Porter; each `CrashLoopBackoff` event's logs will be available there, giving you information on what caused your app to crash.
+
+### Stuck `CronJobs`[](#stuck-cronjobs "Direct link to heading")
+
+```
+- alert: KubernetesCronjobTooLong
+    expr: time() - kube_cronjob_next_schedule_time > 3600
+    for: 0m
+    labels:
+      severity: warning
+    annotations:
+      summary: Kubernetes CronJob too long (instance {{ $labels.instance }})
+      description: "CronJob {{ $labels.namespace }}/{{ $labels.cronjob }} is taking more than 1h to complete.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+```
+
+This alert is triggered when a `CronJob` runs for more than an hour, which could be because the job is stuck. Checking the logs for these jobs on the Porter dashboard will allow you to understand the reasons behind such jobs.

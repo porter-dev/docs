@@ -1,0 +1,97 @@
+---
+title: "Upgrading EKS"
+---
+
+At a broad level, upgrading a Porter-provisioned EKS cluster involves the following main steps:
+
+1. Upgrading the EKS control plane
+2. Updating the launch configuration for the cluster's autoscale groups to use a new EKS AMI
+3. Refreshing the instances in the cluster to use the new AMI
+
+##### Application Downtime
+
+Please note - this process may incur downtime for a couple of minutes at the end, as your cluster's nodes are switched out for newer nodes - at this stage, Kubernetes will be responsible for switching your applications to working nodes, which may render them inaccessible for a few minutes.
+
+## Upgrading the EKS control plane[](#upgrading-the-eks-control-plane "Direct link to heading")
+
+To upgrade the cluster's control plane, navigate to the EKS dashboard on your AWS account, and for the cluster in question, click on `Update now`, in the `Kubernetes version` column.
+
+![step-1](/images/other/cluster-upgrades/154793461-042ffd02-e463-43c3-bc83-05e33bbc7dde.png)
+
+![step-2](/images/other/cluster-upgrades/154793466-9707d5fd-688b-49ce-bf41-b7a5a2825556.png)
+
+This process may take 20-30 minutes; you can check whether the upgrade's finished by hitting the Refresh button above your cluster list. Once the cluster's version is successfully upgraded, you can proceed to the next step.
+
+## Modifying launch groups[](#modifying-launch-groups "Direct link to heading")
+
+Porter-provisioned EKS clusters make use of AWS autoscaling groups, which take care of ensuring your clusters have the resources they need to run your applications. The next step in the upgrade process involves modifying the launch configurations used by your cluster's autoscaling groups, to use a new AMI containing the Kubernetes version you're upgrading to. 
+
+### Install the AWS CLI[](#install-the-aws-cli "Direct link to heading")
+
+We need the AWS CLI v2 to retrieve the AMI ID we need to seed in our launch configurations. If you don't have the CLI installed, please follow the links below specific to your platform for installing and configuring the CLI:
+
+* [Installing the CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+* [Configuring the CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)
+
+Next, run the following command to retrieve the AMI ID; replace `K8S_VERSION` with the Kubernetes version you need, and `AWS_REGION` with the region your cluster is placed in:
+
+```
+$ aws ssm get-parameter --name /aws/service/eks/optimized-ami/<K8S_VERSION>/amazon-linux-2/recommended/image_id --region <AWS_REGION> --query "Parameter.Value" --output text
+
+```
+
+![step-three](/images/other/cluster-upgrades/154793468-128cffb1-6ff2-4fcf-9966-13e09256a139.png)
+
+Running this gives you an AMI ID, which you should save for later.
+
+![step-four](/images/other/cluster-upgrades/154793472-640eed03-525e-467a-bf77-cf0abcb86e79.png)
+
+### Updating launch configurations[](#updating-launch-configurations "Direct link to heading")
+
+Navigate to the `Auto Scaling groups` in the EC2 dashboard, and locate the autoscaling groups used by your cluster - they'll contain the cluster's name in them. First we'll modify the launch configuration for the autoscaling group used by system nodes - that's the group where `Instances` is set to `2`. Click on the launch template/configuration assigned to that autoscaling group:
+
+![step-five](/images/other/cluster-upgrades/154793477-d1527717-fcd2-430f-91ab-93dc8a20c0d0.png)
+
+In the screen that opens up, select `Modify template (Create new version)` from the `Actions` menu:
+
+![step-six](/images/other/cluster-upgrades/154793482-e76aec5e-8f84-415c-af41-4633e1268b34.png)
+
+Now, scroll down to the `Application and OS Images` section, and paste the AMI ID you retrieved earlier.
+
+![step-seven](/images/other/cluster-upgrades/154793490-eb2dd83c-bd0d-4258-8b1c-199b328e2fbd.png)
+
+In the search results that pop up, go to the `Community AMIs` section and select the single AMI displayed there:
+
+![step-eight](/images/other/cluster-upgrades/154793499-dbe7b825-f7b5-4eef-9ad6-c46013d7c8e7.png)
+
+This takes you right back to the launch configuration modification screen - ensure that the AMI has indeed changed.
+
+![step-nine](/images/other/cluster-upgrades/154793502-3c1e7f07-f470-47cd-9891-8faef45f52f8.png)
+
+Now scroll to the bottom and click `Create template version`.
+
+![step-ten](/images/other/cluster-upgrades/154793504-b7f96395-f147-4939-9775-978161b4a0ba.png)
+
+Now you need to go back to the launch configuration you just modified, and set the new template as the default version. After going back to the launch configuration, select `Set default version` from the `Actions menu`, and in the popup that appears, set the version you just created as the default version.
+
+![step-eleven](/images/other/cluster-upgrades/154793513-653a6577-e2c8-46d1-83a0-d97147c9641c.png)
+
+![step-twelve](/images/other/cluster-upgrades/154793516-2a1a1af1-8ffc-4d91-b974-e1ada175962f.png)
+
+And that's it! Repeat these steps for the second autoscaling group, using the same AMI ID, and your launch configurations will be updated.
+
+## Refreshing instances[](#refreshing-instances "Direct link to heading")
+
+The last step in the upgrade process involves refreshing your autoscaling groups to run new instances, based on the latest versions of the launch configurations we modified; the autoscaling groups provision new instances and swap out older nodes running the older Kubernetes version in your cluster, for the newer nodes with the new Kubernetes version.
+
+To get started, navigate back to the `Auto Scaling groups` section on the EC2 dashboard, and click on the name of the autoscaling group where `Instances` is set to `2` \- that's for system nodes, and we'll upgrade those nodes first. In the screen that opens up next, select the `Instance refresh` section, and click `Start instance refresh`.
+
+![step-thirteen](/images/other/cluster-upgrades/154793520-3477a95c-6d28-4964-9e46-165cd0b5ee15.png)
+
+Now, scroll down and expand the `Desired configuration` section. In the options that appear, ensure that `Update launch template` is selected, and that the version of the launch configuration you created with the new AMI, is selected in the `Version` dropdown. Then click `Start instance refresh`.
+
+![step-fourteen](/images/other/cluster-upgrades/154793522-07e34a19-c0af-4285-bed1-56430ef395ae.png)
+
+This triggers a refresh for the system nodes in your cluster, and you can monitor the status of the refresh by clicking the `Refresh` button. This process can take up to 15 minutes; once it's complete, you can move on and repeat the same procedure for the other autoscaling group.
+
+![step-fifteen](/images/other/cluster-upgrades/154793524-f62fd76e-dd20-47e3-b3b7-5644514ec3d0.png)

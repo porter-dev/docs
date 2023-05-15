@@ -1,0 +1,251 @@
+---
+title: "Provisioning on AWS"
+---
+
+## Quick Installation[](#quick-installation "Direct link to heading")
+
+Porter runs on a Kubernetes cluster in your own AWS account. You can provision a cluster through Porter by inputting the credentials of your AWS IAM account. You can also delete all resources provided by Porter with one-click.
+
+<Info>Quick Installation uses **AdministratorAccess** permissions to set up Porter. You can optionally specify the minimum IAM policies for provisioning a cluster and registry.</Info>
+
+1. To create a new user, go to your [AWS console](https://console.aws.amazon.com) and navigate to **IAM** \-> **Users** and select **Add user**:
+
+![AWS add user](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/e2f49c37-aa1d-486a-97ff-59d1d2b4b200/large "Screen Shot 2020-12-30 at 1.01.49 PM.png")
+
+  
+2. Give your user a name and select **Programmatic access**. After selecting **Next**, you will be prompted to set permissions for your user, choose **Attach existing policies directly** and select the **AdministratorAccess** policy:
+
+![AdministratorAccess policy attachment](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/df55b6f8-03ce-423a-90bb-23dc44a99200/large "Screen Shot 2020-12-30 at 1.08.07 PM.png")
+
+Optionally, if you don't want to grant Porter **AdministratorAccess**, you can follow these additional steps to configure the minimum required policy **(otherwise, skip to step 3).**
+
+### Permissions for EKS[](#permissions-for-eks "Direct link to heading")
+
+To instead specify the minimum required policy, select **Attach existing policies directly**, and click on **Create Policy**.
+
+![Minimum required policy attachment](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/ff0e2116-aa0a-405d-a16e-80a1d7e94200/large "Screen Shot 2021-02-16 at 4.55.06 PM.png")
+
+You will be prompted to enter your custom policy. Click on the **JSON** tab.
+
+![Custom policy JSON](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/9633f6fa-6ce3-496f-3e96-042266592f00/large "Screen Shot 2021-02-16 at 5.00.00 PM.png")
+
+Copy and paste the below JSON to the field.
+
+**Last updated:** March 9th, 2023
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "VisualEditor0",
+      "Effect": "Allow",
+      "Action": [
+        "autoscaling:AttachInstances",
+        "autoscaling:CancelInstanceRefresh",
+        "autoscaling:CompleteLifecycleAction",
+        "autoscaling:CreateAutoScalingGroup",
+        "autoscaling:CreateLaunchConfiguration",
+        "autoscaling:CreateOrUpdateTags",
+        "autoscaling:DeleteAutoScalingGroup",
+        "autoscaling:DeleteLaunchConfiguration",
+        "autoscaling:DeleteLifecycleHook",
+        "autoscaling:DeleteTags",
+        "autoscaling:Describe*",
+        "autoscaling:DetachInstances",
+        "autoscaling:PutLifecycleHook",
+        "autoscaling:SetDesiredCapacity",
+        "autoscaling:StartInstanceRefresh",
+        "autoscaling:UpdateAutoScalingGroup",
+        "autoscaling:SuspendProcesses",
+        "ec2:AllocateAddress",
+        "ec2:AssignPrivateIpAddresses",
+        "ec2:Associate*",
+        "ec2:AttachInternetGateway",
+        "ec2:AttachNetworkInterface",
+        "ec2:AuthorizeSecurityGroupEgress",
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:CreateDefaultSubnet",
+        "ec2:CreateDhcpOptions",
+        "ec2:CreateEgressOnlyInternetGateway",
+        "ec2:CreateInternetGateway",
+        "ec2:CreateNatGateway",
+        "ec2:CreateNetworkInterface",
+        "ec2:CreateRoute",
+        "ec2:CreateRouteTable",
+        "ec2:CreateSecurityGroup",
+        "ec2:CreateSubnet",
+        "ec2:CreateTags",
+        "ec2:CreateVolume",
+        "ec2:CreateVpc",
+        "ec2:CreateVpcEndpoint",
+        "ec2:DeleteDhcpOptions",
+        "ec2:DeleteEgressOnlyInternetGateway",
+        "ec2:DeleteInternetGateway",
+        "ec2:DeleteNatGateway",
+        "ec2:DeleteNetworkInterface",
+        "ec2:DeleteRoute",
+        "ec2:DeleteRouteTable",
+        "ec2:DeleteSecurityGroup",
+        "ec2:DeleteSubnet",
+        "ec2:DeleteTags",
+        "ec2:DeleteVolume",
+        "ec2:DeleteVpc",
+        "ec2:DeleteVpnGateway",
+        "ec2:Describe*",
+        "ec2:DetachInternetGateway",
+        "ec2:DetachNetworkInterface",
+        "ec2:DetachVolume",
+        "ec2:Disassociate*",
+        "ec2:ModifySubnetAttribute",
+        "ec2:ModifyVpcAttribute",
+        "ec2:ModifyVpcEndpoint",
+        "ec2:ReleaseAddress",
+        "ec2:RevokeSecurityGroupEgress",
+        "ec2:RevokeSecurityGroupIngress",
+        "ec2:UpdateSecurityGroupRuleDescriptionsEgress",
+        "ec2:UpdateSecurityGroupRuleDescriptionsIngress",
+        "ec2:CreateLaunchTemplate",
+        "ec2:CreateLaunchTemplateVersion",
+        "ec2:DeleteLaunchTemplate",
+        "ec2:DeleteLaunchTemplateVersions",
+        "ec2:DescribeLaunchTemplates",
+        "ec2:DescribeLaunchTemplateVersions",
+        "ec2:GetLaunchTemplateData",
+        "ec2:ModifyLaunchTemplate",
+        "ec2:RunInstances",
+        "ecr:*",
+        "eks:CreateCluster",
+        "eks:DeleteCluster",
+        "eks:DescribeCluster",
+        "eks:ListClusters",
+        "eks:UpdateClusterConfig",
+        "eks:UpdateClusterVersion",
+        "eks:DescribeUpdate",
+        "eks:TagResource",
+        "eks:UntagResource",
+        "eks:ListTagsForResource",
+        "eks:CreateFargateProfile",
+        "eks:DeleteFargateProfile",
+        "eks:DescribeFargateProfile",
+        "eks:ListFargateProfiles",
+        "eks:CreateNodegroup",
+        "eks:DeleteNodegroup",
+        "eks:DescribeNodegroup",
+        "eks:ListNodegroups",
+        "eks:UpdateNodegroupConfig",
+        "eks:UpdateNodegroupVersion",
+        "events:PutRule",
+        "events:PutTargets",
+        "events:ListTargetsByRule",
+        "events:DescribeRule",
+        "events:DeleteRule",
+        "events:RemoveTargets",
+        "eks:AssociateEncryptionConfig",
+        "iam:AddRoleToInstanceProfile",
+        "iam:AttachRolePolicy",
+        "iam:CreateInstanceProfile",
+        "iam:CreateOpenIDConnectProvider",
+        "iam:CreateServiceLinkedRole",
+        "iam:CreatePolicy",
+        "iam:CreatePolicyVersion",
+        "iam:CreateRole",
+        "iam:DeleteInstanceProfile",
+        "iam:DeleteOpenIDConnectProvider",
+        "iam:DeletePolicy",
+        "iam:DeletePolicyVersion",
+        "iam:DeleteRole",
+        "iam:DeleteRolePolicy",
+        "iam:DeleteServiceLinkedRole",
+        "iam:DetachRolePolicy",
+        "iam:GetInstanceProfile",
+        "iam:GetOpenIDConnectProvider",
+        "iam:GetPolicy",
+        "iam:GetPolicyVersion",
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:List*",
+        "iam:PassRole",
+        "iam:PutRolePolicy",
+        "iam:RemoveRoleFromInstanceProfile",
+        "iam:TagOpenIDConnectProvider",
+        "iam:TagRole",
+        "iam:TagPolicy",
+        "iam:UntagRole",
+        "iam:UpdateAssumeRolePolicy",
+        "lambda:*",
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:DescribeLogGroups",
+        "logs:DeleteLogGroup",
+        "logs:ListTagsLogGroup",
+        "logs:PutLogEvents",
+        "logs:PutRetentionPolicy",
+        "kms:CreateAlias",
+        "kms:CreateGrant",
+        "kms:Get*",
+        "kms:CreateKey",
+        "kms:DeleteAlias",
+        "kms:DescribeKey",
+        "kms:GetKeyPolicy",
+        "kms:GetKeyRotationStatus",
+        "kms:Get*",
+        "kms:ListAliases",
+        "kms:ListResourceTags",
+        "kms:ScheduleKeyDeletion",
+        "kms:TagResource",
+        "kms:UntagResource",
+        "kms:EnableKeyRotation"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "VisualEditor1",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateAccessKey",
+        "iam:DeleteAccessKey",
+        "iam:ListAccessKeys",
+        "iam:CreateUser",
+        "iam:GetUser",
+        "iam:DeleteUser"
+      ],
+      "Resource": "arn:aws:iam::*:user/eks-node-drainer-*"
+    }
+  ]
+}
+
+```
+<Info>`kms:Get*` is only required if you have enabled KMS secret encryption whilst creating the cluster</Info>
+
+Click on **Create a Policy** and give it a name to create a custom policy.
+
+3. After creating the user, you will be shown an **Access key ID** and **Secret access key**. Copy both of these directly into Porter's AWS Credentials form along with your preferred AWS region:
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/756eaa57-c8a3-46af-963d-d0d0954a2a00/large)
+
+<Info>You can find your default AWS region by navigating to [console.aws.amazon.com](https://console.aws.amazon.com). After being automatically redirected, your region will appear at the start of the URL.</Info>
+
+After clicking **Continue**, you will be prompted to name your cluster and select the instance types you want to provision your cluster with. If you are uncertain about which instance type to select, please see [this answer](https://docs.porter.run/docs/provisioning-infrastructure#which-instance-type-should-i-select).
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/2bea5230-5450-4889-8cb3-b0c228f33300/large)
+
+Once you click **Provision Resources**, Porter will install all the requisite resources in your AWS account using the IAM credentials you have created. This may take up to 30 minutes.
+
+## Deleting Provisioned Resources[](#deleting-provisioned-resources "Direct link to heading")
+
+<Warning>Deleting resources on AWS via Porter may result in dangling resources. After clicking delete, please make sure to check your AWS console to see if all resources have properly been removed. You can remove any dangling resources via either the AWS console or the CLI.</Warning>
+
+Because it is difficult to keep track of all the resources created by Porter, we recommend that you delete all provisioned resources through Porter. This will ensure that you do not get charged on AWS for lingering resources.
+
+To delete resources, click on **Cluster Settings** from the **Cluster Dashboard**.
+
+![Delete cluster](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/834be6c2-1c3f-40b7-ed56-df806e324700/large "Screen Shot 2021-01-09 at 2.59.49 PM.png")
+
+Click **Delete Cluster** to remove the cluster from Porter and delete resources in your AWS console. It may take up to 30 minutes for these resources to be deleted from your AWS console.
+
+**Note that you can only delete cluster resources that have been provisioned via Porter.**
+
+![Delete cluster confirmation](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/413de009-7055-4066-dc88-c7ad81694500/large "Screen Shot 2021-01-09 at 3.02.07 PM.png")
+
+For a guide on how to delete the dangling resources, see [Deleting Dangling Resources](/other/deleting-dangling-resources).

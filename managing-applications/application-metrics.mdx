@@ -1,0 +1,92 @@
+---
+title: "Application Metrics"
+---
+
+Porter supports visualizing the several metrics for your applications and network. This is done by querying a Prometheus add-on deployed on your cluster.
+
+##### info
+
+If you do not see a **Metrics** tab for your application or cluster, follow the instructions for [manual setup](#manual-setup).
+
+## Application Metrics[](#application-metrics "Direct link to heading")
+
+### Viewing Application Metrics[](#viewing-application-metrics "Direct link to heading")
+
+Navigate to the "Applications" tab for a cluster. There will be a "Metrics" tab after you click on the application. Initially after deploying, these metrics will not show anything, but after about an hour, this tab should start to display the application resource usage:
+
+![Metrics View](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/1b312323-5682-47f8-53e4-f8f43e072900/large "Screen Shot 2021-05-14 at 2 53 21 PM")
+
+### Understanding Application Metrics[](#understanding-application-metrics "Direct link to heading")
+
+For each application metric, the metric is **summed across all instances of the application.** This means that if you have 10 replicas of an application running, the CPU and RAM usage will be summed across all 10 replicas. This also means that you may see temporary spikes in CPU/RAM usage as an application is re-deploying, as the re-deployment process will cause additional application instances to be running at the same time. To view the resource usage of individual instances of the application, you can filter your selection by clicking on the settings button:
+
+![Metrics Pod Selection](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/91d74c63-fcdd-47a0-7585-3f47d9dca600/large "Screen Shot 2021-05-14 at 2 53 56 PM")
+
+By default, the application metrics view can display three metrics:
+
+* **CPU** \-- the amount of CPU that your application is using.
+* **RAM** \-- the amount of memory in [**mebibytes (Mi)**](https://simple.wikipedia.org/wiki/Mebibyte). A mebibyte is roughly equivalent to 1.05 megabytes.
+* **Network Received Bytes** \-- the amount of bytes that was received by your application in **kibibytes**. A mebibyte is equivalent to 1.024 kilobytes.
+
+If autoscaling is enabled, several more options and metrics will be available:
+
+* If autoscaling is enabled, the CPU and Memory usage graphs will provide the option to "Show Autoscaling Threshold," which will show how close your usage is to the threshold where autoscaling is triggered. When the usage exceeds the threshold, the threshold will increase:
+
+![Autoscaling Threshold](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/4ad18150-e487-4b65-f8cd-dac18120ab00/large "Autoscaling Threshold")
+
+* There will be a display for how many replicas of your application are present at a given time:
+
+![Number of Replicas](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/9880d1a6-7780-414a-fb85-bc749fb9b800/large "Number of Replicas")
+
+## Networking Metrics[](#networking-metrics "Direct link to heading")
+
+### Viewing Networking Metrics[](#viewing-networking-metrics "Direct link to heading")
+
+Network metrics are available from the cluster dashboard: click on your cluster in the sidebar, and select the **Metrics** tab:
+
+![cluster-metrics](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/65d59fb5-53e2-4988-0c0d-875c5562dd00/large "cluster-metrics")
+
+### Understanding Networking Metrics[](#understanding-networking-metrics "Direct link to heading")
+
+The network metrics are displayed for each publicly exposed application. To change the application, the target application can be changed by clicking the settings button:
+
+![cluster-metrics](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/89f0d6e2-c422-4509-5122-2b5b2a5fcc00/large "cluster-metrics")
+
+The network metrics tab can display the following metrics:
+
+* **5XX Error Percentage**: the percentage of responses from the application which returned a `500`\-level status code.
+* **Request Latency (s)**: this will show the average request latency in seconds for the selected ingress.
+* **Percentile Response Times (s)**: this will show the p99, p95, or p50 (99th, 95th, and 50th percentile) response times. To change the displayed percentage, click on the settings tab.
+
+## Manual Setup[](#manual-setup "Direct link to heading")
+
+For clusters created **before April 16th, 2021** or clusters that have been linked manually, there may be some manual setup involved in order to view all metrics.
+
+### Deploying the Prometheus Addon[](#deploying-the-prometheus-addon "Direct link to heading")
+
+Navigate to **Launch > Community Add-ons > Prometheus** in order to install the Prometheus addon. No configuration settings are necessary to install this chart.
+
+![Install Prometheus](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/7f0eb01e-7756-4df6-7506-91c857d60300/large "Screen Shot 2021-05-14 at 2 41 34 PM")
+
+### Setting up Networking Metrics[](#setting-up-networking-metrics "Direct link to heading")
+
+By default, new Porter clusters will show the NGINX error percentage automatically, as long as Prometheus is installed. However, if you installed the cluster before April 16th, 2021, you will need to update the NGINX chart. Go to the **Applications** tab and select **All** for the Filter. You should click on the chart called `nginx-ingress` and click on the **DevOps Mode** button. Then click on the "Helm Values" tab. You can then copy/paste the following yaml into the values:
+
+```
+controller:
+  metrics:
+    annotations:
+      prometheus.io/port: "10254"
+      prometheus.io/scrape: "true"
+    enabled: true
+  podAnnotations:
+    prometheus.io/port: "10254"
+    prometheus.io/scrape: "true"
+
+```
+
+##### Don't Overwrite YAML
+
+Be careful not to overwrite existing yaml! You should merge any existing values with these values.
+
+Now click **Update Values**. After a few seconds it should have reloaded, and you will be able to view the networking metrics detailed above.

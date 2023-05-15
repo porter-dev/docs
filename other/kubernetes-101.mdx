@@ -1,0 +1,33 @@
+---
+title: "Kubernetes 101"
+---
+
+While Porter abstracts away the underlying complexity of Kubernetes, we've found that there are few core concepts that are useful to learn in order to make educated decisions about application configuration. If you are unsure what instance type you should provision your Kubernetes cluster with or how much resources you should assign to your applications, please read the sections below.
+
+## Resources[](#resources "Direct link to heading")
+
+Each Kubernetes cluster consists of underlying **nodes**. Nodes are basic compute instances (e.g. EC2 on AWS) on which your applications run. One Kubernetes cluster manages multiple nodes, and each node can run multiple applications. Kubernetes will intelligently allocate your applications on these nodes depending on how much resources each node has available.
+
+An application you deploy on Porter consists of one or multiple **pods.** Each pod is a replica of your application, and incoming requests will automatically be dispersed across all pods of your application. You can vertically scale each pod by allocating more resources, or horizontally scale them by adding more pods to your application.
+
+A useful analogy is to think of these nodes as buckets in which your pods are placed. You can fill up an entire bucket with just one big pod, or you can run multiple smaller pods on one node. You can assign however much resources you want to each pod, and Kubernetes will intelligently allocate them across the nodes. The only rule is that you cannot allocate more resources to a single pod than what is available on a single node - a bucket simply cannot fit a pod that is larger than itself.
+
+> **Takeaway:**
+> 
+> You cannot allocate more resources to a single pod than what is available on a single node. The instance type you choose when provisioning the cluster should be at least double the amount of resources you want to assign to a single pod.
+
+## Cluster Architecture[](#cluster-architecture "Direct link to heading")
+
+Regardless of which cloud provider it provisions in, each cluster provisioned by Porter consists of one load balancer. This load balancer sits in front of the cluster and forwards all traffic to an nginx-ingress-controller running inside the cluster that acts as a reverse proxy.
+
+Porter clusters also consist of two node groups: system and workloads. The system nodes run all components that are pre-installed by Porter, such as nginx-ingress-controller, cert-manager, prometheus, etc. The workload nodes run user deployed applications and autoscale based on resource usage.
+
+## FAQ[](#faq "Direct link to heading")
+
+### What is a namespace?[](#what-is-a-namespace "Direct link to heading")
+
+Namespaces are semantic partitions by which you can organize and divide your applications. It bares no significance in how your applications are actually run. It is strictly semantic - you can think of them as folders.
+
+### How do I set up multiple environments?[](#how-do-i-set-up-multiple-environments "Direct link to heading")
+
+The canonical way to set up development, staging, and production environments is to run each environment on a single cluster. This is necessary to completely isolate your environments from each other, as opposed to putting them on the same cluster that shares the same networking stack.

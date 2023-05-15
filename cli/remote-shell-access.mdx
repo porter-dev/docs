@@ -1,0 +1,70 @@
+---
+title: "Remote Shell Access to an Existing Application"
+---
+
+##### Prerequisites
+
+* You've logged in to the Porter CLI after running [porter auth login](/cli/command-reference/porter-auth)
+* You're connected to the correct project by running [porter config set-project](/cli/command-reference/porter-config)
+* You're connected to the correct cluster by running [porter config set-cluster](/cli/command-reference/porter-config)
+
+The `porter run` command allows users to execute a command on a remote container:
+
+```
+porter run [APP_NAME] -- [COMMAND] [args...]
+
+```
+
+The `APP_NAME` is the name of the application on the Porter dashboard (this can be a release either in the "Applications" or the "Jobs" tab).
+
+It can also cleanup residual instances of applications that may have been left behind as a result of a previous call to `porter run`:
+
+```
+porter run cleanup
+
+```
+
+You may learn more about ephemeral instances in the [Ephemeral Instances](#ephemeral-instances) section.
+
+## Examples[](#examples "Direct link to heading")
+
+If you have a release called `web`, and you would like to enter an interactive shell in the container attached to `web`:
+
+```
+porter run web -- sh
+
+```
+
+To test that remote execution is working, you can run:
+
+```
+porter run web -- echo "hello world"
+
+```
+
+To run in a namespace other than `default`, use the `--namespace` flag:
+
+```
+porter run web --namespace other-namespace -- sh
+
+```
+
+Running the above commands will spin up a copy of the release and in some cases, these copies might be left behind. This may not be ideal and hence, running the following command will help you clean them up:
+
+```
+porter run cleanup
+
+```
+
+To cleanup such copies of releases in other namespaces, use the `--namespace` flag:
+
+```
+porter run cleanup --namespace other-namespace
+
+```
+
+## Ephemeral Instances[](#ephemeral-instances "Direct link to heading")
+
+When you call `porter run` **without** the `-e` for remote shell access into an application, an exact copy of your application instance is created. These are called **ephemeral instances**. If you lose internet connection or unexpectedly terminate your shell session, the ephemeral instance might not be shut down immediately. In order to shut down these instances, a job runs on your cluster that deletes ephemeral instances **greater than 6 hours old**.
+
+To delete these ephemeral instances manually, you can run `porter run cleanup`.

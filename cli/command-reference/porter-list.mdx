@@ -1,0 +1,76 @@
+---
+title: "porter list"
+---
+
+##### Prerequisites
+
+* You've logged in to the Porter CLI after running [porter auth login](/cli/command-reference/porter-auth)
+* You're connected to the correct project by running [porter config set-project](/cli/command-reference/porter-config)
+* You're connected to the correct cluster by running [porter config set-cluster](/cli/command-reference/porter-config)
+
+  
+`porter list` lists applications, jobs or addons in a specific cluster and namespace.
+
+### `porter list all`[](#porter-list-all "Direct link to heading")
+
+To list all releases in the `default` namespace, simply run:
+
+```
+porter list all
+
+```
+
+To list all releases in a different namespace, run:
+
+```
+porter list all --namespace my-custom-ns
+
+```
+
+### `porter list applications`[](#porter-list-applications "Direct link to heading")
+
+To list applications in the `default` namespace, simply run:
+
+```
+porter list applications
+
+```
+
+To list applications in a different namespace, run:
+
+```
+porter list applications --namespace my-custom-ns
+
+```
+
+### `porter list jobs`[](#porter-list-jobs "Direct link to heading")
+
+To list jobs in the `default` namespace, run:
+
+```
+porter list jobs
+
+```
+
+To list jobs in a different namespace, run:
+
+```
+porter list jobs --namespace my-custom-ns
+
+```
+
+### `porter list addons`[](#porter-list-addons "Direct link to heading")
+
+To list addons in the `default` namespace, run:
+
+```
+porter list addons
+
+```
+
+To list addons in a different namespace, run:
+
+```
+porter list addons --namespace my-custom-ns
+
+```

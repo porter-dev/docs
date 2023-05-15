@@ -1,0 +1,49 @@
+---
+title: "Getting Started on Porter with Python"
+---
+
+In this tutorial-style guide, we will be deploying a sample Python app to Porter, using the [Django framework](https://www.djangoproject.com).
+
+##### Prerequisites
+
+To proceed further with this guide, you will need access to a [Porter account](https://dashboard.getporter.dev/register). You also need to setup your Porter account with Github in order to deploy the app. You may follow the [Adding/Updating the Porter Github App](/deploying-applications/deploying-from-github/adding-updating-gh-app#adding-the-porter-github-app) guide to do this.
+
+## Set up[](#set-up "Direct link to heading")
+
+Porter has a sample getting started Python app on Github at [porter-dev/python-getting-started](https://github.com/porter-dev/python-getting-started). If you look at the repository, you will find that it is a template repository which means that you can simply click on the **Use this template** button on the frontpage of the repository or navigate to [python-getting-started/generate](https://github.com/porter-dev/python-getting-started/generate) to generate a new repository based on this template.
+
+## Deploy app to Porter[](#deploy-app-to-porter "Direct link to heading")
+
+In the [Porter dashboard](https://dashboard.getporter.dev), go to the [Launch tab](https://dashboard.getporter.dev/launch).
+
+![Launch Tab 1](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/23edac0b-5f2f-4bfa-2025-edde7dda2400/large "Launch Tab - Choose a template")
+
+Click on **Web Service > Launch Template** and choose the **Git Repository** deployment method.
+
+![Launch Tab 2](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/16653bd5-67cc-4384-2351-d9f2b9edc600/large "Launch Tab - Choose deployment method")
+
+Choose the repository you generated in the **Set up** step. If you cannot find the repository from the search bar, make sure that you have given access to the Porter Github app. Refer to [Updating the Porter Github App](/deploying-applications/deploying-from-github/adding-updating-gh-app#updating-the-porter-github-app) to do this.
+
+![Launch Tab 3](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/0d50433c-3886-4337-2c45-5cbb6e15d900/large "Launch Tab - Choose git repository")
+
+Click on the **main** branch, then click on **Continue**. You will be presented with a screen that looks like the following.
+
+![Launch Tab 4](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/f09483f2-7ea0-407b-5335-cf6608dcae00/large "Launch Tab - Deployment information")
+
+Click on **Continue > Deploy**. This will start deploying your app to Porter after which you will be redirected to the applications view. Here you will be able to see your newly created app.
+
+![Applications View](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/8fd65d54-456a-41fc-ea11-26e1ce8ea000/large "Applications Tab - Newly created app")
+
+Click on the app in the applications view and you should be able to see the URL which will serve your newly created Python app.
+
+![App URL](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/f620e64e-89f9-4534-4997-df3a021e8300/large "Newly created app")
+
+Once the app is successfully deployed, navigate to the URL as above and you should see something like the following.
+
+![Python App](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/3f2b375f-f381-4d98-4b91-c81be4facc00/large "Successfully deployed Python app")
+
+**Congratulations!** You just deployed your first Python app on Porter!
+
+## Next steps[](#next-steps "Direct link to heading")
+
+Now that you have deployed your first app on Porter, feel free to make changes to the git repository that you created from [porter-dev/python-getting-started](https://github.com/porter-dev/python-getting-started) and push updates to your Porter app. You should also check out the documentation for some of the advanced topics.

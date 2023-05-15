@@ -1,0 +1,49 @@
+---
+title: "random-string"
+---
+
+This preview environments driver can be used to generate random strings of any length. The [config](/preview-environments/porter-yaml-reference#resourceconfig) section, when using this driver, supports the following properties:
+
+* `length` \[`Integer`, optional\] \- the length of the random string to generate. Defaults to 8.
+* `lower` \[`Boolean`, optional\] \- whether to generate string with only lowercase alphabets. Defaults to false.
+
+For example, to generate a random string of length 12 with only lowercase alphabets:
+
+```
+---
+resources:
+  - name: my-random-value
+    driver: random-string
+    config:
+      length: 12
+      lower: true
+
+```
+
+This may generate a value like `bghawfdkowlk`
+
+### Outputs[](#outputs "Direct link to heading")
+
+This driver outputs the generated random string using the `value` identifier. For instance, in the above example, the generated string can be used inside of another resource as follows:
+
+```
+---
+resources:
+  - name: my-random-value
+    driver: random-string
+    config:
+      length: 12
+      lower: true
+  - name: my-deployment
+    depends_on:
+      - my-random-value
+    source:
+      name: web
+    config:
+      values:
+        container:
+          env:
+            normal:
+              MY_RANDOM_VALUE: "{ .my-random-value.value }"
+
+```

@@ -1,0 +1,74 @@
+---
+title: "Setup"
+---
+
+## Enable Preview Environments for your Cluster[](#enable-preview-environments-for-your-cluster "Direct link to heading")
+
+To enable preview environments for your cluster, navigate to the [cluster dashboard](https://dashboard.getporter.dev/cluster-dashboard). If preview environments are enabled for your project, you will see the first tab of the cluster listed as **Preview Environments**. Click **Enable Preview Environments** to enable them for your cluster.
+
+## Enable Preview Environments for your Repository[](#enable-preview-environments-for-your-repository "Direct link to heading")
+
+Next, you should enable preview environments for your specific repository. To do this, click on the **Add Repository** button and select the repository that you wish to enable preview environments in. If you're not seeing the correct list of repositories, follow the instructions [here](/deploying-applications/deploying-from-github/adding-updating-gh-app#updating-the-porter-github-app) to add your repository. Then, click **Add Repository** again, and preview environments will be enabled for your repository.
+
+##### info
+
+To remove preview environments from a repository, click on the **Configure** button, which will pull up a list of the repositories where preview environments are currently enabled. Click on the delete icon next to the repository to remove the integration.
+
+## Create a `porter.yaml` File[](#create-a-porteryaml-file "Direct link to heading")
+
+The last step is to create a `porter.yaml` file for your application. This file specifies the list of applications and addons that you'd like to deploy, and the build configuration settings for your application. Here's an example `porter.yaml` file:
+
+```
+# The YAML reference version: v1 is the only option for now
+version: v1
+
+# A list of resources to create
+resources:
+  - # The name of this resource
+    name: example
+
+    # The source for this repository. Defaults to the web, worker, and job applications by default.
+    source:
+      name: web
+
+    # The configuration for the application or addon.
+    config:
+      # The build configuration for the application.
+      build:
+        method: pack
+      # The runtime configuration for the application.
+      values:
+        container:
+          command: go-getting-started
+          port: 8080
+          env:
+            normal:
+              BPE_PORT: "8080"
+
+```
+
+Now that the repository has been added and the `porter.yaml` file has been created, new PRs created will trigger a new preview environment, and updates to that PR will re-build and re-deploy the environment. Each time the preview environment is deployed, a Github comment will be added to the PR indicating the URL that the PR is deployed on:
+
+![Bot Comment](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/76356cd8-8e9c-4189-00f2-6b96aa19b200/large "Bot Comment")
+
+## Github App Permissions[](#github-app-permissions "Direct link to heading")
+
+If you previously installed the Porter Github App in your Github account, you will receive an email requesting updated permissions for the Github app. **If you do not wish to test preview environments at this time, you can ignore this email**. The existing Porter Github App will still work.
+
+This section details the **updated permissions** that the Porter Github App is requesting.
+
+##### info
+
+To see the full list of requested permissions, go [here](/deploying-applications/deploying-from-github/adding-updating-gh-app#porter-github-app-permissions).
+
+### Repository permissions[](#repository-permissions "Direct link to heading")
+
+**Administration (Read & write):** required for Porter to create a new Github environment called `Preview` for deployments. The administration API isn't used otherwise.
+
+**Deployments (Read & write):** required for Porter to request Github deployments to the `Preview` environment.
+
+**Environments (Read & write):** required for Porter to create a new Github environment called `Preview` for deployments.
+
+**Pull Requests (Read & write):** required for Porter to add comments to Github PRs.
+
+**Webhooks (Read & write):** required for Porter to listen to changes to PRs.

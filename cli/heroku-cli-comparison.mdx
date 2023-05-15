@@ -1,0 +1,22 @@
+---
+title: "Comparison with the Heroku CLI"
+---
+
+Following is the one-to-one comparison of some of the commands supported by the Heroku CLI and their nearest Porter counterparts.
+
+| Heroku                | Porter                                                                                  |
+| --------------------- | --------------------------------------------------------------------------------------- |
+| heroku addons         | [porter list addons](/cli/command-reference/porter-list#porter-list-addons)             |
+| heroku addons:create  | [porter create](/cli/command-reference/porter-create)                                   |
+| heroku addons:destroy | [porter delete addon](/cli/command-reference/porter-delete#porter-delete-addon)         |
+| heroku apps           | [porter list applications](/cli/command-reference/porter-list#porter-list-applications) |
+| heroku apps:create    | [porter create](/cli/command-reference/porter-create)                                   |
+| heroku apps:destroy   | [porter delete app](/cli/command-reference/porter-delete)                               |
+| heroku auth:login     | [porter auth login](/cli/command-reference/porter-auth)                                 |
+| heroku auth:logout    | [porter auth logout](/cli/command-reference/porter-auth)                                |
+| heroku auth:token     | [porter config](/cli/command-reference/porter-config)                                   |
+| heroku config:set     | [porter update env-group set](/cli/command-reference/porter-update)                     |
+| heroku config:set     | [porter update env-group unset](/cli/command-reference/porter-update)                   |
+| heroku logs           | [porter logs](/cli/command-reference/porter-logs)                                       |
+| heroku ps:forward     | [porter kubectl -- port-forward](/cli/command-reference/porter-kubectl)                 |
+| heroku run            | [porter run -e](/cli/command-reference/porter-run)                                      |

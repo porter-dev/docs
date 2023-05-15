@@ -1,0 +1,93 @@
+---
+title: "os-env"
+---
+
+This preview environments driver can be used to read environment variables that contain the prefix `PORTER_APPLY_`.
+
+For example, to read in all the environment variables that start with `PORTER_APPLY_`:
+
+```
+---
+resources:
+  - name: my-os-env
+    driver: os-env
+
+```
+
+### Outputs[](#outputs "Direct link to heading")
+
+This driver outputs all the environment variables that start with `PORTER_APPLY_`. This means that if an environment variable is named `PORTER_APPLY_my_secret`, this driver will output a `my_secret` identifier:
+
+```
+---
+resources:
+  - name: my-os-env
+    driver: os-env
+  - name: my-deployment
+    depends_on:
+      - my-os-env
+    source:
+      name: web
+    config:
+      values:
+        container:
+          env:
+            normal:
+              MY_SECRET_VALUE: "{ .my-os-env.my_secret }"
+
+```
+
+### Example GitHub workflow file[](#example-github-workflow-file "Direct link to heading")
+
+To use this driver from inside the preview env workflow file in your GitHub repository, you may add the environment variables prefixed with `PORTER_APPLY_` in the `Create Porter preview env` step's `env` section as follows:
+
+```
+"on":
+  workflow_dispatch:
+    inputs:
+      pr_branch_from:
+        description: Pull request head branch
+        required: true
+        type: string
+      pr_branch_into:
+        description: Pull request base branch
+        required: true
+        type: string
+      pr_number:
+        description: Pull request number
+        required: true
+        type: number
+      pr_title:
+        description: Pull request title
+        required: true
+        type: string
+name: Porter Preview Environment
+jobs:
+  porter-preview:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2.3.4
+    - name: Create Porter preview env
+      timeout-minutes: 30
+      uses: porter-dev/porter-preview-action@v0.2.0
+      with:
+        action_id: ${{ github.run_id }}
+        cluster: "1"
+        host: https://dashboard.getporter.dev
+        installation_id: "00000000"
+        namespace: pr-${{ github.event.inputs.pr_number }}-my-super-app
+        pr_branch_from: ${{ github.event.inputs.pr_branch_from }}
+        pr_branch_into: ${{ github.event.inputs.pr_branch_into }}
+        pr_id: ${{ github.event.inputs.pr_number }}
+        pr_name: ${{ github.event.inputs.pr_title }}
+        project: "1"
+        repo_name: my-super-app
+        repo_owner: porter-user
+        token: ${{ secrets.PORTER_TOKEN_1 }}
+      env:
+        PORTER_APPLY_my_secret: "my_secret"
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.event.inputs.pr_number }}
+
+```

@@ -1,0 +1,80 @@
+---
+title: "Selecting an Application and Build Method"
+---
+
+To deploy your application, first navigate to the "Launch" tab, where you will see three types of applications to deploy: web, worker, or job. To understand the difference between these three application types, see the description of the [types of applications](/deploying-applications/overview#types-of-applications). Then follow the four steps below to get your application linked up.
+
+## Selecting an Application and Build Method[](#selecting-an-application-and-build-method "Direct link to heading")
+
+### Step 1: Selecting an application[](#step-1-selecting-an-application "Direct link to heading")
+
+After selecting an application type and clicking "Launch template," you should see two options for launching your application: **Git Repository** and **Docker Registry**. Select **Git Repository**. You should then be able to search for your connected repositories: if you are not seeing your desired repository, see the [Adding/Updating the Porter Github App](/deploying-applications/deploying-from-github/adding-updating-gh-app) guide.
+
+### Step 2: Selecting a Branch[](#step-2-selecting-a-branch "Direct link to heading")
+
+Once you click on a repository, you will be asked to select a branch for that repository. This branch is **the source branch where you want your application to be deployed from on pushes to that branch.** For example, if you are setting up a production cluster, you might want your applications to be deployed on pushes to the `production` branch. If your branches are protected using Github's branch protection rules, see the [working with protected branches](#working-with-protected-branches) section below.
+
+### Step 3: Selecting a Build Method[](#step-3-selecting-a-build-method "Direct link to heading")
+
+After you select a branch, you will see your repository contents listed. What you select in this case depends on if you already have a Dockerfile, or if you'd like for Porter to detect and build your application automatically using a buildpack.
+
+<Tabs>
+<Tab title="Dockerfile">
+If you already have a Dockerfile, you should locate the Dockerfile in your repository and select it. Once you click on the Dockerfile, you will be asked if you'd like to set the Docker build context to a different directory.
+<Card title="Docker Build Context">
+The Docker build context is the current working directory of your Dockerfile -- in other words, where your Dockerfile assumes your application should be built from. For example, if your application code and entrypoint exist in the root of your repository, but your Dockerfile exists under the path `./docker/Dockerfile`, you should select the root of the repository as the Docker build context.
+</Card>
+Once you have selected a Dockerfile and your Docker build context, clicking **Continue** will bring you your application's runtime configuration section. See [step 4](#step-4-deploy-your-application) for details.
+</Tab>
+<Tab title="Buildpack">
+If you do not have a Dockerfile, Porter can detect and build your application automatically. First, select the path to your application directory, and then select **Continue**.
+<Card title="Procfile Support">
+If you have a `Procfile` in the root of your repository, Porter will detect this and ask which process you'd like to run for your application. Porter will not run all processes in the Procfile per application: it will only run a single process.
+</Card>
+After this step, you will see a summary of your selected settings, with an unexpanded **Buildpack Settings** section. If you expand this section, you will see the runtime that Porter detected automatically, along with the builder that Porter will use. For example:
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/1fe0f6bf-a38c-4335-2062-9850c023cc00/large)
+
+By default, Porter uses the `Heroku-20` stack to build your application. Documentation for common runtimes can be found here:
+
+| Buildpack                                                                        | Requirements                                                         |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [Ruby](https://elements.heroku.com/buildpacks/heroku/heroku-buildpack-ruby)      | [Requirements](https://devcenter.heroku.com/articles/ruby-support)   |
+| [Node.js](https://elements.heroku.com/buildpacks/heroku/heroku-buildpack-nodejs) | [Requirements](https://devcenter.heroku.com/articles/nodejs-support) |
+| [Python](https://elements.heroku.com/buildpacks/heroku/heroku-buildpack-python)  | [Requirements](https://devcenter.heroku.com/articles/python-support) |
+| [Java](https://elements.heroku.com/buildpacks/heroku/heroku-buildpack-java)      | [Requirements](https://devcenter.heroku.com/articles/java-support)   |
+| [PHP](https://elements.heroku.com/buildpacks/heroku/heroku-buildpack-php)        | [Requirements](https://devcenter.heroku.com/articles/php-support)    |
+| [Go](https://elements.heroku.com/buildpacks/heroku/heroku-buildpack-go)          | [Requirements](https://devcenter.heroku.com/articles/go-support)     |
+
+For understanding how to customize your buildpack settings, see the [customizing buildpacks](#customizing-buildpacks) section of the docs.
+
+</Tab>
+</Tabs>
+
+### Step 4: Deploy your Application[](#step-4-deploy-your-application "Direct link to heading")
+
+The last step is to set the runtime configuration for your application, and deploy it to your Porter cluster! This configuration varies by application type -- for example, for web applications you can set the port that the application should be listening on, whether to expose this application to external traffic on a custom domain, and override the start command. For a detailed explanation of these configuration options for each application type, see the following guides:
+
+* [Web Applications](/deploying-applications/runtime-configuration-options/web-applications)
+* [Worker Applications](/deploying-applications/runtime-configuration-options/worker-applications)
+* [Jobs and Cron Jobs](/running-jobs/overview)
+
+After clicking **Deploy**, you can navigate to your application, your deployment will use a placeholder Docker image until the Github Action that deploys your application has completed for the first time:
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/4fba0ab7-bb80-4b82-452f-818909a79d00/large)
+
+You can monitor the status of the generated GitHub Action by checking the **Actions** tab in your linked repository.
+
+## Working with Protected Branches[](#working-with-protected-branches "Direct link to heading")
+
+At the moment, it is recommended that you turn off the branch protection rule so that Porter can write the file to the repository, and then turn it back on immediately afterwards. Porter will have built-in support for working with protected branches in a future version.
+
+## Customizing Buildpacks[](#customizing-buildpacks "Direct link to heading")
+
+Porter has built-in support `Heroku` and `Paketo` builders. The `Heroku` builder can use either the [Heroku-18](https://devcenter.heroku.com/articles/heroku-18-stack) stack or the [Heroku-20](https://devcenter.heroku.com/articles/heroku-20-stack), while the `Paketo` builder uses the [Paketo Full Builder](https://paketo.io/docs/concepts/builders/#full) to build your application. If your application fails to build using one builder, it is recommended that you attempt the other builders which may detect configuration parameters slightly differently.
+
+If Porter detects the runtime for your application, it will always use the detected buildpack to build your application. If your application requires multiple buildpacks (for example, a `rails` app that uses `npm` to compile static assets), you can add multiple buildpacks to the configuration that will be attempted.
+
+If your runtime isn't supported in any of these builders, you can input the URL to an open-source buildpack hosted on a public Github repository.
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/5435c6ce-4dd1-4c41-3b07-931373df7a00/large)

@@ -1,0 +1,61 @@
+---
+title: "Custom Domains"
+---
+
+The setup for a custom domain involves two steps: setting up a DNS record to point to that domain, and then deploying your application to deploy to that domain:
+
+* [DNS Setup](#dns-setup)
+* [Deploy your Application](#deploying-on-the-custom-domain)
+
+## DNS Setup[](#dns-setup "Direct link to heading")
+
+You must first find the DNS name assigned to the load balancer of your cluster. This can be found by navigating to the Porter dashboard and copying the load balancer address:
+
+![Ingress IP Address](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/cc2161bb-b885-4923-934b-0cd9f45dad00/large "Ingress IP Address")
+
+If you're on Digital Ocean or Google Cloud Platform, this will be an IP address -- see [DO/GCP section](#digital-oceangoogle-cloud-platform) for setup. If you're on AWS, this will be a domain name to your load balancer -- see the [AWS section](#amazon-web-services) for setup.
+
+### Digital Ocean/Google Cloud Platform[](#digital-oceangoogle-cloud-platform "Direct link to heading")
+
+On Digital Ocean and GCP Kubernetes clusters, the load balancer address copied above will be an IP address. Thus, you can simply create an `A` record for your domain/subdomain and point it to this IP address. Once DNS has propagated, you can now [deploy your application using the custom domain](#deploying-on-the-custom-domain)!
+
+<Info>After you complete the previous steps, it might take up to 30 minutes for DNS records to fully propagate. Please wait before deploying your applications until the DNS propagation is complete. You can check this using tools like [dnschecker.org](https://dnschecker.org) or running `nslookup <your-domain>`.</Info>
+
+### Amazon Web Services[](#amazon-web-services "Direct link to heading")
+
+On EKS, the load balancer will be a domain name, rather than an IP address. The next steps depend on whether you are setting up a domain apex (i.e. root domain) or a subdomain:
+
+<Tabs>
+  <Tab title="Apex Domain">
+Because AWS creates a load balancer that is assigned a domain name, rather than an IP address, you must use a DNS provider which allows for `ALIAS` records, since `CNAME` records are not supported for apex domains. Create an `ALIAS` record for your root domain which points to the load balancer address that you copied above.
+
+If you've purchased your domain through a service like GoDaddy or Namecheap that does not support `ALIAS` records, we recommend that you switch your service to Route 53: please follow [this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html) to manage your existing domains with Route 53, and then see the instructions below for Route 53 setup.
+
+#### Route 53 Instructions[](#route-53-instructions "Direct link to heading")
+
+When creating a new record, leave the Record name empty and select the **Alias to Network Load Balancer** option. After you choose the region your EKS cluster is provisioned in, you will be able to select the URL you've copied from Step 2 from the dropdown menu. Set Record type as **A record** and create the record.
+
+![A Record](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/90f234e2-30f0-463a-8334-fb68cce1b900/large "Screen Shot 2021-01-18 at 6.56.04 PM.png")
+
+  </Tab>
+  <Tab title="Subdomain">
+Create a `CNAME` record on your DNS provider for your desired subdomain, which points to the load balancer URL you have copied above. Make sure you exclude the protocol `http://` and any trailing `/` from the URL string. For example, on Route 53, this looks like the following:
+
+![CNAME record](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/be14bc42-4f63-4d3b-d0eb-5d4d71438700/large "CNAME record")
+
+  </Tab>
+</Tabs>
+
+Once DNS has propagated, you can now [deploy your application using the custom domain](#deploying-on-the-custom-domain)!
+
+<Info>After you complete the previous steps, it might take up to 30 minutes for DNS records to fully propagate. Please wait before deploying your applications until the DNS propagation is complete. You can check this using tools like [dnschecker.org](https://dnschecker.org) or running `nslookup <your-domain>`.</Info>
+
+## Deploying on the Custom Domain[](#deploying-on-the-custom-domain "Direct link to heading")
+
+To deploy an application on the domain, make sure the **Expose to external traffic** option is set add your domain in the **Configure Custom Domain** section, as follows:
+
+![Custom Domain Deployment](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/6e4fd4ab-2994-4bc0-4455-e328d5c60100/large "Custom Domain Deployment")
+
+That's it! Your application should be running on your custom domain within a few minutes.
+
+<Info>If you experience SSL certificate errors, see the [SSL Certificates](/deploying-applications/https-and-domains/ssl-certificates) doc for debugging SSL certificate errors.</Info>

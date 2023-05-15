@@ -1,0 +1,115 @@
+---
+title: "porter update"
+---
+
+##### info
+
+A detailed guide on updating applications from the CLI can be found [here](/deploying-applications/deploying-from-cli/updating-an-application).
+
+##### Prerequisites
+
+* You've logged in to the Porter CLI after running [porter auth login](/cli/command-reference/porter-auth)
+* You're connected to the correct project by running [porter config set-project](/cli/command-reference/porter-config)
+* You're connected to the correct cluster by running [porter config set-cluster](/cli/command-reference/porter-config)
+
+## Applications[](#applications "Direct link to heading")
+
+`porter update` builds and updates a specified application given by the `--app` flag. For example:
+
+```
+porter update --app example-app
+
+```
+
+### Examples[](#examples "Direct link to heading")
+
+This command will automatically build from a local path. The path can be configured via the `--path` flag. You can also overwrite the tag using the `--tag` flag. For example, to build from the local directory `~/path-to-dir` with the tag `testing`:
+
+```
+porter update --app example-app --path ~/path-to-dir --tag testing
+
+```
+
+If the application has a remote Git repository source configured, you can specify that the remote Git repository should be used to build the new image by specifying `--source github`. Porter will use the latest commit from the remote repo and branch to update an application, and will use the latest commit as the image tag.
+
+```
+porter update --app remote-git-app --source github
+
+```
+
+To add new configuration or update existing configuration, you can pass a `values.yaml` file in via the `--values` flag. For example;
+
+```
+porter update --app example-app --values my-values.yaml
+
+```
+
+If your application is set up to use a Dockerfile by default, you can use a buildpack via the flag `--method pack`. Conversely, if your application is set up to use a buildpack by default, you can use a Dockerfile by passing the flag "--method docker". You can specify the relative path to a Dockerfile in your remote Git repository. For example, if a Dockerfile is found at `./docker/prod.Dockerfile`, you can specify it as follows:
+
+```
+porter update --app example-app --method docker --dockerfile ./docker/prod.Dockerfile
+
+```
+
+### Flags[](#flags "Direct link to heading")
+
+* `--app` (string) Application in the Porter dashboard
+* `--dockerfile` (string) the path to the dockerfile
+* `-e, --env` (stringArray) Build-time environment variable, in the form 'VAR=VALUE'. These are not available at image runtime.
+* `--method` (string) the build method to use ("docker" or "pack")
+* `--namespace` (string) Namespace of the application (default "default")
+* `-p, --path` (string) If local build, the path to the build directory. If remote build, the relative path from the repository root to the build directory.
+* `--source` (string) the type of source ("local" or "github") (default "local")
+* `--stream` (string) stream update logs to porter dashboard
+* `-t, --tag` (string) the specified tag to use, if not "latest"
+* `-v, --values` (string) Filepath to a values.yaml file
+
+## Env groups[](#env-groups "Direct link to heading")
+
+##### info
+
+For an introduction to Env groups, please refer to the [Environment Groups documentation](/deploying-applications/environment-groups)
+
+`porter update env-group` updates an existing env group denoted with the `--name` flag. For example:
+
+```
+porter update env-group set -n foo=bar -n por=ter -s api_key=supersecret --name prod-env
+
+```
+
+The `-n` flag is used to denote a normal (or non-secret) variable in an env group. The `-s` flag is used to denote a secret variable in an env group.
+
+##### info
+
+Updating an env group's existing variable will always overwrite its previous value and type. This means that a previous secret variable will turn into a non-secret one if it is set by using the `-n` flag.
+
+### Examples[](#examples-1 "Direct link to heading")
+
+To add a new variable, or update an existing one, to an env group named `prod-env` in the namespace `prod`, you can do the following:
+
+```
+porter update env-group set -n VAR=VALUE [-n VAR=VALUE ...] --name prod-env --namespace prod
+
+```
+
+To add a new secret variable, or update an existing one, to an env group named `prod-env` in the namespace `prod`, you can do the following:
+
+```
+porter update env-group set -s VAR=VALUE [-s VAR=VALUE ...] --name prod-env --namespace prod
+
+```
+
+To delete a variable from an env group named `prod-env` in the namespace `prod`, you can do the following:
+
+```
+porter update env-group unset VAR [VAR ...] --name prod-env --namespace prod
+
+```
+
+### Flags[](#flags-1 "Direct link to heading")
+
+* `--name` (string) name of the env group
+* `--version` (uint) version of the env group to fork off of (default "0" which means the latest version)
+* `-n` or `--normal` (stringArray) list of normal variables, in the form VAR=VALUE, to set
+* `-s` or `--secret` (stringArray) list of secret variables, in the form VAR=VALUE, to set
+* `--namespace` (string) namespace of the env group (default "default")

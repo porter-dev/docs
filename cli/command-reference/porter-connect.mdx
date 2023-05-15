@@ -1,0 +1,81 @@
+---
+title: "porter connect"
+---
+
+##### Prerequisites
+
+* You've logged in to the Porter CLI after running [porter auth login](/cli/command-reference/porter-auth)
+* You're connected to the correct project by running [porter config set-project](/cli/command-reference/porter-config)
+
+  
+`porter connect` contains commands for connecting to external clusters and providers.
+
+## Cluster Connection[](#cluster-connection "Direct link to heading")
+
+### `porter connect kubeconfig`[](#porter-connect-kubeconfig "Direct link to heading")
+
+This connects an existing Kubernetes cluster with a Porter instance. By default, this command will read the `current-context` that's set in your default `kubeconfig` (either by reading the `$KUBECONFIG` env variable or reading from `$HOME/.kube/config`). You can also pass a path to a kubeconfig file explicitly (see examples).
+
+#### Examples[](#examples "Direct link to heading")
+
+You can pass a path to a `kubeconfig` file explicitly via:
+
+```
+porter connect kubeconfig --kubeconfig path/to/kubeconfig
+
+```
+
+You can initialize Porter with a set of contexts by passing a context list to start. The contexts that Porter will be able to access are the same as `kubectl config get-contexts`. For example, if there are two contexts named `minikube` and `staging`, you could connect both of them via:
+
+```
+porter connect kubeconfig --contexts minikube --contexts staging
+
+```
+
+#### Details[](#details "Direct link to heading")
+
+The Porter CLI will attempt to generate a working kubeconfig for many types of cluster configurations and auth mechanisms, even though the necessary commands and/or certificates will not be available on a filepath in the Porter instance. The CLI will attempt the following resolutions:
+
+* If a kubeconfig requires cluster CA data via the `certificate-authority` field, the CA data will be automatically populated.
+* If a kubeconfig requires client cert data via the `client-certificate` field, the certificate data will be automatically populated.
+* If a kubeconfig requires client key data via the `client-key` field, the key data will be automatically populated.
+* If a kubeconfig requires a custom `oidc` auth mechanism, and this mechanism requires OIDC issuer CA data via the `idp-certificate-authority` field, the CA data will be automatically populated.
+* If a kubeconfig requires a bearer token to be read from a `token-file` field, the token data will be automatically populated.
+* If a kubeconfig requires a custom AWS mechanism (through either `aws eks get-token` or `aws-iam-authenticator`), the CLI will require an AWS IAM user that has permissions on the cluster. This user can be supplied manually or the Porter CLI can attempt to create this user automatically.
+* If a kubeconfig requires a custom `gcp` auth mechanism (for connecting with GKE clusters), the CLI will require a GCP `service-account` that has permissions to read from the GKE cluster. The CLI will ask the user if it can set this up automatically: if so, it will automatically detect the correct GCP project ID and will create a service account and download a key file. If the user does not wish the CLI to set this up automatically, the user will need to provide a file path to a service account key file that was downloaded from GCloud.
+
+## Registry Connection[](#registry-connection "Direct link to heading")
+
+##### info
+
+Note that there is a detailed guide for setting up registry connections [here](/deploying-applications/deploying-from-docker-registry/linking-existing-registry).
+
+### `porter connect dockerhub`[](#porter-connect-dockerhub "Direct link to heading")
+
+Adds a Docker Hub registry integration to a project.
+
+### `porter connect docr`[](#porter-connect-docr "Direct link to heading")
+
+Adds a DOCR instance to a project.
+
+### `porter connect ecr`[](#porter-connect-ecr "Direct link to heading")
+
+Adds an ECR instance to a project.
+
+### `porter connect gcr`[](#porter-connect-gcr "Direct link to heading")
+
+Adds a GCR instance to a project.
+
+### `porter connect gar`[](#porter-connect-gar "Direct link to heading")
+
+Adds a GAR instance to a project.
+
+### `porter connect registry`[](#porter-connect-registry "Direct link to heading")
+
+Adds a custom image registry to a project.
+
+## Custom Helm Repository[](#custom-helm-repository "Direct link to heading")
+
+### `porter connect helm`[](#porter-connect-helm "Direct link to heading")
+
+This connects a custom Helm repository to your Porter project. For a private Helm repository, you should be able to configure this with a username and password.

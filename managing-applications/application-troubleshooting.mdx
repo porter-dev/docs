@@ -1,0 +1,88 @@
+---
+title: "Application Troubleshooting"
+---
+
+## Application Restarts[](#application-restarts "Direct link to heading")
+
+### Memory Usage[](#memory-usage "Direct link to heading")
+
+One of the most common issues for application restarts is that your applications continuously runs out of memory. You can try to allocate more memory to your application, and check the **Metrics** tab to view the memory consumption. If the memory usage continues to hit the memory limit (which is set in the **Resources** tab), increase the memory limit.
+
+### Failing Liveness or Startup Probes[](#failing-liveness-or-startup-probes "Direct link to heading")
+
+As documented in the [zero-downtime deployments doc](https://docs.porter.run/deploying-applications/zero-downtime-deployments), enabling health checks via liveness probes are a good way to ensure that traffic only reaches healthy application instances. When the liveness probe or startup probes fail, the application will be restarted. There are a few common reasons why the application may fail its health check:
+
+* The liveness probe or startup probe are misconfigured.
+* Your application is experiencing resource pressure, and does not respond to an HTTP probe within 1 second. This is common for runtimes which share a single thread, like Rails or Node. In high-traffic scenarios, the latency of the health check can exceed 1 second, and thus the application will be restarted.
+* You have not give your application enough time to start up, and thus the application fails its startup probe.
+* The health check depends on an external service, like a database connection, which is currently unavailable.
+
+### Start Command[](#start-command "Direct link to heading")
+
+When the start command isn't set correctly, application logs will never show in the dashboard, and you will see a message in the "System" logs stating that the OCI container runtime is unable to start the process. Make sure that you've set the start command correctly.
+
+##### info
+
+You can read more about the start command for web applications in the [runtime configuration options](/deploying-applications/runtime-configuration-options/web-applications#start-command).
+
+One method to check which commands are set in the `$PATH` of your container is to set the start command to `sleep infinity`, and then use the [porter run command](/cli/remote-shell-access) to get shell access. From this shell, you could for example run:
+
+```
+$ which <start-command>
+$ echo $PATH
+
+```
+
+### Application Issues and Non-Zero Exit Codes[](#application-issues-and-non-zero-exit-codes "Direct link to heading")
+
+Your application may be restarting due to an application-level error which is causing the process to exit. To investigate if this may be the cause of application restarts, you can view the logs for failing applications by navigating to the **Events** tab.
+
+If your application is killed due to a non-zero exit code, it typically indicates that your application restarted due to an application error, or was killed by an external signal. For an overview on exit codes:
+
+* A valid exit code is between 0 and 255, 0 means that the container exited normally.
+* Generally speaking, if the container exited due to an internal signal then the exit code is between 1 and 128 and if it exited due to an external signal, the exit code is between 129 and 255.
+* The above will not hold true if the application programmer chooses to follow a different convention of using exit codes.
+
+#### Typical exit codes[](#typical-exit-codes "Direct link to heading")
+
+* `137`: indicates that the process was killed by `SIGKILL`. The most common reason for this is that your application does not handle graceful shutdown when it receives a `SIGTERM` signal. After receiving `SIGTERM`, your application should close existing connections and terminate with exit code `0`. See the [graceful shutdown doc](https://docs.porter.run/deploying-applications/zero-downtime-deployments#graceful-shutdown) for more information.
+* `1`: indicates common issues. Check container logs for further troubleshooting. For example, this could be the result of `exit(1)`.
+* `255`: this could either be the result of `exit(-1)` (which is translated to `255`) from the application, or could indicate that the application was forcibly killed by the underlying Kubernetes node. This is common if the application moves between nodes during a node scale-down event. While Porter typically kills processes running on the nodes gracefully, there are rare cases where the containers are abruptly stopped. To avoid downtime in these instances, it is recommended that at least 2 replicas are running for each application instance.
+* `2`: This could happen because of a misuse of a shell builtin when using Bash.
+* `126`: A command was invoked that could not be executed by the system.
+* `127`: Command was not found. Please check your `$PATH` or for a possible typo.
+* `128`: Invalid argument to `exit()`.
+* `130`: Process terminated with `Ctrl+C`.
+
+**Note:** Normally, an exit code of `128+n` denotes the fatal signal `n` from the standard [Linux interruption signals](https://man7.org/linux/man-pages/man7/signal.7.html).
+
+## Image Pull Errors[](#image-pull-errors "Direct link to heading")
+
+Under the hood, every application which runs on Porter is running a [Docker image](https://docs.docker.com/get-started/overview/#images). This Docker image is pulled from a registry, which typically requires authentication credentials. If you are facing an image pull error, make sure you've checked the following items:
+
+* The image repository exists in the registry, and the image repository contains an image with the image tag set on Porter
+* You have connected an image registry to Porter. For more information, see the [getting started guide](https://docs.porter.run/getting-started/overview) or the doc on [deploying from a Docker registry](https://docs.porter.run/deploying-applications/deploying-from-docker-registry)
+* Your authentication credentials have not been revoked and have not expired. To check this, navigate to the **Integrations** tab on Porter, and select **Docker Registry**. If you are able to view the list of images for your registry, Porter is able to access that image registry.
+
+## Networking Issues[](#networking-issues "Direct link to heading")
+
+### Frequent Connection Resets/Dropped Connections[](#frequent-connection-resetsdropped-connections "Direct link to heading")
+
+This can be caused by a number of issues, which can either be at the application level, or at the networking level:
+
+* If your requests take longer than 30 seconds to resolve, or you are running a websocket-based application, the default read and write timeouts may not be long enough. See the [networking configuration doc](/managing-applications/network-configuration-options#setting-custom-readwrite-timeouts) for how to increase the read/write timeouts.
+* If your application sends very large headers as part of the response body, consider increasing the response header size, as documented [here](https://docs.porter.run/managing-applications/network-configuration-options#header-size).
+* If you are seeing dropped connections while redeploying, follow the instructions for [zero-downtime deployments](https://docs.porter.run/deploying-applications/zero-downtime-deployments).
+* If you are seeing `recv` errors in your NGINX logs, the application is sending sending a connection reset message before a response is sent. This can usually be resolved by increasing the `keepalive` value in your application code.
+
+### `413 Request Entity Too Large`[](#413-request-entity-too-large "Direct link to heading")
+
+This is caused by the NGINX instance rejecting requests that are too large. See the [networking configuration doc](/managing-applications/network-configuration-options#client-max-body-size) for how to resolve these errors.
+
+### `502 Bad Gateway`[](#502-bad-gateway "Direct link to heading")
+
+You will see `502 Bad Gateway` when your application is not starting correctly. See [application restarts](#application-restarts) to troubleshoot the error. This could also be a port number error -- make sure that you've set the port number correctly in the `Main` application tab.
+
+### `503 Temporarily Unavailable`[](#503-temporarily-unavailable "Direct link to heading")
+
+The most common cause of this error is not setting the port number correctly. If not set correctly, your application will often show `503 Temporarily Unavailable` permanently when visiting the public URL. Make sure that you've set the port number correctly in the `Main` application tab. If the port number is set correctly, this may be shown when there is an application restart: [see above](#application-restarts) for more information.

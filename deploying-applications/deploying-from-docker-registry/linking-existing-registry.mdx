@@ -1,0 +1,277 @@
+---
+title: "Linking an Existing Docker Registry"
+---
+
+Porter supports linking a private Docker container registry to your project. This container registry is used to deploy Docker containers onto a cluster and push new versions of the image to your registry from CI/CD workflows. We support the following container registries:
+
+* [Amazon Elastic Container Registry (ECR)](#amazon-elastic-container-registry-ecr)
+* [Google Artifact Registry (GAR)](#google-artifact-registry-gar)
+* [Google Container Registry (GCR)](#google-container-registry-gcr)
+* [DigitalOcean Container Registry](#digital-ocean-container-registry)
+* [Docker Hub](#docker-hub)
+* [Other registries](#customprivate-registries) which implement the [Registry HTTP API v2](https://docs.docker.com/registry/spec/api/)
+
+The following guide will show you how to link your container registries depending on your registry provider. Some container registries can only be linked from the CLI, so make sure that you've following the [installation guide](/cli/installation) for the CLI.
+
+## Amazon Elastic Container Registry (ECR)[](#amazon-elastic-container-registry-ecr "Direct link to heading")
+
+In order to link ECR, an AWS IAM user must be created in your AWS account with access to push, pull and list images from the ECR registry. If you are logged in via the AWS CLI, Porter can generate these credentials for you automatically when you run `porter connect ecr`. Alternatively, you must first [create an ECR user](#creating-an-aws-ecr-user) and have those credentials ready for the next step!
+
+You can link ECR using either the dashboard or the CLI:
+
+<Tabs>
+  <Tab title="Browser">
+  In order to link an existing ECR registry from the dashboard, navigate to the **Integrations** tab and select **Docker Registry**. Then, select **Add a Registry** in top right, and select **Elastic Container Registry**. Give the registry a name, for example `my-awesome-registry`:
+  ![ECR](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/92dd9aaf-76cb-4e72-5ed9-e50c2268bb00/large)
+  Next, input the AWS credentials (if you do not have your AWS credentials, follow the [instructions below](#creating-an-aws-ecr-user)). Then, click **Save Settings**.
+  </Tab>
+  <Tab title="CLI">
+  Run the following command on the Porter CLI:
+
+```
+porter connect ecr
+
+```
+
+You will be prompted for the region your ECR instance belongs to. For example:
+
+```
+Please provide the AWS region where the ECR instance is located.
+AWS Region: us-east-2
+
+```
+
+The CLI will then ask if you'd like to set up an IAM user in your AWS account automatically, or if you'd like to enter your credentials manually. If you specify yes, Porter will create a user with the policy `AmazonEC2ContainerRegistryFullAccess` that can push/pull images from ECR. Otherwise, make sure you've following the [instructions below](#creating-an-aws-ecr-user) and have your AWS credentials ready.
+
+Finally, the CLI will prompt you to enter a name for the registry. Here you may enter any name you like.
+
+```
+Give this registry a name: my-awesome-registry
+
+```
+
+That's it! If you navigate to the "Launch" tab in the dashboard, you should see your existing ECR images in the "Registry" section.
+
+  </Tab>
+</Tabs>
+
+
+To verify that the ECR registry was linked correctly, you can navigate to the **Integrations** tab, click **Docker Registry**, and expand a registry to make sure you see all repositories listed.
+
+<Card title="Troubleshooting">
+  If you are unable to connect to your registry, double-check that the user exists, the region is correct, and the credentials were copied correctly.
+</Card>
+
+### Creating an AWS ECR User[](#creating-an-aws-ecr-user "Direct link to heading")
+
+Before linking your ECR registry, you can create an AWS IAM user that has access to ECR, and then generate AWS credentials. To create a new user, go to your [AWS console](https://console.aws.amazon.com) and navigate to **IAM** \-> **Users** and select **Add user**:
+
+![AWS add user](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/2292762b-da76-4eac-e01b-6903a8003b00/large "Screen Shot 2020-12-30 at 1.01.49 PM.png")
+
+Give your user a name and select **Programmatic access**. After selecting **Next**, you will be prompted to set permissions for your user, choose **Attach existing policies directly** and search for the policy `AmazonEC2ContainerRegistryFullAccess` that can push/pull images from ECR.
+
+<Info>If you'd like to customize the IAM policy, you can create a new policy and attach that to the user directly.</Info>
+
+After creating this user, you will see an AWS Access Key and Secret -- make sure you have these credentials ready, and link your ECR registry using the instructions above.
+
+## Google Artifact Registry (GAR)[](#google-artifact-registry-gar "Direct link to heading")
+
+### Creating a GCP Service Account for GAR[](#creating-a-gcp-service-account-for-gar "Direct link to heading")
+
+Before you can connect to an existing GAR instance, you must create a service account with permission to push/pull from GAR. To do this, follow the steps below.
+
+1. First, go to your [Google Cloud console](https://console.cloud.google.com/) and navigate to **IAM & Admin** \-> **Service Accounts**:
+
+![GCP service accounts](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/485c7084-6bac-401e-2732-7053881e8a00/large "Screen Shot 2021-02-26 at 8.34.21 AM.png")
+
+2. Select **Create Service Account**:
+
+![Create SA](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/5e21c881-34ae-4b35-df45-3b97a4ea6900/large "Screen Shot 2021-02-26 at 8.36.48 AM.png")
+
+3. Name your service account (for example, "porter-gar-access"), grant the service account **Artifact Registry Administrator** permissions, then select **Done**:
+
+![Artifact registry administrator permissions](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/decda4fa-4866-4260-0017-c1f05207a400/large "Screen Shot 2021-02-26 at 8.39.58 AM.png")
+
+4. After creating the service account, you will be redirected to the list of service accounts. Find the row with the newly created service account, and select "Manage keys" in the "Actions" column:
+
+![Manage keys SA](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/c3ee9b4d-3757-4bb6-4663-eb7a5b770a00/large "Screen Shot 2021-02-26 at 8.44.08 AM.png")
+
+5. Finally, press the "Add key" dropdown and select "Create new key". After choosing the **JSON** key type, your key file will be **automatically** downloaded:
+
+![JSON key download](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/185f69ac-120c-458c-b3f4-9260dfd86600/large "Screen Shot 2021-02-26 at 8.45.48 AM.png")
+
+### Linking GAR[](#linking-gar "Direct link to heading")
+
+Now that you have a service account and JSON key downloaded, linking GAR can either be done from the dashboard or the CLI:
+<Tabs>
+  <Tab title="Browser">
+    In order to link an existing GAR registry from the dashboard, navigate to the **Integrations** tab and select **Docker Registry**. Then, select **Add a Registry** in top right, and select **Google Artifact Registry**. Give the registry a name, for example `my-awesome-registry`:
+    ![GAR](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/e9b1bebb-a797-4025-7d5b-87e72e9a8f00/large)
+    Next, input the GCP credentials that you downloaded above, and enter your GAR region.
+    Then, click **Save Settings**.
+  </Tab>
+  <Tab title="CLI">
+    Run the following command on the Porter CLI:
+
+```
+porter connect gar
+
+```
+
+You will be prompted for the full path to the service account key file that you just downloaded. **Enter the full path (not relative) to the key file location**:
+
+```
+Please provide the full path to a service account key file.
+Key file location:
+
+```
+
+Next, you will be prompted to enter the GAR region you want to connect to.:
+
+```
+Please enter the artifact registry region. For example, us-central-1.
+Artifact registry region:
+
+```
+
+Finally, you will be prompted to provide a name for this new registry.
+
+```
+Give this registry a name:
+
+```
+
+That's it! If you navigate to the "Launch" tab in the dashboard, you should see your existing GAR images in the "Registry" section.
+
+  </Tab>
+</Tabs>
+
+## Google Container Registry (GCR)[](#google-container-registry-gcr "Direct link to heading")
+
+### Creating a GCP Service Account for GCR[](#creating-a-gcp-service-account-for-gcr "Direct link to heading")
+
+Before you can connect to an existing GCR instance, you must create a service account with permission to push/pull from GCR. To do this, follow the steps below.
+
+1. First, go to your [Google Cloud console](https://console.cloud.google.com/) and navigate to **IAM & Admin** \-> **Service Accounts**:
+
+![GCP service accounts](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/485c7084-6bac-401e-2732-7053881e8a00/large "Screen Shot 2021-02-26 at 8.34.21 AM.png")
+
+2. Select **Create Service Account**:
+
+![Create SA](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/5e21c881-34ae-4b35-df45-3b97a4ea6900/large "Screen Shot 2021-02-26 at 8.36.48 AM.png")
+
+3. Name your service account (for example, "porter-gcr-access"), grant the service account **Storage Admin** permissions, then select **Done**:
+
+![Storage admin permissions](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/61b4c08f-e91a-405d-9acc-e0cd3d0a2200/large "Screen Shot 2021-02-26 at 8.39.58 AM.png")
+
+4. After creating the service account, you will be redirected to the list of service accounts. Find the row with the newly created service account, and select "Manage keys" in the "Actions" column:
+
+![Manage keys SA](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/befa54da-4482-4d16-a3c4-79d9d0e34100/large "Screen Shot 2021-02-26 at 8.44.08 AM.png")
+
+5. Finally, press the "Add key" dropdown and select "Create new key". After choosing the **JSON** key type, your key file will be **automatically** downloaded:
+
+![JSON key download](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/3e24731a-f307-4871-f6a7-1deb2b1e9000/large "Screen Shot 2021-02-26 at 8.45.48 AM.png")
+
+### Linking GCR[](#linking-gcr "Direct link to heading")
+
+Now that you have a service account and JSON key downloaded, linking GCR can either be done from the dashboard or the CLI:
+
+<Tabs>
+  <Tab title="Browser">
+  In order to link an existing GCR registry from the dashboard, navigate to the **Integrations** tab and select **Docker Registry**. Then, select **Add a Registry** in top right, and select **Google Container Registry**. Give the registry a name, for example `my-awesome-registry`:
+  ![GCR](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/b85524a6-0329-4879-c0bb-04f27d140700/large)
+  Next, input the GCP credentials that you downloaded above, and enter your registry URL, the the form `[GCR_DOMAIN]/[GCP_PROJECT_ID]`. For most, the GCR domain will be `gcr.io` (for more information, [click here](https://cloud.google.com/container-registry/docs/overview#registries)).
+  Then, click **Save Settings**.
+  </Tab>
+  <Tab title="CLI">
+Run the following command on the Porter CLI:
+
+```
+porter connect gcr
+
+```
+
+You will be prompted for the full path to the service account key file that you just downloaded. **Enter the full path (not relative) to the key file location**:
+
+```
+Please provide the full path to a service account key file.
+Key file location:
+
+```
+
+Finally, you will be prompted to provide the registry URL, in the form `[GCR_DOMAIN]/[GCP_PROJECT_ID]`, and a name for the registry. For most, the GCR domain will be `gcr.io` (for more information, [click here](https://cloud.google.com/container-registry/docs/overview#registries)).
+
+```
+Please provide the registry URL, in the form [GCP_DOMAIN]/[GCP_PROJECT_ID]. For example, gcr.io/my-project-123456.
+Registry URL:
+Give this registry a name:
+
+```
+
+That's it! If you navigate to the "Launch" tab in the dashboard, you should see your existing GCR images in the "Registry" section.
+
+  </Tab>
+</Tabs>
+
+## Digital Ocean Container Registry[](#digital-ocean-container-registry "Direct link to heading")
+
+At the moment, linking a Digital Ocean Container Registry can only be done using the Porter CLI. To connect, run the following command:
+
+```
+porter connect docr
+
+```
+
+If you have not yet linked a DigitalOcean account, this command will open the browser that allows you to link your DigitalOcean account. Authorize the DigitalOcean account that you'd like to give access. You will then be redirected to the dashboard, at which point you can close out of the browser tab and go back to the CLI.
+
+The CLI will then prompt you to provide a link to the container registry, in the form `registry.digitalocean.com/[REGISTRY_NAME]`. This can be found by navigating to the "Container Registry" tab in DigitalOcean and copying the registry name:
+
+![Container registry name](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/35e56388-6872-4dae-fef0-8624459c7300/large "Screen Shot 2021-02-26 at 9.00.08 AM.png")
+
+```
+Please provide the registry URL, in the form registry.digitalocean.com/[REGISTRY_NAME]. For example, registry.digitalocean.com/porter-test.
+Registry URL: registry.digitalocean.com/porter-hi
+
+```
+
+That's it! If you navigate to the "Launch" tab in the dashboard, you should see your existing DigitalOcean Container Registry images in the "Registry" section.
+
+## Docker Hub[](#docker-hub "Direct link to heading")
+
+In order to connect to a Docker Hub image repository, you must first generate a personal access token in the Docker Hub dashboard. Navigate to the ["Security" tab in your account settings](https://hub.docker.com/settings/security), and select "New Access Token":
+
+![Access token](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/1d357255-a1da-42a8-e991-8348b6673e00/large "Screen Shot 2021-02-26 at 9.09.26 AM.png")
+
+Name this access token something like "Porter," and copy the access token to the clipboard.
+
+<Info>If you're planning on linking more than one image repository through Docker Hub, you will need to re-use this access token multiple times, so you may want to copy it to a local file on your computer and delete it when you're finished.</Info>
+
+Then type `porter connect dockerhub` into the CLI. You will first be prompted to enter the path to the Docker Hub image repository that you would like to link. The image repository path can be found by going to the "Repositories" tab in Docker Hub and copying the username/organization and repository name. For example, for an organization called "porter1" and an image repository name called "porter", the repo name would be "porter1/porter":
+
+```
+Provide the Docker Hub image path, in the form of ${org_name}/${repo_name}. For example, porter1/porter.
+Image path: porter1/porter
+
+```
+
+You should then enter your Docker Hub username and the access token you just copied.
+
+That's it! If you navigate to the "Launch" tab in the dashboard, you should see your existing Docker Hub image repository in the "Registry" section.
+
+<Card title="Multiple Docker Hub Repositories">
+  This flow only links a single Docker Hub repository at a time. If you'd like to link multiple repositories, you must run `porter connect dockerhub` for each repository.
+</Card>
+
+## Custom/Private Registries[](#customprivate-registries "Direct link to heading")
+
+Other Docker container registries are supported, as long as they implement the [Registry HTTP API v2](https://docs.docker.com/registry/spec/api/) specification. To link these, type `porter connect registry` into the CLI. You will then be asked to input the URL of your image repository:
+
+```
+Provide the image registry URL (include the protocol). For example, https://my-custom-registry.getporter.dev.
+Image registry URL: https://my-custom-registry.getporter.dev
+
+```
+
+If your registry is public, you can simply press enter when asked to input the username/password. Otherwise, enter the username/password that you would use for `docker login`.
+
+That's it! If you navigate to the "Launch" tab in the dashboard, you should see your existing image repositories in the "Registry" section.

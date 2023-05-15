@@ -1,0 +1,50 @@
+---
+title: "Wallarm"
+---
+
+## About[](#about "Direct link to heading")
+
+Wallarm is a platform that lets you protect and monitor your APIs, similarly to WAF. You can deploy a [Wallarm Ingress Controller](https://docs.wallarm.com/admin-en/installation-kubernetes-en/) for Kubernetes to Porter to monitor and protect your APIs against threats like SQL injection and XSS attacks.
+
+## Deployment[](#deployment "Direct link to heading")
+
+Head to the **Community Add-ons** tab on Porter and select the **Wallarm-Ingress** add-on.
+
+You will be prompted to enter a **Cloud WAF Token** to connect to your wallarm cloud. At the moment, the add-on requires that you are using Wallarm's US cloud. To generate an auth key, navigate to the Wallarm's [Nodes tab](https://us1.my.wallarm.com/nodes) and create a WAF node of **Cloud** type.
+
+Copy the generated token and paste it into the **Cloud WAF Token** field on Porter.
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/9b67a33e-5130-4e46-8213-8e5346663300/large)
+
+## Enabling Wallarm on Porter Deployments[](#enabling-wallarm-on-porter-deployments "Direct link to heading")
+
+In order to protect your deployments with Wallarm, you need to configure the **Ingress** of the deployment to use the Wallarm Ingress Controller.
+
+To do this, navigate to the **Advanced** tab of your **Web Service** deployment and add the following two key value pairs under **Ingress Custom Annotations**
+
+```
+nginx.ingress.kubernetes.io/wallarm-instance: "UNIQUE_NUMBER_OF_YOUR_CHOICE"
+nginx.ingress.kubernetes.io/wallarm-mode: monitoring
+
+```
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/2fec2948-ba86-4a5d-7ece-4645b1be7300/large)
+
+> Please ensure that your `nginx.ingress.kubernetes.io/wallarm-instance` value is surrounded with quotation marks. For example, if the number you'd like to assign to the instance is `101`, your value should be `\"101\"`
+
+## Custom Domains with Wallarm[](#custom-domains-with-wallarm "Direct link to heading")
+
+To protect endpoints on custom domains with Wallarm, you need to create a `CNAME` record that points your domain at the load balancer attached to the Wallarm Ingress Controller, instead of the default load balancer that sits in front of the NGINX Ingress Controller.
+
+Navigate to your AWS Console's **EC2 > Load Balancer** to find the DNS name of the load balancer spun up by the Wallarm Ingress Controller. Create a `CNAME` record that points your domain to this DNS name. If your custom domain is throwing an error, try re-deploying your web service with the same configuration.
+
+## Verifying Deployment[](#verifying-deployment "Direct link to heading")
+
+To test whether Wallarm is properly protecting and monitoring your endpoint, run:
+
+```
+curl https://<YOUR_ENDPOINT>/?id='or+1=1--a-<script>prompt(1)</script>'
+
+```
+
+You should be able to see an attack event show up in the **Nodes** tab of your Wallarm Console.

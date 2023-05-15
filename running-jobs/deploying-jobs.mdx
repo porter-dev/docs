@@ -1,0 +1,41 @@
+---
+title: "Deploying Jobs"
+---
+
+## Deploying a One-Time Job[](#deploying-a-one-time-job "Direct link to heading")
+
+##### info
+
+As an alternative to one-time jobs, you can also run a command using [remote execution](/cli/remote-shell-access) from the CLI. This is simpler to do, but lacks the benefit of getting the history of jobs along with logs and status for each job.
+
+To deploy a one-time job on Porter, head to the "Launch" tab and select the "Jobs" template. From this template, you can connect your source ([Github repo](https://docs.porter.run/deploying-applications/deploying-from-github) or [Docker image registry](https://docs.porter.run/deploying-applications/deploying-from-docker-registry/)), specify the job command, and add environment variables. For example, to create a job that simply prints to the console from an environment variable, we can create a job with the following configuration:
+
+![One-time job](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/63f1a5c7-acc1-4983-eb44-9014fed1f200/large "Screen Shot 2021-04-16 at 2.54.35 PM.png")
+
+![One-time job additional settings](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/0506f9d6-8118-433b-27dd-5b5403368900/large "Screen Shot 2021-04-16 at 2.55.12 PM.png")
+
+After clicking "Deploy" and waiting for the Job to run successfully, you will be redirected to the "Jobs" tab where your jobs are listed. Click into the job you would like to view (in this case, `ubuntu-job`), and the history of runs for that job will be shown. You can click on each job to view the logs:
+
+![View job logs](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/e1698aed-47be-4e35-2cf2-0128d555f700/large "Screen Shot 2021-04-16 at 3.00.11 PM.png")
+
+To re-run the job, simply click the "Rerun job" button in the bottom right corner, which will re-run the job using the exact same configuration as before. You can view the configuration for this job from the "Main" tab, and you can delete the job (along with the history of all runs of the job) from the "Settings" tab.
+
+##### info
+
+To run a job as part of your application deployment process (for example, to run a migration script), see [this document](https://docs.porter.run/deploying-applications/deploying-from-github/customizing-github-workflow#database-migrations-and-jobs).
+
+## Deploying a Cron Job[](#deploying-a-cron-job "Direct link to heading")
+
+Deploying a cron job follows the same pattern as deploying a one-time job, but requires that you input a cron expression for the job to periodically run. To create cron expressions more easily, see [this online editor](https://crontab.guru/) for developing cron expressions.
+
+As an example, we will once again create a job that simply prints to the console from an environment variable, but in this case we will create the job with a cron expression so that the job runs every minute:
+
+![Cron expression](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/15643d5b-0e27-4a30-6b0c-ee3b7e69b700/large "Screen Shot 2021-04-16 at 3.15.06 PM.png")
+
+![Cron expression additional settings](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/da9b487d-ecc8-434f-43db-406cf8321300/large "Screen Shot 2021-04-16 at 3.15.15 PM.png")
+
+After the cron job successfully deploys, you can navigate to the "Jobs" tab and click on your deployed job (in this case, `ubuntu-cron-job`):
+
+![Cron expression list](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/c598af44-e74b-4ca8-8bd4-011ad8aa5f00/large "Screen Shot 2021-04-16 at 3.17.17 PM.png")
+
+As you can see, the cron job runs every minute. By default, Porter will keep the history of the last 20 jobs run for that cron schedule.

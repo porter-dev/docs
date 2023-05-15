@@ -1,0 +1,29 @@
+---
+title: "Deploying your First Application"
+---
+
+Now that you've deployed your Porter cluster, you can deploy your first application to the cluster! In this example, we'll deploy a pre-built `hello-world` application to verify that everything is working correctly.
+
+## Launch your Application[](#launch-your-application "Direct link to heading")
+
+On the Porter dashboard, navigate to the **Launch** tab. From here, click on the **Web** option and click **Launch template**. On the next screen, name your application `porter-hello-world` and select **Docker registry** as the application type. When asked to select a container image, simply input `public.ecr.aws/o1j4x7p4/porter-hello-world:latest` as follows:
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/013a75ef-870b-4241-0ca1-699cb04c8a00/large)
+
+On the following screen, simply hit **Deploy**, and you'll see the application show up in the dashboard!
+
+## View your Application[](#view-your-application "Direct link to heading")
+
+After clicking on the application `porter-hello-world` on the dashboard, the application will have a link to a public URL:
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/7443b5f4-2e81-4116-1bd7-043ddafdb400/large)
+
+Clicking on this URL will render the following page:
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/3d2660b9-8cf1-4bd8-e8a8-b431c412c500/large)
+
+The demo application was successfully deployed!
+
+## Application Cleanup[](#application-cleanup "Direct link to heading")
+
+To delete this application, click on the **Settings** tab of the application, scroll to the bottom, and click **Delete porter-hello-world**.

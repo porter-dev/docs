@@ -1,0 +1,49 @@
+---
+title: "Getting Started on Porter with NodeJS"
+---
+
+In this tutorial-style guide, we will be deploying a sample NodeJS app to Porter, that uses the [Express web framework](https://expressjs.com) to host static content.
+
+##### Prerequisites
+
+To proceed further with this guide, you will need access to a [Porter account](https://dashboard.getporter.dev/register). You also need to setup your Porter account with Github in order to deploy the app. You may follow the [Adding/Updating the Porter Github App](/deploying-applications/deploying-from-github/adding-updating-gh-app#adding-the-porter-github-app) guide to do this.
+
+## Set up[](#set-up "Direct link to heading")
+
+Porter has a sample getting started NodeJS app on Github at [porter-dev/node-js-getting-started](https://github.com/porter-dev/node-js-getting-started). If you look at the repository, you will find that it is a template repository which means that you can simply click on the **Use this template** button on the frontpage of the repository or navigate to [node-js-getting-started/generate](https://github.com/porter-dev/node-js-getting-started/generate) to generate a new repository based on this template.
+
+## Deploy app to Porter[](#deploy-app-to-porter "Direct link to heading")
+
+In the [Porter dashboard](https://dashboard.getporter.dev), go to the [Launch tab](https://dashboard.getporter.dev/launch).
+
+![Launch Tab 1](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/93187eb6-ed2a-4cb3-baab-d014a70e6500/large "Launch Tab - Choose a template")
+
+Click on **Web Service > Launch Template** and choose the **Git Repository** deployment method.
+
+![Launch Tab 2](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/fe44aafb-5222-4851-77ee-90ee76a38c00/large "Launch Tab - Choose deployment method")
+
+Choose the repository you generated in the **Set up** step. If you cannot find the repository from the search bar, make sure that you have given access to the Porter Github app. Refer to [Updating the Porter Github App](/deploying-applications/deploying-from-github/adding-updating-gh-app#updating-the-porter-github-app) to do this.
+
+![Launch Tab 3](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/cd457ce8-015c-492a-c22a-51b78fce6700/large "Launch Tab - Choose git repository")
+
+Click on the **main** branch, then click on **Continue**. You will be presented with a screen that looks like the following.
+
+![Launch Tab 4](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/68997958-b015-41fd-e6a7-235809e4b000/large "Launch Tab - Deployment information")
+
+Click on **Continue > Deploy**. This will start deploying your app to Porter after which you will be redirected to the applications view. Here you will be able to see your newly created app.
+
+![Applications Tab](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/2c4521e0-1400-49f9-899f-abb43e9bea00/large "Applications Tab - Newly created app")
+
+Click on the app in the applications view and you should be able to see the URL which will serve your newly created NodeJS app.
+
+![App URL](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/776e948b-f159-459f-7f6e-343caba54200/large "Newly created app")
+
+Once the app is successfully deployed, navigate to the URL as above and you should see something like the following.
+
+![NodeJS App](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/f3dd3795-f00e-4330-8961-92bd21dac100/large "Successfully deployed NodeJS app")
+
+**Congratulations!** You just deployed your first NodeJS app on Porter!
+
+## Next steps[](#next-steps "Direct link to heading")
+
+Now that you have deployed your first app on Porter, feel free to make changes to the git repository that you created from [porter-dev/node-js-getting-started](https://github.com/porter-dev/node-js-getting-started) and push updates to your Porter app. You should also check out the documentation for some of the advanced topics.

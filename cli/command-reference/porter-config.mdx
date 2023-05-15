@@ -1,0 +1,30 @@
+---
+title: "porter config"
+---
+
+`porter config` contains commands for controlling local configuration settings.
+
+### `porter config`[](#porter-config "Direct link to heading")
+
+Running `porter config` with no subcommands will output the current configuration file to the terminal. Note that this configuration may be overwritten through a combination of flags and environment variables.
+
+### `porter config set-host [HOSTNAME]`[](#porter-config-set-host-hostname "Direct link to heading")
+
+Saves the host in the default configuration. Note this host must include the protocol and should not contain trailing slashes. For example:
+
+```
+porter config set-host https://dashboard.getporter.dev
+
+```
+
+### `porter config set-project`[](#porter-config-set-project "Direct link to heading")
+
+Saves the project ID in the default configuration from a list of projects that you have access to.
+
+### `porter config set-cluster`[](#porter-config-set-cluster "Direct link to heading")
+
+Saves the cluster ID in the default configuration from a list of clusters that the current project has access to.
+
+### `porter config set-registry`[](#porter-config-set-registry "Direct link to heading")
+
+Saves the registry ID in the default configuration from a list of registries that the current project has access to.

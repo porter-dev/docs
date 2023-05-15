@@ -1,0 +1,25 @@
+---
+title: "Advanced Options"
+---
+
+## Timeout Limits[](#timeout-limits "Direct link to heading")
+
+A timeout limit can be set for the job run in the **Advanced** tab. This timeout is set to 1 hour (3600 seconds) by default:
+
+![Timeout value](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/206ec181-83dd-4888-6d89-6e92f6ae2000/large "Job timeout value")
+
+## Stopping Jobs[](#stopping-jobs "Direct link to heading")
+
+Jobs can be stopped by clicking the stop icon on a job in a "Running" state:
+
+![Stop job](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/e3806c4b-1e8f-44db-1824-983092365700/large "Screen Shot 2021-05-14 at 2 28 27 PM")
+
+You can configure the stopping behavior of the job in the "Advanced" tab. By default, Porter will send `SIGTERM` to the job and all child processes of the job, wait for the job to terminate, and send `SIGKILL` if the job has not terminated after 30 seconds. The time between `SIGTERM` and `SIGKILL` can be configured, and you can avoid sending the signal to all child processes by toggling the "Propagate SIGTERM to child processes" checkbox.
+
+## Concurrency Limits for Jobs[](#concurrency-limits-for-jobs "Direct link to heading")
+
+You can prevent jobs from running concurrently by toggling the "Allow jobs to execute concurrently" checkbox in the "Advanced" tab. This may be desired if your jobs are writing to data sources, and you wish to prevent duplicate entries.
+
+##### info
+
+In general, it is best to ensure your job runs are idempotent.
