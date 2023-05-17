@@ -26,7 +26,7 @@
     ],
     "anchors": [
       {
-        "name": "Get Starter",
+        "name": "Get Started",
         "icon": "play",
         "url": "https://dashboard.getporter.dev"
       },
@@ -50,76 +50,162 @@
         "pages": ["introduction"]
       },
       {
-        "group": "Getting Started",
+        "group": "Porter Standard",
         "pages": [
-            "getting-started/overview",
-            "getting-started/linking-application-source",
-            {
-                "group": "Provisioning Infastructure",
-                "pages": [
-                    "getting-started/provisioning-infrastructure",
-                    "getting-started/provisioning-on-aws",
-                    "getting-started/provisioning-on-gcp",
-                    "getting-started/provisioning-on-do"
-                ]
-            },
-            "getting-started/deploying-first-application",
-            "getting-started/next-steps"
+          {
+            "group": "Getting Started",
+            "pages": [
+                "standard/getting-started/overview",
+                {
+                    "group": "Provision Infastructure",
+                    "pages": [
+                        "standard/getting-started/provisioning-infrastructure",
+                        "standard/getting-started/provisioning-on-aws"
+                    ]
+                },
+                {
+                    "group": "Deploy Application",
+                    "pages": [
+                      "standard/getting-started/deploy-overview",
+                      "standard/getting-started/deploying-first-application",
+                      "standard/getting-started/build"
+                    ]
+                },
+                "standard/getting-started/manage-and-scale"
+            ]
+          },
+          {
+            "group": "Deploying Applications",
+            "pages": [
+                "standard/deploying-applications/overview",
+                {
+                    "group": "Deploying from a Github Repo",
+                    "pages": [
+                        "standard/deploying-applications/deploying-from-github",
+                        "standard/deploying-applications/deploying-from-github/adding-updating-gh-app",
+                        "standard/deploying-applications/deploying-from-github/selecting-application-and-build-method",
+                        "standard/deploying-applications/deploying-from-github/customizing-github-workflow"
+                    ]
+                },
+                {
+                    "group": "Deploying from a Docker Registry",
+                    "pages": [
+                        "standard/deploying-applications/deploying-from-docker-registry",
+                        "standard/deploying-applications/deploying-from-docker-registry/linking-existing-registry",
+                        "standard/deploying-applications/deploying-from-docker-registry/deploying"
+    
+                    ]
+                },
+                {
+                    "group": "Deploying from the CLI",
+                    "pages": [
+                        "standard/deploying-applications/deploying-from-cli",
+                        "standard/deploying-applications/deploying-from-cli/creating-an-application",
+                        "standard/deploying-applications/deploying-from-cli/updating-an-application",
+                        "standard/deploying-applications/deploying-from-cli/common-configuration-options"
+                    ]
+                },
+                {
+                    "group": "HTTPS and Domains",
+                    "pages": [
+                        "standard/deploying-applications/https-and-domains",
+                        "standard/deploying-applications/https-and-domains/porter-domains",
+                        "standard/deploying-applications/https-and-domains/custom-domains",
+                        "standard/deploying-applications/https-and-domains/wildcard-domains",
+                        "standard/deploying-applications/https-and-domains/ssl-certificates"
+                    ]
+                  },
+                "standard/deploying-applications/using-other-ci-tools",
+                "standard/deploying-applications/zero-downtime-deployments",
+                "standard/deploying-applications/blue-green-deployments",
+                "standard/deploying-applications/environment-groups",
+                {
+                    "group": "Runting Configuration Options",
+                    "pages": [
+                        "standard/deploying-applications/runtime-configuration-options",
+                        "standard/deploying-applications/runtime-configuration-options/web-applications",
+                        "standard/deploying-applications/runtime-configuration-options/worker-applications"
+                    ]
+                }
+            ]
+          }
         ]
       },
       {
-        "group": "Deploying Applications",
+        "group": "Porter Enterprise",
         "pages": [
-            "deploying-applications/overview",
-            {
-                "group": "Deploying from a Github Repo",
-                "pages": [
-                    "deploying-applications/deploying-from-github",
-                    "deploying-applications/deploying-from-github/adding-updating-gh-app",
-                    "deploying-applications/deploying-from-github/selecting-application-and-build-method",
-                    "deploying-applications/deploying-from-github/customizing-github-workflow"
-                ]
-            },
-            {
-                "group": "Deploying from a Docker Registry",
-                "pages": [
-                    "deploying-applications/deploying-from-docker-registry",
-                    "deploying-applications/deploying-from-docker-registry/linking-existing-registry",
-                    "deploying-applications/deploying-from-docker-registry/deploying"
-
-                ]
-            },
-            {
-                "group": "Deploying from the CLI",
-                "pages": [
-                    "deploying-applications/deploying-from-cli",
-                    "deploying-applications/deploying-from-cli/creating-an-application",
-                    "deploying-applications/deploying-from-cli/updating-an-application",
-                    "deploying-applications/deploying-from-cli/common-configuration-options"
-                ]
-            },
-            {
-                "group": "HTTPS and Domains",
-                "pages": [
-                    "deploying-applications/https-and-domains",
-                    "deploying-applications/https-and-domains/porter-domains",
-                    "deploying-applications/https-and-domains/custom-domains",
-                    "deploying-applications/https-and-domains/wildcard-domains",
-                    "deploying-applications/https-and-domains/ssl-certificates"
-                ]
-              },
-            "deploying-applications/using-other-ci-tools",
-            "deploying-applications/zero-downtime-deployments",
-            "deploying-applications/blue-green-deployments",
-            "deploying-applications/environment-groups",
-            {
-                "group": "Runting Configuration Options",
-                "pages": [
-                    "deploying-applications/runtime-configuration-options",
-                    "deploying-applications/runtime-configuration-options/web-applications",
-                    "deploying-applications/runtime-configuration-options/worker-applications"
-                ]
-            }
+          {
+            "group": "Getting Started",
+            "pages": [
+                "enterprise/getting-started/overview",
+                {
+                    "group": "Provisioning Infastructure",
+                    "pages": [
+                        "enterprise/getting-started/provisioning-infrastructure",
+                        "enterprise/getting-started/provisioning-on-aws",
+                        "enterprise/getting-started/provisioning-on-gcp"
+                    ]
+                },
+                "enterprise/getting-started/linking-application-source",
+                "enterprise/getting-started/deploying-first-application",
+                "enterprise/getting-started/next-steps"
+            ]
+          },
+          {
+            "group": "Deploying Applications",
+            "pages": [
+                "enterprise/deploying-applications/overview",
+                {
+                    "group": "Deploying from a Github Repo",
+                    "pages": [
+                        "enterprise/deploying-applications/deploying-from-github",
+                        "enterprise/deploying-applications/deploying-from-github/adding-updating-gh-app",
+                        "enterprise/deploying-applications/deploying-from-github/selecting-application-and-build-method",
+                        "enterprise/deploying-applications/deploying-from-github/customizing-github-workflow"
+                    ]
+                },
+                {
+                    "group": "Deploying from a Docker Registry",
+                    "pages": [
+                        "enterprise/deploying-applications/deploying-from-docker-registry",
+                        "enterprise/deploying-applications/deploying-from-docker-registry/linking-existing-registry",
+                        "enterprise/deploying-applications/deploying-from-docker-registry/deploying"
+    
+                    ]
+                },
+                {
+                    "group": "Deploying from the CLI",
+                    "pages": [
+                        "enterprise/deploying-applications/deploying-from-cli",
+                        "enterprise/deploying-applications/deploying-from-cli/creating-an-application",
+                        "enterprise/deploying-applications/deploying-from-cli/updating-an-application",
+                        "enterprise/deploying-applications/deploying-from-cli/common-configuration-options"
+                    ]
+                },
+                {
+                    "group": "HTTPS and Domains",
+                    "pages": [
+                        "enterprise/deploying-applications/https-and-domains",
+                        "enterprise/deploying-applications/https-and-domains/porter-domains",
+                        "enterprise/deploying-applications/https-and-domains/custom-domains",
+                        "enterprise/deploying-applications/https-and-domains/wildcard-domains",
+                        "enterprise/deploying-applications/https-and-domains/ssl-certificates"
+                    ]
+                  },
+                "enterprise/deploying-applications/using-other-ci-tools",
+                "enterprise/deploying-applications/zero-downtime-deployments",
+                "enterprise/deploying-applications/blue-green-deployments",
+                "enterprise/deploying-applications/environment-groups",
+                {
+                    "group": "Running Configuration Options",
+                    "pages": [
+                        "enterprise/deploying-applications/runtime-configuration-options",
+                        "enterprise/deploying-applications/runtime-configuration-options/web-applications",
+                        "enterprise/deploying-applications/runtime-configuration-options/worker-applications"
+                    ]
+                }
+            ]
+          }
         ]
       }
     ],
