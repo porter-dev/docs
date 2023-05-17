@@ -2,13 +2,13 @@
 title: "Selecting an Application and Build Method"
 ---
 
-To deploy your application, first navigate to the "Launch" tab, where you will see three types of applications to deploy: web, worker, or job. To understand the difference between these three application types, see the description of the [types of applications](/deploying-applications/overview#types-of-applications). Then follow the four steps below to get your application linked up.
+To deploy your application, first navigate to the "Launch" tab, where you will see three types of applications to deploy: web, worker, or job. To understand the difference between these three application types, see the description of the [types of applications](/enterprise/deploying-applications/overview#types-of-applications). Then follow the four steps below to get your application linked up.
 
 ## Selecting an Application and Build Method[](#selecting-an-application-and-build-method "Direct link to heading")
 
 ### Step 1: Selecting an application[](#step-1-selecting-an-application "Direct link to heading")
 
-After selecting an application type and clicking "Launch template," you should see two options for launching your application: **Git Repository** and **Docker Registry**. Select **Git Repository**. You should then be able to search for your connected repositories: if you are not seeing your desired repository, see the [Adding/Updating the Porter Github App](/deploying-applications/deploying-from-github/adding-updating-gh-app) guide.
+After selecting an application type and clicking "Launch template," you should see two options for launching your application: **Git Repository** and **Docker Registry**. Select **Git Repository**. You should then be able to search for your connected repositories: if you are not seeing your desired repository, see the [Adding/Updating the Porter Github App](/enterprise/deploying-applications/deploying-from-github/adding-updating-gh-app) guide.
 
 ### Step 2: Selecting a Branch[](#step-2-selecting-a-branch "Direct link to heading")
 
@@ -55,9 +55,9 @@ For understanding how to customize your buildpack settings, see the [customizing
 
 The last step is to set the runtime configuration for your application, and deploy it to your Porter cluster! This configuration varies by application type -- for example, for web applications you can set the port that the application should be listening on, whether to expose this application to external traffic on a custom domain, and override the start command. For a detailed explanation of these configuration options for each application type, see the following guides:
 
-* [Web Applications](/deploying-applications/runtime-configuration-options/web-applications)
-* [Worker Applications](/deploying-applications/runtime-configuration-options/worker-applications)
-* [Jobs and Cron Jobs](/running-jobs/overview)
+* [Web Applications](/enterprise/deploying-applications/runtime-configuration-options/web-applications)
+* [Worker Applications](/enterprise/deploying-applications/runtime-configuration-options/worker-applications)
+* [Jobs and Cron Jobs](/enterprise/running-jobs/overview)
 
 After clicking **Deploy**, you can navigate to your application, your deployment will use a placeholder Docker image until the Github Action that deploys your application has completed for the first time:
 
