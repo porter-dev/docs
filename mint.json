@@ -87,15 +87,12 @@
                         "standard/deploying-applications/deploying-from-github/customizing-github-workflow"
                     ]
                 },
-                "standard/deploying-applications/deploying-from-docker-registry/deploying",
                 {
                     "group": "HTTPS and Domains",
                     "pages": [
                         "standard/deploying-applications/https-and-domains",
                         "standard/deploying-applications/https-and-domains/porter-domains",
-                        "standard/deploying-applications/https-and-domains/custom-domains",
-                        "standard/deploying-applications/https-and-domains/wildcard-domains",
-                        "standard/deploying-applications/https-and-domains/ssl-certificates"
+                        "standard/deploying-applications/https-and-domains/custom-domains"
                     ]
                   },
                 "standard/deploying-applications/using-other-ci-tools"
