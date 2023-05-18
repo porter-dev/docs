@@ -1,0 +1,92 @@
+---
+title: "Writing a porter.yaml file"
+sidebarTitle: "Writing porter.yaml"
+---
+
+Before creating a new application in Porter, you can specify configuration for your application services by writing a `porter.yaml` file and adding it to your repository. 
+Though this file is not required, it can reduce the time it takes to get started with a Porter application. 
+Once you start creating your application in Porter and select your Github repository, Porter will automatically read your `porter.yaml` to prepopulate settings for your application services.
+
+## Writing your first `porter.yaml` file
+
+The structure of a `porter.yaml` file is very simple. Application services are specified via the apps key, and each service is given a run command as such:
+
+```
+apps:
+  my-app-web:
+    run: "python app.py" 
+  my-app-worker:
+    run: "python start-worker.py" 
+```
+
+In the file above, we have defined two application services, named `my-app-web` and `my-app-worker`. By default, every service whose name includes `web` will be inferred to be a **Web** type service, and everything else will be inferred to be a **Worker** type service. See [here](/standard/deploying-applications/overview#types-of-applications) for more information about the difference between service types.
+
+You can also explicitly define the type of a service using the type key:
+
+```
+apps:
+  my-app-web:
+    type: web
+    run: "python app.py" 
+  my-app-worker:
+    type: worker
+    run: "python start-worker.py"     
+```
+
+After writing a file like the above, naming it `porter.yaml`, and adding it to your Github repository, you are all set to create an application in Porter!
+
+## Writing your second (and nth) porter.yaml file
+
+You can also specify more advanced configuration in your `porter.yaml` file. Two common configuration options are **Resources** and **Pre-deploy**.
+
+## Resources
+
+You can specify RAM and CPU allocated to your services like so:
+
+```
+apps:
+  my-app-web:
+    run: "python app.py" 
+    config:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+  my-app-worker:
+    run: "python start-worker.py"
+```
+
+In the example above, the my-app-web service is allocated 100m CPU and 128Mi RAM.
+
+## Pre-deploy
+
+A pre-deploy command is a command that is run before your application services are deployed. This is useful for running database migrations, for example. You can specify a pre-deploy command like so:
+
+```
+apps:
+  my-app-web:
+    run: "python app.py" 
+  my-app-worker:
+    run: "python start-worker.py" 
+
+release:
+  run: "python manage.py migrate"
+```
+
+If you require more resources to run this command, you may also specify resources for the job that runs your pre-deploy command, similar to any other service:
+
+```
+apps:
+  my-app-web:
+    run: "python app.py" 
+  my-app-worker:
+    run: "python start-worker.py"
+
+release:
+  run: "python manage.py migrate"
+  config:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+```

@@ -31,7 +31,7 @@ porter create web --app web-test --values ./values.yaml
 
 ```
 
-Go to the [common configuration options](/deploying-applications/deploying-from-cli/common-configuration-options) section to view `values.yaml` files for common use-cases.
+Go to the [common configuration options](/enterprise/deploying-applications/deploying-from-cli/common-configuration-options) section to view `values.yaml` files for common use-cases.
 
 <Info>If you have experience with Kubernetes/Helm, you can also view all possible configuration options in the `values.yaml` files of the respective applications: [web](https://github.com/porter-dev/porter-charts/blob/master/applications/web/values.yaml), [worker](https://github.com/porter-dev/porter-charts/blob/master/applications/worker/values.yaml), and [job](https://github.com/porter-dev/porter-charts/blob/master/applications/job/values.yaml).</Info>
 
@@ -73,7 +73,7 @@ If your local branch is set to track changes from an upstream remote branch, Por
 
 ## Deploying from a Docker Registry[](#deploying-from-a-docker-registry "Direct link to heading")
 
-The CLI also supports deploying directly from a Docker image which is hosted on a [connected Docker registry](/deploying-applications/deploying-from-docker-registry/linking-existing-registry). Simply specify `--source registry` and the application image via the `--image` tag:
+The CLI also supports deploying directly from a Docker image which is hosted on a [connected Docker registry](/enterprise/deploying-applications/deploying-from-docker-registry/linking-existing-registry). Simply specify `--source registry` and the application image via the `--image` tag:
 
 ```
 porter create web --app web-test --source registry --image gcr.io/snowflake-12345/web-test:latest

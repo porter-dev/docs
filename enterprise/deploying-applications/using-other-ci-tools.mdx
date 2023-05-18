@@ -15,11 +15,11 @@ PORTER_CLUSTER
 
 These environment variables can be set by logging into the Porter CLI and running `porter config`.
 
-<Info>For an introduction on deploying applications from the CLI, see [this section](/deploying-applications/deploying-from-cli).</Info>
+<Info>For an introduction on deploying applications from the CLI, see [this section](/enterprise/deploying-applications/deploying-from-cli).</Info>
 
 ## Deploying and Updating your Application[](#deploying-and-updating-your-application "Direct link to heading")
 
-In order to update your application on each push to a repository, you can either deploy from a [Github repository](/deploying-applications/deploying-from-github) or a [Docker registry](/deploying-applications/deploying-from-docker-registry). If you deploy from a Github repository, you can delete the created Github actions file and create your own file. If you deploy from a Docker registry, you must have an image to deploy from first -- the easiest approach is just to push a "dummy" image to your registry, which will be overwritten when calling `porter update` from the CI run.
+In order to update your application on each push to a repository, you can either deploy from a [Github repository](/enterprise/deploying-applications/deploying-from-github) or a [Docker registry](/enterprise/deploying-applications/deploying-from-docker-registry). If you deploy from a Github repository, you can delete the created Github actions file and create your own file. If you deploy from a Docker registry, you must have an image to deploy from first -- the easiest approach is just to push a "dummy" image to your registry, which will be overwritten when calling `porter update` from the CI run.
 
 To simply build and re-deploy the application running on Porter, you can call the following:
 

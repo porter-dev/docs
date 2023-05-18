@@ -1,0 +1,13 @@
+---
+title: "Porter Domains"
+---
+
+Porter provides subdomains of `onporter.run` to use for testing and staging environments. A DNS record is automatically created on an `onporter.run` domain when a **Web** application is deployed with the **Generate a Porter URL for external traffic** option is set:
+
+![Porter Domains](/images/deploying-applications/porter-domains.png "Porter Domains")
+
+Porter makes no guarantees about the availability of the Porter DNS server that manages this domain, so for production applications it is recommended that you use another DNS provider.
+
+## DNS Propagation Delay
+
+Although DNS propagation is usually done within a few seconds to minutes, it can take up to several hours before DNS is propagated for a Porter domain.

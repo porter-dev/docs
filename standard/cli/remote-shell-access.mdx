@@ -1,0 +1,34 @@
+---
+title: "Remote Shell Access to an Existing Application"
+---
+
+##### Prerequisites
+
+* You've logged in to the Porter CLI after running [porter auth login](/enterprise/cli/command-reference/porter-auth)
+* You're connected to the correct project by running [porter config set-project](/enterprise/cli/command-reference/porter-config)
+* You're connected to the correct cluster by running [porter config set-cluster](/enterprise/cli/command-reference/porter-config)
+
+The `porter app run` command allows users to execute a command on an application:
+
+```
+porter app run [APP_NAME] -- [COMMAND] [args...]
+
+```
+
+The `APP_NAME` is the name of the application on the Porter dashboard (this can be a release either in the "Applications" or the "Jobs" tab).
+
+## Examples[](#examples "Direct link to heading")
+
+If you have an application called `hello-world`, and you would like to enter an interactive shell:
+
+```
+porter app run hello-world -- sh
+
+```
+
+To test that remote execution is working, you can run:
+
+```
+porter app run hello-world -- echo "hello world"
+
+```

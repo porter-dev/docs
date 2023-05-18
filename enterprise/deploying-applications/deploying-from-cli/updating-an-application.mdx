@@ -13,7 +13,7 @@ porter update --app [app-name]
 
 Where `app-name` is the name of a web, worker, or job application on the Porter dashboard. The default behavior of this command is to build a new image using the local filesystem, push this image to the connect image repository, and re-deploy the application on the Porter dashboard. However, each of these steps can be configured.
 
-As with the [porter create command](/deploying-applications/deploying-from-cli/creating-an-application), you can update the configuration that an application uses by passing in the `--values` flag, which should pass the filepath to a `values.yaml` file. **Note that this command merges the `values.yaml` file with your existing configuration, so you should only specify options that you would like to modify**. For example, the following `values.yaml` file:
+As with the [porter create command](/enterprise/deploying-applications/deploying-from-cli/creating-an-application), you can update the configuration that an application uses by passing in the `--values` flag, which should pass the filepath to a `values.yaml` file. **Note that this command merges the `values.yaml` file with your existing configuration, so you should only specify options that you would like to modify**. For example, the following `values.yaml` file:
 
 ```yaml
 container:
@@ -28,7 +28,7 @@ porter update --app --values ./values.yaml
 
 ```
 
-Go to the [common configuration options](/deploying-applications/deploying-from-cli/common-configuration-options) section to view `values.yaml` files for common use-cases.
+Go to the [common configuration options](/enterprise/deploying-applications/deploying-from-cli/common-configuration-options) section to view `values.yaml` files for common use-cases.
 
 <Info>If you have experience with Kubernetes/Helm, you can also view all possible configuration options in the `values.yaml` files of the respective applications: [web](https://github.com/porter-dev/porter-charts/blob/master/applications/web/values.yaml), [worker](https://github.com/porter-dev/porter-charts/blob/master/applications/worker/values.yaml), and [job](https://github.com/porter-dev/porter-charts/blob/master/applications/job/values.yaml).</Info>
 

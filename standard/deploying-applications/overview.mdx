@@ -1,0 +1,64 @@
+---
+title: 'Deploying Applications - Overview'
+sidebarTitle: 'Overview'
+---
+
+## Deployment Methods[](#deployment-methods 'Direct link to heading')
+
+Porter supports multiple deployment methods for different types of applications. These deployment methods are as follows:
+
+<Card
+  title="Deploying from a Github Repository"
+  icon="github"
+  href="/standard/deploying-applications/deploying-from-github"
+>
+  Porter will automatically update your applications on a push to a specific
+  branch in a Github repository.
+</Card>
+<Card
+  title="Deploying from a Docker Registry"
+  icon="docker"
+  href="/standard/deploying-applications/deploying-from-docker-registry"
+>
+  you can create and update applications from an existing Docker registry that
+  you manage.
+</Card>
+<Card
+  title="Deploying from the CLI"
+  icon="square-terminal"
+  href="/standard/deploying-applications/deploying-from-cli"
+>
+  you can create and update applications directly from the CLI.
+</Card>
+<Card
+  title="Using your own CI Tool"
+  icon="puzzle"
+  href="/standard/deploying-applications/using-other-ci-tools"
+>
+  you can configure your CI tools, such as CircleCI, Travis CI, or Gitlab, to
+  deploy to Porter.
+</Card>
+
+**Which Deployment Method Should I Use?**
+
+If you're unsure of which deployment method to use, we highly recommend deploying from a Github repository.
+
+## Types of Applications[](#types-of-applications 'Direct link to heading')
+
+There are three types of applications you can deploy on Porter: **web services**, **workers**, and **jobs**.
+
+### Web Service[](#web-service 'Direct link to heading')
+
+Web services are processes that are constantly running and are exposed to either external or internal traffic. This includes any servers or web applications - most of your deployments should fall into this category.
+
+You can choose to expose your application to external traffic on a custom domain - Porter will automatically [secure your endpoints with SSL certificates](/standard/deploying-applications/https-and-domains/ssl-certificates). Alternatively, you can expose your web service to only internal traffic (i.e. accessible only by other deployments in the same cluster).
+
+### Worker[](#worker 'Direct link to heading')
+
+Worker processes are constantly running processes that are exposed to neither external nor internal traffic. Workers have no URLs or ports - they're best suited for background processes, queuing systems, etc. Most of the configuration options are identical to web applications, excluding the options that manage the endpoint.
+
+### Jobs and Cron Jobs[](#jobs-and-cron-jobs 'Direct link to heading')
+
+Jobs are processes that run to completion. They're best suited for ephemeral tasks such as database migration or clean up scripts.
+
+On Porter, you can run either **one-off jobs** or **cron jobs**. One-off jobs can be triggered manually through the dashboard or using the CLI. Cron jobs run periodically on a schedule specified as a cron expression. Please see the [Running Jobs and Cron Jobs](/running-jobs/overview) documentation section for more information.

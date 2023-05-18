@@ -1,0 +1,12 @@
+---
+title: "HTTPS and Domains"
+sidebarTitle: "Overview"
+---
+
+Porter secures all application endpoints with SSL using [cert-manager](https://cert-manager.io/) and [Let's Encrypt](https://letsencrypt.org/). There are three options for domains:
+
+* [Porter Domains](/standard/deploying-applications/https-and-domains/porter-domains) \-- these domains are of the form `*.onporter.run`. They are designed to be used for testing and staging environments, but are not meant to run production applications.
+* [Custom Domains](/standard/deploying-applications/https-and-domains/custom-domains) \-- this guide shows you how to set up a custom domain for your applications.
+* [Wildcard Domains](/standard/deploying-applications/https-and-domains/wildcard-domains) \-- this guide shows you how to set up a wildcard domain that can use the same SSL certificate per subdomain.
+
+To view more details about viewing SSL certificates, see the [SSL Certificates](/standard/deploying-applications/https-and-domains/ssl-certificates) guide.

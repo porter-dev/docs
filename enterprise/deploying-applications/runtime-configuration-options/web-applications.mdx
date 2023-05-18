@@ -24,17 +24,17 @@ The port that your application exposes for receiving traffic.
 
 This option allows you to expose a webhook for your application which can update the container image that's running. This is useful for programmatically redeploying a Docker image from an automated script.
 
-<Info>For more information about webhooks and auto-deployment, see the [docs on programmatic Docker deployments](/deploying-applications/deploying-from-docker-registry/deploying#programmatic-updates)</Info>
+<Info>For more information about webhooks and auto-deployment, see the [docs on programmatic Docker deployments](/enterprise/deploying-applications/deploying-from-docker-registry/deploying#programmatic-updates)</Info>
 
 ### Network Settings[](#network-settings "Direct link to heading")
 
 #### Expose to external traffic[](#expose-to-external-traffic "Direct link to heading")
 
-Selecting this option will create a public endpoint for your application. If this option is selected but a custom domain is not specified, the application will use a [Porter domain](/deploying-applications/https-and-domains/porter-domains).
+Selecting this option will create a public endpoint for your application. If this option is selected but a custom domain is not specified, the application will use a [Porter domain](/enterprise/deploying-applications/https-and-domains/porter-domains).
 
 #### Configure Custom Domain[](#configure-custom-domain "Direct link to heading")
 
-Selecting this option will expand a section that allows you to configure a set of custom domains for your application. See the [docs on custom domains](/deploying-applications/https-and-domains/custom-domains) for more information.
+Selecting this option will expand a section that allows you to configure a set of custom domains for your application. See the [docs on custom domains](/enterprise/deploying-applications/https-and-domains/custom-domains) for more information.
 
 ##### Enable TLS and automatically create certificates[](#enable-tls-and-automatically-create-certificates "Direct link to heading")
 
@@ -85,7 +85,7 @@ cert-manager.io/cluster-issuer: letsencrypt-prod
 
 ### Custom Health Checks[](#custom-health-checks "Direct link to heading")
 
-Custom health checks are endpoints that indicate if an application is healthy and ready to receive traffic. These are documented in detail in the [Zero-Downtime Deployments](/deploying-applications/zero-downtime-deployments) guide.
+Custom health checks are endpoints that indicate if an application is healthy and ready to receive traffic. These are documented in detail in the [Zero-Downtime Deployments](/enterprise/deploying-applications/zero-downtime-deployments) guide.
 
 ### Persistent Disks[](#persistent-disks "Direct link to heading")
 
@@ -96,7 +96,7 @@ Persistent disks mount a persistent filesystem into your application instance th
 
 ### Termination Grace Period[](#termination-grace-period "Direct link to heading")
 
-The termination grace period is the number of seconds after `SIGTERM` is sent before the application will be forcefully killed. This is documented in detail in the [Zero-Downtime Deployments](/deploying-applications/zero-downtime-deployments) guide.
+The termination grace period is the number of seconds after `SIGTERM` is sent before the application will be forcefully killed. This is documented in detail in the [Zero-Downtime Deployments](/enterprise/deploying-applications/zero-downtime-deployments) guide.
 
 ### Container Hooks[](#container-hooks "Direct link to heading")
 

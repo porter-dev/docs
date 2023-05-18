@@ -1,0 +1,69 @@
+---
+title: "Updating an Application from the CLI"
+---
+
+## Introduction[](#introduction "Direct link to heading")
+
+You can update an existing application that was deployed from either the dashboard or the CLI. The root command for updating an application is:
+
+```yaml
+porter update --app [app-name]
+
+```
+
+Where `app-name` is the name of a web, worker, or job application on the Porter dashboard. The default behavior of this command is to build a new image using the local filesystem, push this image to the connect image repository, and re-deploy the application on the Porter dashboard. However, each of these steps can be configured.
+
+As with the [porter create command](/standard/deploying-applications/deploying-from-cli/creating-an-application), you can update the configuration that an application uses by passing in the `--values` flag, which should pass the filepath to a `values.yaml` file. **Note that this command merges the `values.yaml` file with your existing configuration, so you should only specify options that you would like to modify**. For example, the following `values.yaml` file:
+
+```yaml
+container:
+  port: 8080
+
+```
+
+Would only update the container port to `8080`, while keeping your existing configuration, after running the command:
+
+```yaml
+porter update --app --values ./values.yaml
+
+```
+
+Go to the [common configuration options](/standard/deploying-applications/deploying-from-cli/common-configuration-options) section to view `values.yaml` files for common use-cases.
+
+<Info>If you have experience with Kubernetes/Helm, you can also view all possible configuration options in the `values.yaml` files of the respective applications: [web](https://github.com/porter-dev/porter-charts/blob/master/applications/web/values.yaml), [worker](https://github.com/porter-dev/porter-charts/blob/master/applications/worker/values.yaml), and [job](https://github.com/porter-dev/porter-charts/blob/master/applications/job/values.yaml).</Info>
+
+## Building from Local Files[](#building-from-local-files "Direct link to heading")
+
+The default behavior of this command will vary depending on if the application already has a Github repository source specified:
+
+* If this application has a linked Github repository source, it will use the build settings from the linked source. That is, if the Github build settings specify a Dockerfile, this command will use the path to that Dockerfile.
+* If the application does not have a linked source, this command will default to using a Dockerfile located at the root of the directory, at the path `./Dockerfile`. If a `Dockerfile` is not found, Porter will use a [Heroku-18](https://devcenter.heroku.com/articles/heroku-18-stack) buildpack to build your application.
+
+These default behaviors can be overwritten through a combination of the `--method` flag, the `--dockerfile` flag, and the `--path` flag:
+
+## Building from Github[](#building-from-github "Direct link to heading")
+
+If you specify `--source github`, this command will look for a remote Github repository that has been linked to this application. If one is found, the command will download an archive of the Github repository from the latest commit of the linked branch, and will use that as the filesystem to build from.
+
+## Updating Configuration without Building[](#updating-configuration-without-building "Direct link to heading")
+
+If you would only like to update the configuration for your application via a `values.yaml` file (without building a new image), you can do so with the following command:
+
+```
+porter update config --app [app-name] --values [values-file]
+
+```
+
+For example, to update the app `web-test`, and to programmatically set the environment variables for that application, you can create a file called `web-test-values.yaml` with the following structure:
+
+```yaml
+container:
+  env:
+    normal:
+      TESTING: test-from-cli
+
+```
+
+If you then run `porter update config --app web-test --values web-test-values.yaml`, you'll now see the new values in the application:
+
+![CLI env vars](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/79ccd15e-3fed-4e45-b5a2-c6769ef67c00/large "Screen Shot 2021-08-20 at 11.51.41 AM.png")

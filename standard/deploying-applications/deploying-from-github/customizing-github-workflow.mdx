@@ -1,0 +1,38 @@
+---
+title: "Customizing your Github Workflow"
+---
+
+It is possible to customize your Github workflow file after it is written to the repository. Porter offers a Github actions step that allow you to customize your Github actions workflows to accommodate different workflows:
+
+* [Run any CLI command](https://github.com/marketplace/actions/run-porter-cli) \-- this action allows you to run any CLI command, so that you can compose your own workflows.
+
+<Note>Full documentation for writing Github actions files can be found [here](https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions).</Note>
+
+## Examples[](#examples "Direct link to heading")
+
+### Updating the Image Tag of an Application[](#updating-image-tags "Direct link to heading")
+
+If you've deployed an application from an existing Docker registry, you can update the image tag of an application
+in your CI/CD file using the Porter CLI.
+
+You can use [this Github action](https://github.com/porter-dev/porter-cli-action). For example:
+
+```
+# ... the rest of your Github action
+steps:
+  - name: Checkout code
+    uses: actions/checkout@v2.3.4
+  - name: Set Github tag
+    id: vars
+    run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+  - name: Update a Porter application
+    timeout-minutes: 20
+    uses: porter-dev/porter-cli-action@v0.1.0
+    with:
+      command: app update-tag APP_NAME --tag ${{ steps.vars.outputs.sha_short }}
+    env:
+      PORTER_HOST: https://dashboard.getporter.dev
+      PORTER_CLUSTER: 1234
+      PORTER_PROJECT: 4321
+      PORTER_TOKEN: ${{ secrets.PORTER_TOKEN }}
+```
