@@ -18,12 +18,6 @@
       "name": "Dashboard",
       "url": "https://dashboard.getporter.dev"
     },
-    "topbarLinks": [
-      {
-        "name": "Book a Demo",
-        "url": "https://porter.run/?demo=true"
-      }
-    ],
     "anchors": [
       {
         "name": "Get Started",
