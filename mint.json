@@ -19,6 +19,12 @@
       "name": "Dashboard",
       "url": "https://dashboard.getporter.dev"
     },
+    "topbarLinks": [
+      {
+        "name": "Talk to us",
+        "url": "https://cal.com/talk-to-porter/15min"
+      }
+    ],
     "anchors": [
       {
         "name": "Get Started",
