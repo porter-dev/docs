@@ -14,9 +14,9 @@ Next, you should enable preview environments for your specific repository. To do
 
 To remove preview environments from a repository, click on the **Configure** button, which will pull up a list of the repositories where preview environments are currently enabled. Click on the delete icon next to the repository to remove the integration.
 
-## Create a `porter.yaml` File[](#create-a-porteryaml-file "Direct link to heading")
+## Create a `preview.yaml` File[](#create-a-porteryaml-file "Direct link to heading")
 
-The last step is to create a `porter.yaml` file for your application. This file specifies the list of applications and addons that you'd like to deploy, and the build configuration settings for your application. Here's an example `porter.yaml` file:
+The last step is to create a `preview.yaml` file for your application. This file specifies the list of applications and addons that you'd like to deploy, and the build configuration settings for your application. Here's an example `preview.yaml` file:
 
 ```
 # The YAML reference version: v1 is the only option for now
@@ -47,7 +47,7 @@ resources:
 
 ```
 
-Now that the repository has been added and the `porter.yaml` file has been created, new PRs created will trigger a new preview environment, and updates to that PR will re-build and re-deploy the environment. Each time the preview environment is deployed, a Github comment will be added to the PR indicating the URL that the PR is deployed on:
+Now that the repository has been added and the `preview.yaml` file has been created, new PRs created will trigger a new preview environment, and updates to that PR will re-build and re-deploy the environment. Each time the preview environment is deployed, a Github comment will be added to the PR indicating the URL that the PR is deployed on:
 
 ![Bot Comment](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/76356cd8-8e9c-4189-00f2-6b96aa19b200/large "Bot Comment")
 

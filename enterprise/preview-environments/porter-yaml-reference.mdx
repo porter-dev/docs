@@ -1,10 +1,10 @@
 ---
-title: "Porter YAML Reference"
+title: "Preview YAML Reference"
 ---
 
-This document contains a full reference file for `porter.yaml`. Each `porter.yaml` file has the following high-level structure:
+This document contains a full reference file for `preview.yaml`. Each `preview.yaml` file has the following high-level structure:
 
-* [version](#version) \- the version of the `porter.yaml` file reference to use.
+* [version](#version) \- the version of the `preview.yaml` file reference to use.
 * [resources](#resources) \- a list of resources to create.  
    * [name](#resourcename) \- the unique ID of the resource.  
    * [driver](#resourcedriver) \- the name of the driver to use for the resource.  
@@ -15,7 +15,7 @@ This document contains a full reference file for `porter.yaml`. Each `porter.yam
 
 ## `version`[](#version "Direct link to heading")
 
-The version of the `porter.yaml` file reference to use. Currently, only `v1` is supported:
+The version of the `preview.yaml` file reference to use. Currently, only `v1` is supported:
 
 ```
 version: v1
@@ -101,15 +101,15 @@ The target specifies the specifics of the project, cluster, etc., the applicatio
 
 * `project` \[`Integer`, optional\] \- the Porter project ID to deploy the resource to. This is resolved in the following manner:  
    * Checks for the `PORTER_PROJECT` environment variable and uses it if it is set to a non-zero value.  
-   * Next, checks for the value of `target.project` in the `porter.yaml` file and uses it if it is set to a non-zero value.  
+   * Next, checks for the value of `target.project` in the `preview.yaml` file and uses it if it is set to a non-zero value.  
    * Lastly, defaults back to the CLI configuration value for the project, set by using the `porter config set-project` command.
 * `cluster` \[`Integer`, optional\] \- the Porter cluster ID in the project to deploy the resource to. This is resolved in the following manner:  
    * Checks for the `PORTER_CLUSTER` environment variable and uses it if it is set to a non-zero value.  
-   * Next, checks for the value of `target.cluster` in the `porter.yaml` file and uses it if it is set to a non-zero value.  
+   * Next, checks for the value of `target.cluster` in the `preview.yaml` file and uses it if it is set to a non-zero value.  
    * Lastly, defaults back to the CLI configuration value for the cluster, set by using the `porter config set-cluster` command.
 * `namespace` \[`String`, optional\] \- the namespace in the cluster to deploy the resource to. This is resolved in the following manner:  
    * Checks for the `PORTER_NAMESPACE` environment variable and uses it if it is set to a non-empty string.  
-   * Next, checks for the value of `target.namespace` in the `porter.yaml` file and uses it if it is set to a non-empty string.  
+   * Next, checks for the value of `target.namespace` in the `preview.yaml` file and uses it if it is set to a non-empty string.  
    * Lastly, uses the `default` namespace if the above steps do not resolve to a non-empty string value.
 
 **Note:** In some cases, the `target` section can also contain the `app_name` field to denote the Porter release name.

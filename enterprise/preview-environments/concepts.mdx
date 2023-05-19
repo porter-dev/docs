@@ -16,13 +16,13 @@ A preview environment deployment is a collection of apps and addons on Porter. F
 
 An `Environment` is to a GitHub repository just like a `Deployment` is to a pull request in that repository.
 
-## `porter.yaml` file[](#porteryaml-file "Direct link to heading")
+## `preview.yaml` file[](#porteryaml-file "Direct link to heading")
 
-To enable deployments to Porter preview environments, you must add a `porter.yaml` file to the root directory of your GitHub repository. A detailed reference can be found in the [Porter YAML Reference](/preview-environments/porter-yaml-reference) document.
+To enable deployments to Porter preview environments, you must add a `preview.yaml` file to the root directory of your GitHub repository. A detailed reference can be found in the [Porter YAML Reference](/preview-environments/porter-yaml-reference) document.
 
 ## Resource[](#resource "Direct link to heading")
 
-A resource is the basic building block of a `porter.yaml` file and describes the steps to build and deploy the same to Porter. Resources contain information about the kind of Porter release they build.
+A resource is the basic building block of a `preview.yaml` file and describes the steps to build and deploy the same to Porter. Resources contain information about the kind of Porter release they build.
 
 ### Resource Dependencies[](#resource-dependencies "Direct link to heading")
 
@@ -34,7 +34,7 @@ A driver instructs a resource to act in a certain way. For example, the default 
 
 ### Driver Configuration[](#driver-configuration "Direct link to heading")
 
-Every driver expects a configuration section (in the form of [<resource>.config](/preview-environments/porter-yaml-reference#resourceconfig)) in the `porter.yaml` file. This section may be different for different drivers and provides it with the information required to carry out its operation over the resource attached to the driver.
+Every driver expects a configuration section (in the form of [<resource>.config](/preview-environments/porter-yaml-reference#resourceconfig)) in the `preview.yaml` file. This section may be different for different drivers and provides it with the information required to carry out its operation over the resource attached to the driver.
 
 ### Driver Outputs[](#driver-outputs "Direct link to heading")
 
