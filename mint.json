@@ -245,19 +245,18 @@
             "group": "Preview Environments",
             "pages": [
                 "enterprise/preview-environments/overview",
-                "enterprise/preview-environments/concepts",
                 "enterprise/preview-environments/setup",
                 "enterprise/preview-environments/porter-yaml-reference",
                 {
                   "group": "Drivers",
                   "pages": [
-                      "enterprise/drivers/deploy",
-                      "enterprise/drivers/build-image",
-                      "enterprise/drivers/push-image",
-                      "enterprise/drivers/update-config",
-                      "enterprise/drivers/random-string",
-                      "enterprise/drivers/env-group",
-                      "enterprise/drivers/os-env"
+                      "enterprise/preview-environments/drivers/deploy",
+                      "enterprise/preview-environments/drivers/build-image",
+                      "enterprise/preview-environments/drivers/push-image",
+                      "enterprise/preview-environments/drivers/update-config",
+                      "enterprise/preview-environments/drivers/random-string",
+                      "enterprise/preview-environments/drivers/env-group",
+                      "enterprise/preview-environments/drivers/os-env"
                   ]
                 },
                 {
