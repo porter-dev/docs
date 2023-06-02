@@ -268,8 +268,8 @@
                 {
                   "group": "Examples",
                   "pages": [
-                    "enterprise/examples/basic-web-application",
-                    "enterprise/other/web-and-database"
+                    "enterprise/preview-environments/examples/basic-web-application",
+                    "enterprise/preview-environments/other/web-and-database"
                   ]
                 }
             ]
