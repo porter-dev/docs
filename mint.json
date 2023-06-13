@@ -271,7 +271,7 @@
               "group": "Examples",
               "pages": [
                 "enterprise/preview-environments/examples/basic-web-application",
-                "enterprise/preview-environments/other/web-and-database"
+                "enterprise/preview-environments/examples/web-and-database"
               ]
             }
           ]
