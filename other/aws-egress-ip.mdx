@@ -1,0 +1,28 @@
+---
+title: "Egress IPs"
+sidebarTitle: 'Egress IPs'
+---
+
+Some third-party platforms may find it necessary to whitelist connections made from your Porter-provisioned infrastructure. This guide walks you through determing the egress IPs used by your applications.
+
+## AWS
+
+### AWS CLI
+
+After ensuring you have the AWS CLI installed and configured to access the account which contains your Porter cluster, run the following command:
+
+```bash
+aws ec2 describe-nat-gateways --filter "Name=tag-key,Values=kubernetes.io/cluster/<CLUSTER_NAME>" --query "NatGateways[*].NatGatewayAddresses[0].PublicIp"
+```
+
+You'll need to replace `<CLUSTER_NAME>` with the name of your cluster. This command will return the Egress IP which you can use to whitelist your workloads with third party platforms. In case your cluster has multiple gateways, there will be multiple egress IPs.
+
+### AWS VPC Console
+
+1. Log into the AWS account containing your Porter cluster, and navigate to the `VPC` console.
+
+2. In the left pane, select `NAT gateways`, and you'll be able to see your cluster's NAT gateways; they'll be named after your cluster. Alternatively, you can use `kubernetes.io/cluster/<CLUSTER_NAME>: shared` to pull up the cluster's NAT gateways, where `CLUSTER_NAME` corresponds to your Porter cluster name.
+
+3. Copy the contents of `Primary public IP` - this serves as the Egress IP which you can use to whitelist your workloads with third party platforms. In case your cluster has multiple gateways, there will be multiple egress IPs.
+
+![aws-egress-ip](/images/other/54ab5315-310d-438d-9360-41812623b004.png)
