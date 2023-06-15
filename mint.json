@@ -286,7 +286,8 @@
         "other/kubernetes-101",
         "other/modify-autoscaling-limits",
         "other/deleting-dangling-resources",
-        "other/porter-ip-ranges"
+        "other/porter-ip-ranges",
+        "other/allowlist-cidr-ranges"
       ]
     },
     {
