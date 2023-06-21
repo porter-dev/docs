@@ -1,0 +1,115 @@
+---
+title: "Migrate from Heroku"
+---
+
+This guide will walk you through how to migrate from Heroku to Porter step by step. It usually takes around an hour to 
+complete the steps outlined in this guide.
+
+# Step 1: Provision Infrastructure
+
+<Info> Estimated time of completion: 30 minutes </Info>
+
+Unlike Heroku, Porter deploys applications on your own infrastructure. Accordingly, the first step would be to grant Porter permissions to your AWS
+account to create the necessary underlying infrastructure for you to start deploying applications. [Please follow this guide](/standard/getting-started/provisioning-on-aws) to provision
+the required infrastructure in your AWS account.
+
+# Step 2: Convert your `Procfile` to `porter.yaml`
+
+<Info> Estimated time of completion: 5 minutes </Info>
+
+Once your infrastructure has been provisioned, you will be able to [launch applications](standard/getting-started/deploy-overview#launch-your-application) from the dashboard.
+You can deploy your application on Porter using a `porter.yaml` file. While this is an optional step, `porter.yaml` allows you to declare your
+application in a similar way as you can on Heroku using a `Procfile`. 
+
+Converting a `Procfile` into a `porter.yaml` file is straightforward. For example, a `Procfile` that looks like this:
+
+```
+web: puma
+worker: sidekiq-process-manager
+release: bundle exec rake db:migrate
+```
+
+can be converted into the following `porter.yaml` file:
+
+```
+apps:
+  web:
+    run: "puma"
+  worker:
+    run: "sidekiq-process-manager"
+  release:
+    run: "bundle exec rake db:migrate"
+```
+
+It is possible to configure more than just start commands on `porter.yaml`. For a full guide on how to write a `porter.yaml` file, [take a look here](standard/deploying-applications/writing-porter-yaml).
+
+# Step 3: Launch Applications
+
+<Info> Estimated time of completion: 10 minutes </Info>
+
+Once the `porter.yaml` file is ready and is present in the root folder of your repository, you can simply link up your repository. Porter will detect your `porter.yaml` file
+and create your application accordingly. Porter supports Heroku's own buildpacks, so your applications will be built the exact same way as you can on Heroku. If you are capable of it, however,
+we recommend that you write a `Dockerfile` for your application.
+
+If you are using custom buildpacks, you will have to fork the custom buildpack you are using and make it compatible with [Cloud Native Buildpacks](https://buildpacks.io/).
+Doing this is not arbitrary, and in most cases we recommend that you write a `Dockerfile` for your application instead. If you are not able to write a `Dockerfile` 
+and are using any of the following custom buildpacks, we maintain a fork of these custom buildpacks that you can just plug into **Build Settings** from the dashboard.
+
+* `libvips` - Installs the `libvips` library (https://github.com/portersupport/cnb-libvips)
+* `wkhtmltopdf` - Downloads and extracts the `wkhtmltopdf` binaries (https://github.com/portersupport/heroku-buildpack-wkhtmltopdf-1)
+* `puppeteer` - Installs dependencies needed in order to run puppeteer (https://github.com/portersupport/cnb-puppeteer)
+* `ffmpeg` - Installs `ffmpeg` and its dependencies (https://github.com/portersupport/heroku-buildpack-ffmpeg-latest)
+* `apt-buildpack` - Installs dependencies declared in the `Aptfile` (https://github.com/portersupportapt-buildpack)
+* `geo-buildpack` - Installs GEOS libraries (https://github.com/portersupport/cn-buildpack-geo)
+
+If you'd like to request a custom buildpack that you are using, please email us at contact [at] porter.run with the subject "Buildpack Request".
+We will review the requested buildpack and let you know if we can support it. While we maintain these buildpacks, we still recommend you to write a `Dockerfile` instead if possible.
+
+For a step by step guide on how to do this, [please follow this guide](standard/getting-started/deploying-first-application).
+
+# Step 4: Copy over Environment Variables
+
+<Info> Estimated time of completion: 5 minutes </Info>
+
+Once you've specified your repository and build settings, you will be prompted to add environment variables. To do this quickly without having to copy over each variable one by one,
+simply run `printenv` from your Heroku console or the CLI:
+```
+heroku run printenv
+```
+
+Then, simply copy and paste the output into the application by clicking on the **Load from File** button.
+
+Heroku attaches a lot of variables automatically even if you don't specify them, so the output from `printenv` will contain some variables that you did not add yourself. 
+You will need to remove some of these environment variables that are specific to Heroku. The important environment variable that's essential to remove is the `PATH` environment variable as this would
+cause the build process to fail. With this copied set of environment variables, click on **Deploy**.
+
+# Step 5: Debugging your build process on GitHub Actions
+
+Porter uses [GitHub Actions to build your applications](https://docs.porter.run/standard/getting-started/build). To debug your application builds, take a look at your build logs from the **Actions** tab
+of your repository. To change your build settings or environment variables, simply edit it from the Porter dashboard. If you navigate to **Build Settings**, you'll see a checkbox
+that says **Re-run build and deploy on save**. With that setting enabled, click on **Save Build Settings** to re-run the build. 
+
+![rerun build](/images/other/re-run-build.png)
+
+Of course, you can also trigger the build from the GitHub actions tab. Consult the [GitHub Actions documentation](https://docs.github.com/en/actions) for more info about Actions.
+
+# Step 6: Allocate Resources
+
+Once your application has built and you can verify that it's running properly, next step is to rightsize your applications with an appropriate amount of RAM and CPU.
+
+Here's the resource allocation that corresponds to each dyno type:
+* **Standard 1X Dyno** - 1000m vCPU, 500MB RAM
+* **Standard 2X Dyno** - 1000m vCPU, 1GB RAM
+* **Performance-M Dyno** - 1000m vCPU, 2.5GB RAM
+* **Performance-L Dyno** - 2000m vCPU, 14GB RAM
+
+# Step 7: Switch over DNS
+
+The final step is to switch over your production traffic by changing your DNS records. [Follow this guide](https://docs.porter.run/standard/deploying-applications/https-and-domains/custom-domains) to add your custom domain to the 
+application and create a `CNAME` record in your DNS provider that points to the Load Balancer's IP address as specified in the aformentioned docs. This switchover may incur downtime. In most cases, this switchover does not incur more than
+5 minutes of downtime. We recommend doing this during your low-traffic hours.
+
+## Support
+If you need assistance during the migration, please join our [discord community]("https://discord.com/invite/FaaFjb6DXA") for help. We also offer a white-glove migration package for companies who would be subscribing to Porter's enterprise tier.
+
+For more information, please visit https://migratefromheroku.com.

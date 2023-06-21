@@ -268,8 +268,8 @@
                 {
                   "group": "Examples",
                   "pages": [
-                    "enterprise/examples/basic-web-application",
-                    "enterprise/other/web-and-database"
+                    "enterprise/preview-environments/examples/basic-web-application",
+                    "enterprise/preview-environments/examples/web-and-database"
                   ]
                 }
             ]
@@ -283,7 +283,8 @@
           "other/team-management-and-authorization",
           "other/kubernetes-101",
           "other/modify-autoscaling-limits",
-          "other/deleting-dangling-resources"
+          "other/deleting-dangling-resources",
+          "other/migrate-from-heroku"
         ]
       },
       {
@@ -296,7 +297,7 @@
     ],
     "footerSocials":
       {
-          "twitter": "https://twitter.com/getporterdev",
+          "twitter": "https://twitter.com/porterdotrun",
           "discord": "https://discord.com/invite/FaaFjb6DXA"
       },
       "integrations": {
