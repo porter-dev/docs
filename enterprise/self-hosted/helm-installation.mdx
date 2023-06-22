@@ -1,0 +1,96 @@
+---
+title: 'Helm installation'
+---
+
+## Deploying Porter via Helm
+
+It is possible to deploy Porter on an existing Kubernetes cluster using Helm. For a basic installation, run the following:
+
+```sh
+helm repo add porter https://charts-self-hosted.porter.run
+helm install porter porter/porter
+```
+
+By default, the Porter instance is configured to connect to the same cluster instance it is installed on. To get started, run the following:
+
+```sh
+kubectl port-forward pod/<porter-pod> 8080:8080
+```
+
+Then, navigate to the Porter dashboard at `http://localhost:8080` and log in. If you are the first user created on the Porter instance, you will be automatically added to the `default` project, which is connected to the cluster. After logging in, you will have access to the dashboard, which will look something like this:
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/bce6db57-2264-4b4b-93fa-a3f78e1d8100/large)
+
+To link your own Helm registry, please see the instructions [here](../integrations/helm-registries).
+
+## Adding Github Repository Integrations
+
+To enable Github repository integrations (which enables launching applications from Github actions), follow the instructions for [generating Github app credentials](https://docs.porter.run/self-hosted/integrations/github#setting-up-github-repository-integrations). Copy the contents of the private key generated in step #2, and add the following to your Helm values:
+
+```yaml
+server:
+  githubApp:
+    enabled: true
+    clientId: <GITHUB_APP_CLIENT_ID>
+    clientSecret: <GITHUB_APP_CLIENT_SECRET>
+    webhookSecret: <GITHUB_APP_WEBHOOK_SECRET>
+    name: <GITHUB_APP_NAME>
+    id: <GITHUB_APP_ID>
+    privateKey: |
+      -----BEGIN RSA PRIVATE KEY-----
+      <PRIVATE_KEY_CONTENTS>
+      -----END RSA PRIVATE KEY-----
+```
+
+## Adding Support for Github Preview Environments
+
+To enable preview environments from GitHub (creating stacks of applications from a `porter.yaml` file per PR), generate an arbitrary 32 character `<secret>` and add the following to your Helm values:
+
+```yaml
+server:
+  additionalEnv:
+    GITHUB_INCOMING_WEBHOOK_SECRET: <secret>
+```
+
+## Securing your Installation
+
+There are several parameters that should be set in order to secure your installation. Note that updating database encryption keys may cause existing credentials to become unreadable - see the [rotating credentials](#rotating-credentials) section below for more information. The following values should be set for secure installations:
+
+```yaml
+server:
+  cookieSecret: "random_hash_key_;random_block_key" # the random hash key and block key should be 16 characters
+  dbEncryptionKey: "__random_strong_encryption_key__" # the db encryption key should be 32 characters
+  tokenEncryptionKey: "__random_strong_encryption_key__" # the token encryption key should be 32 characters
+```
+
+For example, this can be generated via the following command:
+
+```sh
+echo "
+server:
+  cookieSecret: \"$(cat /dev/urandom | base64 | head -c 16);$(cat /dev/urandom | base64 | head -c 16)\"
+  dbEncryptionKey: \"$(cat /dev/urandom | base64 | head -c 32)\"
+  tokenEncryptionKey: \"$(cat /dev/urandom | base64 | head -c 32)\"
+"
+```
+
+## Rotating Credentials
+
+#### Rotating Database Encryption Keys
+
+In order to rotate database encryption keys for the instance, you must set the following variables:
+
+```yaml
+server:
+  dbEncryptionKey: "__random_strong_encryption_key__"
+  oldDBEncryptionKey: "__random_strong_encryption_key__"
+  newDBEncryptionKey: "__random_strong_encryption_key__"
+```
+
+#### Rotating Token Encryption Keys
+
+If you'd like to rotate token encryption keys, it will cause all existing issued tokens to become invalid. To change the token encryption key, simply modify the `server.tokenEncryptionKey` variable.
+
+#### Rotating Cookie Secrets
+
+If you'd like to rotate the cookie secret, it will cause all existing sessions to become invalid, logging out all users. The user will need to log back in again in order to use Porter. This will not impact CLI authentication or token-based authentication to the API (for example, from a CI process). To change the cookie secrets, simply modify the `server.cookieSecret` variable.
