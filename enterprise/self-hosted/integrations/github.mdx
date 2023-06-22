@@ -1,51 +1,8 @@
-In order to offer GitHub login, you will need to set up an OAuth application in GitHub that will authorize reading GitHub user data. To offer reading from/writing to GitHub repositories, you need to create a GitHub App in GitHub. In this guide, we assume you are setting up a GitHub integration for a Porter instance running on `porter.example.com`. Let's get started!
+## Setting Up GitHub Repository Integrations
 
-## Setting Up GitHub Login
+### Step 1: GitHub App Creation
 
-### Step 1: GitHub OAuth Application Creation
-
-:::info
-
-**Note:** you can view the most up-to-date instructions for creating a Github OAuth app in the [Github documentation](https://docs.github.com/en/developers/apps/creating-an-oauth-app).
-
-:::
-
-Navigate to your organization settings page (alternately, you can navigate to your personal settings page) and select **Developer Settings** in the sidebar. Go to **OAuth Apps** and select **New OAuth App**. You can fill it in with the following fields:
-
-- **Application name:** Porter
-- **Homepage URL:** https://getporter.dev
-- **Authorization callback URL:** `https://<your-domain>/api/oauth/github/callback`
-
-The registration form should look something like this:
-
-![Github App Creation](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/60d32e97-ef0c-465c-8550-d69fa0926c00/large "Github App Creation")
-
-After creating the OAuth application, select "Generate a new client secret" and store the secret value somewhere. You will need this for the next step.
-
-### Step 2: Update Porter Environment Variables
-
-Add the following Github credentials to your Porter instance:
-
-```sh
-GITHUB_CLIENT_ID=<your-github-client-id>
-GITHUB_CLIENT_SECRET=<your-github-client-secret>
-```
-
-:::info
-
-**Note:** if you ever want to enable Github login, you can set the environment variable `GITHUB_LOGIN_ENABLED=false`.
-
-:::
-
-Restart the Porter instance, and you will be given the option to log in with Github!
-
-![Github Sign-In](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/484b31db-8070-4276-56c5-ea57c6eb3d00/large "Github Sign-In")
-
-## Setting Up Github Repository Integrations
-
-### Step 1: Github App Creation
-
-Navigate to your organization settings page (alternately, you can navigate to your personal settings page) and select **Developer Settings** in the sidebar. Go to **Github Apps** and select **New Github App**. You should use the following settings:
+Navigate to your organization settings page (alternately, you can navigate to your personal settings page) and select **Developer Settings** in the sidebar. Go to **GitHub Apps** and select **New GitHub App**. You should use the following settings:
 
 - Callback URL: `<protocol>://<your-domain>/api/oauth/github-app/callback`
 - The **Request user authorization (OAuth) during installation** checkbox should be checked.
@@ -53,28 +10,28 @@ Navigate to your organization settings page (alternately, you can navigate to yo
 - Webhook secret: generate a random webhook secret for your domain, for example by running `cat /dev/urandom | base64 | head -c 32`.
 - Permissions:
   - **Repository:**
-    - **Actions (Read & write):** required for Porter to write Github actions YAML files to the repository.
-    - **Administration (Read & write):** required for Porter to create a new Github environment called `Preview` for deployments. The administration API isn't used otherwise.
-    - **Contents (Read & write):** required for Porter to write Github actions YAML files to the repository.
+    - **Actions (Read & write):** required for Porter to write GitHub Actions YAML files to the repository.
+    - **Administration (Read & write):** required for Porter to create a new GitHub environment called `Preview` for deployments. The administration API isn't used otherwise.
+    - **Contents (Read & write):** required for Porter to write GitHub actions YAML files to the repository.
     - **Deployments (Read & write):** required for Porter to request Github deployments to the `Preview` environment.
-    - **Environments (Read & write):** required for Porter to create a new Github environment called `Preview` for deployments.
+    - **Environments (Read & write):** required for Porter to create a new GitHub environment called `Preview` for deployments.
     - **Metadata (Read-only):** mandatory, required for Github apps that integrate with repositories.
-    - **Pull Requests (Read & write):** required for Porter to add comments to Github PRs.
+    - **Pull Requests (Read & write):** required for Porter to add comments to GitHub PRs.
     - **Secrets (Read & write):** required for Porter to write a `PORTER_TOKEN` secret to the repository automatically. We **do not** read any secrets from the repository beyond those prefixed with `PORTER_`.
-    - **Webhooks (Read & write):** required for Porter to create a Github repository webhook to trigger new preview environment runs.
-    - **Workflows (Read & write):** required for Porter to write Github actions YAML files to the repository.
+    - **Webhooks (Read & write):** required for Porter to create a GitHub repository webhook to trigger new preview environment runs.
+    - **Workflows (Read & write):** required for Porter to write GitHub actions YAML files to the repository.
   - **Organization:**
-    - **Members (read-only)**: required for Porter to create a new Github environment called `Preview` for deployments.
+    - **Members (read-only)**: required for Porter to create a new GitHub environment called `Preview` for deployments.
   - **Account:**
-    - **Email addresses (read-only)**: required for Porter to read your Github email address for authentication.
+    - **Email addresses (read-only)**: required for Porter to read your GitHub email address for authentication.
 
 ### Step 2: Downloading a Private Key
 
-After creating the Github App, generate a new private key for your app. Put this private key either somewhere in your filesystem, or mount it into the container if using Kubernetes or Swarm to deploy.
+After creating the GitHub App, generate a new private key for your app. Put this private key either somewhere in your filesystem, or mount it into the container if using Kubernetes or Swarm to deploy.
 
 ### Step 3: Update Porter Environment Variables
 
-Add the following Github credentials to your Porter instance:
+Add the following GitHub credentials to your Porter instance:
 
 ```sh
 GITHUB_APP_CLIENT_ID=<github-app-id>
@@ -87,14 +44,47 @@ GITHUB_APP_SECRET_PATH=<path-to-secret>
 
 ### Troubleshooting
 
-#### Checking Github App Credentials
+#### Checking GitHub App Credentials
 
-Make sure that all of the credentials and config values you're passing in to the Porter instance match those in the Github app's settings.
+Make sure that all of the credentials and config values you're passing in to the Porter instance match those in the GitHub app's settings.
 
 #### Webhook Failures
 
-If your Github app is connected properly and is showing the correct accounts on the Porter dashboard, but the repos aren't displaying on the Porter dashboard, you can check that the webhooks have been delivered properly from the **Advanced** tab of the Github app's settings. From there, you can view recent webhook deliveries and ensure that they were delivered successfully. If they were not delivered successfully, you can redeliver them or debug the request from this tab.
+If your GitHub app is connected properly and is showing the correct accounts on the Porter dashboard, but the repos aren't displaying on the Porter dashboard, you can check that the webhooks have been delivered properly from the **Advanced** tab of the GitHub app's settings. From there, you can view recent webhook deliveries and ensure that they were delivered successfully. If they were not delivered successfully, you can redeliver them or debug the request from this tab.
 
 #### Deleting and Reinstalling
 
-If you've migrated the Porter instance to use a new database, or the Github app is otherwise not working, you can try to delete the Github app from your repositories and reinstall it. You must do this by navigating to the installation in each account that the Github app is installed. For organizations, you will be able to uninstall the Github app from **Settings** > **Github App** in your organization view on Github. For personal accounts, you can uninstall the Github app from **Settings** > **Applications** in your personal settings view.
+If you've migrated the Porter instance to use a new database, or the GitHub app is otherwise not working, you can try to delete the GitHub app from your repositories and reinstall it. You must do this by navigating to the installation in each account that the GitHub app is installed. For organizations, you will be able to uninstall the GitHub app from **Settings** > **GitHub App** in your organization view on GitHub. For personal accounts, you can uninstall the GitHub app from **Settings** > **Applications** in your personal settings view.
+
+## Setting Up GitHub Login
+
+### Step 1: GitHub OAuth Application Creation
+
+<Info>**Note:** you can view the most up-to-date instructions for creating a Github OAuth app in the [Github documentation](https://docs.github.com/en/developers/apps/creating-an-oauth-app).</Info>
+
+Navigate to your organization settings page (alternately, you can navigate to your personal settings page) and select **Developer Settings** in the sidebar. Go to **OAuth Apps** and select **New OAuth App**. You can fill it in with the following fields:
+
+- **Application name:** Porter
+- **Homepage URL:** https://porter.run
+- **Authorization callback URL:** `https://<your-domain>/api/oauth/github/callback`
+
+The registration form should look something like this:
+
+![GitHub App Creation](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/60d32e97-ef0c-465c-8550-d69fa0926c00/large "GitHub App Creation")
+
+After creating the OAuth application, select "Generate a new client secret" and store the secret value somewhere. You will need this for the next step.
+
+### Step 2: Update Porter Environment Variables
+
+Add the following GitHub credentials to your Porter instance:
+
+```sh
+GITHUB_CLIENT_ID=<your-github-client-id>
+GITHUB_CLIENT_SECRET=<your-github-client-secret>
+```
+
+<Info>**Note:** if you ever want to enable Github login, you can set the environment variable `GITHUB_LOGIN_ENABLED=false`.</Info>
+
+Restart the Porter instance, and you will be given the option to log in with Github!
+
+![GitHub Sign-In](https://user-images.githubusercontent.com/22849518/248030447-2402acc2-aea8-4085-8d7b-b2c3a0951858.png "GitHub Sign-In")
