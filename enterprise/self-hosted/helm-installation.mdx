@@ -21,36 +21,34 @@ Then, navigate to the Porter dashboard at `http://localhost:8080` and log in. If
 
 ![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/bce6db57-2264-4b4b-93fa-a3f78e1d8100/large)
 
-To link your own Helm registry, please see the instructions [here](../integrations/helm-registries).
+## Connecting a Helm Registry
 
-## Adding Github Repository Integrations
+In order to add a public or private Helm registry to your Porter instance, you must first use the CLI to provide the registry URL and optional registry credentials. Make sure you have the Porter CLI installed and set the host for the CLI to your Porter instance via `porter config set-host`. For example, if port-forwarding to localhost, you can run:
 
-To enable Github repository integrations (which enables launching applications from Github actions), follow the instructions for [generating Github app credentials](https://docs.porter.run/self-hosted/integrations/github#setting-up-github-repository-integrations). Copy the contents of the private key generated in step #2, and add the following to your Helm values:
-
-```yaml
-server:
-  githubApp:
-    enabled: true
-    clientId: <GITHUB_APP_CLIENT_ID>
-    clientSecret: <GITHUB_APP_CLIENT_SECRET>
-    webhookSecret: <GITHUB_APP_WEBHOOK_SECRET>
-    name: <GITHUB_APP_NAME>
-    id: <GITHUB_APP_ID>
-    privateKey: |
-      -----BEGIN RSA PRIVATE KEY-----
-      <PRIVATE_KEY_CONTENTS>
-      -----END RSA PRIVATE KEY-----
+```
+porter config set-host http://localhost:8080
+porter auth login
 ```
 
-## Adding Support for Github Preview Environments
+Next, run the following command:
 
-To enable preview environments from GitHub (creating stacks of applications from a `porter.yaml` file per PR), generate an arbitrary 32 character `<secret>` and add the following to your Helm values:
-
-```yaml
-server:
-  additionalEnv:
-    GITHUB_INCOMING_WEBHOOK_SECRET: <secret>
 ```
+porter connect helm
+```
+
+For example, to add the Bitnami Helm registry, the following configuration can be set:
+
+```
+Name: bitnami
+Provide the Helm registry URL, make sure to include the protocol. For example, https://charts.bitnami.com/bitnami.
+Registry URL: https://charts.bitnami.com/bitnami
+Helm repo username (press enter for a public registry):
+Helm registry password (press enter for a public registry).
+```
+
+After this is added, you will see the following on the Porter dashboard from the **Launch** tab:
+
+![image](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/13079fe9-e4ce-4310-b453-79fb35a5a200/large)
 
 ## Securing your Installation
 
@@ -94,3 +92,32 @@ If you'd like to rotate token encryption keys, it will cause all existing issued
 #### Rotating Cookie Secrets
 
 If you'd like to rotate the cookie secret, it will cause all existing sessions to become invalid, logging out all users. The user will need to log back in again in order to use Porter. This will not impact CLI authentication or token-based authentication to the API (for example, from a CI process). To change the cookie secrets, simply modify the `server.cookieSecret` variable.
+
+## Adding GitHub Repository Integrations
+
+To enable GitHub repository integrations (which enables launching applications from GitHub actions), follow the instructions for [generating GitHub app credentials](https://docs.porter.run/enterprise/self-hosted/integrations/github). Copy the contents of the private key generated in step #2, and add the following to your Helm values:
+
+```yaml
+server:
+  githubApp:
+    enabled: true
+    clientId: <GITHUB_APP_CLIENT_ID>
+    clientSecret: <GITHUB_APP_CLIENT_SECRET>
+    webhookSecret: <GITHUB_APP_WEBHOOK_SECRET>
+    name: <GITHUB_APP_NAME>
+    id: <GITHUB_APP_ID>
+    privateKey: |
+      -----BEGIN RSA PRIVATE KEY-----
+      <PRIVATE_KEY_CONTENTS>
+      -----END RSA PRIVATE KEY-----
+```
+
+## Adding Support for GitHub Preview Environments
+
+To enable preview environments from GitHub (creating stacks of applications from a `porter.yaml` file per PR), generate an arbitrary 32 character `<secret>` and add the following to your Helm values:
+
+```yaml
+server:
+  additionalEnv:
+    GITHUB_INCOMING_WEBHOOK_SECRET: <secret>
+```
