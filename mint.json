@@ -53,12 +53,6 @@
       ]
     },
     {
-      "group": "Language/Framework Specific Guides",
-      "pages": [
-        "language-specific-guides/fastapi"
-      ]
-    },
-    {
       "group": "Porter Standard",
       "pages": [
         {
@@ -282,6 +276,12 @@
             }
           ]
         }
+      ]
+    },
+    {
+      "group": "Language Specific Guides",
+      "pages": [
+        "language-specific-guides/fastapi"
       ]
     },
     {
