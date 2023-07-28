@@ -29,16 +29,6 @@ While this does not occur frequently, it is possible that Let's Encrypt is exper
 
 In order to issue a certificate, a small application pod runs on your cluster that responds to the HTTP-01 challenge from Let's Encrypt. If there are not enough cluster resources, this pod might not be created. Make sure that your nodes have enough resources and space available to run your application.
 
-### View and Renew Certificates[](#view-and-renew-certificates "Direct link to heading")
-
-Porter offers a view for seeing all certificates requests in the cluster and manually renewing them. The manual renewal involves deleting the existing certificate request, but **does not delete the actual certificate from the cluster**. However, this could disrupt certificate requests and renewal, so make sure you only do this if the steps above have failed. To view the certificates and request status, navigate to the `cert-manager` namespace, where you should see a `cert-manager` application:
-
-![Cert Manager](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/41576fe4-b7ab-4bdc-5d3b-28e609578800/large "Cert Manager Location")
-
-Click on the `cert-manager` application, and navigate to the **Certificates** tab. In this tab, you will see the certificates on the cluster. From this section, you can choose to manually renew a certificate:
-
-![Cert Manager Renewal](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/15a88aeb-fd9e-418e-db43-e45096940f00/large "Cert Manager Renewal")
-
 ### Reach out for Support[](#reach-out-for-support "Direct link to heading")
 
 If none of these steps worked, reach out on Discord or email and we'll help you get this resolved!
