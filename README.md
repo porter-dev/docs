@@ -1,6 +1,6 @@
 # Porter Documentation
 
-The content and configuration powering the documentation available at [porter-preview.mintlify.app](https://porter-preview.mintlify.app)
+The content and configuration powering the documentation available at [docs.porter.run](https://docs.porter.run/introduction).
 
 ### 👩‍💻 Development
 
