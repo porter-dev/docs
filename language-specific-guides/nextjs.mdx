@@ -1,0 +1,24 @@
+---
+title: "Deploying Next.js"
+sidebarTitle: 'Next.js'
+---
+
+# Next.js
+
+Deploying a [Next.js](https://nextjs.org/) application on Porter is extremely simple.
+
+This guide will show you how to deploy the Next.js [hello-world](https://github.com/vercel/next.js/tree/canary/examples/hello-world) example with just a few clicks:
+
+1. Make a fork of the [nextjs-hello-world](https://github.com/porter-dev/nextjs-hello-world) repository.
+2. On Porter, create a new application from Git.
+3. Select the forked repository and the branch you would like to deploy:
+![Deploy the forked repo](/images/nextjs/deploy-app.png)
+4. You can ignore all the other options and click "Deploy app" to create the application.
+
+That's it! After a minute or two, your application should finish building and be deployed on Porter. All new commits pushed to your forked repository will automatically update your Next.js app.
+
+You can verify your application is running as expected by navigating to the application's generated URL:
+![App URL](/images/nextjs/app-url.png)
+
+You should see the Next.js hello world page:
+![Hello World](/images/nextjs/hello-world.png)
