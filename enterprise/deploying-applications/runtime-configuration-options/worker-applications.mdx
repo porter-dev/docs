@@ -45,6 +45,8 @@ You can enable autoscaling based the amount of CPU and RAM that your application
 * **Target CPU Utilization** \-- the threshold of CPU usage that your application needs to consume before it is autoscaled. For example, if you allocate 2 CPU (`2000m`) to your application and 1 instance is running, autoscaling will be triggered once your application reaches 1 CPU.
 * **Target RAM Utilization** \-- the threshold of RAM usage that your application needs to consume before it is autoscaled. For example, if you allocate 2000 Mi to your application and 1 instance is running, autoscaling will be triggered once your application reaches 1000 Mi.
 
+Depending on cluster size, autoscaling rules are evaluated every 15-30 seconds, with new replicas spawned as necessary. If the current resource utilization is within a small window of the threshold, replicas will not be spawned to avoid issues where the autoscaler scales up and down rapidly as the current values change in response to scaling events. If your cluster has no available capacity on existing nodes and has not hit the maximum number of nodes, the cluster will scale up or down to fit resource utilization.
+
 ## Environment[](#environment "Direct link to heading")
 
 In this section, you can set environment variables for your application. You can input these directly, load them from an environment group, or copy them from a file that uses `.env` formatting.
