@@ -15,7 +15,6 @@ The `porter app run` command allows users to execute a command on a remote conta
 
 ```
 porter app run [APP_NAME] -- [COMMAND] [args...]
-
 ```
 
 The `APP_NAME` is the name of the application on the Porter dashboard.
@@ -23,3 +22,15 @@ The `APP_NAME` is the name of the application on the Porter dashboard.
 Running `porter app run` spins up an ephemeral copy of your application 
 container. This container will be deleted when your command completes, 
 or when you exit your interactive shell session.
+
+To connect to an existing running container, you can specify the `-e` flag:
+
+```
+porter app run -e [APP_NAME] -- [COMMAND] [args...]
+```
+
+### Common Usage [](#porter-run-examples "Direct link to heading")
+```
+porter app run [APP_NAME] -- bash
+```
+This will launch an interactive shell session through which you can run other commands, like `ls`, `ps`, etc. If `bash` isn't found on your container, you can also try `sh` for a similar result.
