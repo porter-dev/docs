@@ -31,7 +31,7 @@ You'll need to replace `<CLUSTER_NAME>` with the name of your cluster. This comm
 
 ### gcloud CLI
 
-After ensuring you have the AWS CLI installed and configured to access the account which contains your Porter cluster, run the following command:
+After ensuring you have the GCP gcloud CLI installed and configured to access the account which contains your Porter cluster, run the following command:
 
 ```bash
 gcloud compute addresses list --filter="region:REGION AND users~.*routers/.*-cloud-router$"
