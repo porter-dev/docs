@@ -281,6 +281,7 @@
     {
       "group": "Language Specific Guides",
       "pages": [
+        "language-specific-guides/django",
         "language-specific-guides/fastapi",
         "language-specific-guides/nextjs"
       ]

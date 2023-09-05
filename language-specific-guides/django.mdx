@@ -1,0 +1,32 @@
+---
+title: "Deploying a Django Application"
+sidebarTitle: 'Django'
+---
+
+# Django
+
+Porter deploys your applications to a cloud provider of your choice in a few clicks, whether that is AWS, Google Cloud, or Azure.
+Just push your code to a Git repository and let Porter handle the rest from CI/CD to autoscaling.
+
+This guide will walk you through the steps of deploying a Django app on AWS, Google Cloud, or Azure via Porter.
+
+# How to Deploy
+
+## Create an account on Porter
+
+Porter deploys your applications to your own AWS, GCP, or Azure account. To deploy a Django application, you must first connect your cloud account to Porter.
+
+First, create an account on [Porter](https://dashboard.getporter.dev). Follow [this guide](/standard/getting-started/provisioning-on-aws) to connect your AWS, GCP, or Azure account. 
+Porter will create the necessary infrastructure in the cloud provider of your choice.
+
+## Deploying from the dashboard
+
+Once you've connected your AWS account, you can start deploying your Django application. Take a look here for a more [detailed guide](https://docs.porter.run/standard/getting-started/deploy-overview).
+
+1. Create a New Application on Porter.
+2. Select the Git repository you would like to deploy.
+3. Click Deploy.
+
+That's it! Porter will automatically build and deploy your application.
+
+You will be able to see the example Django app deployed on a vanity URL that ends with `onporter.run`.
