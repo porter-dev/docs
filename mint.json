@@ -68,7 +68,8 @@
               "group": "Provision Infastructure",
               "pages": [
                 "standard/getting-started/provisioning-infrastructure",
-                "standard/getting-started/provisioning-on-aws"
+                "standard/getting-started/provisioning-on-aws",
+                "standard/getting-started/provisioning-on-gcp"
               ]
             },
             {
