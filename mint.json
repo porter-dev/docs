@@ -1,5 +1,10 @@
 {
   "name": "Porter",
+  "analytics": {
+    "gtm": {
+      "tagId": "GTM-P8D92VJ"
+    }
+  },
   "logo": {
     "light": "/logo/light.png",
     "dark": "/logo/dark.png",
