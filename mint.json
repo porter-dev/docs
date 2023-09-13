@@ -21,7 +21,7 @@
     }
   },
   "topbarCtaButton": {
-    "name": "Dashboard",
+    "name": "Get Started",
     "url": "https://dashboard.getporter.dev"
   },
   "topbarLinks": [
