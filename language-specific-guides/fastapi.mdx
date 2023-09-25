@@ -5,51 +5,36 @@ sidebarTitle: 'FastAPI'
 
 # FastAPI
 
-Deploying an application on Porter is simple and follows the same steps regardless of which framework/language you are
-deploying, as long as your application is packaged as a container. 
+Porter deploys your application to a cloud provider of your choice in a few clicks, whether that is AWS, Google Cloud, or Azure. 
+Just push your code to a Git repository and let Porter handle the rest from CI/CD to autoscaling.
 
-This guide shows you how to containerize your FastAPI server with an example repository.
+This guide will walk you through the steps of deploying a FastAPI app on AWS, Google Cloud, or Azure via Porter.
 
-# Boilerplate Application
+Below is a boilerplate FastAPI application we will use as an example.
+
+# Example Application
 
 You can fork [this repository](https://github.com/porter-dev/fastapi-example) to get started.
-
-This example repository contains a boilerplate FastAPI app. The main file contains:
-
-```
-from typing import Union
-
-from fastapi import FastAPI
-
-app = FastAPI()
-
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
-```
 
 # How to Deploy
 
 ## Create an account on Porter
 
-Unlike other PaaS options, Porter deploys your applications to your own AWS account. Before deploying a FastAPI application you must set up your infrastructure on AWS first.
+Porter deploys your applications to your own AWS, GCP, or Azure account. To deploy a FastAPI application, you must first connect your cloud account to Porter.
 
-First, create an account on [Porter](https://dashboard.getporter.dev). Follow [this guide](/standard/getting-started/provisioning-on-aws) to create the necessary infrastructure on AWS.
+First, create an account on [Porter](https://dashboard.getporter.dev). Follow [this guide](/standard/getting-started/provisioning-on-aws) to connect your AWS, GCP, or Azure account. 
+Porter will create the necessary infrastructure in the cloud provider of your choice.
 
 ## Deploying from the dashboard
-Once your infrastructure has been provisioned on AWS, you can start deploying your FastAPI application. Take a look here for a more [detailed guide](https://docs.porter.run/standard/getting-started/deploy-overview).
+
+Once you've connected your AWS account, you can start deploying your FastAPI application. Take a look here for a more [detailed guide](https://docs.porter.run/standard/getting-started/deploy-overview).
 
 1. Create a New Application on Porter.
-2. Select the Git repository you have forked from the example repo.
-3. Add a Web service to the application. There is no need to add a start command, because the `Dockerfile` in the example repository already has a command specified.
-4. Click Deploy.
+2. Select the Git repository you would like to deploy.
+3. Click Deploy.
 
-That's it! You should be able to see your FastAPI server on a Porter URL that ends with `onporter.run`. Verify that the application has been deployed by going to the `/docs` page on your application, which will show the auto-generated docs as below:
+That's it! Porter will automatically build and deploy your application.
+
+You will be able to see the example FastAPI app deployed on a vanity URL that ends with `onporter.run`. Verify that the application has been deployed by going to the `/docs` page on your application, which will show the auto-generated docs as below:
 
 ![FastAPI](/images/language-specific-guides/fastapi.png)

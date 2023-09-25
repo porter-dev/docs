@@ -1,5 +1,10 @@
 {
   "name": "Porter",
+  "analytics": {
+    "gtm": {
+      "tagId": "GTM-P8D92VJ"
+    }
+  },
   "logo": {
     "light": "/logo/light.png",
     "dark": "/logo/dark.png",
@@ -16,12 +21,12 @@
     }
   },
   "topbarCtaButton": {
-    "name": "Dashboard",
+    "name": "Get Started",
     "url": "https://dashboard.getporter.dev"
   },
   "topbarLinks": [
     {
-      "name": "Book a Demo",
+      "name": "Talk to Sales",
       "url": "https://cal.com/talk-to-porter/15min"
     }
   ],
@@ -64,7 +69,8 @@
               "pages": [
                 "standard/getting-started/provisioning-infrastructure",
                 "standard/getting-started/provisioning-on-aws",
-                "standard/getting-started/provisioning-on-azure"
+                "standard/getting-started/provisioning-on-azure",
+                "standard/getting-started/provisioning-on-gcp"
               ]
             },
             {
@@ -282,7 +288,10 @@
     {
       "group": "Language Specific Guides",
       "pages": [
-        "language-specific-guides/fastapi"
+        "language-specific-guides/django",
+        "language-specific-guides/fastapi",
+        "language-specific-guides/nextjs",
+        "language-specific-guides/nodejs"
       ]
     },
     {

@@ -26,3 +26,28 @@ You'll need to replace `<CLUSTER_NAME>` with the name of your cluster. This comm
 3. Copy the contents of `Primary public IP` - this serves as the egress IP which you can use to whitelist your workloads with third party platforms. In case your cluster has multiple gateways, there will be multiple egress IPs.
 
 ![aws-egress-ip](/images/other/54ab5315-310d-438d-9360-41812623b004.png)
+
+## Google Cloud Platform (GCP)
+
+### gcloud CLI
+
+After ensuring you have the GCP gcloud CLI installed and configured to access the account which contains your Porter cluster, run the following command:
+
+```bash
+gcloud compute addresses list --filter="region:REGION AND users~.*routers/.*-cloud-router$"
+```
+
+You'll need to replace `REGION` with the region that your cluster was deployed in.
+If your cluster name is `my-cluster`, then your egress IP will be `my-cluster-cloud-nat-ip`
+This command will return the egress IP which you can use to whitelist your workloads with third party platforms.
+In case your cluster has multiple gateways, there will be multiple egress IPs.
+
+### GCP Console
+
+1. Log into the GCP console, and navigate to [Cloud NAT](https://console.cloud.google.com/net-services/nat/list)
+
+2. Search for your cluster name in the search bar, and click on the 'Gateway Name'
+   ![cloud-routers](https://github.com/porter-dev/porter/assets/10238219/6f1793ea-eb8b-451c-9cf2-11c543e16a6e)
+
+3. Your clusters IP address will be listed under "Cloud NAT Rules" as "Cloud NAT IPs"
+   ![cloud-nat-ip](https://github.com/porter-dev/porter/assets/10238219/099a5f24-a426-421f-bd01-26d2e1a0c1a4)
