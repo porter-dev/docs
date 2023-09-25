@@ -69,6 +69,7 @@
               "pages": [
                 "standard/getting-started/provisioning-infrastructure",
                 "standard/getting-started/provisioning-on-aws",
+                "standard/getting-started/provisioning-on-azure",
                 "standard/getting-started/provisioning-on-gcp"
               ]
             },
