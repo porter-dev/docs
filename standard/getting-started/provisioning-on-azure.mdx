@@ -39,10 +39,10 @@ To get started, set the `PORTER_AZURE_SUBSCRIPTION_ID` environment variable to y
 $ PORTER_AZURE_SUBSCRIPTION_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-Run the following command to generate the role definition and save it as a local variable.
+Run the following command to create the role:
 
 ```
-$ PORTER_ROLE_DEFINITION=$(envsubst << EOF
+$ envsubst << EOF | az role definition create --role-definition @-
 {
     "assignableScopes": ["/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"],
     "description": "Grants Porter access to manage resources for an AKS cluster.",
@@ -50,30 +50,23 @@ $ PORTER_ROLE_DEFINITION=$(envsubst << EOF
     "isCustom": true,
     "name": "porter-aks-restricted",
     "permissions": [
-      {
-        "actions": ["*"],
-        "dataActions": [],
-        "notActions": [
-          "Microsoft.Authorization/elevateAccess/Action",
-          "Microsoft.Blueprint/blueprintAssignments/write",
-          "Microsoft.Blueprint/blueprintAssignments/delete",
-          "Microsoft.Compute/galleries/share/action"
-          ],
-        "notDataActions": []
-      }
+        {
+            "actions": ["*"],
+            "dataActions": [],
+            "notActions": [
+                "Microsoft.Authorization/elevateAccess/Action",
+                "Microsoft.Blueprint/blueprintAssignments/write",
+                "Microsoft.Blueprint/blueprintAssignments/delete",
+                "Microsoft.Compute/galleries/share/action"
+            ],
+            "notDataActions": []
+        }
     ],
     "roleName": "Contributor",
     "roleType": "BuiltInRole",
     "type": "Microsoft.Authorization/roleDefinitions"
 }
 EOF
-)
-```
-
-Finally, create your role using the role definition you just saved:
-
-```
-$ az role definition create --role-definition ${PORTER_ROLE_DEFINITION}
 ```
   
 2. Create a new service principal through the Azure CLI that uses the role you just created:
