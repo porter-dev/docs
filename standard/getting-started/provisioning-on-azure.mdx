@@ -31,15 +31,22 @@ It might take a few minutes for providers to complete registration. Once you con
 
 Most of the permissions required by Porter to manage your infrastructure come with Azure's built-in Contributor role.  However, this role does not allow for role assignments, which are crucial for Porter.
 
-For this reason, we need to create a new role that combines the Contributor scope along with permissions to create role assignments. To get started, copy the following JSON into a file called `porter-aks-role.json`, replacing all instances of `<SUBSCRIPTION_ID>` with your Azure subscription ID:
+For this reason, we need to create a new role that combines the Contributor scope along with permissions to create role assignments. We will do this through the Azure CLI.
+
+To get started, set the `PORTER_AZURE_SUBSCRIPTION_ID` environment variable to your subscription id:
 
 ```
+$ PORTER_AZURE_SUBSCRIPTION_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+Run the following command to generate the role definition and save it as a local variable.
+
+```
+$ PORTER_ROLE_DEFINITION=$(envsubst << EOF
 {
-    "assignableScopes": [
-      "/subscriptions/<SUBSCRIPTION_ID>"
-    ],
-    "description": "Grants full access to manage all resources for a Porter AKS cluster.",
-    "id": "/subscriptions/<SUBSCRIPTION_ID>/providers/Microsoft.Authorization/roleDefinitions/porter-aks-restricted",
+    "assignableScopes": ["/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"],
+    "description": "Grants Porter access to manage resources for an AKS cluster.",
+    "id": "/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}/providers/Microsoft.Authorization/roleDefinitions/porter-aks-restricted",
     "isCustom": true,
     "name": "porter-aks-restricted",
     "permissions": [
@@ -59,12 +66,14 @@ For this reason, we need to create a new role that combines the Contributor scop
     "roleType": "BuiltInRole",
     "type": "Microsoft.Authorization/roleDefinitions"
 }
+EOF
+)
 ```
 
-After saving the file, create the role through the Azure CLI by running the following command in the same directory as the file you just saved:
+Finally, create your role using the role definition you just saved:
 
 ```
-$ az role definition create --role-definition @porter-aks-role.json
+$ az role definition create --role-definition ${PORTER_ROLE_DEFINITION}
 ```
   
 2. Create a new service principal through the Azure CLI that uses the role you just created:
@@ -73,10 +82,8 @@ $ az role definition create --role-definition @porter-aks-role.json
 $ az ad sp create-for-rbac \
   --name="azure-porter-restricted-sp" \
   --role="porter-aks-restricted" \
-  --scopes="/subscriptions/<SUBSCRIPTION_ID>"
+  --scopes="/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"
 ```
-
-As before, make sure to replace `<SUBSCRIPTION_ID>` with your Azure subscription ID.
 
 Running this will display the following output, which you will need when you go to provision your cluster on the Porter dashboard:
 
