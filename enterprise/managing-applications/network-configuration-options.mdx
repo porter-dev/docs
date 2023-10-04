@@ -21,11 +21,13 @@ Read/write timeouts are very application-specific, and are subject to change on 
 On Porter, you can configure your own read/write timeouts by adding annotations:
 
 ```
-nginx.ingress.kubernetes.io/proxy-connect-timeout: "60s"
-nginx.ingress.kubernetes.io/proxy-read-timeout: "60s"
-nginx.ingress.kubernetes.io/proxy-send-timeout: "60s"
+nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
 
 ```
+
+Note: All timeout values are unitless and in seconds - for instance, `nginx.ingress.kubernetes.io/proxy-read-timeout: "120"` sets a valid 120 seconds proxy read timeout.
 
 For an explanation of these values:
 
