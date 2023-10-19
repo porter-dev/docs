@@ -40,11 +40,6 @@
       "name": "Github",
       "icon": "github",
       "url": "https://github.com/porter-dev/porter"
-    },
-    {
-      "name": "Community",
-      "icon": "discord",
-      "url": "https://discord.gg/FaaFjb6DXA"
     }
   ],
   "modeToggle": {
