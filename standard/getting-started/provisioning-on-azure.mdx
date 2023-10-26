@@ -42,7 +42,7 @@ $ PORTER_AZURE_SUBSCRIPTION_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 Run the following command to create the role:
 
 ```
-$ envsubst << EOF | az role definition create --role-definition @-
+envsubst << EOF | az role definition create --role-definition @-
 {
     "assignableScopes": ["/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"],
     "description": "Grants Porter access to manage resources for an AKS cluster.",
@@ -72,10 +72,10 @@ EOF
 2. Create a new service principal through the Azure CLI that uses the role you just created:
 
 ```
-$ az ad sp create-for-rbac \
-  --name="azure-porter-restricted-sp" \
-  --role="porter-aks-restricted" \
-  --scopes="/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"
+az ad sp create-for-rbac \
+--name="azure-porter-restricted-sp" \
+--role="porter-aks-restricted" \
+--scopes="/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"
 ```
 
 Running this will display the following output, which you will need when you go to provision your cluster on the Porter dashboard:
