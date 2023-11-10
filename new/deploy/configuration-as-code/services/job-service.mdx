@@ -1,0 +1,42 @@
+---
+title: 'Job Services'
+---
+
+The following is a full reference for all the fields that can be set for a job service in `porter.yaml`.
+
+- [allowConcurrent](#allowConcurrent) \- indicates whether or not runs of the job can be processed concurrently.
+- [cron](#cron) \- a cron expression for the job.
+- [suspendCron](#suspendCron) \- indicates whether or not the cron schedule should be suspended.
+- [timeoutSeconds](#timeoutSeconds) \- the number of seconds to wait before timing out the job.
+
+### `allowConcurrent`
+
+`boolean` - optional
+
+```yaml
+allowConcurrent: true
+```
+
+### `cron`
+
+`string` - optional
+
+```yaml
+cron: "0 0 * * *"
+```
+
+### `suspendCron`
+
+`boolean` - optional
+
+```yaml
+suspendCron: true
+```
+
+### `timeoutSeconds`
+
+`integer` - optional
+
+```yaml
+timeoutSeconds: 3600
+```
