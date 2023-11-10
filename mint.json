@@ -70,7 +70,8 @@
         "new/provision/overview",
         "new/provision/provisioning-on-aws",
         "new/provision/provisioning-on-azure",
-        "new/provision/provisioning-on-gcp"
+        "new/provision/provisioning-on-gcp",
+        "new/provision/changing-instance-types"
       ]
     },
     {
