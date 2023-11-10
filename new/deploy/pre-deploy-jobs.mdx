@@ -1,3 +1,39 @@
 ---
-title: "Pre-Deploy Jobs"
+title: 'Pre-Deploy Jobs'
 ---
+
+A pre-deploy job is an optional task that runs after each build, but before all your services are deployed.
+It is commonly used for preliminary tasks which are required for your services to run, such as a database migration or seeding.
+**Note:** any commands that are used to build your application should _not_ be included in a pre-deploy job, as the build will already be completed by the time the pre-deploy job is run.
+
+You can specify the pre-deploy job for your application both in the Porter dashboard and in your `porter.yaml` file.
+
+## Configuring pre-deploy in the Porter dashboard
+
+You should see the pre-deploy section at the top of your application's **Overview** tab:
+![Add predeploy from UI](/images/deploying-applications/add-pre-deploy.png)
+
+Alternatively, when creating a new application, you will see the same section in the creation flow. From here, you can specify the start command (e.g., `bash ./migrate-db.sh`) as well as resources allocated for the job.
+After updating your application, the pre-deploy command will be run after the next build.
+
+## Configuring pre-deploy in the porter.yaml file
+
+(See our other doc for information on how to start writing a `porter.yaml`)
+
+If you have a `porter.yaml` file configured for your application, adding a pre-deploy job is as easy as adding a `predeploy` section to your `porter.yaml` file:
+
+```yaml
+# porter.yaml
+services: ...
+predeploy:
+  run: bash ./migrate-db.sh
+```
+
+## Tracking pre-deploy progress
+
+Your pre-deploy job will run after your build completes successfully. You can track its progress in the **Activity** tab of your application:
+![Predeploy activity feed](/images/deploying-applications/pre-deploy-activity-feed.png)
+
+You can view logs of the pre-deploy job while it runs or after it completes:
+
+![Predeploy logs](/images/deploying-applications/pre-deploy-logs.png)

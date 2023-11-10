@@ -1,11 +1,14 @@
 ---
-title: "Buliding your Application"
+title: 'Building your Application'
 ---
 
 When an application is deployed from a GitHub repository, Porter will build your application by opening a PR that contains a GitHub Actions file in your repository.
 
-
-<Info> For those who are not familiar with GitHub Actions, we recommend getting a basic overview from [their documentation](https://docs.github.com/en/actions). </Info>
+<Info>
+  {' '}
+  For those who are not familiar with GitHub Actions, we recommend getting a basic
+  overview from [their documentation](https://docs.github.com/en/actions).{' '}
+</Info>
 
 ## Merging in the PR for GitHub Actions
 
@@ -72,10 +75,10 @@ You can also trigger a rerun of this GitHub Actions directly from GitHub by clic
 
 ## Build-time Environment Variables
 
-Many languages and frameworks require certain environment variables to be present during the build process. Any environment variable you add to an application on Porter will 
+Many languages and frameworks require certain environment variables to be present during the build process. Any environment variable you add to an application on Porter will
 automatically be piped into your build process. **There is no need for you to manually add these environment variables inside the GitHub Actions file**.
 
-Please note that `Secrets` will not be made available to your build process. Learn more about `Secrets` [here](/new/configure/environment-groups). 
+Please note that `Secrets` will not be made available to your build process. Learn more about `Secrets` [here](/new/configure/environment-groups).
 
 ## Storing Container Images
 
