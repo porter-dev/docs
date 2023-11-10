@@ -48,9 +48,7 @@
   "navigation": [
     {
       "group": "Home",
-      "pages": [
-        "introduction"
-      ]
+      "pages": ["introduction"]
     },
     {
       "group": "Quickstart",
@@ -84,8 +82,23 @@
         "new/deploy/builds",
         "new/deploy/pre-deploy-jobs",
         "new/deploy/rollbacks",
-        "new/deploy/configuration-as-code",
-        "new/deploy/using-other-ci-tools"
+        "new/deploy/using-other-ci-tools",
+        {
+          "group": "Configuration as Code",
+          "pages": [
+            "new/deploy/configuration-as-code/overview",
+            "new/deploy/configuration-as-code/reference",
+            {
+              "group": "Service Configuration",
+              "pages": [
+                "new/deploy/configuration-as-code/services/web-service",
+                "new/deploy/configuration-as-code/services/worker-service",
+                "new/deploy/configuration-as-code/services/job-service",
+                "new/deploy/configuration-as-code/services/predeploy"
+              ]
+            }
+          ]
+        }
       ]
     },
     {
@@ -160,10 +173,7 @@
     },
     {
       "group": "Debug",
-      "pages": [
-        "new/debug/common-errors",
-        "new/debug/resolving-notifications"
-      ]
+      "pages": ["new/debug/common-errors", "new/debug/resolving-notifications"]
     },
     {
       "group": "Security and Compliance",
@@ -178,10 +188,7 @@
     },
     {
       "group": "Other Guides",
-      "pages": [
-        "other/deleting-dangling-resources",
-        "other/aws-vpc-peering"
-      ]
+      "pages": ["other/deleting-dangling-resources", "other/aws-vpc-peering"]
     },
     {
       "group": "Terms & Privacy",

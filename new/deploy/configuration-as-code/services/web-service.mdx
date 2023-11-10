@@ -1,0 +1,70 @@
+---
+title: 'Web Services'
+---
+
+The following is a full reference for all the fields that can be set for a web service in `porter.yaml`.
+
+- [autoscaling](#autoscaling) \- the autoscaling configuration for the service.
+  - **enabled** \- whether autoscaling is enabled or not.
+  - **minInstances** \- the minimum number of instances to run.
+  - **maxInstances** \- the maximum number of instances to run.
+  - **cpuThresholdPercent** \- the CPU threshold percentage to trigger autoscaling at.
+  - **memoryThresholdPercent** \- the memory threshold percentage to trigger autoscaling at.
+- [domains](#domains) \- the list of custom domains for the service, if the service is exposed publicly.
+  - **name** \- the name of the domain.
+- [private](#private) \- whether the service is private or not.
+- [healthCheck](#healthcheck) \- the health check configuration for the service.
+  - **enabled** \- whether the health check is enabled or not.
+  - **httpPath** \- the path to check for the health check.
+- [ingressAnnotations](#ingressannotations) \- the ingress annotations to apply for the service.
+
+### `autoscaling`
+
+`object` - optional
+
+All fields are optional.
+
+```yaml
+autoscaling:
+  enabled: true
+  minInstances: 1
+  maxInstances: 10
+  cpuThresholdPercent: 80
+  memoryThresholdPercent: 80
+```
+
+### `domains`
+
+`array` - optional
+
+```yaml
+domains:
+  - name: example.com
+```
+
+### `private`
+
+`boolean` - optional
+
+```yaml
+private: true
+```
+
+### `healthCheck`
+
+`object` - optional
+
+```yaml
+healthCheck:
+  enabled: true
+  httpPath: /health
+```
+
+### `ingressAnnotations`
+
+`object` - optional
+
+```yaml
+ingressAnnotations:
+  nginx.ingress.kubernetes.io/proxy-connect-timeout: '"18000"'
+```
