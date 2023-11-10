@@ -1,0 +1,37 @@
+---
+title: 'Provisioning Infrastructure'
+sidebarTitle: 'Overview'
+---
+
+Porter provisions and manages the underlying infrastructure in your own cloud. During project creation, Porter will prompt you to provision resources in a cloud provider of your choice. For the Standard tier, only Amazon Web Services (AWS) is supported. 
+To request access for Google Cloud Platform (GCP) and Microsoft Azure, please [contact us](https://cal.com/talk-to-porter/15min). 
+
+![image](/images/provisioning-infrastructure/cloud-selection.png)
+
+## AWS
+
+For step by step instructions on how to provision infrastructure, see the link below.
+
+<Card
+  title="Provisioning on AWS"
+  icon="aws"
+  href="/standard/getting-started/provisioning-on-aws"
+></Card>
+
+As mentioned in the [introduction](/introduction#relationship-with-kubernetes), Porter provisions a Kubernetes cluster in your cloud provider. It is not necessary to know much about the provisioned resources to use Porter, other than a few basic concepts. For those looking for a brief introduction to Kubernetes, we cover these basic concepts in [Kubernetes 101](/other/kubernetes-101).
+
+## FAQ[](#faq 'Direct link to heading')
+
+### How much does the underlying infrastructure cost?[](#how-much-does-the-underlying-infrastructure-cost 'Direct link to heading')
+
+The cost of your infrastructure varies entirely on the amount of resources you use. By default, clusters provisioned by Porter cost around $300 per month.
+
+### What does Porter-provisioned infrastructure consist of?
+
+Broadly speaking, infrastructure provisioned by Porter on AWS includes a VPC, a Network Load Balancer, and an EKS cluster. The EKS cluster consits of three node groups: 2 t3.medium instances for system worklods, 1 t3.large instance for the monitoring workloads, and a t3.xlarge instance for your application workloads that scales based on your usage.
+
+### Which instance type should I select?[](#which-instance-type-should-i-select 'Direct link to heading')
+
+By default, Porter provisions a t3.xlarge instance - this accommodates up to 4 vCPU and 16GB of RAM. You can switch out the instance type depending on how much resources each of your application requires. Each of your application cannot exceed the amount of resources available on a single instance. For example, if you want to run an application with 4GB memory on AWS, the instance type you select should be larger than the `t3.medium` instances because they only have 2 vCPU and 4GB memory.
+
+If you are unsure of which instance type you should select, [book a free consultation call with our solution architects](mailto:contact@porter.run).
