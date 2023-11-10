@@ -18,7 +18,7 @@ This eliminates the need to rely on static AWS credentials and makes it easier t
    You can find your Account ID at the top right corner of your [AWS console](https://console.aws.amazon.com).
    Input your Account ID and click on **Grant Permissions**.
 
-![Cloud Formation](/images/provisioning-infrastructure/cloud-formation-3-steps.png)
+![Cloud Formation 3 steps](/images/provisioning-infrastructure/cloud-formation-3-steps.png)
 
 2. You will be directed to your AWS console to create a CloudFormation stack. This stack will create the role Porter will assume to manage your infrastructure.
    Scroll to the bottom of the screen. Check the "I acknowledge..." box and click on **Create Stack**. It may take a few minutes for the role to be fully created. After creation you can proceed to selecting provisioning settings.
@@ -37,16 +37,23 @@ This eliminates the need to rely on static AWS credentials and makes it easier t
 3. After creating the role, navigate back to the Porter dashboard and click **Continue**. You will be prompted to select the AWS region that you want to provision your infrastructure in.
    Porter supports all AWS regions.
 
+<Info>
+  If you want to inquire about enabling more advanced settings like changing
+  instance types or enabling KMS [contact
+  us](https://cal.com/talk-to-porter/15min) to learn more about Porter
+  Enterprise before you provision your cluster. Porter Enterprise gives you more
+  configuration options to customize the deployment of your cluster
+</Info>
 ![select-region](/images/provisioning-infrastructure/select-region.png)
 
-4. Once you click **Provision**, Porter will start spinning up the requisite infrastructure in your account. This may take up to 30 minutes.
+4. Before you are able to provision a cluster you must pass all provision checks as AWS imposes quota limits on accounts. Common errors you may encounter during this process are AWS quota limits.
+   Porter will prevent you from provisioning until these quota limits have
+   been resolved. Troubleshooting steps will be shown on the dashboard if you
+   encounter these errors.
 
-<Info>
-  Common errors you may encounter during this process are AWS quota limits.
-  Porter will prevent you from provisioning until these quota limits have been
-  resolved. Troubleshooting steps will be shown on the dashboard if you
-  encounter these errors.
-</Info>
+   ![preflight-checks](/images/provisioning-infrastructure/preflight-checks.png)
+
+5. Once you click **Provision**, Porter will start spinning up the requisite infrastructure in your account. This may take up to 30 minutes.
 
 Once you click **Provision Resources**, Porter will install all the requisite resources in your AWS account using the IAM credentials you have created. This may take up to 30 minutes.
 
