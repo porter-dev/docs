@@ -1,3 +1,82 @@
 ---
-title: "Builds"
+title: "Buliding your Application"
 ---
+
+When an application is deployed from a GitHub repository, Porter will build your application by opening a PR that contains a GitHub Actions file in your repository.
+
+
+<Info> For those who are not familiar with GitHub Actions, we recommend getting a basic overview from [their documentation](https://docs.github.com/en/actions). </Info>
+
+## Merging in the PR for GitHub Actions
+
+When you create an application, you will be asked to merge in the PR that Porter has opened in your repository. Porter will open a PR that contains the GitHub Actions file from a new branch called `porter-stack`.
+
+![Initial view](/images/deploying-applications/initial-deploy-screen.png)
+![GHA PR](/images/deploying-applications/gha-pr.png)
+
+The GitHub actions file included in the PR will, by default, be triggered on any pushes to the specified git branch. Here's an example file that could be written to your repository:
+
+```
+"on":
+  push:
+    branches:
+    - master
+name: Deploy to storm-king
+jobs:
+  porter-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Set Github tag
+      id: vars
+      run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+    - name: Setup porter
+      uses: porter-dev/setup-porter@v0.1.0
+    - name: Deploy stack
+      timeout-minutes: 30
+      run: porter apply -f ./porter.yaml
+      env:
+        PORTER_CLUSTER: "37"
+        PORTER_HOST: https://dashboard.getporter.dev
+        PORTER_PR_NUMBER: ${{ github.event.number }}
+        PORTER_PROJECT: "18"
+        PORTER_STACK_NAME: testasdfasdfasdf
+        PORTER_TAG: ${{ steps.vars.outputs.sha_short }}
+        PORTER_TOKEN: ${{ secrets.PORTER_STACK_18_37 }}
+```
+
+You can customize this GitHub action to be triggered on different actions than `push`. Please see the GitHub Actions [docs](https://docs.github.com/en/actions) for reference.
+As long as the steps **Setup porter** and **Deploy stack** are present in your github actions file, you can also prepend or append any steps as desired.
+
+## Viewing your Build Logs
+
+You can view the build logs of your application from either the Porter dashboard or the GitHub Actions tab.
+
+To view your build logs on Porter, ... @feroze
+
+To view your build logs on GitHub, navigate to the **Actions** tab in your repository. Click on the most recent **Deploy to Porter** workflow to view the build logs of your application.
+
+![GHA Logs](/images/deploying-applications/gha-logs.png)
+
+## Retrying a Build on Failure
+
+When builds fail, you can troubleshoot by viewing the logs from the Porter Dashboard or the **Actions** tab on GitHub.
+To retry a build, simply toggle the option to **Re-run build and deploy on save**, then click on **Save Build Settings**. This will re-trigger the github actions file present in your github repository.
+
+![Rerun Build from Dashboard](/images/deploying-applications/rerun-build.png)
+
+You can also trigger a rerun of this GitHub Actions directly from GitHub by clicking on **Re-run failed jobs** button after selecting the job run.
+
+![Re-run GHA](/images/deploying-applications/rerun-gha.png)
+
+## Build-time Environment Variables
+
+Many languages and frameworks require certain environment variables to be present during the build process. Any environment variable you add to an application on Porter will 
+automatically be piped into your build process. **There is no need for you to manually add these environment variables inside the GitHub Actions file**.
+
+Please note that `Secrets` will not be made available to your build process. Learn more about `Secrets` [here](/new/configure/environment-groups). 
+
+## Storing Container Images
+
+When your application has built successfully, Porter will automatically push the resulting container images into a container registry in your connected cloud account and update your application with the new build.
