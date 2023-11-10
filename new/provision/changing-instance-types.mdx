@@ -1,0 +1,83 @@
+---
+title: "Changing Instance Types"
+sidebarTitle: "Changing Instance Types"
+---
+
+## Prerequistes
+
+If you have not yet provisioned a cluster on one of the cloud providers, check out one of the links below to get started
+
+<CardGroup cols={3}>
+  <Card
+    title="Provisioning on AWS"
+    icon="aws"
+    href="/standard/getting-started/provisioning-on-aws"
+  ></Card>
+  <Card
+    title="Provisioning on Azure"
+    icon="microsoft"
+    href="/standard/getting-started/provisioning-on-azure"
+  ></Card>
+  <Card
+    title="Provisioning on GCP"
+    icon="google"
+    href="/standard/getting-started/provisioning-on-gcp"
+  ></Card>
+</CardGroup>
+
+## Select an instance type
+
+1. Select the `Infrastructure` section on the left side of the dashboard
+2. Select the `Configuration` tab
+
+![Infrastructure Tab](/images/provisioning-infrastructure/infrastructure-tab-configuration.png)
+
+3. Expand the `Advanced Settings` dropdown
+
+![Advanced Settings](/images/provisioning-infrastructure/infrastructure-tab-configuration-advanced-settings-expanded.png)
+
+The following settings should be displayed:
+
+- **Cluster Version** - the version of the underlying Kubernetes cluster.
+- **Machine Type** - The underlying instance of the nodes that your applications are running on. The options here will vary per cloud provider.
+- **Maximum number of nodes** - The maximum number of nodes that your cluster will autoscale to under high load.
+- **Minumum number of nodes** - The minimum number of nodes that your cluster will autoscale to under low load.
+
+4. Select the appropriate **Machine Type** from the dropdown, then scroll to the bottom of the page, and click `Provision`.
+
+![Provision Button](/images/provisioning-infrastructure/infrastructure-tab-configuration-provision-enabled.png)
+
+- For more information on each cloud provider and their specific instance types, see our [FAQ at the bottom of this page](/new/provision/changing-instance-types#how-much-will-my-instance-type-cost)
+
+## FAQ
+
+### Why does my cloud provider offer an instance that is not available on Porter?
+
+If you have an instance type that you would like to use in mind, it may not be available in the same region as your cluster.
+This happens frequently as each cloud provider releases new instances on a phased basis, region by region.
+
+Porter extensively tests the compatibility of instance types across a wide range of cluster and application configurations.
+Whilst the instance types that are available on Porter suit the most common needs of our users, we will be happy to add requested instance types for any cloud provider.
+Message us from the dashboard through the chat bot, or send us an email at support@porter.run.
+
+### How much will my instance type cost?
+
+The specific instance types that are available for each cloud provider, along with their pricing can be found on their docs at the links below
+
+<CardGroup cols={3}>
+  <Card
+    title="AWS Instance Types"
+    icon="aws"
+    href="https://aws.amazon.com/ec2/pricing/on-demand"
+  ></Card>
+  <Card
+    title="Azure Instance Types"
+    icon="microsoft"
+    href="https://azure.microsoft.com/en-us/pricing/details/virtual-machines/linux/#pricing"
+  ></Card>
+  <Card
+    title="GCP Instance Types"
+    icon="google"
+    href="https://cloud.google.com/compute/all-pricing#general_purpose"
+  ></Card>
+</CardGroup>
