@@ -1,3 +1,17 @@
 ---
 title: "Environment Groups"
 ---
+
+An environment group (or env group for short) is a set of environment variables that are meant to be reused across multiple applications. For example, if all web services require a shared set of API and database keys, this could form a web-service environment group with all of those keys as a shared configuration. In this guide, we will explain how to create and use environment groups.
+
+<Info>
+  Environment groups are stored in your own cluster as a Kubernetes Config Map
+  or a Kubernetes Secret. The data will be visible to any users or services with
+  access to your cluster, such as Porter.
+</Info>
+
+## Creating and Using Environment Groups
+
+You can create a new environment group in the “Env Groups” tab on the dashboard.
+
+![image](/images/other/env-group-tab.png)
