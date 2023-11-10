@@ -1,0 +1,27 @@
+---
+title: 'Worker Services'
+---
+
+The following is a full reference for all the fields that can be set for a worker service in `porter.yaml`.
+
+- [autoscaling](#autoscaling) \- the autoscaling configuration for the service.
+  - **enabled** \- whether autoscaling is enabled or not.
+  - **minInstances** \- the minimum number of instances to run.
+  - **maxInstances** \- the maximum number of instances to run.
+  - **cpuThresholdPercent** \- the CPU threshold percentage to trigger autoscaling at.
+  - **memoryThresholdPercent** \- the memory threshold percentage to trigger autoscaling at.
+
+### `autoscaling`
+
+`object` - optional
+
+All fields are optional.
+
+```yaml
+autoscaling:
+  enabled: true
+  minInstances: 1
+  maxInstances: 10
+  cpuThresholdPercent: 80
+  memoryThresholdPercent: 80
+```

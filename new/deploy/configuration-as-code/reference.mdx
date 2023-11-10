@@ -1,0 +1,104 @@
+---
+title: 'Reference for porter.yaml'
+---
+
+The following is a full reference for all the fields that can be set in a `porter.yaml` file.
+
+- [version](#version) \- the version of the `porter.yaml` file. The below documentation is for `v2`.
+- [name](#name) \- the name of the app.
+- [services](#services) \- a list of services for this app.
+  - **name** - the unique ID of the resource.
+  - **type** - the type of service - being one of `web`, `worker`, or `job`.
+  - **run** - the run command for the service.
+  - **instances** - the number of instances of the service to run.
+  - **cpuCores** - the number of CPU cores to allocate to the service.
+  - **ramMegabytes** - the amount of RAM to allocate to the service.
+  - **gpuCoresNvidia** - the number of Nvidia GPU cores to allocate to the service.
+  - **port** - the port that the service will listen on.
+  - additional type-specific fields. See full reference for [web](/new/deploy/configuration-as-code/services/web-service), [worker](/new/deploy/configuration-as-code/services/worker-service), and [job](/new/deploy/configuration-as-code/services/job-service) services.
+- [build](#build) \- the build settings for the app. Only one of `build` or `image` can be set.
+  - **method** - the build method for the app. Can be one of `docker` or `pack`.
+  - **context** - the build context for the app.
+  - **dockerfile** - the path to the Dockerfile for the app, if the method is `docker`.
+  - **builder** - the builder image to use for the app, if the method is `pack`.
+  - **buildpacks** - the buildpacks to use for the app, if the method is `pack`.
+- [image](#image) \- the image settings for the app. Only one of `build` or `image` can be set.
+  - **repository** - the image repository.
+  - **tag** - the image tag.
+- [env](#env) \- the environment variables for the app.
+- [predeploy](#predeploy) \- the pre-deploy job for the app.
+  - **run** - the run command for the pre-deploy job.
+
+### `version`
+
+`string` - required
+
+```yaml
+version: v2
+```
+
+### `name`
+
+`string` - optional
+
+Either `name` must or the `PORTER_APP_NAME` environment variable must be set when running `porter apply`.
+
+```yaml
+name: my-app
+```
+
+### `services`
+
+`array` - required
+
+```yaml
+services:
+  - name: web
+    type: web
+    run: python app.py
+    instances: 1
+    cpuCores: 1
+    ramMegabytes: 1024
+    port: 8080
+```
+
+### `build`
+
+`object` - optional
+
+```yaml
+build:
+  method: pack
+  context: .
+  builder: heroku/buildpacks:20
+  buildpacks:
+    - heroku/python
+```
+
+### `image`
+
+`object` - optional
+
+```yaml
+image:
+  repository: my-registry/my-app
+  tag: latest
+```
+
+### `env`
+
+`object` - optional
+
+```yaml
+env:
+  PORT: 8080
+```
+
+### `predeploy`
+
+`object` - optional
+
+```yaml
+predeploy:
+  run: echo "predeploy"
+```
