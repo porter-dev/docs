@@ -15,7 +15,7 @@ The following is a full reference for all the fields that can be set for a web s
 - [private](#private) \- whether the service is private or not.
 - [healthCheck](#healthcheck) \- the health check configuration for the service.
   - **enabled** \- whether the health check is enabled or not.
-  - **path** \- the path to check for the health check.
+  - **httpPath** \- the path to check for the health check.
 - [ingressAnnotations](#ingressannotations) \- the ingress annotations to apply for the service.
 
 ### `autoscaling`
@@ -57,7 +57,7 @@ private: true
 ```yaml
 healthCheck:
   enabled: true
-  path: /health
+  httpPath: /health
 ```
 
 ### `ingressAnnotations`
@@ -68,7 +68,3 @@ healthCheck:
 ingressAnnotations:
   nginx.ingress.kubernetes.io/proxy-connect-timeout: '"18000"'
 ```
-
-
-
-
