@@ -143,7 +143,9 @@
     {
       "group": "Preview Environments",
       "pages": [
-        "new/preview-environments/overview"
+        "new/preview-environments/overview",
+        "new/preview-environments/defining-overrides",
+        "new/preview-environments/custom-workflows"
       ]
     },
     {

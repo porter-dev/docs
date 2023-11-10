@@ -1,0 +1,49 @@
+---
+title: 'Defining Overrides'
+---
+
+## Changing Values and Variables
+
+It is frequently the case that the configuration you are using for your app in production will be different from what you'd want to use in a preview environment. For example, you might want to bump down the resources your app consumes or use development API keys.
+
+Porter allows you to easily change the configuration of your app for preview environments by defining overrides in the dashboard or in your `porter.yaml` file.
+
+### Using the Dashboard
+
+After enabling previews, you will be directed to a form where you can define what you want your app to look like when deployed to a preview environment. Any value that you can set when creating or updating an app can be changed specifically for preview environments. Newly created previews will use these values. Note that you can always change this configuration later.
+
+![Updating Values](/images/preview-environments/updating-values.png)
+_Any value that you can set when creating or updating an app can be changed specifically for preview environments._
+
+### Using `porter.yaml`
+
+Values set in the `previews` section of `porter.yaml` will be overlayed on top of the base configuration for a particular app. For example, the `api` service defined in the YAML below will use 128MB of RAM in all preview environments. Additionally, the `NODE_ENV` environment variable will be set to `development` in previews. Any values not specifically overriden in the `previews` section will be inherited from the base app.
+
+```yaml
+version: v2
+
+services:
+  - name: api
+    type: web
+    port: 3000
+
+env:
+  NODE_ENV: production
+
+# any values set in this section will override the values above
+previews:
+  services:
+    - name: api
+      ramMegabytes: 128 # use less memory in previews
+
+  env:
+    NODE_ENV: development # change the NODE_ENV variable to development in previews
+```
+
+## Setting Environment Variables
+
+Porter will by default use the environment variables from the base app, but strip out any environment groups that you have attached. This is because environment groups are typically used to define values that are specific to a particular environment. If there are any variables that you want to ensure are set in preview environments, you can add them to the app's environment variables, or create a new environment group specifically for preview environments and add it to the preview app configuration in the dashboard.
+
+## Preview App URLs
+
+Preview apps can be made accessible via a unique URL that is generated when the preview is created. Similarly to environment groups, custom domains defined on your base app are also stripped out when creating the preview app in order to prevent collisions. If you want to make a preview web service accessible via a unique URL, make sure that the service is configured to be public.
