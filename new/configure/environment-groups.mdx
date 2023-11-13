@@ -15,3 +15,12 @@ An environment group (or env group for short) is a set of environment variables 
 You can create a new environment group in the “Env Groups” tab on the dashboard.
 
 ![image](/images/other/env-group-tab.png)
+
+Clicking the “New Env Group” button will open a modal where you can enter the name of the environment group and the environment variables that should be included in the group.
+The limit for the name of an env group is 15 characters and you can add your environment variables by clicking the “Add Row button or batch upload them via a .env file
+
+![create-env-group](/images/other/env-group-create.png)
+
+## 🔒 Creating Secret Environment Variables
+
+Porter supports creating secret environment variables that will not be exposed after creation. At the moment, you must create an environment group in order to create secret environment variables. To create a secret environment variable, click on the lock icon next to the environment variable during creation of the environment variable:
