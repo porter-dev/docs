@@ -45,10 +45,61 @@ The `scripts.build` command is run automatically after application dependencies 
 jq '.scripts.build' package.json
 ```
 
-The `scripts.start` command is executed whenever `npm run start` is executed. This should start your application server in the correct Node.js dependency context. While Next.js sets this to `next start`, you can run any command you wish. The following `jq` command can be run to validate that the start command is configured correctly:
+## Setting the correct start command
+
+The `scripts.start` command is executed whenever `npm run start` is executed. This should start your application server in the correct Node.js dependency context. While Next.js sets this to `next start`, you'll need to modify this so that Porter can route to the application outside of it's container as it listens on the local interface, `127.0.0.1` or `localhost`.
+
+The following snippet contains the correct `.scripts.start` command. Please note that this is just the partial contents of the `package.json` and should not replace the entire file.
+
+```bash
+{
+  "scripts": {
+    "start": "next start --hostname=0.0.0.0"
+  }
+}
+```
+
+> **`package.json`**
+
+The command can be updated via `jq` with the following commands:
+
+```bash
+content="$(jq --arg var "next start --hostname=0.0.0.0" '.scripts.start = $var' package.json)"
+echo "$content" >package.json
+```
+
+And the configuration can be verified via the following `jq` command:
 
 ```bash
 jq '.scripts.start' package.json
+```
+
+## Local testing
+
+Testing that the application will work locally is straightforward.
+
+Start by running `npm install`. This will install your application dependencies.
+
+```bash
+npm install
+```
+
+Next, build the app. This will precompile your application in the same way a Porter deploy will.
+
+```bash
+npm run build
+```
+
+Next, run the application with the following command to verify things are working:
+
+```bash
+npm run start
+```
+
+Finally, load the url `http://localhost:3000` in your browser to verify the response. You can also run the following `curl` command in a new terminal (do not cancel the running `uvicorn` server when executing this):
+
+```bash
+curl localhost:3000
 ```
 
 ## Creating a `porter.yaml`
@@ -64,6 +115,7 @@ services:
   run: "npm run start"
   cpuCores: 0.19
   ramMegabytes: 400
+  port: 3000
 ```
 
 > **`porter.yaml`**
