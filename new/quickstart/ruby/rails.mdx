@@ -33,7 +33,7 @@ echo 'Rails.application.routes.draw { root "rails/welcome#index" }' > porter-rai
 
 Testing that the application will work locally is straightforward.
 
-Start by running `bundle install`. This will install your application dependencies.
+Start by running `bundle install` in the `porter-rails-app` directory. This will install your application dependencies.
 
 ```bash
 bundle install
@@ -79,7 +79,6 @@ Note that anything not specified in the `porter.yaml` can be configured in the P
 
 Before deploying, you'll need to [create a Github Repository](https://docs.github.com/en/get-started/quickstart/create-a-repo) and push your code to the newly created repository. This will provide you with the ability to setup a Github Action for deploying the app.
 
-
 ## Deploying your application to Porter
 
 Now that the application has been created on Github, head over to our documentation on [Deploying from a Github Repository](/deploy/deploy-from-github-repo) to complete the setup of your application on Porter. At the end of that process, your application will be up and running on Porter!
@@ -97,7 +96,6 @@ RAILS_SERVE_STATIC_FILES=true
 ## Testing your application
 
 After the Rails application has been deployed, you can head over to your configured public url for the deployed application. Assuming an domain of `rails-app-4feee654149e65c0.onporter.run`, hitting the [/](https://rails-app-4feee654149e65c0.onporter.run/) page will result in the default Rails welcome page.
-
 
 ---
 
