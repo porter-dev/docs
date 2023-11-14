@@ -1,0 +1,96 @@
+---
+title: "Deploying a FastAPI app"
+description: "Getting started with a FastAPI app on Porter"
+---
+
+Running a FastAPI application on your Porter infrastructure is simple and requires minimal changes to your application. This tutorial will cover creating the application, making changes to get it Porter-ready, and finally deploying it.
+
+While Porter can be used with any existing FastAPI application, this tutorial will assume you are starting with a brand new application. Please follow the instructions as appropriate.
+
+## Create the application
+
+Creating a new FastAPI application is straightforward, and requires only a few files.
+
+First, start by adding a few requirements to your application. We can keep track of these in a `requirements.txt` file.
+
+```bash
+fastapi
+uvicorn[standard]
+```
+
+> **`requirements.txt`**
+
+We should also add our code to the application. For this tutorial, we'll start with a simple hello-world example.
+
+```bash
+from typing import Union
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+```
+
+> **`main.py`**
+
+## Local testing
+
+Testing that the application will work locally is straightforward.
+
+Start by running `pip install -r requirements.txt`. This will install your application dependencies.
+
+```bash
+pip install -r requirements.txt
+```
+
+Next, run the application with the following command to verify things are working:
+
+```bash
+uvicorn main:app --reload
+```
+
+Finally, load the url `http://localhost:8000` in your browser to verify the response. You can also run the following `curl` command in a new terminal (do not cancel the running `uvicorn` server when executing this):
+
+```bash
+curl localhost:8000
+```
+
+## Creating a `porter.yaml`
+
+While Porter allows folks to configure the services and other configuration for an application in the Porter UI, you can also optionally configure this in a `porter.yaml`. The `porter.yaml` file format covers both the build and run portions of your application's lifecycle. While it is expansive in nature, the following covers a minimum necessary to get your application deployed.
+
+```bash
+---
+version: v2
+services:
+- name: web-server
+  type: web
+  run: "uvicorn main:app --host 0.0.0.0 --port 8000"
+  cpuCores: 0.19
+  ramMegabytes: 400
+  port: 8000
+```
+
+> **`porter.yaml`**
+
+In the above example, we configure `uvicorn` to listen on all interfaces and the configured port `8000`. Both of these are necessary as otherwise the application will not be routable by Porter outside of it's container.
+
+Note that anything not specified in the `porter.yaml` can be configured in the Porter UI, and you can always add new services for a given application both in the `porter.yaml` as well as in the UI at a later date.
+
+## Push the application to your Github repository
+
+Before deploying, you'll need to [create a Github Repository](https://docs.github.com/en/get-started/quickstart/create-a-repo) and push your code to the newly created repository. This will provide you with the ability to setup a Github Action for deploying the app.
+
+## Deploying your application to Porter
+
+Now that the application has been created on Github, head over to our documentation on [Deploying from a Github Repository](/deploy/deploy-from-github-repo) to complete the setup of your application on Porter. At the end of that process, your application will be up and running on Porter!
+
+## Testing your application
+
+After the FastAPI application has been deployed, you can head over to your configured public url for the deployed application. Assuming an domain of `fastapi-app-4feee654149e65c0.onporter.run`, hitting the [/](https://fastapi-app-4feee654149e65c0.onporter.run/) page will result in a Hello World response in JSON. You can also browse to [/docs](https://fastapi-app-4feee654149e65c0.onporter.run/docs) to view the generated Swagger UI for your application.
+
+---
+
+Now that the application is working, checkout the rest of the Porter documentation to find out more ways to leverage the platform to scale your FastAPI to support your needs on Porter.
