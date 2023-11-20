@@ -1,0 +1,81 @@
+---
+title: "Supporting additional AWS services with AWS ALB (Application Load Balancer)"
+sidebarTitle: "Configuring AWS ALB"
+---
+
+# AWS[](#aws "Direct link to heading")
+
+The default Porter-managed Kubernetes cluster on AWS uses a Network Load Balancer (NLB) which forwards traffic to an on-cluster Nginx Ingress Controller.
+Whilst this provides the best performance, some users have extra requirements which require an ALB such as:
+
+- allowlisting specific IP ranges for applications deployed on Porter
+- integrating with other AWS tools such as AWS WAFv2
+- using AWS ACM certificates
+
+As an enterprise feature, Porter supports switching out the default NLB for an Application Load Balancer (ALB).
+
+## Requirements
+
+- A Porter-managed Kubernetes cluster
+- Access to your DNS provider. For this example, we will use CloudFlare, but Route53 is also supported.
+- A domain name which can be wildcarded. For this example, we will use `stefan-2.porter.run`
+
+If the following options are not available to you, please reach out to Porter using the chatbot on the dashboard for more information
+
+## DNS Validation
+
+Skip this step if you are using Route53, as Porter can perform the validation on your behalf.
+
+When your ALB is up and running, you will have to ensure that your new AWS Certificate Manager (ACM) Certificate is validated. AWS does this by creating a CNAME record which must resolve to an automatically generated value.
+
+### AWS Certificate Manager - CNAME
+
+1. In your AWS console, navigate to the region that your cluster was deployed in. You can find this from your Porter dashboard in the `Infrastructure` section, in the Configuration tab.
+1. After selecting the correct region, search for `AWS Certificate Manager` in the AWS Console search bar.
+1. Select `List Certificates` from the bar on the left.
+1. Find the domain name which matches the domain that you provided to Porter, then click on the Certificate ID.
+1. The status for this certificate should be `Pending validation`.
+   ![Pending Certificate](/images/allowlist-cidr-ranges/pending-certificate.png)
+1. Scroll down to `Domains`.
+1. Take note of the `CNAME name` and `CNAME value`.
+   ![CNAME Name and Value](/images/allowlist-cidr-ranges/cname-values.png)
+
+   - You may see multiple domains here, all with the same CNAME name and CNAME value. No need to worry about these.
+
+1. Go to your DNS provider. This will be CloudFlare in our case.
+
+### CloudFlare
+
+1. Select `DNS` then `Records`.
+1. Create a new record - Select `CNAME` for type.
+
+   - Enter the value that you pulled from AWS for `CNAME name` in the `Name` field in CloudFlare.
+   - Enter the value that you pulled from AWS for `CNAME value` in the `Target` field in CloudFlare.
+   - Ensure `Proxy status` is disabled, and is in `DNS only` mode.
+   - Set `TTL` to `Auto`.
+   - Enter `Porter-managed ACM Certificate Verification for YOUR_DOMAIN` in the `Comment` field. This is not required, but is strongly recommended.
+     ![Completed DNS Validation Record](/images/allowlist-cidr-ranges/dns-validation-cloudflare.png)
+
+1. Return to the AWS console.
+
+### AWS Certificate Manager - Status
+
+1. Go to the ACM Certificate and refresh the page.
+1. If the status is still `Pending Validation`, wait 5 minutes then refresh again. You should now see that the status is `Issued`.
+   ![Issued Certificate](/images/allowlist-cidr-ranges/issued-certificate.png)
+1. Your certificate is now issued, and can be used by your ALB.
+
+## Creating a CNAME for your wildcard domain
+
+As a reminder, we are using `stefan-2.porter.run` as the address that we provided to Porter. All of our protected applications will be available at `*.stefan-2.porter.run` for example `myapp.stefan-2.porter.run` or `whoami.stefan-2.porter.run`.
+
+1. Go to your DNS provider. We will be using CloudFlare, but the settings should be similar in any DNS Provider.
+   1 Select `DNS` then `Records`.
+1. Create a new record.
+   - Select `CNAME` for type.
+   - Enter the wildcarded domain in the `Name` field i.e. `*.stefan-2.porter.run`.
+   - Enter the ALB domain name in `Target` field. This will be provided to you by the Porter engineer.
+   - Ensure `Proxy status` is disabled, and is in `DNS only` mode.
+   - Set `TTL` to `Auto`.
+     ![Completed DNS Wildcard Record](/images/allowlist-cidr-ranges/dns-wildcard-cloudflare.png)
+1. You can now use this as a custom domain in Porter for you applications.
