@@ -53,50 +53,38 @@
       ]
     },
     {
-      "group": "Quickstart",
-      "pages": [
-        "new/quickstart/overview",
-        "new/quickstart/javascript",
-        "new/quickstart/python",
-        "new/quickstart/ruby",
-        "new/quickstart/go",
-        "new/quickstart/rust",
-        "new/quickstart/php"
-      ]
-    },
-    {
       "group": "Provision",
       "pages": [
-        "new/provision/overview",
-        "new/provision/provisioning-on-aws",
-        "new/provision/provisioning-on-azure",
-        "new/provision/provisioning-on-gcp",
-        "new/provision/changing-instance-types"
+        "provision/overview",
+        "provision/provisioning-on-aws",
+        "provision/provisioning-on-azure",
+        "provision/provisioning-on-gcp",
+        "provision/changing-instance-types"
       ]
     },
     {
       "group": "Deploy",
       "pages": [
-        "new/deploy/overview",
-        "new/deploy/types-of-services",
-        "new/deploy/deploy-from-github-repo",
-        "new/deploy/deploy-from-docker-registry",
-        "new/deploy/builds",
-        "new/deploy/pre-deploy-jobs",
-        "new/deploy/rollbacks",
-        "new/deploy/using-other-ci-tools",
+        "deploy/overview",
+        "deploy/types-of-services",
+        "deploy/deploy-from-github-repo",
+        "deploy/deploy-from-docker-registry",
+        "deploy/builds",
+        "deploy/pre-deploy-jobs",
+        "deploy/rollbacks",
+        "deploy/using-other-ci-tools",
         {
           "group": "Configuration as Code",
           "pages": [
-            "new/deploy/configuration-as-code/overview",
-            "new/deploy/configuration-as-code/reference",
+            "deploy/configuration-as-code/overview",
+            "deploy/configuration-as-code/reference",
             {
               "group": "Service Configuration",
               "pages": [
-                "new/deploy/configuration-as-code/services/web-service",
-                "new/deploy/configuration-as-code/services/worker-service",
-                "new/deploy/configuration-as-code/services/job-service",
-                "new/deploy/configuration-as-code/services/predeploy"
+                "deploy/configuration-as-code/services/web-service",
+                "deploy/configuration-as-code/services/worker-service",
+                "deploy/configuration-as-code/services/job-service",
+                "deploy/configuration-as-code/services/predeploy"
               ]
             }
           ]
@@ -106,20 +94,20 @@
     {
       "group": "Configure",
       "pages": [
-        "new/configure/basic-configuration",
-        "new/configure/environment-groups",
-        "new/configure/autoscaling",
-        "new/configure/custom-domains",
-        "new/configure/health-checks",
-        "new/configure/advanced-networking"
+        "configure/basic-configuration",
+        "configure/environment-groups",
+        "configure/autoscaling",
+        "configure/custom-domains",
+        "configure/health-checks",
+        "configure/advanced-networking"
       ]
     },
     {
       "group": "Command Line Interface (CLI)",
       "pages": [
-        "new/cli/installation",
-        "new/cli/basic-usage",
-        "new/cli/v1-and-v2",
+        "cli/installation",
+        "cli/basic-usage",
+        "cli/v1-and-v2",
         {
           "group": "v2 Command Reference",
           "pages": [
@@ -159,44 +147,27 @@
     {
       "group": "Preview Environments",
       "pages": [
-        "new/preview-environments/overview",
-        "new/preview-environments/defining-overrides",
-        "new/preview-environments/custom-workflows"
-      ]
-    },
-    {
-      "group": "Observability",
-      "pages": [
-        "new/observability/monitoring",
-        "new/observability/logging",
-        "new/observability/alerts",
-        "new/observability/integrations"
-      ]
-    },
-    {
-      "group": "Debug",
-      "pages": [
-        "new/debug/common-errors",
-        "new/debug/resolving-notifications"
+        "preview-environments/overview",
+        "preview-environments/defining-overrides",
+        "preview-environments/custom-workflows"
       ]
     },
     {
       "group": "Security and Compliance",
       "pages": [
-        "new/security-and-compliance/configuring-alb",
-        "new/security-and-compliance/role-based-access-control",
-        "new/security-and-compliance/controlling-network-access",
-        "new/security-and-compliance/configuring-waf",
-        "new/security-and-compliance/static-egress-ip",
-        "new/security-and-compliance/soc2",
-        "new/security-and-compliance/hipaa"
+        "security-and-compliance/role-based-access-control",
+        "security-and-compliance/static-egress-ip",
+        "security-and-compliance/configuring-alb",
+        "security-and-compliance/soc2-hipaa"
       ]
     },
     {
       "group": "Other Guides",
       "pages": [
         "other/deleting-dangling-resources",
-        "other/aws-vpc-peering"
+        "other/aws-vpc-peering",
+        "other/kubernetes-101",
+        "other/migrate-from-heroku"
       ]
     },
     {
