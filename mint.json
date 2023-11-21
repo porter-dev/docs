@@ -48,7 +48,9 @@
   "navigation": [
     {
       "group": "Home",
-      "pages": ["introduction"]
+      "pages": [
+        "introduction"
+      ]
     },
     {
       "group": "Quickstart",
@@ -173,11 +175,15 @@
     },
     {
       "group": "Debug",
-      "pages": ["new/debug/common-errors", "new/debug/resolving-notifications"]
+      "pages": [
+        "new/debug/common-errors",
+        "new/debug/resolving-notifications"
+      ]
     },
     {
       "group": "Security and Compliance",
       "pages": [
+        "new/security-and-compliance/configuring-alb",
         "new/security-and-compliance/role-based-access-control",
         "new/security-and-compliance/controlling-network-access",
         "new/security-and-compliance/configuring-waf",
@@ -188,7 +194,10 @@
     },
     {
       "group": "Other Guides",
-      "pages": ["other/deleting-dangling-resources", "other/aws-vpc-peering"]
+      "pages": [
+        "other/deleting-dangling-resources",
+        "other/aws-vpc-peering"
+      ]
     },
     {
       "group": "Terms & Privacy",
