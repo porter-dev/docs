@@ -1,0 +1,25 @@
+---
+title: "Autoscaling"
+---
+
+This section goes over the various scaling options that are available on Porter. Note that these scaling options are available on both **Web** and **Worker** services.
+
+## Horizontal Scaling
+
+You can set the number of replicas you'd like to run for each of your application service from the **Resources** tab.
+
+The load on your application service will be automatically be balanced across all the available replicas.
+
+## Autoscaling
+
+You can configure your services to scale automatically based on resource usage. Autoscaling on your services will be triggered based on the CPU or RAM usage threshold you configure in percentage value.
+
+For example, if you set autoscaling threshold to be 70% CPU and 70% RAM, your application service will be scaled up and down to ensure that there is always 30% excess capacity for CPU and RAM.
+Note that autoscaling will be triggered when either one of the CPU or RAM threshold is hit (i.e. it is not required that both thresholds are hit).
+
+![image](/images/configure/autoscaling.png)
+
+## Custom Autoscaling
+
+It is possible to autoscale your workloads based on custom metrics (e.g. queue latency, queue length, etc.). Your cluster comes with [Prometheus](https://prometheus.io/) installed by default, which collects various metrics available 
+on your cluster. To enable this on your project, please reach out to support@porter.run.

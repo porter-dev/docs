@@ -5,29 +5,26 @@ description: 'Welcome to the Porter documentation'
 
 ## What is Porter?
 
-Porter is a platform as a service (PaaS) that runs in your own cloud. It brings the magical experience of deploying an application with just a few clicks into a cloud provider of your choice, whether that is AWS or GCP. Porter will provision and manage the underlying infrastructure for you - simply point at your repository and Porter will handle the rest, from building your application to autoscaling it.
+Porter is a platform as a service (PaaS) that runs in your own cloud. It brings the magical experience of deploying an application with just a few clicks into a cloud provider of your choice, whether that is AWS, GCP, or Azure. Porter will provision and manage the underlying infrastructure for you - simply point at your repository and Porter will handle the rest, from building your application to autoscaling it.
 
 Get started with the documentation:
 
-<Card title="Getting Started" icon="play" href="/standard/getting-started/overview">
-  Getting started with your first project on Porter
+<Card title="Provision Infrastructure" icon="play" href="/new/provision/overview">
+  Connect your AWS, GCP, or Azure account.
 </Card>
 <Card
   title="Deploying Applications"
   icon="browser"
-  href="/standard/deploying-applications/overview"
+  href="/new/deploy/overview"
 >
   Deploy from a Github repository, Docker registry, or write your own workflow
 </Card>
 <Card
-  title="Managing Applications"
+  title="Configure Applications"
   icon="bars-progress"
-  href="/standard/managing-applications/application-metrics"
+  href="/new/configure/overview"
 >
-  View application metrics, logs, and troubleshoot your deployments
-</Card>
-<Card title="Porter Enterprise" icon="key-skeleton" href="/enterprise/getting-started/overview">
-  Documentation for Porter Enterprise, which supports deploying to multiple clusters as well as DevOps Mode.
+  Manage, scale, and monitor your applications.
 </Card>
 
 ## Why Porter?
@@ -42,9 +39,10 @@ Porter gives you the best of both worlds by bringing the simplicity of a PaaS in
 
 ## Relationship with Kubernetes
 
-Under the hood, Porter runs on top of Kubernetes. Porter provisions and manages each cloud provider's native Kubernetes offering (i.e. EKS on AWS and GKE on GCP) while abstracting away its complexity.
+Under the hood, Porter runs on top of Kubernetes. Porter provisions and manages each cloud provider's native Kubernetes offering (i.e. EKS on AWS, GKE on GCP, and AKS on Azure) while abstracting away its complexity.
 
-Some find it daunting that Porter runs on top of Kubernetes. For teams who don't know Kubernetes, **Kubernetes is an incidental implementation detail**. You don't need to know anything about Kubernetes other than a few basic concepts to use Porter. It just _happens_ that Kubernetes is the best underlying layer to deliver the PaaS experience on. In fact, most PaaS's actually run on top of Kubernetes although that detail is hidden away from the end user. Many of our users who have migrated from another PaaS experience no learning curve, and you can still take advantage of the flexibility of Kubernetes in the future should you need it.
+Some find it daunting that Porter runs on top of Kubernetes. For teams who don't know Kubernetes, **Kubernetes is an incidental implementation detail**. You don't need to know anything about Kubernetes other than a few basic concepts to use Porter. 
+It just _happens_ that Kubernetes is the best underlying layer to deliver the PaaS experience on. In fact, most traditional PaaS's actually run on top of Kubernetes, although that detail is hidden away from the end user. Many of our users who have migrated from another PaaS experience no learning curve, and you can still take advantage of the power of Kubernetes in the future should you need it.
 
 ## Internal Developer Platform[](#internal-developer-platform 'Direct link to heading')
 

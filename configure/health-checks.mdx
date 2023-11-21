@@ -1,0 +1,17 @@
+---
+title: "Health Checks"
+---
+
+Every time an application is redeployed on Porter (through a Github action, configuration change, etc), a new set of application instances will replace the old application instances. 
+
+While your existing instances will not be replaced until the new instances are up and running, there is no way to guarantee that the process *inside* the application instance is up and running before the original instances are replaced. 
+**Health checks** can be configured to prevent any downtime during deployment updates:.
+
+When your Web service is configured with health checks, Porter will ensure that no traffic is routed to your service unless the specified endpoints return a `200` status code. Health checks can be configured in the **Advanced** tab:
+
+![Health Check Configuration](/images/configure/health-checks.png)
+
+For example, in the screenshot above, no traffic will be routed to the web service until the `/healthz` endpoint returns a `200` status code. This is useful for 
+**Zero Downtime Deploys**. 
+
+When you push a new update to your application, the old version of your application will not be spun down until the new version passes all health checks. 

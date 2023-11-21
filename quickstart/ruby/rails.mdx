@@ -1,0 +1,102 @@
+---
+title: "Deploying a Rails app"
+description: "Getting started with a Ruby on Rails app on Porter"
+---
+
+Running a Ruby on Rails application on your Porter infrastructure is simple and requires minimal changes to your application. This tutorial will cover creating the application, making changes to get it Porter-ready, and finally deploying it.
+
+While Porter can be used with any existing Ruby on Rails app, this tutorial will assume you are starting with a brand new app. Please follow the instructions as appropriate.
+
+## Create the application
+
+Creating a new Ruby on Rails application is straightforward, and requires only a few files.
+
+First, start by installing the `rails` Gem. This will be used to scaffold out a new Rails application.
+
+```bash
+gem install rails
+```
+
+Next, use `rails new` to scaffold out a new application. The contents will be created in the `porter-rails-app` folder:
+
+```bash
+rails new porter-rails-app --css tailwind
+```
+
+Finally, setup a default route for your application. This can be customized later, but will be useful for testing that the application is responding correctly to requests.
+
+```bash
+echo 'Rails.application.routes.draw { root "rails/welcome#index" }' > porter-rails-app/config/routes.rb
+```
+
+## Local testing
+
+Testing that the application will work locally is straightforward.
+
+Start by running `bundle install` in the `porter-rails-app` directory. This will install your application dependencies.
+
+```bash
+bundle install
+```
+
+Next, run the application with the following command to verify things are working:
+
+```bash
+bin/rails server
+```
+
+Finally, load the url `http://localhost:3000` in your browser to verify the response. You can also run the following `curl` command in a new terminal (do not cancel the running `rails` server when executing this):
+
+```bash
+curl localhost:3000
+```
+
+## Creating a `porter.yaml`
+
+While Porter allows folks to configure the services and other configuration for an application in the Porter UI, you can also optionally configure this in a `porter.yaml`. The `porter.yaml` file format covers both the build and run portions of your application's lifecycle. While it is expansive in nature, the following covers a minimum necessary to get your application deployed.
+
+```bash
+---
+version: v2
+services:
+- name: web-server
+  type: web
+  run: "bin/rails server -b 0.0.0.0"
+  cpuCores: 0.19
+  ramMegabytes: 400
+  port: 3000
+predeploy:
+  run: bundle exec rake assets:precompile db:prepare
+```
+
+> **`porter.yaml`**
+
+In the above example, we configure Rails to listen on all interfaces and the configured port `3000`. Both of these are necessary as otherwise the application will not be routable by Porter outside of it's container.
+
+Note that anything not specified in the `porter.yaml` can be configured in the Porter UI, and you can always add new services for a given application both in the `porter.yaml` as well as in the UI at a later date.
+
+## Push the application to your Github repository
+
+Before deploying, you'll need to [create a Github Repository](https://docs.github.com/en/get-started/quickstart/create-a-repo) and push your code to the newly created repository. This will provide you with the ability to setup a Github Action for deploying the app.
+
+## Deploying your application to Porter
+
+Now that the application has been created on Github, head over to our documentation on [Deploying from a Github Repository](/deploy/deploy-from-github-repo) to complete the setup of your application on Porter. At the end of that process, your application will be up and running on Porter!
+
+To ensure that Rails acts in a production-ready, Cloud-Native fashion, be sure to set the following environment variables on your Rails application in the Porter UI.
+
+```bash
+RAILS_ENV=production
+RAILS_LOG_TO_STDOUT=true
+RAILS_SERVE_STATIC_FILES=true
+```
+
+> **`.env`**
+
+## Testing your application
+
+After the Rails application has been deployed, you can head over to your configured public url for the deployed application. Assuming an domain of `rails-app-4feee654149e65c0.onporter.run`, hitting the [/](https://rails-app-4feee654149e65c0.onporter.run/) page will result in the default Rails welcome page.
+
+---
+
+Now that the application is working, checkout the rest of the Porter documentation to find out more ways to leverage the platform to scale your Ruby on Rails to support your needs on Porter.

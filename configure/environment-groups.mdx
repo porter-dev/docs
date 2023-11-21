@@ -1,0 +1,70 @@
+---
+title: "Environment Groups"
+---
+
+An environment group (or env group for short) is a set of environment variables that are meant to be reused across multiple applications. For example, if all web services require a shared set of API and database keys, this could form a web-service environment group with all of those keys as a shared configuration. In this guide, we will explain how to create and use environment groups.
+
+<Info>
+  Environment groups are stored in your own cluster as a Kubernetes Config Map
+  or a Kubernetes Secret. The data will be visible to any users or services with
+  access to your cluster, such as Porter.
+</Info>
+
+## Creating Environment Groups
+
+You can create a new environment group in the “Env Groups” tab on the dashboard.
+
+![image](/images/other/env-group-tab.png)
+
+Clicking the “New Env Group” button will open a modal where you can enter the name of the environment group and the environment variables that should be included in the group.
+You can add your environment variables by clicking the **Add Row** button or batch upload them via a .env file using the **Copy from File** button.
+
+![create-env-group](/images/other/env-group-create.png)
+
+## 🔒 Creating Secret Environment Variables
+
+Porter supports creating secret environment variables that will not be exposed after creation. At the moment, you must create an environment group in order to create secret environment variables. To create a secret environment variable, click on the lock icon next to the environment variable during creation of the environment variable:
+
+![create-env-group](/images/other/env-group-secrets.png)
+
+## How Secrets are Stored[](#how-secrets-are-stored "Direct link to heading")
+
+All env group variables are stored **in your own cluster**, and not on Porter's infrastructure. The entire env group is stored as a Kubernetes [Config Map](https://kubernetes.io/docs/concepts/configuration/configmap/), which is meant for non-sensitive, unstructured data. When you create a secret environment variable, the ConfigMap will contain a reference to a Kubernetes [Secret](https://kubernetes.io/docs/concepts/configuration/secret), which contains the secret data. This secret will be [injected into your container](https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/) as it is mounted, and will not be exposed on the Porter dashboard after creation. To summarize:
+
+- No env group data is stored on Porter's servers: it is all stored on your own cluster.
+- **Non-sensitive data** in an env group will be read into memory on Porter's servers during deployment, and added directly to the deployment.
+- **Sensitive data** in an env group will **not** be read into memory on Porter's servers during deployment, and are referenced as a secret during deployment. This sensitive data only exists in memory on Porter's infrastructure during creation/updating of the env group (**not** the deployment).
+
+## Syncing Environment Groups to Applications[](#syncing-environment-groups-to-applications "Direct link to heading")
+
+Environment groups have the capability to sync with applications, so when the environment variables are updated the synced applications are automatically restarted.
+To sync a env group to an application either add it during creation of the app:
+
+![sync-env-group](/images/other/env-group-sync.png)
+
+You can also navigate to the application and add the env group from the **Env Groups** tab and hit **Update app**:
+
+![sync-env-group-tab](/images/other/env-group-sync-tab.png)
+
+<Info>
+  **Note:** Only a limit of 3 environment groups can be synced to an
+  application. If your use case requires syncing more than 3 please contact us.
+</Info>
+
+When you subsequently update those env group variables from the **Env groups** tab, the applications will be restarted with the new variables.
+
+## Updating and Deleting Environment Groups[](#updating-and-deleting-environment-groups "Direct link to heading")
+
+To update your environment group, navigate back to the **Env Groups** tab, and click on the existing environment group to update. You can make changes to the env group here, and select the **Update** button when finished:
+
+![update-env-group](/images/other/env-group-update.png)
+
+To delete the environment group, navigate to the **Settings** tab, and press the **Delete** button,:
+
+<Info>
+  **Note:** You will not be able to delete an environment group if it is synced
+  to an application. Ensure you unsync the env group from all attached
+  applications in order to delete it.
+</Info>
+
+![delete-env-group](/images/other/env-group-delete.png)

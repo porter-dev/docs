@@ -1,0 +1,34 @@
+---
+title: 'Custom Workflows'
+---
+
+In cases where you need more control over how your apps build and deploy when creating new preview environments, it is possible to leverage the Porter CLI in combination with custom CI actions to handle a wider range of workflows.
+
+## Using the CLI
+
+Spinning up an isolated preview environment is as simple as running the following command:
+
+```bash
+porter apply -f porter.yaml --preview
+```
+
+This will create a new preview environment using the currently checked out branch.
+
+## Customizing Github Actions
+
+Porter uses Github Actions to build and deploy your apps. When setting up preview environments, a workflow file with a name like `porter-preview-<app-name>.yml` will be created in your repository. You can customize this file to suit your needs.
+
+For example, it is possible to add conditionals to only run the workflow for specific branches or tags. This can be useful if you want to only create preview environments when a specific branch naming convention is used. If you only want to create preview environments for branches that start with `feat/`, you can add the following to your workflow file:
+
+```yaml
+...
+jobs:
+  porter-deploy:
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.head_ref, 'feat/') }}
+    steps:
+    - name: Checkout code
+...
+```
+
+For more information on Github Actions, see the [Github Actions documentation](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions).

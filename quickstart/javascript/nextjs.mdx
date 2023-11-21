@@ -1,0 +1,135 @@
+---
+title: "Deploying a Next.js"
+description: "Getting started with a Next.js app on Porter"
+---
+
+Running a Next.js application on your Porter infrastructure is simple and requires minimal changes to your application. This tutorial will cover creating the application, making changes to get it Porter-ready, and finally deploying it.
+
+While Porter can be used with any existing Next.js app, this tutorial will assume you are starting with a brand new app. Please follow the instructions as appropriate.
+
+## Create the application
+
+We recommend starting a new Next.js application using `create-next-app`, which sets up everything automatically for you. To create a project, run:
+
+```bash
+npx create-next-app@latest porter-nextjs-app --ts --eslint --tailwind --src-dir --app --import-alias '@/*'
+```
+
+## Verify you have a build command
+
+Next.js applications will be deployable on Porter as long as they have the following:
+
+- A dependency lockfile to track dependencies at a specific version for your package manager of choice. The following are supported:
+  - NPM: `package-lock.json`
+  - PNPM: `pnpm-lock.yaml`
+  - Yarn: `yarn.lock`
+- A `scripts.build`` command in the `package.json` to tell Porter how to build your app.
+
+If your app uses `npm run start` as it's start command, you'll also need a `scripts.start` command to start your Next.js server.
+
+As this tutorial uses npm, we can validate the existence of the lockfile by running the following command:
+
+```bash
+ls -lah package-lock.json
+```
+
+If the lockfile is ever out of date, you can always update it with `npm install`. This should always be run after updating any application dependencies.
+
+```bash
+npm install
+```
+
+The `scripts.build` command is run automatically after application dependencies are installed, and is useful for running any asset pipeline or compilation step for your app. Next.js typically sets a default, but the value can be validated via the `jq` utility:
+
+```bash
+jq '.scripts.build' package.json
+```
+
+## Setting the correct start command
+
+The `scripts.start` command is executed whenever `npm run start` is executed. This should start your application server in the correct Node.js dependency context. While Next.js sets this to `next start`, you'll need to modify this so that Porter can route to the application outside of it's container as it listens on the local interface, `127.0.0.1` or `localhost`.
+
+The following snippet contains the correct `.scripts.start` command. Please note that this is just the partial contents of the `package.json` and should not replace the entire file.
+
+```bash
+{
+  "scripts": {
+    "start": "next start --hostname=0.0.0.0"
+  }
+}
+```
+
+> **`package.json`**
+
+The command can be updated via `jq` with the following commands:
+
+```bash
+content="$(jq --arg var "next start --hostname=0.0.0.0" '.scripts.start = $var' package.json)"
+echo "$content" >package.json
+```
+
+And the configuration can be verified via the following `jq` command:
+
+```bash
+jq '.scripts.start' package.json
+```
+
+## Local testing
+
+Testing that the application will work locally is straightforward.
+
+Start by running `npm install`. This will install your application dependencies.
+
+```bash
+npm install
+```
+
+Next, build the app. This will precompile your application in the same way a Porter deploy will.
+
+```bash
+npm run build
+```
+
+Next, run the application with the following command to verify things are working:
+
+```bash
+npm run start
+```
+
+Finally, load the url `http://localhost:3000` in your browser to verify the response. You can also run the following `curl` command in a new terminal (do not cancel the running `next` server when executing this):
+
+```bash
+curl localhost:3000
+```
+
+## Creating a `porter.yaml`
+
+While Porter allows folks to configure the services and other configuration for an application in the Porter UI, you can also optionally configure this in a `porter.yaml`. The `porter.yaml` file format covers both the build and run portions of your application's lifecycle. While it is expansive in nature, the following covers a minimum necessary to get your application deployed.
+
+```bash
+---
+version: v2
+services:
+- name: web-server
+  type: web
+  run: "npm run start"
+  cpuCores: 0.19
+  ramMegabytes: 400
+  port: 3000
+```
+
+> **`porter.yaml`**
+
+Note that anything not specified in the `porter.yaml` can be configured in the Porter UI, and you can always add new services for a given application both in the `porter.yaml` as well as in the UI at a later date.
+
+## Push the application to your Github repository
+
+Before deploying, you'll need to [create a Github Repository](https://docs.github.com/en/get-started/quickstart/create-a-repo) and push your code to the newly created repository. This will provide you with the ability to setup a Github Action for deploying the app.
+
+## Deploying your application to Porter
+
+Now that the application has been created on Github, head over to our documentation on [Deploying from a Github Repository](/deploy/deploy-from-github-repo) to complete the setup of your application on Porter. At the end of that process, your application will be up and running on Porter!
+
+---
+
+Now that the application is working, checkout the rest of the Porter documentation to find out more ways to leverage the platform to scale your Next.js to support your needs on Porter.

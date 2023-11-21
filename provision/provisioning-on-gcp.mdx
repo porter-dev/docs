@@ -1,0 +1,97 @@
+---
+title: "Provisioning on Google Cloud"
+---
+
+Porter runs on a Kubernetes cluster in your own Google Cloud account. You can provision a cluster through Porter by providing the credentials of a GCP service account.
+
+<Info>
+  Quick Installation uses **Owner** permissions to set up Porter. You can
+  optionally specify the minimum IAM policies for provisioning both a cluster
+  and registry.
+</Info>
+
+## Prerequisites[](#prerequisites "Direct link to heading")
+
+### Enabling GCP APIs[](#enabling-apis "Direct link to heading")
+
+To use Porter on GCP, you must first enable some APIs on your project.
+
+1. Navigate to the **APIs & Services** tab of your project.
+
+![APIs and services](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/75c924c8-88d4-40a7-5a35-5e29261f4d00/large "Screen Shot 2021-05-06 at 6.23.07 PM.png")
+
+2. Click on the **Enable APIs and Services** button at the top. This will bring up a catalog of APIs that you can enable on GCP. Enable the following four APIs:
+
+- Compute Engine API
+- Kubernetes Engine API
+- Cloud Resource Manager API
+- Container Registry API
+- Artifact Registry API
+
+It might take a few minutes for each of these APIs to be enabled. Once you can confirm that all five APIs are enabled from the **APIs & Services** tab, proceed to the next section.
+
+### Creating a Service Account[](#creating-service-account "Direct link to heading")
+
+1. First, go to your [Google Cloud console](https://console.cloud.google.com/) and navigate to **IAM & Admin** \-> **Service Accounts**:
+
+![Service accounts](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/c7dbb5ea-64ff-4ac5-4b97-6b4ff403cb00/large "Screen Shot 2021-04-15 at 6.41.26 PM.png")
+
+2. Select **Create Service Account**:
+
+![Create service account](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/a625aa4d-08d9-4a47-885a-d470fd1a3100/large "Screen Shot 2021-04-15 at 6.45.42 PM.png")
+
+3. After naming your service account, grant the service account these four permissions:
+
+- **Cloud Storage > Storage Admin**
+- **Compute Engine > Compute Admin**
+- **Kubernetes Engine > Kubernetes Engine Admin**
+- **Service Accounts > Service Account User**
+- **Artifact Registry > Artifact Registry Administrator**
+
+Select **Done** to create the service account.
+
+![Create service account confirmation](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/497483cc-c2cc-4e53-3535-bea44f81e700/large "Screen Shot 2021-01-28 at 4.34.21 PM.png")
+
+4. Once the service account has been created, under **Actions** select **Manage keys**.
+
+![Manage keys](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/7ed41d02-b6dd-40cf-b2aa-bdbb23155900/large "Screen Shot 2021-04-15 at 6.51.25 PM.png")
+
+5. Select **ADD KEY** \-> **Create new key** and then choose **JSON** as your key type. After creation, your JSON key will automatically be downloaded as a file. You will need this key later.
+
+![Download JSON](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/9e17f17a-9d9e-4bdc-5978-55275f3d9a00/large "Screen Shot 2021-04-15 at 6.56.30 PM.png")
+
+## Provisioning a cluster[](#provisioning-cluster "Direct link to heading")
+
+1. Select "GCP" from the cloud providers:
+
+![Select GCP](https://github.com/porter-dev/porter/assets/10238219/84cc53f0-b7cc-4449-8a4d-9f7b1f297438 "Cloud providers")
+
+2. Click "Drop a GCP Service Account JSON here, or click to browse." and upload the JSON key file from the Prerequisites step, then click "Continue":
+
+![Upload GCP Service Account](/images/provisioning-infrastructure/gcp-service-account.png)
+
+3. Select the region that you would like to provision in, then click "Provision"
+
+4. Before you are able to provision a cluster you must pass all provision checks. Troubleshooting steps will be shown on the dashboard if you
+   encounter these errors.
+
+![Provision](/images/provisioning-infrastructure/gcp-preflight-checks.png)
+
+After clicking **Provision** from Porter, installation will begin automatically.
+
+## Deleting Provisioned Resources[](#deleting-provisioned-resources "Direct link to heading")
+
+<Warning>
+  Deleting resources on GCP via Porter may result in dangling resources. After
+  clicking delete, please make sure to check your GCP console to see if all
+  resources have properly been removed. You can remove any dangling resources
+  via either the GCP console or the gcloud CLI.
+</Warning>
+
+We recommend that you delete all provisioned resources through Porter as well as confirm resources have been deleted from the GCP console. This will ensure that you do not get charged on GCP for lingering resources.
+
+To delete resources, click on **Additional Settings** from the **Infrastructure** tab.
+
+Click **Delete Cluster** to remove the cluster from Porter and delete resources in your GCP console. It may take up to 30 minutes for these resources to be deleted from your GCP console.
+
+![Cluster settings](/images/provisioning-infrastructure/delete-cluster.png)
