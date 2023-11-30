@@ -42,7 +42,7 @@ PORTER_AZURE_SUBSCRIPTION_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 Run the following command to create the role:
 
 ```
-envsubst << EOF | az role definition create --role-definition @-
+ROLE_DEFINITION_JSON=$(cat <<- EOF
 {
     "assignableScopes": ["/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"],
     "description": "Grants Porter access to manage resources for an AKS cluster.",
@@ -67,6 +67,9 @@ envsubst << EOF | az role definition create --role-definition @-
     "type": "Microsoft.Authorization/roleDefinitions"
 }
 EOF
+)
+
+az role definition create --role-definition "$ROLE_DEFINITION_JSON"
 ```
   
 2. Create a new service principal through the Azure CLI that uses the role you just created:
