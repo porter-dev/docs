@@ -158,6 +158,7 @@
         "security-and-compliance/role-based-access-control",
         "security-and-compliance/static-egress-ip",
         "security-and-compliance/configuring-alb",
+        "security-and-compliance/cloudflare-dns",
         "security-and-compliance/soc2-hipaa"
       ]
     },

@@ -1,0 +1,96 @@
+---
+title: "Using Cloudflare DNS with Porter"
+sidebarTitle: "Cloudflare DNS"
+---
+
+Porter supports the use of Cloudflare DNS out-of-the-box in both proxy, and non-proxy mode.
+
+Before continuing any further, ensure that you have followed our guide for [deploying applications on your custom domain](/configure/custom-domains#deploying-on-the-custom-domain)
+
+When using non-Cloudflare services such as AWS WAFv2, AWS Cloudfront, or most other DDoS prevention services, it is recommended to use non-proxy mode with your Cloudflare DNS.
+This ensures that Cloudflare acts only as a Trusted Authority for DNS, and delegates all other security to other providers.
+Porter handles the creation and renewal of your TLS/HTTPS certificates, and therefore recommends using non-proxy mode.
+
+Most Cloudflare services will require Cloudflare DNS Proxy mode. If you require one of these services, follow the steps below for ensuring that your applications are compatible.
+
+Before continuing, you will need to copy the address of your Porter-managed loadbalancer.
+To find your loadbalancer address, visit the Porter dashboard `Infrastructure` > `Additional Settings`.
+This address may be a DNS address, on an IP address depending on your cloud provider. This is important later.
+
+# Creating a DNS record
+
+If you have already created a wildcard DNS record (recommended), you may skip this section.
+
+- From the Cloudflare dashboard, select `Websites`, then your chosen domain name.
+  ![Websites](/images/security-and-compliance/cloudflare/sidebar-websites.png)
+
+- In the sidebar, select `DNS` > `Records`
+  ![DNS Records](/images/security-and-compliance/cloudflare/sidebar-dns-records.png)
+
+- Click `Add Record`
+  ![Add DNS Record](/images/security-and-compliance/cloudflare/add-record.png)
+
+<Tabs>
+  <Tab title="CNAME Record">
+  If your loadbalancer address is a DNS name address, you will need to create a CNAME Record
+
+Set `Type` to `CNAME` (CNAME Record)
+
+Set `Name` to the DNS name that your application should be available at
+
+Set `Target` to the Porter Loadbalancer DNS address from before
+
+![CNAME Record](/images/security-and-compliance/cloudflare/record-cname.png)
+
+   </Tab>
+
+   <Tab title="A Record">
+
+If your loadbalancer address is an IP address, you will need to create an A Record
+
+Set `Type` to `A` (A Record)
+
+Set `Name` to the DNS name that your application should be available at
+
+Set `IPv4 Address` to the Porter Loadbalancer address from before
+
+![CNAME Record](/images/security-and-compliance/cloudflare/record-a.png)
+
+  </Tab>
+
+</Tabs>
+
+# Non-Proxy DNS
+
+Ensure that `Proxy Status` is disabled. This will show as `DNS only`.
+
+![DNS Only](/images/security-and-compliance/cloudflare/dns-non-proxy.png)
+
+Done! You should now be able to visit your custom domain, with Porter managing your HTTPS!
+
+# Proxy DNS
+
+Ensure that `Proxy Status` is enabled. This will show as `Proxied`.
+
+![Proxied DNS](/images/security-and-compliance/cloudflare/dns-proxy.png)
+
+If you visit your custom domain, you will now get a `too many redirects` error from Cloudflare. To fix this issue, we must create a Cloudflare Configuration Rule.
+
+From the sidebar, select `Rules` > `Configuration Rules`
+![Configuration Rules](/images/security-and-compliance/cloudflare/sidebar-configuration-rules.png)
+
+Select `Create rule`
+
+Give the rule a name. This can be any name you choose.
+
+For this guide, we will assume that you want to enable proxied TLS on all subdomains for this website. As such, select `All incoming requests`
+
+![All Incoming Requests](/images/security-and-compliance/cloudflare/rules-all-incoming.png)
+
+Scroll down to `SSL (Optional)`
+
+Click `Add` and choose `Full` from the drop down.
+
+![SSL Full](/images/security-and-compliance/cloudflare/rules-ssl-full.png)
+
+After a few moments, your custom domain will be ready behind Cloudflare Proxy
