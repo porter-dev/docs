@@ -145,6 +145,20 @@
       ]
     },
     {
+      "group": "Observability",
+      "pages": [
+        "observability/monitoring",
+        "observability/logging",
+        "observability/alerts"
+      ]
+    },
+    {
+      "group": "Debug",
+      "pages": [
+        "debug/common-errors"
+      ]
+    },
+    {
       "group": "Preview Environments",
       "pages": [
         "preview-environments/overview",

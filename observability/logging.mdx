@@ -1,3 +1,11 @@
 ---
 title: 'Logging'
 ---
+
+Porter retains your logs up to 7 days by default. 
+
+You can perform basic search across your logs and navigate across different time periods.
+
+![Logging Tab](/images/observability/logging.png)
+
+All logs are stored exclusively inside your own infrastructure using [Loki](https://github.com/grafana/loki) and does not get stored anywhere on Porter's system. Porter is responsible for the reliability of the Loki instance running on your cluster.
