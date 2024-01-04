@@ -80,6 +80,19 @@ automatically be piped into your build process. **There is no need for you to ma
 
 Please note that `Secrets` will not be made available to your build process. Learn more about `Secrets` [here](/configure/environment-groups).
 
+### Using build-time environment variables for `Dockerfile` builds
+
+If you are building your application via `Dockerfile` and require environment variables to be used during the build process, you can use the `ARG` keyword to make these variables available to your `Dockerfile` and the `${env-var-name}` syntax to reference them elsewhere in the file. Example snippet from a `Dockerfile`:
+
+```
+...
+ARG PORTER_ENV_VARIABLE
+RUN echo "Here is my env variable: ${PORTER_ENV_VARIABLE}"
+...
+```
+
+Note that if you are building via buildpacks, no additional configuration is required to make your build-time environment variables available to your build process.
+
 ## Storing Container Images
 
 When your application has built successfully, Porter will automatically push the resulting container images into a container registry in your connected cloud account and update your application with the new build.
