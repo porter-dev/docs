@@ -99,7 +99,7 @@ When your application has built successfully, Porter will automatically push the
 
 ## Using Buildkit
 
-For certain Dockerfile-based builds, Buildkit may be required to build successfully, such as when using `COPY --chown`. To enable buildkit, set the `DOCKER_BUILKDIT` environment variable to `1`. This can be set at the Github Actions Workflow-level with the following snippet at the top-level of your Github Actions file:
+For certain Dockerfile-based builds, Buildkit may be required to build successfully, such as when using `COPY --chown`. To enable buildkit, set the `DOCKER_BUILDKIT` environment variable to `1`. This can be set at the Github Actions Workflow-level with the following snippet at the top-level of your Github Actions file:
 
 ```
 # ... other parts of the workflow file go here
