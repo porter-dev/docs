@@ -96,3 +96,13 @@ Note that if you are building via buildpacks, no additional configuration is req
 ## Storing Container Images
 
 When your application has built successfully, Porter will automatically push the resulting container images into a container registry in your connected cloud account and update your application with the new build.
+
+## Using Buildkit
+
+For certain Dockerfile-based builds, Buildkit may be required to build successfully, such as when using `COPY --chown`. To enable buildkit, set the `DOCKER_BUILKDIT` environment variable to `1`. This can be set at the Github Actions Workflow-level with the following snippet at the top-level of your Github Actions file:
+
+```
+# ... other parts of the workflow file go here
+env:
+  DOCKER_BUILDKIT: "1"
+```
