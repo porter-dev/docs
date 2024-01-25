@@ -48,9 +48,7 @@
   "navigation": [
     {
       "group": "Home",
-      "pages": [
-        "introduction"
-      ]
+      "pages": ["introduction"]
     },
     {
       "group": "Provision",
@@ -116,7 +114,8 @@
             "standard/cli/command-reference/porter-config",
             "standard/cli/command-reference/porter-project",
             "standard/cli/command-reference/porter-run",
-            "standard/cli/command-reference/porter-update"
+            "standard/cli/command-reference/porter-update",
+            "standard/cli/command-reference/porter-datastore-connect"
           ]
         },
         {
@@ -154,9 +153,7 @@
     },
     {
       "group": "Debug",
-      "pages": [
-        "debug/common-errors"
-      ]
+      "pages": ["debug/common-errors"]
     },
     {
       "group": "Preview Environments",
