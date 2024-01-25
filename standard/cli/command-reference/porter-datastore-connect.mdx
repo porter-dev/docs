@@ -1,0 +1,45 @@
+---
+title: 'porter datastore connect'
+---
+
+##### Prerequisites
+
+- You've logged in to the Porter CLI after running [porter auth login](/enterprise/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/enterprise/cli/command-reference/porter-config)
+
+## Datastores[](#applications 'Direct link to heading')
+
+`porter datastore connect` creates a secure tunnel through which you can connect to your datastore locally. For example:
+
+```
+porter datastore connect <YOUR_DATASTORE_NAME>
+```
+
+Example output from running this command:
+
+```
+Secure tunnel setup complete! While the tunnel is running, you can connect to your datastore using the following credentials:
+ Host: 127.0.0.1
+ Port: 8122
+ Database name: postgres
+ Password: <YOUR_DATASTORE_PASSWORD>
+
+Starting proxy...[CTRL-C to exit]
+Forwarding from 127.0.0.1:8122 -> 6379
+Forwarding from [::1]:8122 -> 6379
+Handling connection for 8122
+```
+
+While the secure tunnel is running, you can run the following command in a separate shell to connect to your datastore (assuming the datastore is a redis cache):
+
+```
+redis-cli -p 8122 -a <YOUR_DATASTORE_PASSWORD> --tls
+```
+
+### Port
+
+If you would like to specify the port on which to connect to the secure tunnel, you can use the `--port` flag. By default, this is set to 8122.
+
+```
+porter datastore connect <YOUR_DATASTORE_NAME> --port <YOUR_PORT>
+```
