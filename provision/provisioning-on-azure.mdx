@@ -27,7 +27,11 @@ It might take a few minutes for providers to complete registration. Once you con
 
 ## Creating the Service Principal[](#creating-service-principal "Direct link to heading")
 
-1. Create a new role through the Azure CLI
+1. Create a new role with the Azure CLI
+
+<Info>
+    The following commands can be run in the Azure Cloud Shell (selecting the `Bash` option) or in your local terminal after installing the Azure CLI and authenticating with `az login`.
+</Info>
 
 Most of the permissions required by Porter to manage your infrastructure come with Azure's built-in Contributor role.  However, this role does not allow for role assignments, which are crucial for Porter.
 
