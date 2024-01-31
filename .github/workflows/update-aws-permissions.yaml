@@ -10,9 +10,9 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
       - name: Checkout docs
+        uses: actions/checkout@v4
+      - name: Checkout ccp
         uses: actions/checkout@v4
         with:
           repository: porter-dev/cluster-control-plane
@@ -22,12 +22,9 @@ jobs:
       - name: Generate docs
         run: |
           mkdir -p docs/snippets
-          go run .github/sync-docs.go > docs/snippets/aws-permissions.mdx
+          curl https://porter-role.s3.us-east-2.amazonaws.com/permissions-docs.txt > docs/snippets/aws-permissions.mdx
       - name: Commit docs
         run: |
-          cd docs
-          git config --global user.name "portersupport"
-          git config --global user.email "support@porter.run"
           git add .
           git commit -m "Autoupdate docs from CCP"
           git push origin main
