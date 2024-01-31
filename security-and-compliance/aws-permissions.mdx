@@ -6,5 +6,61 @@ sidebarTitle: "AWS Roles & Permissions"
 import { awsPermissions } from "/snippets/aws-permissions.mdx";
 import { ShowPermissions } from "/snippets/aws-permissions-component.mdx";
 
-<ShowPermissions policyToShow={"first"} allPolicies={awsPermissions} />
-<ShowPermissions policyToShow={"porter-manager"} allPolicies={awsPermissions} />
+# Overview
+
+Porter creates several roles and policies for use in the management of your AWS account. These may change over time, and will be automatically updated both here, and on your AWS account.
+Make sure to check back here for updates, and if you have any questions, please reach out to us on `support@porter.run`
+
+## Roles
+
+
+### Porter Access Manager
+
+Porter Access Manager is a role that Porter creates to manage the access given to the other roles in this document.
+If permissions are removed from this role, you will be **unable to access new features of Porter**.
+
+<ShowPermissions policyToShow={"role_porter_access_manager_inline_json"} allPolicies={awsPermissions} />
+
+### Porter Manager
+
+Porter Manager is used for all API operations from Porter, to your AWS account. This role is primarily used to read resources in your account to ensure that Porter is not creating duplicate resources, or using resources managed by a non-Porter process.
+This role may adopt policies from the other roles mentioned here, when managing their specific domains.
+
+<ShowPermissions policyToShow={"policy_porter_manager_catchall_json"} allPolicies={awsPermissions} />
+
+### Porter EKS Manager
+Porter EKS Manager is the role used by EKS to perform actions on your AWS account, for ongoing maintenance of your EKS cluster. 
+
+<ShowPermissions policyToShow={"role_porter_controlplane_manager_trust_json"} allPolicies={awsPermissions} />
+<ShowPermissions policyToShow={"policy_porter_eks_manager_json"} allPolicies={awsPermissions} />
+
+### Porter Node Manager
+
+Porter Node Manager is the role used by EKS worker nodes. This role also includes access to some AWS-provided roles such as:
+- `AmazonEKS_CNI_Policy`
+- `AmazonEKSClusterPolicy`
+- `AmazonEKSWorkerNodePolicy`
+- `AmazonEC2ContainerRegistryReadOnly`
+- `service-role/AmazonEBSCSIDriverPolicy`
+- `service-role/AmazonEFSCSIDriverPolicy`
+
+<ShowPermissions policyToShow={"role_porter_node_manager_inline_json"} allPolicies={awsPermissions} />
+
+### Porter Infra Manager
+
+This is the role used to manage non-EKS resources such as RDS, Elasticache, S3, etc.
+<ShowPermissions policyToShow={"policy_porter_infra_manager_inline_json"} allPolicies={awsPermissions} />
+
+## Policies
+
+On top of the roles above, the following policies are created which may be attached to one, or many of the roles above.
+
+### Cluster Autoscaler
+
+Porter Cluster Autoscaler is used to allow Porter to scale your cluster up and down based on the load of your cluster.
+<ShowPermissions policyToShow={"policy_porter_cluster_autoscaler_json"} allPolicies={awsPermissions} />
+
+### Loadbalancer
+
+Porter Loadbalancer is used to allow Porter to manage loadbalancers in your account.
+<ShowPermissions policyToShow={"policy_porter_loadbalancer_json"} allPolicies={awsPermissions} />

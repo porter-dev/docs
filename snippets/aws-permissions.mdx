@@ -1,8 +1,760 @@
 export const awsPermissions = {
-    "porter-manager": {
-        "description": "This is the first page",
-    },
-    "porter-access-manager": {
-        "description": "This is the second page",
-    },
+  "policy_porter_cluster_autoscaler_json": {
+    "Statement": [
+      {
+        "Action": [
+          "autoscaling:SetDesiredCapacity",
+          "autoscaling:TerminateInstanceInAutoScalingGroup",
+          "ec2:DescribeImages",
+          "ec2:GetInstanceTypesFromInstanceRequirements",
+          "eks:DescribeNodegroup",
+          "autoscaling:DescribeAutoScalingGroups",
+          "autoscaling:DescribeAutoScalingInstances",
+          "autoscaling:DescribeLaunchConfigurations",
+          "autoscaling:DescribeScalingActivities",
+          "autoscaling:DescribeTags",
+          "ec2:DescribeInstanceTypes",
+          "ec2:DescribeLaunchTemplateVersions"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "*"
+        ],
+        "Sid": "ManageClusterAutoscaling"
+      }
+    ],
+    "Version": "2012-10-17"
+  },
+  "policy_porter_eks_manager_json": {
+    "Statement": [
+      {
+        "Action": [
+          "servicequotas:ListServiceQuotas",
+          "servicequotas:GetServiceQuota",
+          "servicequotas:RequestServiceQuotaIncrease",
+          "servicequotas:ListRequestedServiceQuotaChangeHistoryByQuota",
+          "iam:ListAttachedRolePolicies",
+          "iam:GetRole",
+          "iam:GetRolePolicy",
+          "iam:PassRole",
+          "iam:DetachRolePolicy",
+          "iam:DeleteRole",
+          "iam:CreateServiceLinkedRole",
+          "iam:ListOpenIDConnectProviders",
+          "iam:GetOpenIDConnectProvider",
+          "iam:CreateOpenIDConnectProvider",
+          "iam:AddClientIDToOpenIDConnectProvider",
+          "iam:UpdateOpenIDConnectProviderThumbprint",
+          "iam:DeleteOpenIDConnectProvider",
+          "iam:TagOpenIDConnectProvider",
+          "iam:ListPolicyVersions",
+          "iam:CreatePolicyVersion",
+          "autoscaling:CreateAutoScalingGroup",
+          "autoscaling:UpdateAutoScalingGroup",
+          "autoscaling:CreateOrUpdateTags",
+          "autoscaling:StartInstanceRefresh",
+          "autoscaling:DeleteAutoScalingGroup",
+          "autoscaling:DeleteTags",
+          "autoscaling:DescribeTags",
+          "secretsmanager:CreateSecret",
+          "secretsmanager:DeleteSecret",
+          "secretsmanager:TagResource",
+          "secretsmanager:TagResource",
+          "eks:DeleteFargateProfile",
+          "eks:UpdateClusterVersion",
+          "eks:DescribeFargateProfile",
+          "eks:ListTagsForResource",
+          "secretsmanager:CreateSecret",
+          "eks:UpdateAddon",
+          "secretsmanager:DeleteSecret",
+          "eks:ListAddons",
+          "eks:UpdateClusterConfig",
+          "eks:CreateCluster",
+          "eks:DescribeAddon",
+          "eks:UpdateNodegroupVersion",
+          "eks:DescribeNodegroup",
+          "eks:AssociateEncryptionConfig",
+          "eks:ListUpdates",
+          "eks:ListIdentityProviderConfigs",
+          "eks:ListNodegroups",
+          "eks:DisassociateIdentityProviderConfig",
+          "eks:UntagResource",
+          "eks:CreateNodegroup",
+          "eks:DeregisterCluster",
+          "eks:DeleteCluster",
+          "eks:CreateFargateProfile",
+          "eks:ListFargateProfiles",
+          "eks:DescribeIdentityProviderConfig",
+          "eks:DeleteAddon",
+          "eks:DeleteNodegroup",
+          "eks:DescribeUpdate",
+          "eks:TagResource",
+          "eks:AccessKubernetesApi",
+          "eks:CreateAddon",
+          "eks:UpdateNodegroupConfig",
+          "eks:DescribeCluster",
+          "eks:AssociateIdentityProviderConfig",
+          "ecr:CompleteLayerUpload",
+          "ecr:CreateRepository",
+          "ecr:InitiateLayerUpload",
+          "ecr:PutImage",
+          "ecr:UploadLayerPart"
+        ],
+        "Effect": "Allow",
+        "Resource": "*"
+      },
+      {
+        "Action": [
+          "cloudformation:CreateStack",
+          "cloudformation:DescribeStacks",
+          "cloudformation:ListStackResources",
+          "cloudformation:DescribeChangeSet",
+          "cloudformation:DescribeStackEvents",
+          "cloudformation:GetStackPolicy",
+          "cloudformation:GetTemplate",
+          "cloudformation:CreateChangeSet",
+          "cloudformation:RollbackStack",
+          "cloudformation:TagResource",
+          "cloudformation:UpdateStack",
+          "cloudformation:ContinueUpdateRollback",
+          "cloudformation:CancelUpdateStack",
+          "iam:ListPolicyVersions"
+        ],
+        "Effect": "Allow",
+        "Resource": "*"
+      },
+      {
+        "Action": [
+          "iam:DeletePolicyVersion"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "arn:aws:iam::*:policy/porter*"
+        ]
+      },
+      {
+        "Action": [
+          "iam:UpdateAssumeRolePolicy"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "arn:aws:iam::*:role/porter*"
+        ]
+      },
+      {
+        "Action": [
+          "ec2:AttachNetworkInterface",
+          "ec2:DetachNetworkInterface",
+          "ec2:AllocateAddress",
+          "ec2:AssignIpv6Addresses",
+          "ec2:AssignPrivateIpAddresses",
+          "ec2:UnassignPrivateIpAddresses",
+          "ec2:AssociateRouteTable",
+          "ec2:AttachInternetGateway",
+          "ec2:AuthorizeSecurityGroupIngress",
+          "ec2:CreateInternetGateway",
+          "ec2:CreateEgressOnlyInternetGateway",
+          "ec2:CreateNatGateway",
+          "ec2:CreateNetworkInterface",
+          "ec2:CreateRoute",
+          "ec2:CreateRouteTable",
+          "ec2:CreateSecurityGroup",
+          "ec2:CreateSubnet",
+          "ec2:CreateTags",
+          "ec2:CreateVpc",
+          "ec2:ModifyVpcAttribute",
+          "ec2:DeleteInternetGateway",
+          "ec2:DeleteEgressOnlyInternetGateway",
+          "ec2:DeleteNatGateway",
+          "ec2:DeleteRouteTable",
+          "ec2:ReplaceRoute",
+          "ec2:DeleteSecurityGroup",
+          "ec2:DeleteSubnet",
+          "ec2:DeleteTags",
+          "ec2:DeleteVpc",
+          "ec2:DescribeAccountAttributes",
+          "ec2:DescribeAddresses",
+          "ec2:DescribeAvailabilityZones",
+          "ec2:DescribeInstances",
+          "ec2:DescribeInstanceTypes",
+          "ec2:DescribeInternetGateways",
+          "ec2:DescribeEgressOnlyInternetGateways",
+          "ec2:DescribeInstanceTypes",
+          "ec2:DescribeImages",
+          "ec2:DescribeNatGateways",
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:DescribeNetworkInterfaceAttribute",
+          "ec2:DescribeRouteTables",
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeSubnets",
+          "ec2:DescribeVpcs",
+          "ec2:DescribeVpcAttribute",
+          "ec2:DescribeVolumes",
+          "ec2:DescribeTags",
+          "ec2:DetachInternetGateway",
+          "ec2:DisassociateRouteTable",
+          "ec2:DisassociateAddress",
+          "ec2:ModifyInstanceAttribute",
+          "ec2:ModifyNetworkInterfaceAttribute",
+          "ec2:ModifySubnetAttribute",
+          "ec2:ReleaseAddress",
+          "ec2:RevokeSecurityGroupIngress",
+          "ec2:RunInstances",
+          "ec2:TerminateInstances",
+          "tag:GetResources",
+          "autoscaling:DescribeAutoScalingGroups",
+          "autoscaling:DescribeInstanceRefreshes",
+          "ec2:CreateLaunchTemplate",
+          "ec2:CreateLaunchTemplateVersion",
+          "ec2:DescribeLaunchTemplates",
+          "ec2:DescribeLaunchTemplateVersions",
+          "ec2:DeleteLaunchTemplate",
+          "ec2:DeleteLaunchTemplateVersions",
+          "ec2:DescribeKeyPairs",
+          "ec2:ModifyInstanceMetadataOptions"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "*"
+        ]
+      },
+      {
+        "Action": [
+          "secretsmanager:CreateSecret",
+          "secretsmanager:DeleteSecret",
+          "secretsmanager:TagResource"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "arn:*:secretsmanager:*:*:secret:aws.cluster.x-k8s.io/*"
+        ]
+      },
+      {
+        "Action": [
+          "kms:CreateAlias",
+          "kms:TagResource",
+          "kms:CreateGrant"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "arn:aws:kms:*:*:alias/*",
+          "arn:aws:kms:*:*:key/*"
+        ]
+      },
+      {
+        "Action": [
+          "kms:CreateKey"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "*"
+        ]
+      },
+      {
+        "Action": [
+          "ssm:GetParameter"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "*"
+        ]
+      },
+      {
+        "Action": [
+          "sts:DecodeAuthorizationMessage"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "*"
+        ]
+      },
+      {
+        "Action": [
+          "elasticfilesystem:CreateFileSystem",
+          "elasticfilesystem:CreateMountTarget",
+          "elasticfilesystem:DeleteFileSystem",
+          "elasticfilesystem:DeleteMountTarget",
+          "elasticfilesystem:DescribeFileSystems",
+          "elasticfilesystem:DescribeMountTargets",
+          "elasticfilesystem:DescribeMountTargetSecurityGroups",
+          "elasticfilesystem:ListTagsForResource",
+          "elasticfilesystem:ModifyMountTargetSecurityGroups",
+          "elasticfilesystem:TagResource",
+          "elasticfilesystem:UntagResource",
+          "elasticfilesystem:UpdateFileSystem"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "*"
+        ]
+      },
+      {
+        "Action": [
+          "ecr:GetRegistryScanningConfiguration",
+          "ecr:PutRegistryScanningConfiguration",
+          "inspector2:Disable",
+          "inspector2:Enable"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "*"
+        ],
+        "Sid": "Soc2Requirements"
+      }
+    ],
+    "Version": "2012-10-17"
+  },
+  "policy_porter_infra_manager_inline_json": {
+    "Statement": [
+      {
+        "Action": [
+          "kms:CreateAlias",
+          "kms:CreateKey",
+          "kms:DeleteAlias",
+          "kms:Describe*",
+          "kms:GenerateRandom",
+          "kms:Get*",
+          "kms:List*",
+          "kms:ScheduleKeyDeletion",
+          "kms:TagResource",
+          "kms:UntagResource",
+          "iam:ListGroups",
+          "iam:ListRoles",
+          "iam:ListUsers",
+          "iam:GetRolePolicy",
+          "iam:GetUser"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "KmsRecommendedInlinePolicy"
+      },
+      {
+        "Action": [
+          "s3:*"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "arn:aws:s3:::aws-cloudtrail-logs*"
+        ],
+        "Sid": "CloudTrailS3AllPermission"
+      },
+      {
+        "Action": [
+          "s3:ListAllMyBuckets",
+          "s3:GetBucketLocation",
+          "s3:GetBucketPolicy"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "CloudTrailListAndDescribeS3"
+      },
+      {
+        "Action": "cloudtrail:*",
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "CloudTrailManager"
+      },
+      {
+        "Action": [
+          "logs:CreateLogGroup"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "arn:aws:logs:*:*:log-group:aws-cloudtrail-logs*"
+        ],
+        "Sid": "CloudTrailCreateLogGroup"
+      },
+      {
+        "Action": [
+          "iam:PassRole"
+        ],
+        "Condition": {
+          "StringEquals": {
+            "iam:PassedToService": "cloudtrail.amazonaws.com"
+          }
+        },
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "CloudTrailPassRole"
+      },
+      {
+        "Action": "iam:PassRole",
+        "Condition": {
+          "StringEquals": {
+            "iam:PassedToService": "s3.amazonaws.com"
+          }
+        },
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "S3ReplicationPassRole"
+      }
+    ],
+    "Version": "2012-10-17"
+  },
+  "policy_porter_loadbalancer_json": {
+    "Statement": [
+      {
+        "Action": [
+          "elasticloadbalancing:RemoveListenerCertificates",
+          "ec2:DeleteTags",
+          "acm:ListCertificates",
+          "acm:RequestCertificate",
+          "acm:DescribeCertificate",
+          "acm:GetCertificate",
+          "acm:ListTagsForCertificate",
+          "acm:UpdateCertificateOptions",
+          "acm:AddTagsToCertificate",
+          "acm:RemoveTagsFromCertificate",
+          "wafv2:GetWebACLForResource",
+          "wafv2:AssociateWebACL",
+          "wafv2:ListResourcesForWebACL",
+          "wafv2:ListRuleGroups",
+          "wafv2:ListWebACLs",
+          "wafv2:GetWebACL",
+          "wafv2:ListTagsForResource",
+          "wafv2:TagResource",
+          "elasticloadbalancing:DescribeRules",
+          "elasticloadbalancing:AddTags",
+          "elasticloadbalancing:CreateLoadBalancer",
+          "elasticloadbalancing:ConfigureHealthCheck",
+          "elasticloadbalancing:DeleteLoadBalancer",
+          "elasticloadbalancing:DeleteTargetGroup",
+          "elasticloadbalancing:DescribeLoadBalancers",
+          "elasticloadbalancing:DescribeLoadBalancerAttributes",
+          "elasticloadbalancing:DescribeTargetGroups",
+          "elasticloadbalancing:ApplySecurityGroupsToLoadBalancer",
+          "elasticloadbalancing:DescribeTags",
+          "elasticloadbalancing:ModifyLoadBalancerAttributes",
+          "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+          "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+          "elasticloadbalancing:RemoveTags",
+          "elasticloadbalancing:DescribeListenerCertificates",
+          "elasticloadbalancing:AddListenerCertificates",
+          "elasticloadbalancing:CreateRule",
+          "elasticloadbalancing:SetSubnets",
+          "elasticloadbalancing:SetWebACL"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "ManageLoadBalancers"
+      }
+    ],
+    "Version": "2012-10-17"
+  },
+  "policy_porter_manager_catchall_json": {
+    "Statement": [
+      {
+        "Action": [
+          "autoscaling:SetDesiredCapacity",
+          "autoscaling:TerminateInstanceInAutoScalingGroup",
+          "ec2:DescribeImages",
+          "ec2:GetInstanceTypesFromInstanceRequirements",
+          "eks:DescribeNodegroup",
+          "autoscaling:DescribeAutoScalingGroups",
+          "autoscaling:DescribeAutoScalingInstances",
+          "autoscaling:DescribeLaunchConfigurations",
+          "autoscaling:DescribeScalingActivities",
+          "autoscaling:DescribeTags",
+          "ec2:DescribeInstanceTypes",
+          "ec2:DescribeLaunchTemplateVersions"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "*"
+        ],
+        "Sid": "ManageClusterAutoscaling"
+      },
+      {
+        "Action": [
+          "elasticloadbalancing:RemoveListenerCertificates",
+          "ec2:DeleteTags",
+          "acm:ListCertificates",
+          "acm:RequestCertificate",
+          "acm:DescribeCertificate",
+          "acm:GetCertificate",
+          "acm:ListTagsForCertificate",
+          "acm:UpdateCertificateOptions",
+          "acm:AddTagsToCertificate",
+          "acm:RemoveTagsFromCertificate",
+          "wafv2:GetWebACLForResource",
+          "wafv2:AssociateWebACL",
+          "wafv2:ListResourcesForWebACL",
+          "wafv2:ListRuleGroups",
+          "wafv2:ListWebACLs",
+          "wafv2:GetWebACL",
+          "wafv2:ListTagsForResource",
+          "wafv2:TagResource",
+          "elasticloadbalancing:DescribeRules",
+          "elasticloadbalancing:AddTags",
+          "elasticloadbalancing:CreateLoadBalancer",
+          "elasticloadbalancing:ConfigureHealthCheck",
+          "elasticloadbalancing:DeleteLoadBalancer",
+          "elasticloadbalancing:DeleteTargetGroup",
+          "elasticloadbalancing:DescribeLoadBalancers",
+          "elasticloadbalancing:DescribeLoadBalancerAttributes",
+          "elasticloadbalancing:DescribeTargetGroups",
+          "elasticloadbalancing:ApplySecurityGroupsToLoadBalancer",
+          "elasticloadbalancing:DescribeTags",
+          "elasticloadbalancing:ModifyLoadBalancerAttributes",
+          "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+          "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+          "elasticloadbalancing:RemoveTags",
+          "elasticloadbalancing:DescribeListenerCertificates",
+          "elasticloadbalancing:AddListenerCertificates",
+          "elasticloadbalancing:CreateRule",
+          "elasticloadbalancing:SetSubnets",
+          "elasticloadbalancing:SetWebACL"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "ManageLoadBalancers"
+      },
+      {
+        "Action": [
+          "ec2:AcceptVpcPeeringConnection",
+          "ec2:CreateVpcPeeringConnection",
+          "ec2:DeleteVpcPeeringConnection",
+          "ec2:ModifyVpcPeeringConnectionOptions"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "VpcPeering"
+      },
+      {
+        "Action": [
+          "ec2:CreateFlowLogs",
+          "ec2:DeleteFlowLogs",
+          "ec2:DescribeFlowLogs"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "VpcFlowLogs"
+      },
+      {
+        "Action": [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetRepositoryPolicy",
+          "ecr:DescribeRepositories",
+          "ecr:ListImages",
+          "ecr:DescribeImages",
+          "ecr:BatchGetImage",
+          "ecr:GetLifecyclePolicy",
+          "ecr:GetLifecyclePolicyPreview",
+          "ecr:ListTagsForResource",
+          "ecr:DescribeImageScanFindings"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "AmazonEC2ContainerRegistryReadOnly"
+      },
+      {
+        "Action": [
+          "sns:*"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "AmazonSNSFullAccess"
+      },
+      {
+        "Action": [
+          "ec2:DescribeInstances",
+          "ec2:DescribeInstanceTypes",
+          "ec2:DescribeRouteTables",
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeSubnets",
+          "ec2:DescribeVolumes",
+          "ec2:DescribeVolumesModifications",
+          "ec2:DescribeVpcs",
+          "eks:DescribeCluster",
+          "eks-auth:AssumeRoleForPodIdentity"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "AmazonEKSWorkerNodePolicy"
+      }
+    ],
+    "Version": "2012-10-17"
+  },
+  "policy_porter_vpc_manager_json": {
+    "Statement": [
+      {
+        "Action": [
+          "ec2:AcceptVpcPeeringConnection",
+          "ec2:CreateVpcPeeringConnection",
+          "ec2:DeleteVpcPeeringConnection",
+          "ec2:ModifyVpcPeeringConnectionOptions"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "VpcPeering"
+      }
+    ],
+    "Version": "2012-10-17"
+  },
+  "role_porter_access_manager_inline_json": {
+    "Statement": [
+      {
+        "Action": [
+          "iam:GetGroup",
+          "iam:CreateGroup",
+          "iam:DeleteGroup",
+          "iam:UpdateGroup",
+          "iam:GetRole",
+          "iam:CreateRole",
+          "iam:DeleteRole",
+          "iam:UpdateRole",
+          "iam:PutRolePermissionsBoundary",
+          "iam:GetUser",
+          "iam:GetPolicy",
+          "iam:CreatePolicy",
+          "iam:DeletePolicy",
+          "iam:GetPolicyVersion",
+          "iam:CreatePolicyVersion",
+          "iam:DeletePolicyVersion",
+          "iam:ListPolicyVersions",
+          "iam:ListPolicyTags",
+          "iam:ListAttachedGroupPolicies",
+          "iam:GetGroupPolicy",
+          "iam:PutGroupPolicy",
+          "iam:AttachGroupPolicy",
+          "iam:DetachGroupPolicy",
+          "iam:DeleteGroupPolicy",
+          "iam:ListAttachedRolePolicies",
+          "iam:ListRolePolicies",
+          "iam:GetRolePolicy",
+          "iam:PutRolePolicy",
+          "iam:AttachRolePolicy",
+          "iam:DetachRolePolicy",
+          "iam:DeleteRolePolicy",
+          "iam:ListAttachedUserPolicies",
+          "iam:ListUserPolicies",
+          "iam:ListRoleTags",
+          "iam:TagPolicy",
+          "iam:UntagPolicy",
+          "iam:TagRole",
+          "iam:UntagRole",
+          "iam:RemoveClientIDFromOpenIDConnectProvider",
+          "iam:ListOpenIDConnectProviderTags",
+          "iam:UpdateOpenIDConnectProviderThumbprint",
+          "iam:UntagOpenIDConnectProvider",
+          "iam:AddClientIDToOpenIDConnectProvider",
+          "iam:DeleteOpenIDConnectProvider",
+          "iam:GetOpenIDConnectProvider",
+          "iam:TagOpenIDConnectProvider",
+          "iam:CreateOpenIDConnectProvider",
+          "iam:UpdateAssumeRolePolicy"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "IAMController"
+      }
+    ],
+    "Version": "2012-10-17"
+  },
+  "role_porter_controlplane_manager_trust_json": {
+    "Statement": [
+      {
+        "Action": [
+          "sts:AssumeRole"
+        ],
+        "Effect": "Allow",
+        "Principal": {
+          "Service": [
+            "eks.amazonaws.com"
+          ]
+        }
+      }
+    ],
+    "Version": "2012-10-17"
+  },
+  "role_porter_node_manager_inline_json": {
+    "Statement": [
+      {
+        "Action": [
+          "logs:CreateLogStream",
+          "logs:CreateLogGroup",
+          "logs:DescribeLogStreams",
+          "logs:PutLogEvents",
+          "logs:PutRetentionPolicy"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "CustomerCloudWatchLogs"
+      }
+    ],
+    "Version": "2012-10-17"
+  },
+  "role_porter_node_manager_trust_json": {
+    "Statement": [
+      {
+        "Action": [
+          "sts:AssumeRole"
+        ],
+        "Effect": "Allow",
+        "Principal": {
+          "Service": [
+            "ec2.amazonaws.com"
+          ]
+        }
+      }
+    ],
+    "Version": "2012-10-17"
+  },
+  "role_trust_with_external_id_tmpl_json": {
+    "Statement": [
+      {
+        "Action": "sts:AssumeRole",
+        "Condition": {
+          "StringEquals": {
+            "sts:ExternalId": "PORTER_EXTERNAL_ID"
+          }
+        },
+        "Effect": "Allow",
+        "Principal": {
+          "AWS": "PORTER_ROLE_ARN"
+        }
+      },
+      {
+        "Action": [
+          "sts:AssumeRole",
+          "sts:TagSession"
+        ],
+        "Effect": "Allow",
+        "Principal": {
+          "Service": [
+            "ec2.amazonaws.com",
+            "eks.amazonaws.com"
+          ]
+        }
+      }
+    ],
+    "Version": "2012-10-17"
+  },
+  "role_trust_without_external_id_tmpl_json": {
+    "Statement": [
+      {
+        "Action": "sts:AssumeRole",
+        "Effect": "Allow",
+        "Principal": {
+          "AWS": "PORTER_ROLE_ARN"
+        }
+      },
+      {
+        "Action": [
+          "sts:AssumeRole",
+          "sts:TagSession"
+        ],
+        "Effect": "Allow",
+        "Principal": {
+          "Service": [
+            "ec2.amazonaws.com",
+            "eks.amazonaws.com"
+          ]
+        }
+      }
+    ],
+    "Version": "2012-10-17"
+  }
 }

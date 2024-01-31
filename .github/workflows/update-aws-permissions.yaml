@@ -1,8 +1,8 @@
 name: DocsTest
 on:
-  push:
-    branches:
-      - sms/upgrades
+  schedule:
+    - cron: "0 9 * * *"
+
 jobs:
   update-docs:
     name: Update AWS permissions docs
