@@ -1,0 +1,10 @@
+---
+title: "AWS Permissions required for Porter"
+sidebarTitle: "AWS Roles & Permissions"
+---
+
+import { awsPermissions } from "/snippets/aws-permissions.mdx";
+import { ShowPermissions } from "/snippets/aws-permissions-component.mdx";
+
+<ShowPermissions policyToShow={"first"} allPolicies={awsPermissions} />
+<ShowPermissions policyToShow={"porter-manager"} allPolicies={awsPermissions} />

@@ -174,7 +174,8 @@
         "security-and-compliance/configuring-alb",
         "security-and-compliance/cloudflare-dns",
         "security-and-compliance/soc2-hipaa",
-        "security-and-compliance/porter-ip-ranges"
+        "security-and-compliance/porter-ip-ranges",
+        "security-and-compliance/aws-permissions"
       ]
     },
     {

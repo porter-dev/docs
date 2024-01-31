@@ -1,0 +1,31 @@
+
+{/* 
+  Cluster Control Plane will export the permissions into aws-permissions.mdx.
+  This component will render the permissions in a readable json format, passing the policyToShow as the policy to render,
+  and allPolicies as the object containing all the policies.
+
+  This is split up in this way so that the permissions can be exported to a generated file (aws-permissions.mdx), separate from the
+  display code below.
+*/}
+
+export const ShowPermissions = ({ policyToShow, allPolicies }) => {
+
+  let policy = allPolicies[policyToShow];
+  if (!policy) {
+    return (
+      <div>
+        <pre>
+        A policy was supposed to appear here, but something had happened.
+        <br/>
+        Please contact support@porter.run for assistance.
+        </pre>
+      </div>
+    )
+  }
+  
+  return(
+    <div>
+        <pre>{JSON.stringify(policy, null, 2)}</pre>
+    </div>
+  )
+};
