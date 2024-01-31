@@ -12,14 +12,7 @@ jobs:
     steps:
       - name: Checkout docs
         uses: actions/checkout@v4
-      - name: Checkout ccp
-        uses: actions/checkout@v4
-        with:
-          repository: porter-dev/cluster-control-plane
-          path: ./ccp
-      - name: Setup Go
-        uses: actions/setup-go@v4
-      - name: Generate docs
+      - name: Grab docs
         run: |
           mkdir -p docs/snippets
           curl https://porter-role.s3.us-east-2.amazonaws.com/permissions-docs.txt > docs/snippets/aws-permissions.mdx
