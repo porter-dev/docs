@@ -1,4 +1,4 @@
-name: DocsTest
+name: Update AWS permissions docs
 on:
   schedule:
     - cron: "0 9 * * *"
