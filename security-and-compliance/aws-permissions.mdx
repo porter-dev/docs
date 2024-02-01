@@ -4,12 +4,14 @@ sidebarTitle: "AWS Roles & Permissions"
 ---
 
 import { awsPermissions } from "/snippets/aws-permissions.mdx";
-import { ShowPermissions } from "/snippets/aws-permissions-component.mdx";
+import { ShowPermissions, LastUpdated } from "/snippets/aws-permissions-component.mdx";
 
 # Overview
 
+
 Porter creates several roles and policies for use in the management of your AWS account. These may change over time, and will be automatically updated both here, and on your AWS account.
 Make sure to check back here for updates, and if you have any questions, please reach out to us on `support@porter.run`
+
 
 ## Roles
 
@@ -64,3 +66,6 @@ Porter Cluster Autoscaler is used to allow Porter to scale your cluster up and d
 
 Porter Loadbalancer is used to allow Porter to manage loadbalancers in your account.
 <ShowPermissions policyToShow={"policy_porter_loadbalancer_json"} allPolicies={awsPermissions} />
+
+
+<LastUpdated lastUpdated={awsPermissions["updated-at"]}/>
