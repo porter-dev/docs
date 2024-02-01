@@ -1,0 +1,23 @@
+name: DocsTest
+on:
+  schedule:
+    - cron: "0 9 * * *"
+
+jobs:
+  update-docs:
+    name: Update AWS permissions docs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout docs
+        uses: actions/checkout@v4
+      - name: Grab docs
+        run: |
+          mkdir -p docs/snippets
+          curl https://porter-role.s3.us-east-2.amazonaws.com/permissions-docs.txt > docs/snippets/aws-permissions.mdx
+      - name: Commit docs
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs: update AWS permissions docs"
+          file_pattern: "docs/snippets/aws-permissions.mdx"
