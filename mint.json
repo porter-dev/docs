@@ -115,7 +115,8 @@
             "standard/cli/command-reference/porter-project",
             "standard/cli/command-reference/porter-run",
             "standard/cli/command-reference/porter-update",
-            "standard/cli/command-reference/porter-datastore-connect"
+            "standard/cli/command-reference/porter-datastore-connect",
+            "standard/cli/command-reference/porter-env"
           ]
         },
         {
