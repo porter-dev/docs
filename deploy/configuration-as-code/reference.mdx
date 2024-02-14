@@ -28,6 +28,8 @@ The following is a full reference for all the fields that can be set in a `porte
 - [env](#env) \- the environment variables for the app.
 - [predeploy](#predeploy) \- the pre-deploy job for the app.
   - **run** - the run command for the pre-deploy job.
+- [autoRollback](#autoRollback) \- the auto-rollback settings for the app.
+  - **enabled** - whether auto-rollback is enabled.
 
 ### `version`
 
@@ -101,4 +103,15 @@ env:
 ```yaml
 predeploy:
   run: echo "predeploy"
+```
+
+### `autoRollback`
+
+`object` - optional
+
+When this attribute is enabled, Porter will automatically rollback all services in the app to the latest previously successfully-deployed version if the any service of the new version fails to deploy.
+
+```yaml
+autoRollback:
+  enabled: true
 ```
