@@ -109,7 +109,7 @@ predeploy:
 
 `object` - optional
 
-When this attribute is enabled, Porter will automatically rollback to the latest previously successfully-deployed version of the app if the new version fails to deploy.
+When this attribute is enabled, Porter will automatically rollback all services in the app to the latest previously successfully-deployed version if the any service of the new version fails to deploy.
 
 ```yaml
 autoRollback:
