@@ -349,6 +349,15 @@ export const awsPermissions = {
         "Sid": "CloudTrailListAndDescribeS3"
       },
       {
+        "Action": [
+          "ec2:DescribeSecurityGroups",
+          "ec2:CreateSecurityGroup"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "SecurityGroupManager"
+      },
+      {
         "Action": "cloudtrail:*",
         "Effect": "Allow",
         "Resource": "*",
@@ -559,6 +568,23 @@ export const awsPermissions = {
       },
       {
         "Action": [
+          "iam:GetRole",
+          "iam:CreateRole",
+          "iam:TagRole",
+          "iam:GetPolicy",
+          "iam:GetRolePolicy",
+          "iam:AttachRolePolicy",
+          "iam:DeleteRolePolicy",
+          "iam:PutRolePolicy"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "*"
+        ],
+        "Sid": "CreateDbCfStacks"
+      },
+      {
+        "Action": [
           "ec2:DescribeInstances",
           "ec2:DescribeInstanceTypes",
           "ec2:DescribeRouteTables",
@@ -682,6 +708,14 @@ export const awsPermissions = {
         "Effect": "Allow",
         "Resource": "*",
         "Sid": "CustomerCloudWatchLogs"
+      },
+      {
+        "Action": [
+          "ssm:GetParameter*"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "ParameterStoreAccess"
       }
     ],
     "Version": "2012-10-17"
@@ -756,5 +790,6 @@ export const awsPermissions = {
       }
     ],
     "Version": "2012-10-17"
-  }
+  },
+  "updated-at": "2024-02-19T17:35:05Z"
 }
