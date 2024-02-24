@@ -599,6 +599,15 @@ export const awsPermissions = {
         "Effect": "Allow",
         "Resource": "*",
         "Sid": "AmazonEKSWorkerNodePolicy"
+      },
+      {
+        "Action": [
+          "account:ListRegions",
+          "eks:ListClusters"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "StopConflictingCidrs"
       }
     ],
     "Version": "2012-10-17"
@@ -791,5 +800,5 @@ export const awsPermissions = {
     ],
     "Version": "2012-10-17"
   },
-  "updated-at": "2024-02-22T18:32:46Z"
+  "updated-at": "2024-02-23T23:16:35Z"
 }
