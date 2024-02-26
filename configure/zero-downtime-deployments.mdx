@@ -1,0 +1,33 @@
+---
+title: "Zero-Downtime Deployments"
+---
+
+Every time an application is redeployed on Porter (through a Github action, configuration change, etc), a new set of application instances will replace the old application instances. While the update process will attempt to prevent downtime, there are some additional configuration settings that can be set to prevent any downtime while re-deploying:
+
+- [Health Checks](#health-checks)
+- [Graceful Shutdown](#graceful-shutdown)
+
+## Health Checks
+
+Health checks are endpoints that indicate if an application is healthy and ready to receive traffic. When health checks are enabled, traffic won't switch from the old application instance until the health check indicates that the application is ready. On health check endpoints, the application should return `200` status when the application should receive traffic, and a `500`-level error otherwise. Health checks can be configured in the **Advanced** tab:
+
+![Health Check Configuration](/images/configure/zero-downtime-deployments.png)
+
+For example, in the screenshot above, no traffic will be routed to the web service until the `/healthz` endpoint returns a `200` status code.
+
+:::info
+
+Readiness probes should be used in conjunction with graceful shutdown behavior to control exactly when applications stop receiving traffic. See the [graceful shutdown](#graceful-shutdown) section for more information.
+
+:::
+
+## Graceful Shutdown
+
+While applications are being re-deployed, the old application instances will receive a termination signal in the form of `SIGTERM`. The applications are then given a **Termination Grace Period**, which is the number of seconds after `SIGTERM` is sent before the application will be forcefully killed. In this time, the application should stop receiving traffic, close any existing connections, and exit gracefully. The termination grace period can also be configured from the **Advanced** tab:
+
+![Termination Grace Period](/images/configure/zero-downtime-deployments.png)
+
+Note that the application will continue to receive traffic until it exits, unless you have configured the readiness probe to fail before this time. Thus, the recommended graceful shutdown sequence is:
+
+1. As soon as `SIGTERM` is received, return a `500`-level response code on the readiness probe endpoint ([see above](#health-checks) for more information).
+2. Since the `SIGTERM` has been issued to your app, the termination grace period is in effect - this is when your app needs to close the server to prevent additional connections, and drain all existing connections before the grace period ends. Exit gracefully after connections are drained.

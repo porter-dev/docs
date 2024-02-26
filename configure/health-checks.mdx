@@ -12,6 +12,6 @@ When your Web service is configured with health checks, Porter will ensure that 
 ![Health Check Configuration](/images/configure/health-checks.png)
 
 For example, in the screenshot above, no traffic will be routed to the web service until the `/healthz` endpoint returns a `200` status code. This is useful for 
-**Zero Downtime Deploys**. 
+[Zero Downtime Deployments](/configure/zero-downtime-deployments). 
 
 When you push a new update to your application, the old version of your application will not be spun down until the new version passes all health checks. 
