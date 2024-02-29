@@ -74,7 +74,7 @@ You can also trigger a rerun of this GitHub Actions directly from GitHub by clic
 ## Build-time Environment Variables
 
 Many languages and frameworks require certain environment variables to be present during the build process. **Any environment variable you add to an application on Porter will
-automatically be piped into your build process; there is no need for you to manually add these environment variables to the GitHub Actions file**. (Any supplementary environment variables you add to the GitHub Actions file will also be made available to your build process, however.)
+automatically be piped into your build process; there is no need for you to manually add these environment variables to the GitHub Actions file**. Any supplementary environment variables you add to the GitHub Actions file will also be made available to your build process, however, as long as they are prefixed with `PORTER_`.
 
 Please note that `Secrets` will not be made available to your build process. Learn more about `Secrets` [here](/configure/environment-groups).
 
