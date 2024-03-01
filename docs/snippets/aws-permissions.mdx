@@ -358,6 +358,32 @@ export const awsPermissions = {
         "Sid": "SecurityGroupManager"
       },
       {
+        "Action": [
+          "ec2:CreateSubnet",
+          "ec2:DeleteSubnet",
+          "ec2:DescribeSubnets",
+          "ec2:ModifySubnetAttribute",
+          "ec2:DescribeRouteTables",
+          "ec2:CreateRouteTable",
+          "ec2:DeleteRouteTable",
+          "ec2:CreateRoute",
+          "ec2:AssociateRouteTable",
+          "ec2:DescribeVpcAttribute",
+          "ec2:CreateTags",
+          "ec2:DescribeVpcs",
+          "ec2:CreateVpc",
+          "ec2:DeleteVpc",
+          "ec2:ModifyVpcAttribute",
+          "ec2:CreateVpcPeeringConnection",
+          "ec2:DeleteVpcPeeringConnection",
+          "ec2:DescribeVpcPeeringConnections",
+          "ec2:AcceptVpcPeeringConnection"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "VPCManager"
+      },
+      {
         "Action": "cloudtrail:*",
         "Effect": "Allow",
         "Resource": "*",
@@ -396,6 +422,18 @@ export const awsPermissions = {
         "Effect": "Allow",
         "Resource": "*",
         "Sid": "S3ReplicationPassRole"
+      },
+      {
+        "Action": [
+          "rds:CreateDBInstance",
+          "rds:DescribeDBInstances",
+          "rds:AddTagsToResource",
+          "rds:ListTagsForResource",
+          "rds:ModifyDBInstance"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "Datastore"
       }
     ],
     "Version": "2012-10-17"
@@ -404,7 +442,6 @@ export const awsPermissions = {
     "Statement": [
       {
         "Action": [
-          "elasticloadbalancing:RemoveListenerCertificates",
           "ec2:DeleteTags",
           "acm:ListCertificates",
           "acm:RequestCertificate",
@@ -441,7 +478,10 @@ export const awsPermissions = {
           "elasticloadbalancing:AddListenerCertificates",
           "elasticloadbalancing:CreateRule",
           "elasticloadbalancing:SetSubnets",
-          "elasticloadbalancing:SetWebACL"
+          "elasticloadbalancing:SetWebACL",
+          "elasticloadbalancing:RemoveListenerCertificates",
+          "elasticloadbalancing:ModifyRule",
+          "elasticloadbalancing:DeleteRule"
         ],
         "Effect": "Allow",
         "Resource": "*",
@@ -523,7 +563,8 @@ export const awsPermissions = {
           "ec2:AcceptVpcPeeringConnection",
           "ec2:CreateVpcPeeringConnection",
           "ec2:DeleteVpcPeeringConnection",
-          "ec2:ModifyVpcPeeringConnectionOptions"
+          "ec2:ModifyVpcPeeringConnectionOptions",
+          "ec2:DescribeVpcPeeringConnections"
         ],
         "Effect": "Allow",
         "Resource": "*",
@@ -800,5 +841,5 @@ export const awsPermissions = {
     ],
     "Version": "2012-10-17"
   },
-  "updated-at": "2024-02-28T20:42:40Z"
+  "updated-at": "2024-03-01T02:40:03Z"
 }
