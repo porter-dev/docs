@@ -650,6 +650,15 @@ export const awsPermissions = {
         "Effect": "Allow",
         "Resource": "*",
         "Sid": "StopConflictingCidrs"
+      },
+      {
+        "Action": [
+          "ssm:GetParameter",
+          "ssm:PutParameter"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "ParameterStore"
       }
     ],
     "Version": "2012-10-17"
@@ -842,5 +851,5 @@ export const awsPermissions = {
     ],
     "Version": "2012-10-17"
   },
-  "updated-at": "2024-03-08T20:59:08Z"
+  "updated-at": "2024-03-11T18:21:18Z"
 }
