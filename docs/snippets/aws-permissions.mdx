@@ -443,7 +443,18 @@ export const awsPermissions = {
           "rds:CreateDBCluster",
           "rds:DescribeDBClusters",
           "rds:ModifyDBCluster",
-          "rds:DeleteDBCluster"
+          "rds:DeleteDBCluster",
+          "elasticache:DescribeCacheSubnetGroups",
+          "elasticache:CreateCacheSubnetGroup",
+          "elasticache:DeleteCacheSubnetGroup",
+          "elasticache:ModifyCacheSubnetGroup",
+          "elasticache:CreateReplicationGroup",
+          "elasticache:DescribeReplicationGroups",
+          "elasticache:ModifyReplicationGroup",
+          "elasticache:DeleteReplicationGroup",
+          "elasticache:AddTagsToResource",
+          "elasticache:ListTagsForResource",
+          "elasticache:DescribeEvents"
         ],
         "Effect": "Allow",
         "Resource": "*",
@@ -864,5 +875,5 @@ export const awsPermissions = {
     ],
     "Version": "2012-10-17"
   },
-  "updated-at": "2024-03-13T20:17:53Z"
+  "updated-at": "2024-03-15T20:54:03Z"
 }
