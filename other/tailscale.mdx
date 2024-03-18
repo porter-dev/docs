@@ -1,0 +1,55 @@
+---
+title: "Tailscale on Porter"
+---
+
+Tailscale is a VPN that creates a secure network between your servers, computers, and cloud instances. Unlike many other VPNs, setting up a new network on Tailscale requires minimal user configuration and virtually no experience with networking. 
+To learn more about how Tailscale works under the hood, you can check out this [excellent overview](https://tailscale.com/blog/how-tailscale-works/?ref=blog.porter.run) on their official blog.
+
+We will be deploying a Tailscale "subnet router" which will allow any services deployed on your Porter cluster to be accessible over the Tailscale network (Tailnet).
+
+
+## Setting up Tailscale
+
+### Installing Tailscale Addon
+
+1. On the Porter dashboard, click on the "Addons" tab on the left sidebar.
+
+![Sidebar Addons](/images/other/sidebar-addons.png)
+
+2. Click "New Addon"
+3. Select "Tailscale" from the list of addons
+![Addons cards](/images/other/addons-list.png)
+4. Click "Deploy Addon"
+5. Enter a name for the addon, such as "Tailscale"
+
+### Retrieving Tailscale API Key
+
+1. Visit your [Tailscale Admin Panel](https://login.tailscale.com/admin/settings/authkeys?ref=blog.porter.run)
+2. Go to `Settings` -> `Auth Keys`
+3. Click on `Generate one-off key`
+![Tailscale Console](/images/other/tailscale-admin-console.png)
+4. Copy the API key as we will need it for the next step
+
+### Adding the Tailscale API Key to Porter
+
+1. On the Porter dashboard, click "Addons", and click on the "Tailscale" addon
+2. Select the `Tailscale Settings` tab
+![Tailscale API Key](/images/other/tailscale-porter-api-key.png)
+3. Paste the API key from above into the `Tailscale Auth Key` field, then click `Deploy`
+
+
+### Adding Routes to your Tailnet
+
+By default, every time that you click "Provision" on your cluster from the `Infrastructure` tab, Porter will ensure that all of your Porter-managed applications and Datastores are accessbile over the Tailnet.
+As each route is added, it must be approved by an admin in the Tailscale Admin Panel.
+
+1. Visit your [Tailscale Admin Panel](https://login.tailscale.com/admin/machines?ref=blog.porter.run)
+2. Click on `Machines`
+3. Click on the `ABC-subnet-router-relay`, where `ABC` is the name that you gave the Tailscale addon on Porter
+4. Click on the 3 dots on the right side of the `ABC-subnet-router-relay`, click `Review Route Settings`
+![Tailscale API Key](/images/other/tailscale-machines.png)
+5. Click `Approve All` to approve all routes
+![Tailscale API Key](/images/other/tailscale-approve-routes.png)
+
+Your Tailscale Subnet Router should now be online. All of your Porter applications and Datastores should be accessible over the Tailnet.
+
