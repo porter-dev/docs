@@ -48,7 +48,9 @@
   "navigation": [
     {
       "group": "Home",
-      "pages": ["introduction"]
+      "pages": [
+        "introduction"
+      ]
     },
     {
       "group": "Provision",
@@ -155,7 +157,9 @@
     },
     {
       "group": "Debug",
-      "pages": ["debug/common-errors"]
+      "pages": [
+        "debug/common-errors"
+      ]
     },
     {
       "group": "Preview Environments",
@@ -182,7 +186,8 @@
         "other/deleting-dangling-resources",
         "other/aws-vpc-peering",
         "other/kubernetes-101",
-        "other/migrate-from-heroku"
+        "other/migrate-from-heroku",
+        "other/tailscale"
       ]
     },
     {
