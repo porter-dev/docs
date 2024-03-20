@@ -1,0 +1,23 @@
+---
+title: 'Machine Type Resource Allowances'
+---
+
+## Setting Resource Limits for your App[](#setting-resource-limits-for-your-app 'Direct link to heading')
+
+Porter sets upper bound limits for how much CPU And RAM your app can access based on the machine type you select for your cluster. This is to avoid scenarios where your app cannot deploy because a single replica is requesting more resources than the machine has to allocate.
+
+The upper bounds will be slightly less than the overall available CPU and RAM available for the machine type as listed in your cloud provider's documentation. This is to account for the overhead of running certain system processes that your cloud provider and Porter deploy to your cluster. While Porter attempts to offload as many of these processes as possible to the system and monitoring node groups, there are some processes, such as networking, metrics, and logging, that are required to run on the same nodes as your app.
+
+## Resource Limits By Machine Type[](#resource-limits-by-machine-type 'Direct link to heading')
+
+As of 3/19/24, the following resource limits are in place depending on the machine type you select:
+
+If your selected machine type has less than 16 GB of RAM, the available CPU and memory for a given machine will be ~65% of the total. For example, if using a t3.medium, which has 2 vCPUs and 4 GB of RAM, the available CPU and memory for a given machine will be 1.25 vCPUs and 2.7 GB of RAM.
+
+For larger instance types above this threshold, the available CPU and memory for a given machine will be ~90% of the total.
+
+## Reference Links[](#reference-links 'Direct link to heading')
+
+- [AWS EC2 Instance Types](https://aws.amazon.com/ec2/instance-types/)
+- [GCP Machine Types](https://cloud.google.com/compute/docs/machine-types)
+- [Azure VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes)
