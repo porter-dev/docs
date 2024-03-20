@@ -432,6 +432,7 @@ export const awsPermissions = {
       {
         "Action": [
           "rds:CreateDBInstance",
+          "rds:DeleteDBInstance",
           "rds:DescribeDBInstances",
           "rds:AddTagsToResource",
           "rds:ListTagsForResource",
@@ -444,6 +445,7 @@ export const awsPermissions = {
           "rds:DescribeDBClusters",
           "rds:ModifyDBCluster",
           "rds:DeleteDBCluster",
+          "elasticache:DescribeCacheClusters",
           "elasticache:DescribeCacheSubnetGroups",
           "elasticache:CreateCacheSubnetGroup",
           "elasticache:DeleteCacheSubnetGroup",
@@ -683,6 +685,19 @@ export const awsPermissions = {
         "Effect": "Allow",
         "Resource": "*",
         "Sid": "ParameterStore"
+      },
+      {
+        "Action": [
+          "rds:DescribeDBInstances",
+          "rds:DescribeDBSubnetGroups",
+          "rds:DescribeDBClusters",
+          "elasticache:DescribeCacheClusters",
+          "elasticache:DescribeCacheSubnetGroups",
+          "elasticache:DescribeReplicationGroups"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "Datastores"
       }
     ],
     "Version": "2012-10-17"
@@ -875,5 +890,5 @@ export const awsPermissions = {
     ],
     "Version": "2012-10-17"
   },
-  "updated-at": "2024-03-19T00:36:26Z"
+  "updated-at": "2024-03-20T02:14:14Z"
 }
