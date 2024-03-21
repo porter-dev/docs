@@ -1,8 +1,8 @@
 ---
-title: "Basic Configuration"
+title: 'Basic Configuration'
 ---
 
-These are basic configuration options that are available on all three services - **Web**, **Worker**, and **Jobs**. 
+These are basic configuration options that are available on all three services - **Web**, **Worker**, and **Jobs**.
 
 ## Setting the Start Command
 
@@ -19,11 +19,10 @@ This is discussed in more detail in the previous [Provisioning section](/standar
 
 ![image](/images/configure/assigning-resources.png)
 
-## Smart Optimization
+## Sleep Mode
 
-Applications deployed on Porter are scheduled on the underlying virtual machines. Your applications will be automatically scheduled on the available virtual machines, which presents a resource optimization problem called the [bin-packing problem](https://en.wikipedia.org/wiki/Bin_packing_problem).
+"Sleeping" a service can also be enabled from the **Resources** tab. When a service is put to sleep, it will be stopped and no instances will run. This is useful if you want to keep a service around but don't want to pay for the resources when it's not being used.
 
-This optional feature called Smart Optimization ensures that the amount of resources assigned to your applications are restricted based on the amount of resources 
-that are available on the virutal machines. This prevents overprovisioning of your cluster and minimizes unnecessary cost incurred on your cloud provider.
+Note that Sleep Mode is enabled at the service level, rather than at the app level.
 
-![image](/images/configure/smart-optimization.png)
+![image](/images/configure/sleep.png)
