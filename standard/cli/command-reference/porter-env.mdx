@@ -27,3 +27,46 @@ To pull variables from an existing environment group, you can specify the `-g` f
 ```
 porter env pull -g [ENV_GROUP_NAME]
 ```
+
+### `porter env set`[](#porter-env-set 'Direct link to heading')
+
+The `porter env set` command allows users to set environment variables and secrets for an existing environment group or application.
+
+```
+porter env set [args...]
+```
+
+To set variables for an existing app, you can specify the `-a` flag:
+
+```
+porter env set -a [APP_NAME] --variables KEY1=VALUE1,KEY2=VALUE2
+```
+
+To set variables for an existing environment group, you can specify the `-g` flag:
+
+```
+porter env set \
+-g [ENV_GROUP_NAME] \
+--variables KEY1=VALUE1,KEY2=VALUE2 \
+--secrets SECRET1=VALUE1,SECRET2=VALUE2
+```
+
+### `porter env unset`[](#porter-env-unset 'Direct link to heading')
+
+The `porter env unset` command allows users to unset environment variables and secrets for an existing environment group or application.
+
+```
+porter env unset [args...]
+```
+
+To unset variables for an existing app, you can specify the `-a` flag:
+
+```
+porter env unset -a [APP_NAME] --variables KEY1,KEY2
+```
+
+To unset variables for an existing environment group, you can specify the `-g` flag:
+
+```
+porter env unset -g [ENV_GROUP_NAME] --variables KEY1,KEY2
+```
