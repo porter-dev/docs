@@ -1,0 +1,75 @@
+---
+title: 'porter app'
+---
+
+##### Prerequisites
+
+- You've logged in to the Porter CLI after running [porter auth login](/enterprise/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/enterprise/cli/command-reference/porter-config)
+- You're connected to the correct cluster by running [porter config set-cluster](/enterprise/cli/command-reference/porter-config)
+
+### `porter app run`[](#porter-run 'Direct link to heading')
+
+The `porter app run` command allows users to execute a command on a remote container:
+
+```
+porter app run [APP_NAME] -- [COMMAND] [args...]
+```
+
+The `APP_NAME` is the name of the application on the Porter dashboard.
+
+Running `porter app run` spins up an ephemeral copy of your application
+container. This container will be deleted when your command completes,
+or when you exit your interactive shell session.
+
+To connect to an existing running container, you can specify the `-e` flag:
+
+```
+porter app run -e [APP_NAME] -- [COMMAND] [args...]
+```
+
+**Common Usage** [](#porter-run-examples 'Direct link to heading')
+
+```
+porter app run [APP_NAME] -- bash
+```
+
+This will launch an interactive shell session through which you can run other commands, like `ls`, `ps`, etc. If `bash` isn't found on your container, you can also try `sh` for a similar result.
+
+### `porter app build`[](#porter-build 'Direct link to heading')
+
+The `porter app build` command builds a new container image for an app based on it's existing build settings. Any build setting can be overridden with a corresponding flag.
+
+For example, to start a Docker build for an app in the `./frontend` directory, you can run:
+
+```
+porter app build [APP_NAME] --build-context ./frontend --dockerfile ./frontend/Dockerfile
+```
+
+### `porter app push`[](#porter-push 'Direct link to heading')
+
+The `porter app push` command pushes a container image to the default registry for the app. This command can be used with the `app build` command to build and push an image as discrete steps.
+
+The `--tag` flag can be used to specify the image tag to push. Otherwise, the head of the current branch will be used as the tag.
+
+```
+porter app push [APP_NAME] --tag [TAG]
+```
+
+### `porter app update`[](#porter-update 'Direct link to heading')
+
+The `porter app update` command updates the specified app with the provided configuration. This command differs from "porter apply" in that it only updates the app, but does not attempt to build a new image. This is similar to updating the app in the Porter dashboard.
+
+```
+porter app update [APP_NAME] -f porter.yaml
+```
+
+### `porter app update-tag`[](#porter-update-tag 'Direct link to heading')
+
+`porter app update-tag` updates the image of the specified application with the tag provided by the `--tag` flag. For example:
+
+```
+porter app update-tag <YOUR_APP_NAME> --tag <GITHUB_SHA>
+```
+
+This command is functionally equivalent to running either `porter apply` or `porter app update` with the `--tag` flag.
