@@ -179,7 +179,8 @@
     {
       "group": "Guides",
       "pages": [
-        "guides/nodejs/getting-started-porter-cloud-nodejs"
+        "guides/nodejs/getting-started-porter-cloud-nodejs",
+        "guides/nodejs/getting-started-porter-aws-nodejs"
       ]
     },
     {
