@@ -2,7 +2,7 @@
 title: "Getting started with Nodejs on Porter with AWS"
 ---
 
-While Porter's a great way to quickly get started with pushing out your app, there are certain limitations. For one, your app runs on our infrastructure, where there are certain limits on the amount of resources you can use. Further, since it's not your own infrastructure at play, it can be troublesome from a compliance perspective. With a successful app, comes a lot of responsibility! 
+While Porter's a great way to quickly get started with pushing out your app, there are certain limitations. For one, your app runs on our infrastructure, where there are certain limits on the amount of resources you can use. Further, since it's not your own infrastructure at play, it can be troublesome from a compliance perspective.
 
 That's where Porter Standard comes in - it allows you to experience the same ease-of-use of the Porter experience, but in your _own_ cloud account. You get the flexibility of running your own industry-grade infrastructure, without actually worrying about how it's provisioned or managed - Porter takes care of all those details for you. In this guide, we're going to walk through using Porter to provision infrastructure in an AWS account, and then deploy a basic Nodejs app and have it up and running.
 
@@ -10,20 +10,17 @@ Note that to follow this guide, you'll need an account on [Porter Standard](http
 
 # What we're deploying
 
-We're going to deploy a sample Nodejs server written in [Express.js](https:/expressjs.com/) - but that doesn't mean you can't bring _any_ Javascript framework to the table. On the contrary - we're open to any and all frameworks! This app's a very basic app with two endpoints - `/` and a basic healthcheck endpoint at `/healthz`, to demonstrate how you can push out a public-facing app on Porter with all bells and whistles attached and ready to go. The idea here is to show you how a basic app can be quickly deployed on Porter, allowing you to then use the same flow for deploying your code. 
+We're going to deploy a sample Nodejs server written in [Express.js](https://expressjs.com/) - but that doesn't mean you're restricted to Express. You're free to use any and all JS frameworks. This app's a very basic app with two endpoints - `/` and a basic healthcheck endpoint at `/healthz`, to demonstrate how you can push out a public-facing app on Porter Cloud with a public facing domain and TLS. The idea here is to show you how a basic app can be quickly deployed on Porter Cloud, allowing you to then use the same flow for deploying your code. 
 
 You can find the repository for this sample app here: https:/github.com/porter-dev/nodejs-getting-started. Feel free to fork/clone it, or bring your own.
 
-# Firing up the furnace
+# Getting started
 
 Deploying an app from a Github repository on Porter using AWS involves - broadly - the following steps:
 
 1. Provisioning infrastructure inside your AWS account using Porter.
 2. Creating a new app on Porter where you specify the repository, the branch, any build settings, as well as what you'd like to run.
 3. Building your app and deploying it(automatically handled by Porter).
-4. Optionally - telling your colleagues and friends about your new app and all it can do, and spreading the word!
-
-Let's fire up this furnace.
 
 ## Connecting your AWS account
 
@@ -43,17 +40,17 @@ Once the CloudFormation stack's created on AWS, you can switch back to the Porte
 
 ## Provisioning infrastructure
 
-Now that Porter can interact with your AWS account - the real work begins. You'll see a screen with a form - the fields are pre-filled, with details about your cluster:
+After connecting your AWS account to Porter, you'll see a screen with a form - the fields are pre-filled, with details about your cluster:
 
 ![5-cluster-setup](images/guides/getting-started-porter-aws-nodejs/5-cluster-setup.png)
 
-Ordinarily, the only two fields you would find worth tweaking are the cluster name and the region - feel free to change those. The other fields are usually changed if Porter detects a conflict between the proposed cluster's VPC and other VPCs in your account - these would be flagged during a preflight test, allowing you the option of tweaking those addresses. You can also choose a different instance type in this section for your cluster; while we tend to default to `t3.medium` instances, we have a lot more instance types. Once you're satisfied, click `Deploy`.
+Ordinarily, the only two fields that should be tweaked are the cluster name and the region - feel free to change those. The other fields are usually changed if Porter detects a conflict between the proposed cluster's VPC and other VPCs in your account - these would be flagged during a preflight test, allowing you the option of tweaking those addresses. You can also choose a different instance type in this section for your cluster; while we tend to default to `t3.medium` instances, we support a lot more instance types. Once you're satisfied, click `Deploy`.
 
 <Info>
   At this stage, Porter will run preflight checks to ensure your AWS account has enough quotas free for components like vCPUs, elastic IPs as well as any potential conflicts with address spaces belonging to other VPCs. If any issues are detected, these will be flagged on the dashboard along with troubleshooting steps.{" "}
 </Info>
 
-Deploying your cluster can take up to 20 minutes - enough time to brew up a pot of tea or a cup of coffee(or rocket fuel as it's known sometimes).
+Deploying your cluster can take up to 20 minutes.
 
 ![6-cluster-provisioning](images/guides/getting-started-porter-aws-nodejs/6-cluster-provisioning.png)
 
@@ -95,13 +92,13 @@ You can define what command you'd like Porter to use for running your app in the
 
 ![11-configure-resources](/images/guides/getting-started-porter-aws-nodejs/11-configure-resources.png)
 
-The `Resources` tab allows you to define how much CPU and RAM your app's allowed to access. Porter imposes a limit on the resources that can be used by a single app; if your app needs more, it might make sense to look at Porter Standard instead, which allows you to bring your own infrastructure and have more flexibility in terms of resource limits. 
+The `Resources` tab allows you to define how much CPU and RAM your app's allowed to access. Porter imposes a limit on the resources that can be used by a single app; if your app needs more, you can change the instance type being used in the `Infrastructure` tab. 
 
 In this section, you can also define the number of replicas you'd like to run for this app, as well as any autoscaling rules - these allow you to instruct Porter to add more replicas if resource utilisation crosses a certain threshold. 
 
 ![12-configure-ingress](/images/guides/getting-started-porter-aws-nodejs/12-configure-ingress.png)
 
-The `Networking` tab is where you specify what port your app listens on. When you deploy a web app on Porter, we automatically generated a public URL for you to use - but you can also opt to bring your own domain by adding an A record to your DNS records pointing your domain at Porter's public load balancer, and adding the custom domain in this section. This can be done at any point - either while you're creating the app, or later once you've deployed it. 
+The `Networking` tab is where you specify what port your app listens on. When you deploy a web app on Porter, we automatically generate a public URL for you to use - but you can also opt to bring your own domain by adding a CNAME/A record to your DNS records pointing your domain at Porter's public load balancer, and adding the custom domain in this section. This can be done at any point - either while you're creating the app, or later once you've deployed it. 
 
 <Info>
   If your app listens on `localhost` or `127.0.0.1`, Porter won't be able to forward incoming connections and requests to your app. To that end, please ensure your app is configured to listen on `0.0.0.0` instead.{" "}
@@ -109,7 +106,7 @@ The `Networking` tab is where you specify what port your app listens on. When yo
 
 ## Review and merge Porter's PR
 
-You're almost there! Hitting `Deploy` will show you the contents of a Github Action workflow that Porter would use to build and deploy your app:
+Hitting `Deploy` will show you the contents of a Github Action workflow that Porter would use to build and deploy your app:
 
 ![13-review-github-action-pr](/images/guides/getting-started-porter-aws-nodejs/13-review-github-action-pr.png)
 
@@ -117,7 +114,7 @@ This Github Action is configured to run every time you push a commit to the bran
 
 ![14-merge-github-action-pr](/images/guides/getting-started-porter-aws-nodejs/14-merge-github-action-pr.png)
 
-All you need to do - merge this PR and watch your build go through!
+All you need to do - merge this PR and your build will commence.
 
 ![15-github-action-run](/images/guides/getting-started-porter-aws-nodejs/15-github-action-run.png)
 
@@ -131,11 +128,11 @@ You can also use the `Activity` tab on the Porter dashboard to see a timeline of
 
 ## First Contact
 
-Progress! Your app's now live on Porter. The Porter-generated unique URL is now visible on the dashboard, under your app's name. Let's take it for a spin:
+Your app's now live on Porter. The Porter-generated unique URL is now visible on the dashboard, under your app's name. Let's test it:
 
 ![19-access-web-app](/images/guides/getting-started-porter-aws-nodejs/19-access-web-app.png)
 
-Things look pretty neat here. You can also check logs and resource consumption metrics on the Porter dashboard to see how your app's faring:
+You can also check logs and resource consumption metrics on the Porter dashboard to see how your app's faring:
 
 ![20-view-logs](/images/guides/getting-started-porter-aws-nodejs/20-view-logs.png)
 
@@ -143,12 +140,10 @@ Things look pretty neat here. You can also check logs and resource consumption m
 
 ## Exploring Further
 
-We've seen how you can go about deploying your Nodejs app on Porter. But there's so much more to running an app which Porter helps you with - here are a few pointers to help you dive further into configuring/tuning your app(and of course, going viral!):
+We've seen how you can go about deploying your Nodejs app on Porter. Here are a few pointers to help you dive further into configuring/tuning your app:
 
-1. [Adding your own domain](/configure/custom-domains). Names _matter_!. 
-2. [Changing instance types](/provision/changing-instance-types). Sometimes, you do need that extra boost to get past the finish line - ask Dom Toretto.
-3. [Adding environment variables and groups](/configure/environment-groups). There's a reason environment variables have truly passed the test of time.
-4. [Scaling your app](/configure/autoscaling). Because your app should never be slow enough to give your users time to make coffee. 
-5. [Ensuring your app's never offline](/configure/health-checks). It's like seatbelts..they seem like a bit much, but _so_ underrated. 
-
-The best part? If you ever need help with your app - you can always reach out using the chat widget on our dashboard. Nothing makes us happier than helping our users _not_ worry about their infrastructure. 
+1. [Adding your own domain](/configure/custom-domains).
+2. [Changing instance types](/provision/changing-instance-types).
+3. [Adding environment variables and groups](/configure/environment-groups).
+4. [Scaling your app](/configure/autoscaling).
+5. [Ensuring your app's never offline](/configure/health-checks).

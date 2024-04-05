@@ -2,25 +2,24 @@
 title: "Getting started with Nodejs on Porter Cloud"
 ---
 
-A great way to get started with quickly pushing out your latest Nodejs app out in the wild is with Porter Cloud - you get the ability to run your app on our own hosted cloud infrastructure, without worrying about any of the details traditionally associated with your own cloud infrastructure. What's more - you get to build your app without ever having to actually define how your app is built. 
+A great way to get started with quickly pushing out your latest Nodejs app out is with Porter Cloud - you get the ability to run your app on our own hosted cloud infrastructure, without worrying about any of the details traditionally associated with your own cloud infrastructure. What's more - you get to build your app without ever having to actually define how your app is built. 
 
 Note that to follow this guide, you'll need an account on [Porter Cloud](https://cloud.porter.run) with a valid credit card. You don't need to worry about being charged; we cover your apps with fre credits, allowing you to quickly get started without paying anything. 
 
 # What we're deploying
 
-We're going to deploy a sample Nodejs server written in [Express.js](https://expressjs.com/) - but that doesn't mean you can't bring _any_ Javascript framework to the table. On the contrary - we're open to any and all frameworks! This app's a very basic app with two endpoints - `/` and a basic healthcheck endpoint at `/healthz`, to demonstrate how you can push out a public-facing app on Porter Cloud with all bells and whistles attached and ready to go. The idea here is to show you how a basic app can be quickly deployed on Porter Cloud, allowing you to then use the same flow for deploying your code. 
+We're going to deploy a sample Nodejs server written in [Express.js](https://expressjs.com/) - but that doesn't mean you're restricted to Express. You're free to use any and all JS frameworks. This app's a very basic app with two endpoints - `/` and a basic healthcheck endpoint at `/healthz`, to demonstrate how you can push out a public-facing app on Porter Cloud with a public facing domain and TLS. The idea here is to show you how a basic app can be quickly deployed on Porter Cloud, allowing you to then use the same flow for deploying your code. 
 
 You can find the repository for this sample app here: https://github.com/porter-dev/nodejs-getting-started. Feel free to fork/clone it, or bring your own.
 
-# Alright, let's go!
+# Deploying your app
 
 Deploying an app from a Github repository on Porter involves - broadly - the following steps:
 
 1. Creating a new app on Porter where you specify the repository, the branch, any build settings, as well as what you'd like to run.
 2. Building your app and deploying it(automatically handled by Porter).
-3. Optionally - telling your colleagues and friends about your new app and all it can do, and potentially putting it up on Hacker News!
 
-Let's get right into it.
+Let's get started!
 
 ## Creating an app and connecting your Github repository
 
@@ -66,7 +65,7 @@ In this section, you can also define the number of replicas you'd like to run fo
 
 ![8-configure-ingress](/images//guides/getting-started-porter-cloud-nodejs/8-configure-ingress.png)
 
-The `Networking` tab is where you specify what port your app listens on. When you deploy a web app on Porter, we automatically generated a public URL for you to use - but you can also opt to bring your own domain by adding an A record to your DNS records pointing your domain at Porter Cloud's public load balancer, and adding the custom domain in this section. This can be done at any point - either while you're creating the app, or later once you've deployed it. 
+The `Networking` tab is where you specify what port your app listens on. When you deploy a web app on Porter, we automatically generate a public URL for you to use - but you can also opt to bring your own domain by adding an A record to your DNS records pointing your domain at Porter Cloud's public load balancer, and adding the custom domain in this section. This can be done at any point - either while you're creating the app, or later once you've deployed it. 
 
 <Info>
   If your app listens on `localhost` or `127.0.0.1`, Porter won't be able to forward incoming connections and requests to your app. To that end, please ensure your app is configured to listen on `0.0.0.0` instead.{" "}
@@ -74,7 +73,7 @@ The `Networking` tab is where you specify what port your app listens on. When yo
 
 ## Review and merge Porter's PR
 
-You're almost there! Hitting `Deploy` will show you the contents of a Github Action workflow that Porter would use to build and deploy your app:
+Hitting `Deploy` will show you the contents of a Github Action workflow that Porter would use to build and deploy your app:
 
 ![9-review-github-action-pr](/images//guides/getting-started-porter-cloud-nodejs/9-review-github-action-pr.png)
 
@@ -82,7 +81,7 @@ This Github Action is configured to run every time you push a commit to the bran
 
 ![10-merge-github-action-pr](/images//guides/getting-started-porter-cloud-nodejs/10-merge-github-action-pr.png)
 
-All you need to do - merge this PR and watch your build go through!
+All you need to do - merge this PR and your build will commence.
 
 ![11-github-action-run](/images//guides/getting-started-porter-cloud-nodejs/11-github-action-run.png)
 
@@ -94,13 +93,13 @@ You can also use the `Activity` tab on the Porter dashboard to see a timeline of
 
 ![14-porter-app-deployment-progress](/images//guides/getting-started-porter-cloud-nodejs/14-porter-app-deployment-progress.png)
 
-## First Contact
+## Accessing your app
 
-Progress! Your app's now live on Porter Cloud. The Porter-generated unique URL is now visible on the dashboard, under your app's name. Let's take it for a spin:
+Your app's now live on Porter Cloud. The Porter-generated unique URL is now visible on the dashboard, under your app's name. Let's test it:
 
 ![15-access-web-app](/images//guides/getting-started-porter-cloud-nodejs/15-access-web-app.png)
 
-Things look pretty neat here. You can also check logs and resource consumption metrics on the Porter dashboard to see how your app's faring:
+You can also check logs and resource consumption metrics on the Porter dashboard to see how your app's faring:
 
 ![16-view-logs](/images//guides/getting-started-porter-cloud-nodejs/16-view-logs.png)
 
@@ -108,11 +107,9 @@ Things look pretty neat here. You can also check logs and resource consumption m
 
 ## Exploring Further
 
-We've seen how you can go about deploying your Nodejs app on Porter. But there's so much more to running an app which Porter helps you with - here are a few pointers to help you dive further into configuring/tuning your app(and of course, making it a hit!):
+We've seen how you can go about deploying your Nodejs app on Porter. Here are a few pointers to help you dive further into configuring/tuning your app:
 
-1. [Adding your own domain](/configure/custom-domains). After all, _everything's_ in a name. 
-2. [Adding environment variables and groups](/configure/environment-groups). Who doesn't like to bring their own databases and caches and API keys for Stripe?
-3. [Scaling your app](/configure/autoscaling). Hacker News traffic is the real deal. 
-4. [Ensuring your app's never offline](/configure/health-checks). You and I need regular health checkups..and so do our apps. 
-
-The best part? If you ever need help with your app - you can always reach out using the chat widget on our dashboard. Nothing makes us happier than helping our users _not_ worry about their apps. 
+1. [Adding your own domain](/configure/custom-domains).
+2. [Adding environment variables and groups](/configure/environment-groups).
+3. [Scaling your app](/configure/autoscaling). 
+4. [Ensuring your app's never offline](/configure/health-checks). 
