@@ -177,6 +177,13 @@
       ]
     },
     {
+      "group": "Guides",
+      "pages": [
+        "guides/nodejs/getting-started-porter-cloud-nodejs",
+        "guides/nodejs/getting-started-porter-aws-nodejs"
+      ]
+    },
+    {
       "group": "Other Guides",
       "pages": [
         "other/deleting-dangling-resources",
