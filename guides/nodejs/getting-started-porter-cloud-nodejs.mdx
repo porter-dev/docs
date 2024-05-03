@@ -1,25 +1,23 @@
 ---
-title: "Deploy NodeJS App on Porter Cloud"
+title: "Deploy a NodeJS App on Porter Cloud"
 ---
 
-You can deploy a NodeJS application on Porter Cloud with just a few clicks.
-
-Note that to follow this guide, you'll need an account on [Porter Cloud](https://porter.run/porter-cloud) with a valid credit card. Every user will receive a free $5 credits on sign up.
+A great way to quickly push your latest Node.js application out is with Porter Cloud - with a few clicks, you can deploy your web applications to production without worrying about any of the details traditionally associated with hosting on your own server. Note that to follow this guide, you'll need an account on [Porter Cloud](https://porter.run/porter-cloud) with a valid credit card. Every user will receive a free $5 credits on sign up.
 
 # What we're deploying
 
-We're going to deploy a sample Nodejs server written in [Express.js](https://expressjs.com/) - but that doesn't mean you're restricted to Express. You're free to use any and all JS frameworks. This app's a very basic app with two endpoints - `/` and a basic healthcheck endpoint at `/healthz`, to demonstrate how you can push out a public-facing app on Porter Cloud with a public facing domain and TLS. The idea here is to show you how a basic app can be quickly deployed on Porter Cloud, allowing you to then use the same flow for deploying your code. 
+We’re going to deploy a basic Node.js application written in [Express.js](https://expressjs.com/) - but that doesn’t mean you’re restricted to the Expressjs web framework. You’re free to use all JS frameworks. This app has two endpoints - `/` and a basic healthcheck endpoint at `/healthz`, to demonstrate how you can push out a public-facing app on Porter Cloud with a public-facing domain and TLS. The idea here is to show you best practices for how a sample application can be quickly deployed on Porter Cloud, allowing you to then use the same flow as an entry point for deploying your own Node.js project.
 
-You can find the repository for this sample app here: https://github.com/porter-dev/nodejs-getting-started. Feel free to fork/clone it, or bring your own.
+You can find the repository for this sample application here: https://github.com/porter-dev/nodejs-getting-started. Feel free to fork or clone it, or bring your own.
 
-# Deploying your app
+# Deployment Process
 
-Deploying an app from a Github repository on Porter involves - broadly - the following steps:
+Deploying Node.js applications from a Github repository on Porter involves - broadly - the following steps:
 
-1. Creating a new app on Porter where you specify the repository, the branch, any build settings, as well as what you'd like to run.
-2. Building your app and deploying it(automatically handled by Porter).
+1. Creating a new app on Porter where you specify the repository, the branch, any build settings, as well as what you’d like to run.
+2. Building your app and deploying it (this is handled by Porter's automation so you don't have to worry about Continuous Integration and Continuous Deployment).
 
-Let's get started!
+Let’s get started!
 
 ## Creating an app and connecting your Github repository
 
@@ -35,15 +33,15 @@ This is where you get to select a name for your app, as well as connect a Github
  
 ## Configuring build settings
 
-Porter has the ability to automatically detect what language your app's written in, and select an appopriate buildpack which can be used to automatically package your app for eventual deployment. Once you've selected the branch you wish to use, Porter will display the following screen:
+Porter automatically detects what language your web application is written in, and selects an appopriate buildpack used to automatically package your app for eventual deployment. Once you’ve selected the branch you wish to use, Porter will display the following screen:
 
 ![buildpack-settings](/images//guides/getting-started-porter-cloud-nodejs/4-configure-buildpack-settings.png)
 
 You have the ability to further tune your build here - for instance, we're going to use the newer `heroku/builder:22` buildpack for our app.
 
-## Configure services
+## Configuration of services
 
-At this point, it's a good idea to take a quick look at applications and services. An application on Porter is a group of services, where each service shares the same build and the same environment variables. If your app consists of a single repository with separate modules for, say an API and a frontend and a background worker, then you'd deploy a single application on Porter with three separate services. Porter supports three kinds of services: `web`, `worker` and `job` services. 
+At this point, it’s a good idea to take a quick look at applications and services. An application on Porter is a group of services, where each service shares the same build and the same environment variables. If your app consists of a single repository with separate modules for an API, a frontend, and a background worker, then you’d deploy a single application on Porter with three separate services. Porter supports three kinds of services: `web`, `worker` and `job` services. 
 
 Let's add a single `web` service for our app:
 
@@ -51,27 +49,27 @@ Let's add a single `web` service for our app:
 
 ## Configure your service
 
-Now that we've defined a single web service, it's time to tell Porter how this service runs. That means specifying what command to run for this service, what kind of CPU/RAM levels to allocate, as well as how this will be accessed publicly.
+Now that we’ve defined a single web service, it’s time to tell Porter how this service runs. That means specifying what start command to run for this service, what kind of CPU/RAM levels to allocate, as well as how this will be accessed publicly.
 
 ![start-command](/images//guides/getting-started-porter-cloud-nodejs/6-configure-start-command.png)
 
-You can define what command you'd like Porter to use for running your app in the `Main` tab. This is required if your app's being built using a buildpack; this _may_ be optional if you opt to use a Dockerfile(since Porter will assume you have an `ENTRYPOINT` in your Dockerfile and use that if it exists).
+You can define what command you’d like Porter to use for running your app in the 'Main' tab. This is required if your app’s being built using a buildpack (for example, a start script like 'npm run start' command to start running a JavaScript application defined in a 'package.json' file). However, this _may_ be optional if you opt to use a Docker file (since Porter will assume you have an 'ENTRYPOINT' in your Docker file and use that if it exists).
 
 ![configure-resources](/images//guides/getting-started-porter-cloud-nodejs/7-configure-resources.png)
 
-The `Resources` tab allows you to define how much CPU and RAM your app's allowed to access. Porter Cloud imposes a limit on the resources that can be used by a single app; if your app needs more, it might make sense to look at Porter Standard instead, which allows you to bring your own infrastructure and have more flexibility in terms of resource limits. 
+The `Resources` tab allows you to define how much CPU and RAM your app's allowed to access.  Porter Cloud imposes a limit on the resources that can be used by a single app. If your app needs more scalability and performance, it might make sense to look at Porter Standard instead, the Platform as a Service (PaaS) that allows you to bring your own infrastructure and have more flexibility regarding resource limits. You can also use cloud provider credits to cover the cost of each AWS EC2 instance and Azure VM when using Porter Standard, and you may need to be hosting on your own cloud to meet any security framework standards like SOC 2.
 
-In this section, you can also define the number of replicas you'd like to run for this app, as well as any autoscaling rules - these allow you to instruct Porter to add more replicas if resource utilisation crosses a certain threshold. 
+You can also define the number of replicas you’d like to run for this app, as well as any autoscaling rules - these allow you to instruct Porter to add more replicas if resource utilization crosses a certain threshold.
 
 ![8-configure-ingress](/images//guides/getting-started-porter-cloud-nodejs/8-configure-ingress.png)
 
-The `Networking` tab is where you specify what port your app listens on. When you deploy a web app on Porter, we automatically generate a public URL for you to use - but you can also opt to bring your own domain by adding an A record to your DNS records pointing your domain at Porter Cloud's public load balancer, and adding the custom domain in this section. This can be done at any point - either while you're creating the app, or later once you've deployed it. 
+The 'Networking' tab is where you specify what port your app listens on. When you deploy a web app on Porter, we automatically generate a public URL for you to use - but you can also opt to bring your own domain by adding an A record to your DNS records pointing your domain at Porter Cloud’s public load balancer, and adding the custom domain in this section. This can be done at any point - either while you’re creating the app, or later once you’ve deployed it. Porter Cloud will take care of the SSL certificate.
 
 <Info>
   If your app listens on `localhost` or `127.0.0.1`, Porter won't be able to forward incoming connections and requests to your app. To that end, please ensure your app is configured to listen on `0.0.0.0` instead.{" "}
 </Info>
 
-## Review and merge Porter's PR
+## App Deployment: review and merge Porter's PR
 
 Hitting `Deploy` will show you the contents of a Github Action workflow that Porter would use to build and deploy your app:
 
@@ -81,7 +79,7 @@ This Github Action is configured to run every time you push a commit to the bran
 
 ![10-merge-github-action-pr](/images//guides/getting-started-porter-cloud-nodejs/10-merge-github-action-pr.png)
 
-All you need to do - merge this PR and your build will commence.
+All you need to do is merge this PR and your build will commence.
 
 ![11-github-action-run](/images//guides/getting-started-porter-cloud-nodejs/11-github-action-run.png)
 
@@ -95,21 +93,21 @@ You can also use the `Activity` tab on the Porter dashboard to see a timeline of
 
 ## Accessing your app
 
-Your app's now live on Porter Cloud. The Porter-generated unique URL is now visible on the dashboard, under your app's name. Let's test it:
+Your Nodejs app’s now live on Porter Cloud. The Porter-generated unique URL / domain name is now visible on the dashboard, under your app’s name. Let’s test it:
 
 ![15-access-web-app](/images//guides/getting-started-porter-cloud-nodejs/15-access-web-app.png)
 
-You can also check logs and resource consumption metrics on the Porter dashboard to see how your app's faring:
+Porter Cloud also provides logging and monitoring in the form of app logs and resource consumption metrics on the dashboard, so you can see how your Node.js project is faring:
 
 ![16-view-logs](/images//guides/getting-started-porter-cloud-nodejs/16-view-logs.png)
 
 ![17-view-metrics](/images//guides/getting-started-porter-cloud-nodejs/17-view-metrics.png)
 
-## Exploring Further
+### Exploring Further
 
 We've seen how you can go about deploying your Nodejs app on Porter. Here are a few pointers to help you dive further into configuring/tuning your app:
 
 1. [Adding your own domain](/configure/custom-domains).
-2. [Adding environment variables and groups](/configure/environment-groups).
+2. [Adding environment variables and groups](/configure/environment-groups) (environment groups are only available when hosting on Porter Standard).
 3. [Scaling your app](/configure/autoscaling). 
-4. [Ensuring your app's never offline](/configure/health-checks). 
+4. [Ensuring your app's never offline](/configure/health-checks) (we'll renew and manage the SSL certificate for you). 
