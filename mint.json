@@ -183,7 +183,8 @@
         "guides/rails/deploy-rails",
         "guides/flask/deploy-flask",
         "guides/golang/deploy-golang",
-        "guides/fastapi/deploy-fastapi"
+        "guides/fastapi/deploy-fastapi",
+        "guides/nextjs/deploy-nextjs",
       ]
     },
     {
