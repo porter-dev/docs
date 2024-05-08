@@ -177,7 +177,7 @@
       ]
     },
     {
-      "group": "Guides",
+      "group": "Language Specific Guides",
       "pages": [
         "guides/nodejs/getting-started-porter-cloud-nodejs",
         "guides/rails/getting-started-porter-cloud-rails",
