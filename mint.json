@@ -183,7 +183,8 @@
         "guides/rails/getting-started-porter-cloud-rails",
         "guides/flask/getting-started-porter-cloud-flask",
         "guides/golang/getting-started-porter-cloud-golang",
-        "guides/fastapi/getting-started-porter-cloud-fastapi"
+        "guides/fastapi/getting-started-porter-cloud-fastapi",
+        "guides/nextjs/getting-started-porter-cloud-nextjs"
       ]
     },
     {
