@@ -179,12 +179,12 @@
     {
       "group": "Language Specific Guides",
       "pages": [
-        "guides/nodejs/getting-started-porter-cloud-nodejs",
-        "guides/rails/getting-started-porter-cloud-rails",
-        "guides/flask/getting-started-porter-cloud-flask",
-        "guides/golang/getting-started-porter-cloud-golang",
-        "guides/fastapi/getting-started-porter-cloud-fastapi",
-        "guides/nextjs/getting-started-porter-cloud-nextjs"
+        "guides/nodejs/deploy-nodejs",
+        "guides/rails/deploy-rails",
+        "guides/flask/deploy-flask",
+        "guides/golang/deploy-golang",
+        "guides/fastapi/deploy-fastapi",
+        "guides/nextjs/deploy-nextjs",
       ]
     },
     {
