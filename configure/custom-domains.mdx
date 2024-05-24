@@ -51,7 +51,7 @@ Create a `CNAME` record on your DNS provider for your desired subdomain, which p
   <Tab title="Apex Domain">
 Because AWS creates a load balancer that is assigned a domain name, rather than an IP address, you must use a DNS provider which allows for `ALIAS` records, since `CNAME` records are not supported for apex domains. Create an `ALIAS` record for your root domain which points to the load balancer address that you copied above.
 
-If you've purchased your domain through a service like GoDaddy or Namecheap that does not support `ALIAS` records, we recommend that you switch your service to Route 53. Please follow [this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html) to manage your existing domains with Route 53, and then see the instructions below for Route 53 setup.
+If you've purchased your domain through a service like GoDaddy that does not support `ALIAS` records, we recommend that you switch your service to Route 53. Please follow [this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html) to manage your existing domains with Route 53, and then see the instructions below for Route 53 setup.
 
 #### Route 53 Instructions[](#route-53-instructions "Direct link to heading")
 
