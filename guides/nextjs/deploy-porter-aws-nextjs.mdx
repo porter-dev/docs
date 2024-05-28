@@ -12,7 +12,7 @@ Note that to follow this guide, you'll need an account on [Porter Standard](http
 
 Next.js is an open-source React framework that enables developers to build server-rendered applications, static websites, and more, with an emphasis on performance and ease of use. It leverages the power of React for component-based development and introduces several built-in features such as automatic code splitting, optimized prefetching, and server-side rendering, ensuring that applications are fast and efficient. One of the main advantages of using Next.js is its hybrid rendering capabilities, allowing developers to choose between static generation or server-side rendering on a per-page basis, optimizing both user experience and server resources. Plus it has a vibrant and active community, which means you get access to a wealth of plugins and community expertise
 
-We're going to deploy a sample NextJS server - but that doesn't mean you're restricted to NextJS. You're free to use any and all Nodejs web frameworks (the ExpressJS web framework is also common among Porter users). This app's a very basic app with a single endpoint - ‘/’ to demonstrate how you can push out a public-facing app on Porter Cloud with a public facing domain and TLS. The idea here is to show you how a basic app can be quickly deployed on Porter Cloud, allowing you to then use the same flow for deploying your code. 
+We're going to deploy a sample NextJS server - but that doesn't mean you're restricted to NextJS. You're free to use any and all Nodejs web frameworks (the ExpressJS web framework is also common among Porter users). This app's a very basic app with a single endpoint - ‘/’ to demonstrate how you can push out a public-facing app on Porter with a public facing domain and TLS. The idea here is to show you how a basic app can be quickly deployed on Porter Standard, allowing you to then use the same flow for deploying your code. 
 
 You can find the repository for this sample app here: https://github.com/porter-dev/nextjs-getting-started. Feel free to fork/clone it, or bring your own.
 
@@ -58,14 +58,14 @@ Deploying your cluster can take up to 20 minutes.
 
 ## ​Deployment Process: Creating an App and Connecting Your GitHub Repository
 
-After creating a new project, on the Porter Cloud dashboard, select ‘Create a new application’, which opens the following screen:
+After creating a new project, on the Porter dashboard, select ‘Create a new application’, which opens the following screen:
 
 ![image-1](/images/guides/porter-cloud-nextjs/1-github-repo.png)
 
-This is where you select a name for your Next.js app and connect a GitHub repository containing your code. Once you've selected the appropriate repository, select the branch you'd like to deploy to Porter Cloud. 
+This is where you select a name for your Next.js app and connect a GitHub repository containing your code. Once you've selected the appropriate repository, select the branch you'd like to deploy to Porter. 
 
 <Info>
-If you signed up for Porter Cloud using an email address instead of a Github account, you can easily connect your Github account to Porter by clicking on the profile icon on the top right corner of the dashboard, selecting ‘Account settings’, and adding your Github account.
+If you signed up for Porter using an email address instead of a Github account, you can easily connect your Github account to Porter by clicking on the profile icon on the top right corner of the dashboard, selecting ‘Account settings’, and adding your Github account.
 </Info>
 
 ## Configuration of Build Settings
@@ -94,13 +94,11 @@ You can define what start command you'd like Porter to use to run your app in th
 
 ![image-5](/images/guides/porter-cloud-nextjs/5-resources.png)
 
-The ‘Resources’ tab allows you to define how much CPU and RAM your app's allowed to access. Porter Cloud imposes a limit on the resources that can be used by a single app; if your app needs more scalability it might make sense to look at Porter Standard and using your own AWS account instead. The cloud platform allows you to bring your own infrastructure and have more flexibility regarding resource limits. You can also use cloud provider credits from AWS/Azure/Google Cloud when using Porter Standard and it has a free plan for startups. Other than scalability, you may need to be hosting on your own infrastructure to meet any security framework standards like SOC 2.
-
 In this section, you can also define the number of replicas you'd like to run for this app and any autoscaling rules—these allow you to instruct Porter to add more replicas if resource utilization crosses a certain threshold. 
 
 ![image-6](/images/guides/porter-cloud-nextjs/6-networking.png)
 
-The ‘Networking’ tab is where you specify what port your app listens on - since we’ve kept NextJS’s default settings, we’re going to set the port to 8000. When you deploy a web app on Porter, we automatically generate a public URL for you to use - but you can also opt to bring your own domain by adding an A record to your DNS records, pointing your domain at Porter Cloud's public load balancer, and adding the custom domain in this section. This can be done at any point - either while you're creating the app or later once you've deployed it. 
+The ‘Networking’ tab is where you specify what port your app listens on - since we’ve kept NextJS’s default settings, we’re going to set the port to 8000. When you deploy a web app on Porter, we automatically generate a public URL for you to use - but you can also opt to bring your own domain by adding an A record to your DNS records, pointing your domain at your cluster's public load balancer, and adding the custom domain in this section. This can be done at any point - either while you're creating the app or later once you've deployed it. 
 
 <Info>
 If your app listens on ‘localhost’ or ‘127.0.0.1’, Porter won't be able to forward incoming connections and requests to your app. To that end, please ensure your app is configured to listen on ‘0.0.0.0’ instead.
@@ -122,7 +120,7 @@ All you need to do is merge this PR, and your build will commence.
 
 ![image-10](/images/guides/porter-cloud-nextjs/10-build-logs.png)
 
-You can also use the ‘Activity’ tab on the Porter cloud platform dashboard to see a timeline of your build going through. Once the build succeeds, you'll also be able to see the deployment in action:
+You can also use the ‘Activity’ tab on the Porter dashboard to see a timeline of your build going through. Once the build succeeds, you'll also be able to see the deployment in action:
 
 ![image-11](/images/guides/porter-cloud-nextjs/11-porter-build-status.png)
 
@@ -130,11 +128,11 @@ You can also use the ‘Activity’ tab on the Porter cloud platform dashboard t
 
 ## Accessing Your App
 
-After completing the previous steps, our new Next.js app's now live on Porter Cloud. The Porter-generated unique URL or domain name is now visible on the dashboard under your app's name. Let's test it:
+After completing the previous steps, our new Next.js app's now live on Porter. The Porter-generated unique URL or domain name is now visible on the dashboard under your app's name. Let's test it:
 
 ![image-13](/images/guides/porter-cloud-nextjs/13-view-web-app.png)
 
-Porter Cloud also provides logging and monitoring in the form of app logs and resource consumption metrics on the dashboard, so you can see how your web application is faring:
+Porter also provides logging and monitoring in the form of app logs and resource consumption metrics on the dashboard, so you can see how your web application is faring:
 
 ![image-15](/images/guides/porter-cloud-nextjs/14-view-logs.png)
 
