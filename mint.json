@@ -176,6 +176,7 @@
         "guides/nodejs/deploy-nodejs",
         "guides/nodejs/deploy-porter-aws-nodejs",
         "guides/nodejs/deploy-porter-gcp-nodejs",
+        "guides/nodejs/deploy-porter-msa-nodejs",
         "guides/rails/deploy-rails",
         "guides/flask/deploy-flask",
         "guides/golang/deploy-golang",

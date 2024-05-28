@@ -1,0 +1,142 @@
+---
+title: "Deploy a NodeJS App on Microsoft Azure with Porter"
+---
+
+While Porter's a great way to quickly get started with pushing out your app, there are certain limitations. For one, your app runs on our infrastructure, where there are certain limits on the amount of resources you can use. Further, since it's not your own infrastructure at play, it can be troublesome from a compliance perspective.
+
+That's where Porter Standard comes in - it allows you to experience the same ease-of-use of the Porter experience, but in your _own_ cloud account. You get the flexibility of running your own industry-grade infrastructure, without actually worrying about how it's provisioned or managed - Porter takes care of all those details for you. In this guide, we're going to walk through using Porter to provision infrastructure in an Azure subscription, and then deploy a basic Nodejs app and have it up and running.
+
+Note that to follow this guide, you'll need an account on [Porter Standard](https:/dashboard.getporter.dev) along with a valid Azure subscription. There is a base charge levied by Azure for a basic cluster provisioned by Porter - this would be around $250 per month, and is subject to change if you run more resource-intensive apps/workloads.
+
+# What we're deploying
+
+We're going to deploy a sample Nodejs server written in [Express.js](https://expressjs.com/) - but that doesn't mean you're restricted to Express. You're free to use any and all JS frameworks. This app's a very basic app with two endpoints - `/` and a basic healthcheck endpoint at `/healthz`, to demonstrate how you can push out a public-facing app on Porter with a public facing domain and TLS. The idea here is to show you how a basic app can be quickly deployed on Porter, allowing you to then use the same flow for deploying your code. 
+
+You can find the repository for this sample app here: https:/github.com/porter-dev/nodejs-getting-started. Feel free to fork/clone it, or bring your own.
+
+# Getting started
+
+Deploying an app from a Github repository on Porter using Azure involves - broadly - the following steps:
+
+1. Provisioning infrastructure inside your Azure subscription using Porter.
+2. Creating a new app on Porter where you specify the repository, the branch, any build settings, as well as what you'd like to run.
+3. Building your app and deploying it(automatically handled by Porter).
+
+## Connecting your Azure subscription
+
+On the Porter dashboard, head to `Infrastructure` and select `Azure`. 
+
+![1-msa-service-principal](images/guides/porter-msa/1-msa-service-principal.png)
+
+Here you're required to provide credentials for an Azure Service Principal which allows Porter to access your Azure subscription. You can find details about enabling APIs on your Azure subscription as well as creating a new Service Principal and generating its credentials [here](/provision/provisioning-on-azure).
+
+
+## Provisioning infrastructure
+
+After connecting your Azure subscription to Porter, you'll see a screen with a form - the fields are pre-filled, with details about your cluster:
+
+![2-msa-cluster-form-setup](images/guides/porter-msa/2-msa-cluster-form.png)
+
+Ordinarily, the only two fields that should be tweaked are the cluster name and the region - feel free to change those. The other fields are usually changed if Porter detects a conflict between the proposed cluster's VPC and other VPCs in your Azure subscription - these would be flagged during a preflight test, allowing you the option of tweaking those addresses. You can also choose a different instance type in this section for your cluster; while we tend to default to `Standard_B2als_v2` instances, we support a lot more instance types. Once you're satisfied, click `Deploy`.
+
+<Info>
+  At this stage, Porter will run more extensive preflight checks to ensure your Azure subscription has enough quotas free for components like vCPUs, elastic IPs as well as any potential conflicts with address spaces belonging to other VPCs. If any issues are detected, these will be flagged on the dashboard along with troubleshooting steps.{" "}
+</Info>
+
+Deploying your cluster can take up to 20 minutes.
+
+![3-msa-cluster-creation-provisioning](images/guides/porter-msa/3-msa-cluster-creation.png)
+
+## Creating an app and connecting your Github repository
+
+On the Porter dashboard, select `Create a new application`, which opens the following screen:
+
+![7-connect-github-repo-branch](/images/guides/getting-started-porter-aws-nodejs/7-connect-github-repo-branch.png)
+
+This is where you get to select a name for your app, as well as connect a Github repository which contains your code. Once you've selected the appropriate repository, select the branch you'd like to deploy to Porter. 
+
+<Info>
+  If you signed up for Porter using an email address instead of a Github account, you can easily connect your Github account to Porter by clicking on the profile icon on the top right corner of the dashboard, selecting `Account settings` and adding your Github account.{" "}
+</Info>
+ 
+## Configuring build settings
+
+Porter has the ability to automatically detect what language your app's written in, and select an appopriate buildpack which can be used to automatically package your app for eventual deployment. Once you've selected the branch you wish to use, Porter will display the following screen:
+
+![8-buildpack-settings](/images/guides/getting-started-porter-aws-nodejs/8-configure-buildpack-settings.png)
+
+You have the ability to further tune your build here - for instance, we're going to use the newer `heroku/builder:22` buildpack for our app.
+
+## Configure services
+
+At this point, it's a good idea to take a quick look at applications and services. An application on Porter is a group of services, where each service shares the same build and the same environment variables. If your app consists of a single repository with separate modules for, say an API and a frontend and a background worker, then you'd deploy a single application on Porter with three separate services. Porter supports three kinds of services: `web`, `worker` and `job` services. 
+
+Let's add a single `web` service for our app:
+
+![9-app-service](/images/guides/getting-started-porter-aws-nodejs/9-add-app-service.png)
+
+## Configure your service
+
+Now that we've defined a single web service, it's time to tell Porter how this service runs. That means specifying what command to run for this service, what kind of CPU/RAM levels to allocate, as well as how this will be accessed publicly.
+
+![10-start-command](/images/guides/getting-started-porter-aws-nodejs/10-configure-start-command.png)
+
+You can define what command you'd like Porter to use for running your app in the `Main` tab. This is required if your app's being built using a buildpack; this _may_ be optional if you opt to use a Dockerfile(since Porter will assume you have an `ENTRYPOINT` in your Dockerfile and use that if it exists).
+
+![11-configure-resources](/images/guides/getting-started-porter-aws-nodejs/11-configure-resources.png)
+
+The `Resources` tab allows you to define how much CPU and RAM your app's allowed to access. Porter imposes a limit on the resources that can be used by a single app; if your app needs more, you can change the instance type being used in the `Infrastructure` tab. 
+
+In this section, you can also define the number of replicas you'd like to run for this app, as well as any autoscaling rules - these allow you to instruct Porter to add more replicas if resource utilisation crosses a certain threshold. 
+
+![12-configure-ingress](/images/guides/getting-started-porter-aws-nodejs/12-configure-ingress.png)
+
+The `Networking` tab is where you specify what port your app listens on. When you deploy a web app on Porter, we automatically generate a public URL for you to use - but you can also opt to bring your own domain by adding a CNAME/A record to your DNS records pointing your domain at Porter's public load balancer, and adding the custom domain in this section. This can be done at any point - either while you're creating the app, or later once you've deployed it. 
+
+<Info>
+  If your app listens on `localhost` or `127.0.0.1`, Porter won't be able to forward incoming connections and requests to your app. To that end, please ensure your app is configured to listen on `0.0.0.0` instead.{" "}
+</Info>
+
+## Review and merge Porter's PR
+
+Hitting `Deploy` will show you the contents of a Github Action workflow that Porter would use to build and deploy your app:
+
+![13-review-github-action-pr](/images/guides/getting-started-porter-aws-nodejs/13-review-github-action-pr.png)
+
+This Github Action is configured to run every time you push a commit to the branch you specified earlier - when it runs, Porter applies the selected buildpack to your code, builds a final image and pushes that image to Porter. Selecting `Deploy app` will allow Porter to open a PR in your repo adding this workflow file:
+
+![14-merge-github-action-pr](/images/guides/getting-started-porter-aws-nodejs/14-merge-github-action-pr.png)
+
+All you need to do - merge this PR and your build will commence.
+
+![15-github-action-run](/images/guides/getting-started-porter-aws-nodejs/15-github-action-run.png)
+
+![16-github-action-build-logs](/images/guides/getting-started-porter-aws-nodejs/16-github-action-build-logs.png)
+
+You can also use the `Activity` tab on the Porter dashboard to see a timeline of your build+deployment going through. Once the build succeeds, you'll also be able to see the deployment in action:
+
+![17-porter-app-build-progress](/images/guides/getting-started-porter-aws-nodejs/17-porter-app-build-progress.png)
+
+![18-porter-app-deployment-progress](/images/guides/getting-started-porter-aws-nodejs/18-porter-app-deployment-progress.png)
+
+## First Contact
+
+Your app's now live on Porter. The Porter-generated unique URL is now visible on the dashboard, under your app's name. Let's test it:
+
+![19-access-web-app](/images/guides/getting-started-porter-aws-nodejs/19-access-web-app.png)
+
+You can also check logs and resource consumption metrics on the Porter dashboard to see how your app's faring:
+
+![20-view-logs](/images/guides/getting-started-porter-aws-nodejs/20-view-logs.png)
+
+![21-view-metrics](/images/guides/getting-started-porter-aws-nodejs/21-view-metrics.png)
+
+## Exploring Further
+
+We've seen how you can go about deploying your Nodejs app on Porter. Here are a few pointers to help you dive further into configuring/tuning your app:
+
+1. [Adding your own domain](/configure/custom-domains).
+2. [Changing instance types](/provision/changing-instance-types).
+3. [Adding environment variables and groups](/configure/environment-groups).
+4. [Scaling your app](/configure/autoscaling).
+5. [Ensuring your app's never offline](/configure/health-checks).
