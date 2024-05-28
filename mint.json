@@ -183,7 +183,8 @@
         "guides/fastapi/deploy-fastapi",
         "guides/nextjs/deploy-nextjs",
         "guides/nextjs/deploy-porter-aws-nextjs",
-        "guides/nextjs/deploy-porter-gcp-nextjs"
+        "guides/nextjs/deploy-porter-gcp-nextjs",
+        "guides/nextjs/deploy-porter-msa-nextjs"
       ]
     },
     {
