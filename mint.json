@@ -181,7 +181,8 @@
         "guides/flask/deploy-flask",
         "guides/golang/deploy-golang",
         "guides/fastapi/deploy-fastapi",
-        "guides/nextjs/deploy-nextjs"
+        "guides/nextjs/deploy-nextjs",
+        "guides/nextjs/deploy-porter-aws-nextjs"
       ]
     },
     {
