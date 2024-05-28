@@ -175,6 +175,7 @@
       "pages": [
         "guides/nodejs/deploy-nodejs",
         "guides/nodejs/deploy-porter-aws-nodejs",
+        "guides/nodejs/deploy-porter-gcp-nodejs",
         "guides/rails/deploy-rails",
         "guides/flask/deploy-flask",
         "guides/golang/deploy-golang",
