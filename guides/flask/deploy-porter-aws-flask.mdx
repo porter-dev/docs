@@ -1,0 +1,146 @@
+---
+title: "Deploy a Flask App on AWS with Porter"
+---
+
+While Porter's a great way to quickly get started with pushing out your app, there are certain limitations. For one, your app runs on our infrastructure, where there are certain limits on the amount of resources you can use. Further, since it's not your own infrastructure at play, it can be troublesome from a compliance perspective.
+
+That's where Porter Standard comes in - it allows you to experience the same ease-of-use of the Porter experience, but in your _own_ cloud account. You get the flexibility of running your own industry-grade infrastructure, without actually worrying about how it's provisioned or managed - Porter takes care of all those details for you. In this guide, we're going to walk through using Porter to provision infrastructure in an AWS account, and then deploy a basic Nodejs app and have it up and running.
+
+Note that to follow this guide, you'll need an account on [Porter Standard](https:/dashboard.getporter.dev) along with an AWS account. There is a base charge levied by AWS for a basic cluster provisioned by Porter - this would be around $224 per month, and is subject to change if you run more resource-intensive apps/workloads.
+
+# What We're Deploying
+
+We're going to deploy a sample Flask server - but that doesn't mean you're restricted to Flask. You're free to use any and all Python web frameworks (Python frameworks like FastAPI are common among Porter users). This app's a minimal Flask application with a single endpoint - `/` to demonstrate how you can push out a public-facing app on Porter with a public facing domain and TLS. The idea here is to show you how a new web app can be quickly deployed on Porter, allowing you to then use the same flow for deploying your code. 
+
+You can find the repository for this sample app here: https://github.com/porter-dev/flask-getting-started. Feel free to fork/clone it, or bring your own.
+
+
+# Getting started
+
+Deploying an app from a Github repository on Porter using AWS involves - broadly - the following steps:
+
+1. Provisioning infrastructure inside your AWS account using Porter.
+2. Creating a new app on Porter where you specify the repository, the branch, any build settings, as well as what you'd like to run.
+3. Building your app and deploying it(automatically handled by Porter).
+
+## Connecting your AWS account
+
+On the Porter dashboard, head to `Infrastructure` and select `AWS`. 
+
+![1-aws-account-permissions](images/guides/getting-started-porter-aws-nodejs/1-aws-account-permissions.png)
+
+Here you're required to log into your AWS account and provide your AWS account ID to Porter. Clicking on `Grant permissions` opens your AWS account and takes you to AWS CloudFormation, where you need to authorize Porter to provision a CloudFormation stack; this stack's responsible for provisioning all IAM roles and policies needed by Porter to provision and manage your infrastructure. Once the stack has been deployed, it takes a few minutes to complete:
+
+![2-aws-cloudformation](images/guides/getting-started-porter-aws-nodejs/2-aws-cloudformation.png)
+
+![3-aws-permissions-progress](images/guides/getting-started-porter-aws-nodejs/3-aws-permissions-progress.png)
+
+Once the CloudFormation stack's created on AWS, you can switch back to the Porter tab, where you should see a message about your AWS account being accessible by Porter:
+
+![4-aws-permissions-completion](images/guides/getting-started-porter-aws-nodejs/4-aws-permissions-completion.png)
+
+## Provisioning infrastructure
+
+After connecting your AWS account to Porter, you'll see a screen with a form - the fields are pre-filled, with details about your cluster:
+
+![5-cluster-setup](images/guides/getting-started-porter-aws-nodejs/5-cluster-setup.png)
+
+Ordinarily, the only two fields that should be tweaked are the cluster name and the region - feel free to change those. The other fields are usually changed if Porter detects a conflict between the proposed cluster's VPC and other VPCs in your account - these would be flagged during a preflight test, allowing you the option of tweaking those addresses. You can also choose a different instance type in this section for your cluster; while we tend to default to `t3.medium` instances, we support a lot more instance types. Once you're satisfied, click `Deploy`.
+
+<Info>
+  At this stage, Porter will run preflight checks to ensure your AWS account has enough quotas free for components like vCPUs, elastic IPs as well as any potential conflicts with address spaces belonging to other VPCs. If any issues are detected, these will be flagged on the dashboard along with troubleshooting steps.{" "}
+</Info>
+
+Deploying your cluster can take up to 20 minutes.
+
+![6-cluster-provisioning](images/guides/getting-started-porter-aws-nodejs/6-cluster-provisioning.png)
+
+## Creating an App and Connecting Your Git Repository
+
+On the Porter dashboard, select `Create a new application`, which opens the following screen:
+
+![image-1](/images//guides/porter-cloud-flask/flask-image1.png)
+
+This is where you select a name for your python web application and connect a Git repository containing your code. Once you've selected the appropriate repository, select the branch you'd like to deploy to Porter. 
+
+<Info>
+If you signed up for Porter using an email address instead of a Github account, you can easily connect your Github account to Porter by clicking on the profile icon on the top right corner of the dashboard, selecting `Account settings`, and adding your Github account.
+</Info>
+
+## Configuring Build Settings
+
+Porter has the ability to automatically detect what language your web applications are written in and select an appropriate buildpack that can be used to package your app for eventual deployment automatically. Once you've selected the branch you wish to use, Porter will display the following screen:
+
+![image-2](/images//guides/porter-cloud-flask/flask-image2.png)
+
+You can further tune your build here. For instance, we're going to use the newer `heroku/builder:22` buildpack for our app.
+
+## Configuration of Services
+
+At this point, taking a quick look at applications and services is a good idea. An application on Porter is a group of services where each service shares the same build and the same environment variables. If your app consists of a single repository with separate modules for, say, an API, a frontend, and a background worker, then you'd deploy a single application on Porter with three separate services. Porter supports three kinds of services: `web`, `worker`, and `job` services. 
+
+Let's add a single `web` service for our app:
+
+## Configure Your Service
+
+Now that we've defined a single web service, it's time to tell Porter how it runs. That means specifying what command to run for this service, what CPU/RAM levels to allocate, and how it will be accessed publicly.
+
+![image-3](/images//guides/porter-cloud-flask/flask-image3.png)
+
+You can define what command you'd like Porter to use to run your app in the `Main` tab. This is required if your app's being built using a buildpack; this may be optional if you opt to use a Docker file(since Porter will assume you have an `ENTRYPOINT` in your Dockerfile and use that if it exists).
+
+![image-4](/images//guides/porter-cloud-flask/flask-image4.png)
+
+The `Resources` tab allows you to define how much CPU and RAM your app is allowed to access. Porter imposes a limit on the resources that can be used by a single app. If your app needs more scalability and performance, it might make sense to look at Porter Standard instead. Porter Standard allows you to bring your own infrastructure and have more flexibility regarding resource limits, without having to worry about DevOps. You can also use cloud provider credits to cover the cost of each AWS EC2 instance and Google Cloud Platform instance when using Porter Standard. Other than scalability, you may need to be hosting on your own cloud to meet any security framework standards like SOC 2.
+
+In this section, you can also define the number of replicas you'd like to run for this app and any autoscaling rules—these allow you to instruct Porter to add more replicas if resource utilization crosses a certain threshold. 
+
+![image-5](/images//guides/porter-cloud-flask/flask-image5.png)
+
+The `Networking` tab is where you specify what port your app listens on. When you deploy a web app on Porter, we automatically generate a public URL for you to use - but you can also opt to bring your own domain by adding an A record to your DNS records, pointing your domain at your cluster's public load balancer, and adding the custom domain in this section. This can be done at any point - either while you're creating the app or later once you've deployed it (and you won't have to worry about SSL certs).
+
+<Info>
+If your app listens on `localhost` or `127.0.0.1`, Porter won't be able to forward incoming connections and requests to your app. To that end, please ensure your app is configured to listen on `0.0.0.0` instead.
+</Info>
+
+## Review and Merge Porter's PR
+
+Hitting `Deploy` will show you the contents of a GitHub Action workflow that Porter would use to build and deploy your app:
+
+![image-6](/images//guides/porter-cloud-flask/flask-image6.png)
+
+This Github Action is configured to run every time you push a commit to the branch you specified earlier - when it runs, Porter applies the selected buildpack to your code, builds a final image, and pushes that image to Porter. Selecting `Deploy app` will allow Porter to open a PR in your repo, adding this workflow file:
+
+![image-7](/images//guides/porter-cloud-flask/flask-image7.png)
+
+All you need to do is merge this PR, and your build will commence.
+
+![image-8](/images//guides/porter-cloud-flask/flask-image8.png)
+
+![image-9](/images//guides/porter-cloud-flask/flask-image9.png)
+
+You can also use the `Activity` tab on the Porter dashboard to see a timeline of your build+deployment going through. Once the build succeeds, you'll also be able to see the deployment in action:
+
+![image-10](/images//guides/porter-cloud-flask/flask-image10.png)
+
+![image-11](/images//guides/porter-cloud-flask/flask-image11.png)
+
+## Accessing Your App
+
+Your app's now live on Porter. The Porter-generated unique URL is now visible on the dashboard under your Flask web app's name. Let's test it:
+
+![image-12](/images//guides/porter-cloud-flask/flask-image12.png)
+
+Porter also provides logging and monitoring in the form of app logs and resource consumption metrics on the dashboard, so you can see how your web application is faring:
+
+![image-13](/images//guides/porter-cloud-flask/flask-image13.png)
+
+![image-14](/images//guides/porter-cloud-flask/flask-image14.png)
+
+### Exploring Further
+We've seen how you can go about deploying Flask apps on Porter. Here are a few pointers to help you dive further into configuring/tuning your app:
+
+1. [Adding your own domain](/configure/custom-domains).
+2. [Adding environment variables and groups](/configure/environment-groups) (environment groups are only available when hosting on Porter Standard).
+3. [Scaling your app](/configure/autoscaling). 
+4. [Ensuring your app's never offline](/configure/health-checks) (we'll renew and manage the SSL certificate for you).

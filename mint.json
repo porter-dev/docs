@@ -179,6 +179,7 @@
         "guides/nodejs/deploy-porter-msa-nodejs",
         "guides/rails/deploy-rails",
         "guides/flask/deploy-flask",
+        "guides/flask/deploy-porter-aws-flask",
         "guides/golang/deploy-golang",
         "guides/fastapi/deploy-fastapi",
         "guides/nextjs/deploy-nextjs",
