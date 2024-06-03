@@ -12,6 +12,38 @@ import { ShowPermissions, LastUpdated } from "/snippets/aws-permissions-componen
 Porter creates several roles and policies for use in the management of your AWS account. These may change over time, and will be automatically updated both here, and on your AWS account.
 Make sure to check back here for updates, and if you have any questions, please reach out to us on `support@porter.run`
 
+## Initial Permissions
+
+When signing up for Porter on AWS, you will be asked to create a cloudformation stack. This is only used for setting up the initial permissions required for Porter to manage your account.
+If you are operating in a regulated environment, these are the minimum permissions required to execute the initial cloudformation stack:
+
+```json
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "ManagePorterCloudFormation",
+			"Effect": "Allow",
+			"Action": [
+				"cloudformation:GetTemplateSummary",
+				"cloudformation:DescribeStackEvents",
+				"cloudformation:CreateStack",
+				"cloudformation:DeleteStack",
+				"cloudformation:DescribeStacks",
+				"cloudformation:ListStacks",
+				"cloudformation:ListStackResources",
+				"iam:DeleteRolePolicy",
+				"iam:DeleteRole",
+				"iam:PutRolePolicy",
+				"iam:GetRole",
+				"iam:CreateRole"
+			],
+			"Resource": "*"
+		}
+	]
+}
+```
+
 
 ## Roles
 
