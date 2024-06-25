@@ -35,7 +35,7 @@ version: 2.1
 jobs:
   porter:
     docker:
-      - image: public.ecr.aws/o1j4x7p4/porter-cli:latest
+      - image: ghcr.io/porter-dev/releases/porter-cli:latest
     steps:
       - checkout
       - setup_remote_docker:
