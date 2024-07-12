@@ -144,7 +144,8 @@
       "pages": [
         "observability/monitoring",
         "observability/logging",
-        "observability/alerts"
+        "observability/alerts",
+        "observability/app-metadata"
       ]
     },
     {
