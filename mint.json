@@ -29,11 +29,6 @@
       "name": "Get Started",
       "icon": "play",
       "url": "https://dashboard.getporter.dev"
-    },
-    {
-      "name": "Github",
-      "icon": "github",
-      "url": "https://github.com/porter-dev/porter"
     }
   ],
   "modeToggle": {
