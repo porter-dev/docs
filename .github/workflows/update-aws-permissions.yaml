@@ -2,6 +2,7 @@ name: Update AWS permissions docs
 on:
   schedule:
     - cron: "0 9 * * *"
+  workflow_dispatch:
 
 jobs:
   update-docs:
