@@ -24,3 +24,4 @@ jobs:
           file_pattern: "docs/snippets/aws-permissions.mdx"
           commit_user_email: support@porter.run
           commit_user_name: portersupport
+          commit_author: portersupport <support@porter.run>
