@@ -21,3 +21,5 @@ jobs:
         with:
           commit_message: "docs: update AWS permissions docs"
           file_pattern: "docs/snippets/aws-permissions.mdx"
+          commit_user_email: support@porter.run
+          commit_user_name: portersupport
