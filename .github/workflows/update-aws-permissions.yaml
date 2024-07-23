@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout docs
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PORTERSUPPORT_GITHUB_TOKEN }}
       - name: Grab docs
         run: |
           mkdir -p docs/snippets
