@@ -31,3 +31,11 @@ Note that the application will continue to receive traffic until it exits, unles
 
 1. As soon as `SIGTERM` is received, return a `500`-level response code on the readiness probe endpoint ([see above](#health-checks) for more information).
 2. Since the `SIGTERM` has been issued to your app, the termination grace period is in effect - this is when your app needs to close the server to prevent additional connections, and drain all existing connections before the grace period ends. Exit gracefully after connections are drained.
+
+# High Availability Applications
+
+Alongside the above, to ensure that your applications are fault tolerant and resilient against failures, please ensure that your applications have at least 3 instances available. This can be configured from the Resources tab, as seen in the screenshot below.
+
+Please note that if you are using autoscaling, this is a minimum of 3 instances.
+
+![Autoscaling replicas](/images/configure/autoscaling.png)
