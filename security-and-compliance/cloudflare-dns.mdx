@@ -74,9 +74,24 @@ Ensure that `Proxy Status` is enabled. This will show as `Proxied`.
 
 ![Proxied DNS](/images/security-and-compliance/cloudflare/dns-proxy.png)
 
-Done! You will now be able to avail of any Cloudflare services through Porter. 
+## Allowing Acme-Challenges
 
-Some users may see a "too many redirects" issue when visiting their domain. If this occurs, follow the steps below.
+To ensure that Porter can still create certificates on your behalf, we must allow LetsEncrypt traffic to not be proxied by Cloudflare, as they must be made over http, or unverified https.
+
+From the sidebar, select `Rules` > `Configuration Rules`
+![Configuration Rules](/images/security-and-compliance/cloudflare/sidebar-configuration-rules.png)
+
+Select `Create rule`
+
+Give the rule a name. This can be any name you choose.
+
+Assuming the domain in question is `example.com`, add a new Page rule for `*example.com/.well-known/acme-challenge/*`, with the following settings:
+  1. `Disable Security`
+  2. `SSL: Off`
+  3. `Cache Level: Bypass`
+  4. `Disable Performance`
+
+Done! You will now be able to avail of any Cloudflare services through Porter. If you are still seeing errors, remove the custom domain from your application in Porter, deploy, then add the domain back and your certificate should be validated after a few seconds.
 
 ## Too Many Redirects
 
