@@ -98,7 +98,7 @@ Running this will display the following output, which you will need when you go 
 
 In your Azure portal, search for **App registrations**. Under the **All applications** tab, you should see the newly-created service principal. Select the principal and navigate to the API Permissions tab:
 
-![API Permissions](https://github.com/porter-dev/porter/assets/66391417/3b633d51-f205-4136-9b81-7b6d54abaa5c)
+![API Permissions](https://github.com/porter-dev/porter-archive/assets/66391417/3b633d51-f205-4136-9b81-7b6d54abaa5c)
 
 Select **Add a permission** > **Microsoft Graph** > **Application permissions** and select the following seven permissions:
 
@@ -118,7 +118,7 @@ By default, Azure limits the types of resources you can provision in your subscr
 
 In your Azure portal, navigate to your subscription and select **Usage + quotas**. Set the resource filter to **Compute** and region to your desired region.
 
-![Usage Quotas](https://github.com/porter-dev/porter/assets/66391417/62e75cda-f8c2-48d8-9b62-83601c5c18ee)
+![Usage Quotas](https://github.com/porter-dev/porter-archive/assets/66391417/62e75cda-f8c2-48d8-9b62-83601c5c18ee)
 
 While the exact virtual machines provisioned by Porter will depend on your selected region's availability, the following table lists the default virtual machine types that Porter will provision along with recommended initial quota limits:
 
@@ -133,7 +133,7 @@ After selecting each resource family, click **Request quota increase** and input
 
 Once you create your project and select Azure as your cloud provider, you will be prompted to provide the credentials for the service principal you created earlier.
 
-![Azure credentials](https://github.com/porter-dev/porter/assets/66391417/d52e86f3-4157-4cd8-a9d4-2c824b6c2ce3)
+![Azure credentials](https://github.com/porter-dev/porter-archive/assets/66391417/d52e86f3-4157-4cd8-a9d4-2c824b6c2ce3)
 
 ## Deleting Provisioned Resources[](#deleting-provisioned-resources "Direct link to heading")
 
@@ -143,7 +143,7 @@ We recommend that you delete all provisioned resources through Porter as well as
 
 To delete resources, click on **Additional settings** from the **Infrastructure** tab.
 
-![Cluster settings](https://github.com/porter-dev/porter/assets/66391417/87e7f207-c7cc-4f4f-a7cb-de4366e1c839 "Direct link to heading")
+![Cluster settings](https://github.com/porter-dev/porter-archive/assets/66391417/87e7f207-c7cc-4f4f-a7cb-de4366e1c839 "Direct link to heading")
 
 Click **Delete Cluster** to remove the cluster from Porter and delete resources in your Azure console. It may take up to 30 minutes for these resources to be deleted from your Azure subscription.
 
@@ -151,4 +151,4 @@ To confirm that resources have been deleted, navigate to your Azure portal and s
 
 No other resource groups should be present.  If any are, you should delete them manually by clicking on the resource group and selecting **Delete resource group**.
 
-![Azure portal resource groups](https://github.com/porter-dev/porter/assets/66391417/ddfe6f23-935f-432c-a23c-799012d96067 "Screen Shot 2021-01-09 at 3.02.07 PM.png")
+![Azure portal resource groups](https://github.com/porter-dev/porter-archive/assets/66391417/ddfe6f23-935f-432c-a23c-799012d96067 "Screen Shot 2021-01-09 at 3.02.07 PM.png")
