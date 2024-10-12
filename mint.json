@@ -129,8 +129,7 @@
             "enterprise/cli/command-reference/porter-stack",
             "enterprise/cli/command-reference/porter-update"
           ]
-        },
-        "enterprise/cli/heroku-cli-comparison"
+        }
       ]
     },
     {
