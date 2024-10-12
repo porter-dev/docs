@@ -8,11 +8,12 @@ Porter injects some default environment variables in all Porter-provisioned apps
 2. `PORTER_RESOURCES_CPU` - The number of vCPU cores assigned to the current service.
 3. `PORTER_RESOURCES_REPLICAS` - The static replica count for the current service. Note that this may differ from the actual number of replicas running, if you have autoscaling enabled.
 4. `PORTER_NODE_NAME` - The node the current service replica is running on.
-5. `PORTER_POD_NAME` - This is the same as the internal hostname for the current service replica.
-6. `PORTER_POD_IP` - The internal private IP assigned to the current service replica.
-7. `PORTER_POD_IMAGE_TAG` - The image tag being used to run the current service replica. This is typically the same as `PORTER_IMAGE_TAG`.
-8. `PORTER_IMAGE_TAG` - The image tag being used for the current app. This is typically the same as `PORTER_POD_IMAGE_TAG`.
-9. `PORTER_POD_REVISION` - The revision ID assigned to the latest app deployment by Porter.
-10. `PORTER_APP_SERVICE_NAME` - A portmanteau of the app name and service name: `<APP>-SERVICE`.
+5. `PORTER_NODE_IP` - The internal IP of the node the current service replica is running on.
+6. `PORTER_POD_NAME` - This is the same as the internal hostname for the current service replica.
+7. `PORTER_POD_IP` - The internal private IP assigned to the current service replica.
+8. `PORTER_POD_IMAGE_TAG` - The image tag being used to run the current service replica. This is typically the same as `PORTER_IMAGE_TAG`.
+9. `PORTER_IMAGE_TAG` - The image tag being used for the current app. This is typically the same as `PORTER_POD_IMAGE_TAG`.
+10. `PORTER_POD_REVISION` - The revision ID assigned to the latest app deployment by Porter.
+11. `PORTER_APP_SERVICE_NAME` - A portmanteau of the app name and service name: `<APP>-SERVICE`.
 
 If you're looking at adding more metadata to logs or traces, these environment variables can be used to inject metadata about the origin of a log/trace into your observability tooling.
