@@ -15,5 +15,6 @@ Porter injects some default environment variables in all Porter-provisioned apps
 9. `PORTER_IMAGE_TAG` - The image tag being used for the current app. This is typically the same as `PORTER_POD_IMAGE_TAG`.
 10. `PORTER_POD_REVISION` - The revision ID assigned to the latest app deployment by Porter.
 11. `PORTER_APP_SERVICE_NAME` - A portmanteau of the app name and service name: `<APP>-SERVICE`.
+12. `PORTER_DOMAINS` - A comma-separated list of the domains assigned to your service.
 
 If you're looking at adding more metadata to logs or traces, these environment variables can be used to inject metadata about the origin of a log/trace into your observability tooling.
