@@ -104,7 +104,6 @@
             "standard/cli/command-reference/porter-config",
             "standard/cli/command-reference/porter-project",
             "standard/cli/command-reference/porter-app",
-            "standard/cli/command-reference/porter-update",
             "standard/cli/command-reference/porter-datastore-connect",
             "standard/cli/command-reference/porter-env"
           ]
@@ -130,8 +129,7 @@
             "enterprise/cli/command-reference/porter-stack",
             "enterprise/cli/command-reference/porter-update"
           ]
-        },
-        "enterprise/cli/heroku-cli-comparison"
+        }
       ]
     },
     {
