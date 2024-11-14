@@ -11,7 +11,7 @@ Some third-party platforms may find it necessary to whitelist connections made f
 After ensuring you have the AWS CLI installed and configured to access the account which contains your Porter cluster, run the following command:
 
 ```bash
-aws --region <REGION> ec2 describe-nat-gateways --filter "Name=tag-key,Values=kubernetes.io/cluster/<CLUSTER_NAME>" --query "NatGateways[*].NatGatewayAddresses[0].PublicIp"
+aws --region <REGION> ec2 describe-nat-gateways --filter "Name=tag-key,Values=*/cluster/<CLUSTER_NAME>" --query "NatGateways[*].NatGatewayAddresses[0].PublicIp"
 ```
 
 You'll need to replace `<CLUSTER_NAME>` and `<REGION>` with the name, and region of your cluster.
@@ -21,7 +21,7 @@ This command will return the egress IP which you can use to whitelist your workl
 
 1. Log into the AWS account containing your Porter cluster, and navigate to the `VPC` console in the appropriate region for your cluster.
 
-2. In the left pane, select `NAT gateways`, and you'll be able to see your cluster's NAT gateways; they'll be named after your cluster. Alternatively, you can use `kubernetes.io/cluster/<CLUSTER_NAME>: shared` to pull up the cluster's NAT gateways, where `CLUSTER_NAME` corresponds to your Porter cluster name.
+2. In the left pane, select `NAT gateways`, and you'll be able to see your cluster's NAT gateways; they'll be named after your cluster, and have a tag `porter.run/managed: true`
 
 3. Copy the contents of `Primary public IP` - this serves as the egress IP which you can use to whitelist your workloads with third party platforms. In case your cluster has multiple gateways, there will be multiple egress IPs.
 
