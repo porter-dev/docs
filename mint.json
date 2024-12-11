@@ -46,7 +46,8 @@
         "provision/provisioning-on-aws",
         "provision/provisioning-on-azure",
         "provision/provisioning-on-gcp",
-        "provision/changing-instance-types"
+        "provision/changing-instance-types",
+        "provision/cluster-upgrades"
       ]
     },
     {
@@ -178,7 +179,6 @@
     {
       "group": "Other Guides",
       "pages": [
-        "other/cluster-upgrades",
         "other/deleting-dangling-resources",
         "other/aws-vpc-peering",
         "other/kubernetes-101",
