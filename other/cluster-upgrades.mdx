@@ -1,0 +1,49 @@
+---
+title: "Cluster Upgrades"
+---
+
+Keeping your Kubernetes clusters up-to-date is essential for ensuring security, stability, and access to the latest features built by the wider Kubernetes community as well as the underlying public cloud. To that end, we take care of managed Kubernetes upgrades for all clusters provisioned through our platform. Our automated upgrade process ensures your clusters remain current without disrupting your workloads, so you can focus on building and deploying your applications while we handle the complexities of cluster maintenance.
+
+# Upgrade Calendar
+
+Kubernetes follows a release cycle where there are - approximately - three minor version releases a year. Every release is followed by a period where public clouds integrate the new version into their managed Kubernetes offerings and run tests to ensure compatibility with the underlying cloud. Our upgrade calendar is thus dependent on both release cycles. To account for that, we carry out cluster upgrades twice a year, where we "leapfrog" over versions to ensure customer clusters are running the _latest stable_ version of Kubernetes. These are typically carried out once towards the end of Q1/beginning of Q2 and then later towards the end of Q3. 
+
+# Upgrade Path
+
+When a new version of upstream Kubernetes is released, we closely track the corresponding release on public clouds in conjunction with the wider community as well as our public cloud partners(AWS/MSA/GCP). 
+
+1. Whilst waiting for public clouds to launch the new version on their managed versions, we start conducting initial compatibility tests with upstream Kubernetes against our systems, to catch any potential issues.
+
+2. Once public clouds have announced support for the new version, more extensive tests are conducted around the following themes:
+    
+    a. System components responsible for managing your cluster's functionality - Ingress, certificate management, autoscaling, telemetry and so on. All system components are upgraded to the latest stable versions from their upstream repos, and validated against both the current stable version and the new version of Kubernetes.
+
+    b. App templates powering customer workloads for web, worker and job services.
+
+    c. Additional addons - these include telemetry addons like Datadog/New Relic.
+
+3. After our tests are successful, we announce a timeline for upgrades over our comms channels on Slack. At this point, while we typically announce a window during low-traffic hours when upgrades are conducted, customers have the option of scheduling a specific slot.
+
+4. When a cluster is upgraded, we upgrade system components, all app templates, the managed cluster control plane as well as all nodegroups. While this operation is meant to be non-disruptive, there are certain prerequisites on the customers' end to ensure zero downtime(see the section below for more details). 
+
+# Shared Responsibility Model
+
+We've endeavoured to build a world-class cluster management system which is able to manage and upgrade customer infrastructure without causing disruption to customer workloads. To that end, we've defined a shared responsibility model which maps out the roles played by Porter's engineering/SRE teams as well as customers to ensure the best possible experience with upgrades.
+
+### Porter's responsibilities
+
+1. Testing each upgrade release extensively to ensure new versions and system components work together cohesively.
+
+2. Executing upgrades in a blue-green deployment fashion, where older components and nodes are gradually replaced with newer versions without compromising customer workload uptime.
+
+3. Maintaining a constant stream of communication around upgrade timelines and statuses.
+
+### Customers' responsibilities
+
+1. Ensuring all production workloads are running with a minimum of 3 replicas in order to take advantage of cross-AZ reliability.
+
+2. Adding functional healthchecks to all production workloads.
+
+3. Adding support for graceful shutdowns to all production workloads.
+
+More documentation around zero-downtime deployments may be found [here](/configure/zero-downtime-deployments).

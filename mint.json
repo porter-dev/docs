@@ -178,6 +178,7 @@
     {
       "group": "Other Guides",
       "pages": [
+        "other/cluster-upgrades",
         "other/deleting-dangling-resources",
         "other/aws-vpc-peering",
         "other/kubernetes-101",
