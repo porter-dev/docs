@@ -46,4 +46,8 @@ We've endeavoured to build a world-class cluster management system which is able
 
 3. Adding support for graceful shutdowns to all production workloads.
 
+<Warning>
+  If your app doesn't have a minimum of three replicas / doesn't use healthchecks or graceful shutdowns, then an upgrade can cause significant disruption. During an upgrade, your cluster's nodes are refreshed and workloads are gradually rescheduled and the absence of these prerequisites will lead to a scenario where your cluster may not have ready replicas to serve production traffic.
+</Warning>
+
 More documentation around zero-downtime deployments may be found [here](/configure/zero-downtime-deployments).
