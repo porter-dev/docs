@@ -71,7 +71,7 @@ With metrics scraping enabled, you can now set up autoscaling based on your cust
 
 When your selected metric exceeds the threshold, Porter will automatically scale your service between the min and max instances you've specified.
 
-![Custom Autoscaling Configuration](/images/observability/custom-autoscaling-config.png)
+![Custom Autoscaling Configuration](/images/observability/custom-autoscaling.png)
 *Custom autoscaling configuration in the Resources tab of a service*
 
 ### Query Requirements for Autoscaling
