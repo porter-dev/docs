@@ -98,3 +98,50 @@ You can switch between:
 - **Custom Mode**: Autoscale based on your application metrics
 
 Click the customize/restore icons to switch between modes.
+
+## Example Use Case: Data Processing Pipeline
+
+Consider a data processing pipeline with two separate Porter applications:
+
+### App 1: Analytics Ingestion API
+
+A Flask/FastAPI service that ingests analytics events from multiple client applications and publishes them to RabbitMQ for processing.
+
+**Metrics Configuration:**
+```python:docs/images/observability/custom-autoscaling.png
+from prometheus_client import generate_latest, Gauge
+
+# Track messages in RabbitMQ queues
+queue_metrics = Gauge('rabbitmq_queue_messages', 
+                     'Number of messages in queue',
+                     ['queue_name'])
+
+@app.route('/metrics')
+def metrics():
+    # Update metrics for different processing queues
+    queue_metrics.labels(queue_name='user_events').set(
+        rabbit_connection.get_queue_length('user_events'))
+    queue_metrics.labels(queue_name='system_events').set(
+        rabbit_connection.get_queue_length('system_events'))
+    return generate_latest()
+```
+
+### App 2: Event Processing Service
+
+A separate application with Celery workers that process events from RabbitMQ and stores them in your data warehouse.
+
+**Custom Autoscaling Configuration:**
+- Metric Name: `rabbitmq_queue_messages{queue_name="user_events"}`
+- Query: `sum(rabbitmq_queue_messages{queue_name="user_events"})`
+- Threshold: `1000` (scale up when more than 1000 events are waiting)
+
+This multi-app setup demonstrates:
+- The ingestion API app handles incoming requests and exposes queue metrics
+- The processing app's workers scale based on metrics from the first app
+- Both apps can be managed and scaled independently
+- The processing app can even scale different worker pools for different queue types
+
+This is a common pattern in event-driven architectures where you want to:
+- Keep ingestion and processing concerns separated
+- Scale processing capacity based on upstream queue metrics
+- Handle different types of events with different processing priorities
