@@ -14,7 +14,7 @@ You can now configure Porter to scrape metrics from your application's `/metrics
 ### How to Enable Metrics Scraping
 
 
-![Metrics Scraping Configuration](/docs/features/images/observability/metrics-scraping-config.png)
+![Metrics Scraping Configuration](/images/observability/metrics-scraping-config.png)
 *Metrics scraping configuration in the Advanced tab of a web service*
 
 1. Navigate to your application dashboard
