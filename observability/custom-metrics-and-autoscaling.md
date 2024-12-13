@@ -28,6 +28,28 @@ You can now configure Porter to scrape metrics from your application's `/metrics
 
 Note: Our telemetry collector will automatically send requests to the specified port and path to collect metrics from your service.
 
+### Prometheus Metrics Format
+
+Your application must expose metrics in Prometheus format, which follows these basic principles:
+
+- Metrics are exposed as HTTP endpoints (typically `/metrics`)
+- Each metric follows the format: `metric_name{label1="value1",label2="value2"} value`
+- Common metric types:
+  - Counter: Values that only increase (e.g., total_http_requests)
+  - Gauge: Values that can go up and down (e.g., current_memory_usage)
+  - Histogram: Observations distributed into buckets (e.g., request_duration_seconds)
+
+Example metrics output:
+```
+# HELP http_requests_total Total number of HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{method="post",code="200"} 1027
+http_requests_total{method="get",code="200"} 2048
+```
+
+For detailed information about implementing Prometheus metrics in your application, refer to:
+- [Official Prometheus Exposition Format](https://prometheus.io/docs/instrumenting/exposition_formats/)
+- [Client Libraries for Different Languages](https://prometheus.io/docs/instrumenting/clientlibs/)
 
 ## Custom Autoscaling
 
