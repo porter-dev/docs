@@ -13,10 +13,6 @@ You can now configure Porter to scrape metrics from your application's `/metrics
 
 ### How to Enable Metrics Scraping
 
-
-![Metrics Scraping Configuration](/images/observability/metrics-scraping-config.png)
-*Metrics scraping configuration in the Advanced tab of a web service*
-
 1. Navigate to your application dashboard
 2. Select your web service
 3. Go to the "Advanced" tab under service settings
@@ -27,6 +23,9 @@ You can now configure Porter to scrape metrics from your application's `/metrics
    - **Path**: The path where metrics are exposed (defaults to `/metrics`)
 
 Note: Our telemetry collector will automatically send requests to the specified port and path to collect metrics from your service.
+
+![Metrics Scraping Configuration](/images/observability/metrics-scraping-config.png)
+*Metrics scraping configuration in the Advanced tab of a web service*
 
 ### Prometheus Metrics Format
 
@@ -57,9 +56,6 @@ With metrics scraping enabled, you can now set up autoscaling based on your cust
 
 ### How to Configure Custom Autoscaling
 
-![Custom Autoscaling Configuration](/images/observability/custom-autoscaling-config.png)
-*Custom autoscaling configuration in the Resources tab of a service*
-
 1. Navigate to your application dashboard
 2. Select your service
 3. Go to the "Resources" tab
@@ -74,6 +70,9 @@ With metrics scraping enabled, you can now set up autoscaling based on your cust
    - **Threshold**: Set the threshold value that triggers scaling
 
 When your selected metric exceeds the threshold, Porter will automatically scale your service between the min and max instances you've specified.
+
+![Custom Autoscaling Configuration](/images/observability/custom-autoscaling-config.png)
+*Custom autoscaling configuration in the Resources tab of a service*
 
 ### Query Requirements for Autoscaling
 
