@@ -57,29 +57,23 @@ With metrics scraping enabled, you can now set up autoscaling based on your cust
 
 ### How to Configure Custom Autoscaling
 
-1. Navigate to your application's "Resources" tab
-2. Enable "Autoscaling"
-3. Click the customize icon to switch to custom metrics mode
-4. Configure:
-   - **Metric Name**: Select from your exposed metrics
-   - **Query**: Write a PromQL query to evaluate your metric
-   - **Threshold**: Set the threshold that triggers scaling
+![Custom Autoscaling Configuration](/images/observability/custom-autoscaling-config.png)
+*Custom autoscaling configuration in the Resources tab of a service*
 
-Example configuration:
-```yaml
-services:
-  - name: web
-    autoscaling:
-      enabled: true
-      kind: custom
-      minInstances: 1
-      maxInstances: 10
-      custom:
-        prometheus:
-          metricName: http_requests_total
-          query: "avg(http_requests_total)"
-          threshold: 100
-```
+1. Navigate to your application dashboard
+2. Select your service
+3. Go to the "Resources" tab
+4. Configure basic autoscaling:
+   - Enable "Enable autoscaling (overrides instances)"
+   - Set "Min instances" (e.g., 1)
+   - Set "Max instances" (e.g., 10)
+5. Switch to custom metrics mode by clicking the customize icon
+6. Configure custom metrics:
+   - **Metric Name**: Select a metric from your exposed Prometheus metrics
+   - **Query**: Write or modify the PromQL query (defaults to `avg(<metric_name>)`)
+   - **Threshold**: Set the threshold value that triggers scaling
+
+When your selected metric exceeds the threshold, Porter will automatically scale your service between the min and max instances you've specified.
 
 ### Switching Between Autoscaling Modes
 
@@ -88,46 +82,3 @@ You can switch between:
 - **Custom Mode**: Autoscale based on your application metrics
 
 Click the customize/restore icons to switch between modes.
-
-## Requirements
-
-### Prometheus Metrics Format
-
-Your application must expose metrics in Prometheus format, which follows these basic principles:
-
-- Metrics are exposed as HTTP endpoints (typically `/metrics`)
-- Each metric follows the format: `metric_name{label1="value1",label2="value2"} value`
-- Common metric types:
-  - Counter: Values that only increase (e.g., total_http_requests)
-  - Gauge: Values that can go up and down (e.g., current_memory_usage)
-  - Histogram: Observations distributed into buckets (e.g., request_duration_seconds)
-
-Example metrics output:
-```
-# HELP http_requests_total Total number of HTTP requests
-# TYPE http_requests_total counter
-http_requests_total{method="post",code="200"} 1027
-http_requests_total{method="get",code="200"} 2048
-```
-
-For detailed information about implementing Prometheus metrics in your application, refer to:
-- [Official Prometheus Exposition Format](https://prometheus.io/docs/instrumenting/exposition_formats/)
-- [Client Libraries for Different Languages](https://prometheus.io/docs/instrumenting/clientlibs/)
-
-Other requirements:
-- Custom autoscaling requires metrics scraping to be enabled
-- Your project must have custom autoscaling enabled (contact Porter support if needed)
-
-## Best Practices
-
-1. **Metric Selection**: Choose metrics that accurately reflect your application's load
-2. **Testing**: Test your autoscaling configuration with realistic load patterns
-3. **Monitoring**: Monitor your application's scaling behavior after enabling custom autoscaling
-
-## Learn More
-
-- [Porter Autoscaling Documentation](https://docs.porter.run/configure/autoscaling)
-- [Prometheus Query Basics](https://prometheus.io/docs/prometheus/latest/querying/basics/)
-- [Zero Downtime Deployments](https://docs.porter.run/configure/zero-downtime-deployments#graceful-shutdown)
-
-For additional support, contact us at support@porter.run
