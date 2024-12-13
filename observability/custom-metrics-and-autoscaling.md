@@ -75,6 +75,23 @@ With metrics scraping enabled, you can now set up autoscaling based on your cust
 
 When your selected metric exceeds the threshold, Porter will automatically scale your service between the min and max instances you've specified.
 
+### Query Requirements for Autoscaling
+
+When using custom metrics for autoscaling, your PromQL query must:
+
+- Return a single numeric value (scalar)
+- Examples of valid queries:
+  - `avg(metric_name)` → Returns a single average value
+  - `sum(rate(http_requests_total[5m]))` → Returns a single sum value
+  - `max(some_latency_metric)` → Returns a single maximum value
+
+Invalid query examples:
+- Vector results (multiple time series)
+- String results
+- No data/empty results
+
+> **Note**: If your query returns multiple values or time series, use aggregation operators like `avg()`, `sum()`, or `max()` to reduce it to a single value.
+
 ### Switching Between Autoscaling Modes
 
 You can switch between:
