@@ -4,6 +4,8 @@ Porter now supports collecting custom metrics from your applications and using t
 
 ## Configuring Metrics Scraping
 
+> **Note**: Metrics scraping is only available for web services.
+
 You can now configure Porter to scrape metrics from your application's `/metrics` endpoint. This is useful for:
 - Collecting application-specific metrics
 - Setting up custom autoscaling based on your metrics
@@ -11,22 +13,21 @@ You can now configure Porter to scrape metrics from your application's `/metrics
 
 ### How to Enable Metrics Scraping
 
-1. Navigate to your application's settings
-2. Go to the "Advanced" tab
-3. Enable "Metrics Scraping"
-4. Configure the following options:
-   - **Port**: The port where your metrics endpoint is exposed (defaults to your service port)
+
+![Metrics Scraping Configuration](./images/observability/metrics-scraping-config.png)
+*Metrics scraping configuration in the Advanced tab of a web service*
+
+1. Navigate to your application dashboard
+2. Select your web service
+3. Go to the "Advanced" tab under service settings
+4. Find the "Metrics scraping" section
+5. Enable "Enable metrics scraping"
+6. Configure the following options:
+   - **Port**: The port where your metrics endpoint is exposed (defaults to your web service's default port)
    - **Path**: The path where metrics are exposed (defaults to `/metrics`)
 
-Example configuration:
-```yaml
-services:
-  - name: web
-    metricsScraping:
-      enabled: true
-      port: 9090    # Your metrics port
-      path: /metrics # Your metrics endpoint
-```
+Note: Our telemetry collector will automatically send requests to the specified port and path to collect metrics from your service.
+
 
 ## Custom Autoscaling
 
