@@ -3,18 +3,13 @@ title: "Custom Metrics and Autoscaling"
 description: "Learn how to configure custom metrics collection and autoscaling in Porter"
 ---
 
-import { Callout } from "nextra/components"
-import { Tab, Tabs } from "nextra/components"
-
 # Custom Metrics and Autoscaling in Porter
 
 Porter now supports exporting custom metrics from your applications and using them for autoscaling. This guide explains how to configure these features.
 
 ## Configuring Metrics Scraping
 
-<Callout type="info">
-  Metrics scraping is only available for web services.
-</Callout>
+**Note:** Metrics scraping is only available for web services.
 
 You can now configure Porter to scrape metrics from your application's `/metrics` endpoint. This is useful for:
 - Collecting application-specific metrics
@@ -32,9 +27,7 @@ You can now configure Porter to scrape metrics from your application's `/metrics
    - **Port**: The port where your metrics endpoint is exposed (defaults to your web service's default port)
    - **Path**: The path where metrics are exposed (defaults to `/metrics`)
 
-<Callout>
-  Our telemetry collector will automatically send requests to the specified port and path to collect metrics from your service.
-</Callout>
+**Important:** Our telemetry collector will automatically send requests to the specified port and path to collect metrics from your service.
 
 ![Metrics Scraping Configuration](/images/observability/metrics-scraping-config.png)
 *Metrics scraping configuration in the Advanced tab of a web service*
@@ -81,9 +74,7 @@ With metrics scraping enabled, you can now set up autoscaling based on your cust
    - **Query**: Write or modify the PromQL query (defaults to `avg(<metric_name>)`)
    - **Threshold**: Set the threshold value that triggers scaling
 
-<Callout>
-  When your selected metric exceeds the threshold, Porter will automatically scale your service between the min and max instances you've specified.
-</Callout>
+When your selected metric exceeds the threshold, Porter will automatically scale your service between the min and max instances you've specified.
 
 ![Custom Autoscaling Configuration](/images/observability/custom-autoscaling.png)
 *Custom autoscaling configuration in the Resources tab of a service*
@@ -103,9 +94,7 @@ Invalid query examples:
 - String results
 - No data/empty results
 
-<Callout type="warning">
-  If your query returns multiple values or time series, use aggregation operators like `avg()`, `sum()`, or `max()` to reduce it to a single value.
-</Callout>
+If your query returns multiple values or time series, use aggregation operators like `avg()`, `sum()`, or `max()` to reduce it to a single value.
 
 ### Switching Between Autoscaling Modes
 
@@ -119,35 +108,34 @@ Click the customize/restore icons to switch between modes.
 
 Consider a data processing pipeline with two separate Porter applications:
 
-<Tabs items={['App 1: Analytics Ingestion API', 'App 2: Event Processing Service']}>
-  <Tab>
-    A Flask/FastAPI service that ingests analytics events from multiple client applications and publishes them to RabbitMQ for processing.
-    
-    **Metrics Configuration:**
-    ```python showLineNumbers
-    from prometheus_client import generate_latest, Gauge
-    
-    # Track messages in RabbitMQ queues
-    queue_metrics = Gauge('rabbitmq_queue_messages', 
-                         'Number of messages in queue',
-                         ['queue_name'])
-    
-    @app.route('/metrics')
-    def metrics():
-        # Update metrics for different processing queues
-        queue_metrics.labels(queue_name='user_events').set(
-            rabbit_connection.get_queue_length('user_events'))
-        queue_metrics.labels(queue_name='system_events').set(
-            rabbit_connection.get_queue_length('system_events'))
-        return generate_latest()
-    ```
-  </Tab>
-  <Tab>
-    A separate application with Celery workers that process events from RabbitMQ and stores them in your data warehouse.
-    
-    **Custom Autoscaling Configuration:**
-    - Metric Name: `rabbitmq_queue_messages{queue_name="user_events"}`
-    - Query: `sum(rabbitmq_queue_messages{queue_name="user_events"})`
-    - Threshold: `1000` (scale up when more than 1000 events are waiting)
-  </Tab>
-</Tabs>
+#### Analytics Ingestion API
+
+A Flask/FastAPI service that ingests analytics events from multiple client applications and publishes them to RabbitMQ for processing.
+
+**Metrics Configuration:**
+```python
+from prometheus_client import generate_latest, Gauge
+
+# Track messages in RabbitMQ queues
+queue_metrics = Gauge('rabbitmq_queue_messages', 
+                     'Number of messages in queue',
+                     ['queue_name'])
+
+@app.route('/metrics')
+def metrics():
+    # Update metrics for different processing queues
+    queue_metrics.labels(queue_name='user_events').set(
+        rabbit_connection.get_queue_length('user_events'))
+    queue_metrics.labels(queue_name='system_events').set(
+        rabbit_connection.get_queue_length('system_events'))
+    return generate_latest()
+```
+
+#### Event Processing Service
+
+A separate application with Celery workers that process events from RabbitMQ and stores them in your data warehouse.
+
+**Custom Autoscaling Configuration:**
+- Metric Name: `rabbitmq_queue_messages{queue_name="user_events"}`
+- Query: `sum(rabbitmq_queue_messages{queue_name="user_events"})`
+- Threshold: `1000` (scale up when more than 1000 events are waiting)
