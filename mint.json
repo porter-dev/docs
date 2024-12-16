@@ -138,7 +138,8 @@
         "observability/monitoring",
         "observability/logging",
         "observability/alerts",
-        "observability/app-metadata"
+        "observability/app-metadata",
+        "observability/custom-metrics-and-autoscaling"
       ]
     },
     {
