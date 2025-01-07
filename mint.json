@@ -46,7 +46,8 @@
         "provision/provisioning-on-aws",
         "provision/provisioning-on-azure",
         "provision/provisioning-on-gcp",
-        "provision/changing-instance-types"
+        "provision/changing-instance-types",
+        "provision/cluster-upgrades"
       ]
     },
     {
