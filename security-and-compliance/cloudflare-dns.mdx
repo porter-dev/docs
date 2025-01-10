@@ -14,8 +14,10 @@ Porter handles the creation and renewal of your TLS/HTTPS certificates, and ther
 Most Cloudflare services will require Cloudflare DNS Proxy mode. If you require one of these services, follow the steps below for ensuring that your applications are compatible.
 
 Before continuing, you will need to copy the address of your Porter-managed loadbalancer.
-To find your loadbalancer address, visit the Porter dashboard `Infrastructure` > `Additional Settings`.
-This address may be a DNS address, on an IP address depending on your cloud provider. This is important later.
+To find your loadbalancer address, visit one of your apps in its Overview tab and access one of its Web services Networking tab.
+You should see the address for your loadbalancer.
+This address may be a DNS address, on an IP address depending on your cloud provider.
+This is important later.
 
 # Creating a DNS record
 
