@@ -37,7 +37,7 @@ After ensuring you have the Azure CLI installed and configured to access the acc
 az aks show -g <resource-name> -n <region> --query 'networkProfile.loadBalancerProfile.effectiveOutboundIPs[].id'
 ```
 
-You need to replace `<resource-name>` with the name of the resource group your cluster is deployed into and `region` with the region your cluster is deployed.
+You need to replace `<resource-name>` with the name of the resource group your cluster is deployed into and `<region>` with the region your cluster is deployed.
 This command should return an array with only one ID.
 
 After that, you should run
