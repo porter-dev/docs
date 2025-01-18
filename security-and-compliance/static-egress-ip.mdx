@@ -34,17 +34,17 @@ This command will return the egress IP which you can use to whitelist your workl
 After ensuring you have the Azure CLI installed and configured to access the account which contains your Porter cluster, run the following command:
 
 ```bash
-az aks show -g <resource-name> -n <region> --query 'networkProfile.loadBalancerProfile.effectiveOutboundIPs[].id'
+az aks show -g <resource-name> -n <cluster-name> --query 'networkProfile.loadBalancerProfile.effectiveOutboundIPs[].id'
 ```
 
-You need to replace `<resource-name>` with the name of the resource group your cluster is deployed into and `<region>` with the region your cluster is deployed.
+You need to replace `<resource-name>` with the name of the resource group your cluster is deployed into and `<cluster-name>` with the name of your cluster.
 This command should return an array with only one ID.
 
 After that, you should run
 ```bash
 az network public-ip show --ids <id> --query ipAddress -o tsv
 ```
-where `<id>` is the ID you got from the previous command (preferably between quotes).
+where `<id>` is the ID you got from the previous command (preferably between quotes). Note that the ID is the full path displayed by the previous command, and not just the UUID at the end.
 
 From the last command, you should see your static egress IP as its output.
 
