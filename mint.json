@@ -47,7 +47,8 @@
         "provision/provisioning-on-azure",
         "provision/provisioning-on-gcp",
         "provision/changing-instance-types",
-        "provision/cluster-upgrades"
+        "provision/cluster-upgrades",
+        "provision/cost-optimization"
       ]
     },
     {
