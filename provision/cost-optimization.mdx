@@ -16,7 +16,7 @@ Let's look at an example. Say you're running a web application with 8 replicas, 
 
 With fixed instance types, you might choose t3.xlarge instances (4 CPU, 16GB RAM each). You would need 5 instances to get enough CPU (20 cores needed), which provides 80GB of RAM - far more than the 32GB you need. At \$0.1664 per hour for each instance (\$0.832 total per hour), you're paying for 48GB of unused RAM - a 60% waste in memory.
 
-With cost optimization enabled, Porter can intelligently bin pack your workloads using a combination of instance types. Using 3 t3.large instances (2 CPU, 8GB RAM each) at \$0.0832/hour (\$0.2496 total) and 4 t3.medium instances (2 CPU, 4GB RAM each) at \$0.0416/hour (\$0.1664 total), Porter achieves the exact capacity needed (20 CPU cores and 32GB RAM) for \$0.416/hour - a 50% reduction in cost with the same performance.
+With cost optimization enabled, Porter can intelligently bin pack your workloads using a combination of instance types. Using 3 t3.large instances (2 CPU, 8GB RAM each) at \$0.0832/hour (\$0.2496 total) and 4 t3.medium instances (2 CPU, 4GB RAM each) at \$0.0416/hour (\$0.1664 total), Porter achieves the exact capacity needed (20 CPU cores and 32GB RAM) for \$0.416/hour - a 50% reduction in cost with the same performance. The machines are reshuffled on a cadence to ensure the best fit as the set of workloads changes. 
 
 ## Enabling and Configuring Cost Optimization
 
@@ -32,7 +32,7 @@ To enable cost optimization for a node group:
 
 ## Best Practices
 
-**Health Checks Required**: For production applications, ensure proper health checks are configured before scheduling them on cost-optimized node groups. This ensures your applications are properly monitored and can be rescheduled if needed.
+**Health Checks Required**: For production applications, ensure proper health checks are configured before scheduling them on cost-optimized node groups. This ensures your applications can be safely rescheduled on new nodes without causing any disruption as nodes are reshuffled.
 
 ## Limitations
 
