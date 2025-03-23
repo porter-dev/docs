@@ -36,6 +36,20 @@ porter app run [APP_NAME] -- bash
 
 This will launch an interactive shell session through which you can run other commands, like `ls`, `ps`, etc. If `bash` isn't found on your container, you can also try `sh` for a similar result.
 
+### `porter app logs`[](#porter-logs 'Direct link to heading')
+
+The `porter app logs` command allows users to stream logs from their application:
+
+```
+porter app logs [APP_NAME]
+```
+
+The `--service` flag can be used to stream logs from a specific service in the application:
+
+```
+porter app logs [APP_NAME] --service [SERVICE_NAME]
+```
+
 ### `porter app build`[](#porter-build 'Direct link to heading')
 
 The `porter app build` command builds a new container image for an app based on it's existing build settings. Any build setting can be overridden with a corresponding flag.
