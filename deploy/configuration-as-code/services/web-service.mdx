@@ -22,8 +22,8 @@ Note that a path must be specified for the default port (set in [services.port](
 If routing to a port on an external service, the port must be exposed on that service (either as the default port or through a path routing rule).
   - **path** \- the URL path.
   - **port** \- the port to route to.
-  - **appName** \- (optional) the name of the application to route to. Defaults to the name of the web service's application.
-  - **serviceName** \- (optional) the name of the service to route to. Defaults to the name of the web service. MUST be specified if appName is set.
+  - **appName** \- (optional) the name of the application to route to. Defaults to the application of the current service.
+  - **serviceName** \- (optional) the name of the service to route to. Defaults to the current service. Must be specified if appName is set.
 
 ### `autoscaling`
 
