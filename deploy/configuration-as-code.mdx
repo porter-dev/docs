@@ -41,6 +41,9 @@ services:
     cpuCores: 0.1
     ramMegabytes: 256
     instances: 1
+    healthCheck:
+      enabled: true
+      command: python run_my_healthcheck.py
   - name: example-job
     type: job
     run: echo 'hello world'
