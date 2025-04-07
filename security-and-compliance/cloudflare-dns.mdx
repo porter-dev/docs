@@ -80,29 +80,30 @@ Ensure that `Proxy Status` is enabled. This will show as `Proxied`.
 
 To ensure that Porter can still create certificates on your behalf, we must allow LetsEncrypt traffic to not be proxied by Cloudflare, as they must be made over http, or unverified https.
 
-From the sidebar, select `Rules` > `Configuration Rules`
-![Configuration Rules](/images/security-and-compliance/cloudflare/sidebar-configuration-rules.png)
+From the sidebar, select `Rules` > `Page Rules`
+![Page Rules](/images/security-and-compliance/cloudflare/sidebar-page-rules.png)
 
 Select `Create rule`
 
 Give the rule a name. This can be any name you choose.
 
 Assuming the domain in question is `example.com`, add a new Page rule for `*example.com/.well-known/acme-challenge/*`, with the following settings:
-  1. `Disable Security`
-  2. `SSL: Off`
-  3. `Cache Level: Bypass`
-  4. `Disable Performance`
+  1. `SSL: Off`
+  2. `Cache Level: Bypass`
 
 Done! You will now be able to avail of any Cloudflare services through Porter. If you are still seeing errors, remove the custom domain from your application in Porter, deploy, then add the domain back and your certificate should be validated after a few seconds.
 
 ## Too Many Redirects
 
-If you visit your custom domain, you may now get a `too many redirects` error from Cloudflare. To fix this issue, we must create a Cloudflare Configuration Rule.
+This step is not necessary for most customers. Only proceed if you are seeing a `too many redirects` error.
+If you visit your custom domain, you may now get a `too many redirects` error from Cloudflare. 
+To fix this issue, we must create a Cloudflare Configuration Rule.
 
-From the sidebar, select `Rules` > `Configuration Rules`
-![Configuration Rules](/images/security-and-compliance/cloudflare/sidebar-configuration-rules.png)
+From the sidebar, select `Rules` > `Overview`
+![Rules Overview](/images/security-and-compliance/cloudflare/sidebar-overview.png)
 
-Select `Create rule`
+Click `Create rule`, then select `Configuration Rules`
+![Configuration Rules](/images/security-and-compliance/cloudflare/configuration-rules.png)
 
 Give the rule a name. This can be any name you choose.
 
