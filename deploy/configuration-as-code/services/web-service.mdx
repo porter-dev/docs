@@ -24,6 +24,7 @@ If routing to a port on a different service, the port must be exposed on that se
   - **port** \- the port to route to.
   - **appName** \- (optional) the name of the application to route to (as it appears in the dashboard). Defaults to the application of the current service.
   - **serviceName** \- (optional) the name of the service to route to (as it appears in the dashboard). Defaults to the current service. Must be specified if appName is set.
+- [rewriteCustomPaths](#rewritecustompaths) \- when path routing is enabled, whether to rewrite custom paths to the root path. Defaults to true.
 
 ### `autoscaling`
 
@@ -93,4 +94,17 @@ pathRouting:
     port: 8083
     appName: other-app
     serviceName: other-service-in-other-app
+```
+
+### `rewriteCustomPaths`
+
+`boolean` - optional (defaults to true)
+
+```yaml
+pathRouting:
+  - path: /api/v1
+    port: 8080
+  - path: /api/v2
+    port: 8081
+rewriteCustomPaths: false
 ```
