@@ -25,10 +25,10 @@ If routing to a port on a different service, the port must be exposed on that se
   - **appName** \- (optional) the name of the application to route to (as it appears in the dashboard). Defaults to the application of the current service.
   - **serviceName** \- (optional) the name of the service to route to (as it appears in the dashboard). Defaults to the current service. Must be specified if appName is set.
 - [pathRoutingConfig](#pathroutingconfig) \- optional configuration options for path-based routing.
-  - **rewriteMode** \- mode for rewriting URL paths. Options are `rewrite-all` (default), `rewrite-prefix`, and `rewrite-off`.
-    - `rewrite-all` \- rewrite the entire path to the root path.
-    - `rewrite-prefix` \- rewrite the path for the URL path prefix only.
-    - `rewrite-off` \- disable path rewriting.
+  - **rewriteMode** \- mode for rewriting URL paths. If the path set in **pathRouting** is `/api/v1`, then `api/v1/subpath` will be rewritten as follows:
+    - `rewrite-all` \- (default) rewrite the entire path to the root path --> `/`.
+    - `rewrite-prefix` \- rewrite the path for the URL path prefix only --> `/subpath`.
+    - `rewrite-off` \- disable path rewriting --> `/api/v1/subpath`.
 
 ### `autoscaling`
 
