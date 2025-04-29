@@ -44,40 +44,48 @@ The `porter app logs` command allows users to stream new logs or view historical
 porter app logs [APP_NAME]
 ```
 
-By default, the command will stream new logs. Setting the `--historical` flag will switch to pulling historical logs:
-
-```
-porter app logs [APP_NAME] --historical
-```
-
-
 The following flags can be used to filter the logs:
 
 ```yaml
-# --service -> filter logs by service name
+# --service:
+# filter logs by service name
 porter app logs [APP_NAME] --service [SERVICE_NAME]
 
-# --search -> search for a specific string in the logs
+# --search:
+# search for a specific string in the logs
 porter app logs [APP_NAME] --search [SEARCH_STRING]
 
-# --revision -> stream logs from a specific revision
+# --revision:
+# stream logs from a specific revision
 porter app logs [APP_NAME] --revision=[REVISION_NUMBER]
 ```
+
+By default, the command will stream new logs. Setting the `--since` flag or the `--from --to` flags will switch to pulling historical logs:
+
+```yaml
+# --since:
+# pull logs over the specified duration
+# looking back from the current time
+porter app logs [APP_NAME] --since 12h
+
+# --from and --to:
+# pull logs between the specified timestamps
+porter app logs [APP_NAME] --from 2021-01-01T00:00:00Z --to 2021-01-01T12:00:00Z
+```
+
 
 When viewing historical logs, these additional flags can be used:
 
 ```yaml
-# --start -> the start time (in UTC) - defaults to 24 hours ago
-porter app logs [APP_NAME] --historical --start 2021-01-01T00:00:00Z
+# --limit:
+# the number of lines of historical logs to return
+# defaults to 100
+porter app logs [APP_NAME] --since 12h --limit=[LIMIT]
 
-# --end -> the end time (in UTC) - defaults to now
-porter app logs [APP_NAME] --historical --end 2021-01-01T00:00:00Z
-
-# --limit -> the number of lines of historical logs to return - defaults to 100
-porter app logs [APP_NAME] --historical --limit=[LIMIT]
-
-# --newest-first -> return the newest historical logs first - defaults to true
-porter app logs [APP_NAME] --historical --newest-first=false
+# --newest-first:
+# return the newest historical logs first
+# defaults to true
+porter app logs [APP_NAME] --since 12h --newest-first=false
 ```
 
 ### `porter app build`[](#porter-build 'Direct link to heading')
