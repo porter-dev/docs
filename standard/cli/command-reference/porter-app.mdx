@@ -70,7 +70,10 @@ porter app logs [APP_NAME] --since 12h
 
 # --from and --to:
 # pull logs between the specified timestamps
-porter app logs [APP_NAME] --from 2021-01-01T00:00:00Z --to 2021-01-01T12:00:00Z
+porter app logs [APP_NAME] --from 2021-01-01T10:00:00Z --to 2021-01-01T12:00:00Z
+
+# with timezone:
+porter app logs [APP_NAME] --from 2021-01-01T06:00:00-04:00 --to 2021-01-01T08:00:00-04:00
 ```
 
 
