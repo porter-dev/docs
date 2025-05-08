@@ -65,6 +65,7 @@
           "pages": [
             "deploy/configuration-as-code/overview",
             "deploy/configuration-as-code/reference",
+            "deploy/configuration-as-code/multi-service",
             {
               "group": "Service Configuration",
               "pages": [
