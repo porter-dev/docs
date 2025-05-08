@@ -65,7 +65,7 @@
           "pages": [
             "deploy/configuration-as-code/overview",
             "deploy/configuration-as-code/reference",
-            "deploy/configuration-as-code/multi-service",
+            "deploy/configuration-as-code/addons-porter-yaml",
             {
               "group": "Service Configuration",
               "pages": [
