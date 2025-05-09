@@ -6,6 +6,14 @@ You can deploy multiple Porter apps alongside multiple Porter addons in a single
 
 <Warning> This feature is currently in beta </Warning>
 
+### Usage
+
+To enable this feature, set the `PORTER_ADDON_YAML` environment variable while running the apply command.
+
+```bash
+PORTER_ADDON_YAML=true porter apply -f porter.yaml
+```
+
 ## Example Configuration
 
 ```yaml
@@ -74,9 +82,9 @@ addons:
       config:
         name: cache
         masterUserPassword: password
-        allocatedStorage: 2 # GB. Cannot be changed after creation.
+        allocatedStorage: 2 # Persistent storage size in GB. Cannot be changed after creation.
         cpuCores: 0.1
-        ramMegabytes: 110 # MB
+        ramMegabytes: 110
   - name: db
     type: MANAGED-POSTGRES
     engine: POSTGRES
@@ -84,15 +92,7 @@ addons:
       config:
         name: db
         masterUserPassword: password
-        allocatedStorage: 2 # GB. Cannot be changed after creation.
+        allocatedStorage: 2 # Persistent storage size in GB. Cannot be changed after creation.
         cpuCores: 0.1
         ramMegabytes: 110
-```
-
-### Usage
-
-To enable this feature, set the `PORTER_ADDON_YAML` environment variable while running the apply command.
-
-```bash
-PORTER_ADDON_YAML=true porter apply -f porter.yaml
 ```
