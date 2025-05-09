@@ -23,6 +23,9 @@ apps:
         port: 80
         sleep: false
         private: true
+    envGroups: # Environment groups can be used to inject environment variables from the addons into the service.
+      - cache
+      - db
     image:
       repository: nginx
       tag: latest
@@ -39,6 +42,9 @@ apps:
         port: 80
         sleep: false
         private: true
+    envGroups: # Environment groups can be used to inject environment variables from the addons into the service.
+      - cache
+      - db
     image:
       repository: nginx
       tag: latest
@@ -54,6 +60,9 @@ apps:
         terminationGracePeriodSeconds: 30
         port: 80
         sleep: false
+    envGroups:
+      - cache
+      - db
     image:
       repository: nginx
       tag: latest
@@ -65,9 +74,9 @@ addons:
       config:
         name: cache
         masterUserPassword: password
-        allocatedStorage: 2
+        allocatedStorage: 2 # GB. Cannot be changed after creation.
         cpuCores: 0.1
-        ramMegabytes: 110
+        ramMegabytes: 110 # MB
   - name: db
     type: MANAGED-POSTGRES
     engine: POSTGRES
@@ -75,7 +84,7 @@ addons:
       config:
         name: db
         masterUserPassword: password
-        allocatedStorage: 2
+        allocatedStorage: 2 # GB. Cannot be changed after creation.
         cpuCores: 0.1
         ramMegabytes: 110
 ```
