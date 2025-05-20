@@ -61,6 +61,7 @@
         "deploy/builds",
         "deploy/pre-deploy-jobs",
         "deploy/rollbacks",
+        "deploy/blue-green-synced-deploy",
         "deploy/using-other-ci-tools",
         {
           "group": "Configuration as Code",

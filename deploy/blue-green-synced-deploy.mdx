@@ -1,0 +1,138 @@
+---
+title: "Blue-Green Synchronized Deployments"
+description: "Deploy groups of applications together using Blue-Green deployment strategy"
+---
+
+# Blue-Green Synchronized Deployments in Porter
+
+Porter supports Blue-Green synchronized deployments to help you coordinate the rollout of tightly coupled applications. This guide explains how to configure and use this feature.
+
+## What is a Blue-Green Synchronized Deployment?
+
+Blue-Green deployment is a strategy that maintains two identical environments (blue and green) to minimize downtime and risk during application updates:
+
+- The **blue environment** is the currently active production environment
+- The **green environment** is the new version being deployed
+
+With Porter's synchronized Blue-Green deployments, you can coordinate multiple applications that need to be deployed together as a single unit. This is particularly useful for:
+
+- Microservices architectures where APIs must stay compatible
+- Frontend and backend components that need to maintain version compatibility
+- Any group of applications that must be deployed in sync to function properly
+
+## Configuring Blue-Green Deployments
+
+You can configure Blue-Green deployment synchronization in two ways: through your porter.yaml file or via the Porter dashboard.
+
+### Configuration in porter.yaml
+
+To enable Blue-Green deployments, add the `deploymentStrategy` section to your `porter.yaml` for each application you want to include in the synchronized group:
+
+```yaml
+version: v2
+name: frontend
+services:
+- name: web
+  run: node index.js
+  type: web
+  instances: 1
+  ...
+build:
+  context: ./
+  method: docker
+  dockerfile: ./Dockerfile
+deploymentStrategy:
+  kind: blueGreen
+  blueGreen:
+    group: [name-for-the-group]
+```
+
+Key configuration points:
+- Set `deploymentStrategy.kind` to `blueGreen`
+- Use the `blueGreen.group` field to specify a group name
+- All applications with the same group name will be deployed together
+- Make sure all applications in the group are deployed with the same image tag
+
+### Configuration in the Porter Dashboard
+
+You can also configure Blue-Green deployments directly in the Porter dashboard:
+
+1. Navigate to your application dashboard
+2. Go to the "Settings" tab
+3. Find the "Blue-Green Deployment Group" section
+4. Select an existing group from the dropdown or type a new group name
+5. Save your changes
+
+![Blue-Green Configuration in Dashboard](/images/deploying-applications/bluegreen-dashboard-configure.png)
+*Blue-Green deployment group configuration in application settings*
+
+## Understanding Blue-Green Deployment Status
+
+When you deploy applications that are part of a Blue-Green group, the Porter dashboard will show detailed status information in the Activity feed. 
+
+![Blue-Green Status in Activity Feed](/images/deploying-applications/bluegreen-status-progressing.png)
+*Blue-Green deployment status displayed in the Activity feed*
+
+## Requirements and Limitations
+
+For Blue-Green synchronized deployments to work correctly:
+
+1. **Same Image Tag Requirement**: All applications in a Blue-Green group must be deployed with the same image tag. This is typically the commit SHA for applications deployed from GitHub. If you have a mono repo and your apps are deployed from the same branch, the default workflow files created by Porter should be comaptible with this feature.
+
+2. **Deployment Time Window**: All applications in a group must complete their deployment within a 20 min time window with the same image tag. If one application fails to deploy or takes too long, the entire group deployment is considered failed and reverted.
+
+
+## Example Use Case
+
+Consider a scenario with a frontend application and its backend API that must stay compatible:
+
+1. Configure both applications with the same Blue-Green group:
+
+```yaml
+# backend/porter.yaml
+version: v2
+name: backend
+services:
+- name: web
+  run: python server.py
+  type: web
+  instances: 1
+  ...
+build:
+  context: ./
+  method: docker
+  dockerfile: ./Dockerfile
+deploymentStrategy:
+  kind: blueGreen
+  blueGreen:
+    group: primary
+
+
+# frontend/porter.yaml
+version: v2
+name: frontend
+services:
+- name: web
+  run: node index.js
+  type: web
+  instances: 1
+  ...
+build:
+  context: ./
+  method: docker
+  dockerfile: ./Dockerfile
+deploymentStrategy:
+  kind: blueGreen
+  blueGreen:
+    group: primary
+```
+
+2. When deploying a new version, Porter will:
+   - Deploy both applications simultaneously
+   - Wait for all applications to be ready before promoting traffic
+   - Ensure both are successful before considering the deployment complete
+   - Roll back all applications if any of them fail
+
+3. The dashboard will show the status of the synchronized deployment in real time, making it easy to identify any issues.
+
+By using Blue-Green synchronized deployments, you ensure that interdependent applications are always deployed in compatible versions, reducing the risk of downtime or broken functionality due to version mismatches.
