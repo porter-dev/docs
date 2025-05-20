@@ -30,15 +30,21 @@ To enable Blue-Green deployments, add the `deploymentStrategy` section to your `
 
 ```yaml
 version: v2
-name: frontend-service
+name: frontend
 services:
 - name: web
+  run: node index.js
   type: web
-  port: 3000
-  deploymentStrategy:
-    kind: blueGreen
-    blueGreen:
-      group: my-application-group
+  instances: 1
+  ...
+build:
+  context: ./
+  method: docker
+  dockerfile: ./Dockerfile
+deploymentStrategy:
+  kind: blueGreen
+  blueGreen:
+    group: [name-for-the-group]
 ```
 
 Key configuration points:
@@ -62,45 +68,63 @@ You can also configure Blue-Green deployments directly in the Porter dashboard:
 
 ## Understanding Blue-Green Deployment Status
 
-When you deploy applications that are part of a Blue-Green group, the Porter dashboard will show detailed status information in the Activity feed:
+When you deploy applications that are part of a Blue-Green group, the Porter dashboard will show detailed status information in the Activity feed. 
 
-- **Waiting**: "Waiting for partner apps: app-name-1, app-name-2"
-- **Failed**: "Failed to deploy because paired app backend didn't deploy the required version"
-- **Success**: "Deployment completed successfully for all apps in the group"
-
-The dashboard provides visibility into exactly why a deployment might be pending or failing.
-
-![Blue-Green Status in Activity Feed](/images/blue-green/bg-activity-feed-status.png)
+![Blue-Green Status in Activity Feed](/images/deploying-applications/bluegreen-status-progressing.png)
 *Blue-Green deployment status displayed in the Activity feed*
 
 ## Requirements and Limitations
 
 For Blue-Green synchronized deployments to work correctly:
 
-1. **Same Image Tag Requirement**: All applications in a Blue-Green group must be deployed with the same image tag. This is typically the commit SHA for applications deployed from GitHub.
+1. **Same Image Tag Requirement**: All applications in a Blue-Green group must be deployed with the same image tag. This is typically the commit SHA for applications deployed from GitHub. If you have a mono repo and your apps are deployed from the same branch, the default workflow files created by Porter should be comaptible with this feature.
 
-2. **Deployment Time Window**: All applications in a group must complete their deployment within a 20 min time window. If one application fails to deploy or takes too long, the entire group deployment is considered failed and reverted.
+2. **Deployment Time Window**: All applications in a group must complete their deployment within a 20 min time window with the same image tag. If one application fails to deploy or takes too long, the entire group deployment is considered failed and reverted.
 
-3. **Configuration Consistency**: All applications in the Blue-Green group should have the `blueGreen` strategy and the same group name configured.
 
-## Example Use Case: API and Web Application
+## Example Use Case
 
-Consider a scenario with a web application and its backend API that must stay compatible:
+Consider a scenario with a frontend application and its backend API that must stay compatible:
 
 1. Configure both applications with the same Blue-Green group:
 
 ```yaml
-# api/porter.yaml
+# backend/porter.yaml
+version: v2
+name: backend
+services:
+- name: web
+  run: python server.py
+  type: web
+  instances: 1
+  ...
+build:
+  context: ./
+  method: docker
+  dockerfile: ./Dockerfile
 deploymentStrategy:
   kind: blueGreen
   blueGreen:
-    group: web-platform
+    group: primary
+
 
 # frontend/porter.yaml
+version: v2
+name: frontend
+services:
+- name: web
+  run: node index.js
+  type: web
+  instances: 1
+  ...
+build:
+  context: ./
+  method: docker
+  dockerfile: ./Dockerfile
 deploymentStrategy:
   kind: blueGreen
   blueGreen:
-    group: web-platform
+    group: primary
 ```
 
 2. When deploying a new version, Porter will:
