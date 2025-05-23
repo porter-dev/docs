@@ -16,6 +16,7 @@ The following is a full reference for all the fields that can be set for a web s
 - [healthCheck](#healthcheck) \- the health check configuration for the service.
   - **enabled** \- whether the health check is enabled or not.
   - **httpPath** \- the path to check for the health check.
+- **serviceMeshEnabled** \- If 'true', enables enhanced communication between your services with improved performance, reliability, and monitoring. Recommended for applications with multiple services that communicate with each other, especially those using gRPC or WebSockets.
 - [ingressAnnotations](#ingressannotations) \- the ingress annotations to apply for the service.
 - [pathRouting](#pathrouting) \- the list of URL paths to service port mappings, if path-based routing is enabled.
 Note that a path must be specified for the default port (set in [services.port](/deploy/configuration-as-code/reference)).
