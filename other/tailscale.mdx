@@ -53,73 +53,12 @@ We will be deploying a Tailscale "subnet router" which will allow any services d
 By default, every time that you click "Update" on your cluster from the `Infrastructure` tab, Porter will ensure that all of your Porter-managed applications and Datastores are accessbile over the Tailnet.
 As each route is added, it must be approved by an admin in the Tailscale Admin Panel.
 
-1. Visit your [Tailscale Admin Panel](https://login.tailscale.com/admin/machines?ref=blog.porter.run)
-2. Click on `Machines`
-3. Click on the `ABC-subnet-router-relay`, where `ABC` is the name that you gave the Tailscale addon on Porter
-4. Click on the 3 dots on the right side of the `ABC-subnet-router-relay`, click `Review Route Settings`
-   ![Tailscale API Key](/images/other/tailscale-machines.png)
-5. Click `Approve All` to approve all routes
-   ![Tailscale API Key](/images/other/tailscale-approve-routes.png)
-6. If you intend to use `porter app run` or `porter datastore connect` commands, also check `Use as Exit Node`.
-
-Your Tailscale Subnet Router should now be online. All of your Porter applications and Datastores should be accessible over the Tailnet.
-
-### Installing Tailscale Addon
-
-<Warning>
-  The Tailscale addon is deprecated and no longer supported. Use the
-  cluster-level VPN Settings for Tailscale integration, which provides
-  additional features and finer-grained permissions through OAuth clients. If
-  you're currently using the Tailscale addon, follow the migration steps above
-  to transition to the new integration method.
-</Warning>
-<a
-  href="https://dashboard.porter.run/addons/new?addon_name=tailscale"
-  target="_blank"
->
-  <img
-    height="100"
-    noZoom
-    src="/images/deploying-applications/deploy-to-porter.svg"
-  />
-</a>
-
-1. On the Porter dashboard, click on the "Addons" tab on the left sidebar.
-
-![Sidebar Addons](/images/other/sidebar-addons.png)
-
-2. Click "New Addon"
-3. Select "Tailscale" from the list of addons
-   ![Addons cards](/images/other/addons-list.png)
-4. Click "Deploy Addon"
-5. Enter a name for the addon, such as "Tailscale"
-
-### Retrieving Tailscale API Key
-
-1. Visit your [Tailscale Admin Panel](https://login.tailscale.com/admin/settings/authkeys?ref=blog.porter.run)
-2. Go to `Settings` -> `Auth Keys`
-3. Click on `Generate one-off key`
-   ![Tailscale Console](/images/other/tailscale-admin-console.png)
-4. Copy the API key as we will need it for the next step
-
-### Adding the Tailscale API Key to Porter
-
-1. On the Porter dashboard, click "Addons", and click on the "Tailscale" addon
-2. Select the `Tailscale Settings` tab
-   ![Tailscale API Key](/images/other/tailscale-porter-api-key.png)
-3. Paste the API key from above into the `Tailscale Auth Key` field, then click `Deploy`
-
-### Adding Routes to your Tailnet
-
-By default, every time that you click "Provision" on your cluster from the `Infrastructure` tab, Porter will ensure that all of your Porter-managed applications and Datastores are accessbile over the Tailnet.
-As each route is added, it must be approved by an admin in the Tailscale Admin Panel.
-
-1. Visit your [Tailscale Admin Panel](https://login.tailscale.com/admin/machines?ref=blog.porter.run)
-2. Click on `Machines`
-3. Click on the `ABC-subnet-router-relay`, where `ABC` is the name that you gave the Tailscale addon on Porter
-4. Click on the 3 dots on the right side of the `ABC-subnet-router-relay`, click `Review Route Settings`
-   ![Tailscale API Key](/images/other/tailscale-machines.png)
-5. Click `Approve All` to approve all routes
+1. Visit your [Tailscale Admin Panel](https://login.tailscale.com/admin/machines?ref=blog.porter.run).
+2. Click on `Machines`.
+3. Find the `cluster-ABC` machine, where `cluster-ABC` is the name of the Porter cluster where the VPN integration was enabled.
+4. Click on the 3 dots on the right side of the `cluster-ABC`, and click `Edit Route settings...`
+   ![Tailscale Machines](/images/other/tailscale-route-settings.png)
+5. Click `Approve All` to approve all routes.
    ![Tailscale API Key](/images/other/tailscale-approve-routes.png)
 6. If you intend to use `porter app run` or `porter datastore connect` commands, also check `Use as Exit Node`.
 
