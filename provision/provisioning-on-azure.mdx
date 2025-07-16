@@ -135,6 +135,16 @@ Once you create your project and select Azure as your cloud provider, you will b
 
 ![Azure credentials](https://github.com/porter-dev/porter-archive/assets/66391417/d52e86f3-4157-4cd8-a9d4-2c824b6c2ce3)
 
+## Rotating Service Principal Credentials[](#-rotating-service-principal-credentials "Direct link to heading")
+
+Azure mandates that client secrets for Service Principals(the `password` field displayed when you create a Service Principal) expire every 365 days. When a client secret expires, Porter loses the ability to manage your infrastructure or push new deployments. Note that in the event of a client secret's expiration, _your cluster continues to function normally, and existing workloads are not affected_.
+
+To refresh your client secret:
+1. Visit [https://aka.ms/NewClientSecret](https://aka.ms/NewClientSecret) and select the app ID for the service principal that was used to create your cluster(to check what your app ID is, you can navigate to `Integrations` on the Porter dashboard and select `Azure`).
+2. Generate a fresh client secret, and copy new value.
+3. Navigate to `Integrations` on the Porter dashboard and select `Azure`.
+4. Update the value of the `Password` field with the new value you generated on Azure, and hit `Update`.
+
 ## Deleting Provisioned Resources[](#deleting-provisioned-resources "Direct link to heading")
 
 <Warning>Deleting resources on Azure via Porter may result in dangling resources. After clicking delete, please make sure to check your Azure portal to see if all resources have properly been removed. You can remove any dangling resources via either the Azure console or the Azure CLI.</Warning>
