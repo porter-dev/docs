@@ -2,7 +2,59 @@
 title: "Provisioning on Azure"
 ---
 
-## Prerequisites[](#prerequisites "Direct link to heading")
+## Setup Options
+
+You can set up Azure for Porter in two ways:
+
+- **[Option 1: Automated Setup Script (Recommended)](#option-1-automated-setup-script-recommended)** - One-click setup using our script
+- **[Option 2: Manual Setup](#option-2-manual-setup)** - Step-by-step manual configuration
+
+### Option 1: Automated Setup Script (Recommended)
+
+Download and run our automated setup script that handles all the configuration steps for you:
+
+```bash
+# Download the setup script
+curl -O https://raw.githubusercontent.com/porter-dev/porter/main/docs/setup-azure-porter.sh
+
+# Make it executable
+chmod +x setup-azure-porter.sh
+
+# Run the script (optionally provide subscription ID)
+./setup-azure-porter.sh [your-subscription-id]
+```
+
+**Prerequisites for the script:**
+- Azure CLI installed and authenticated (`az login`)
+- `jq` command-line JSON processor installed
+- Admin permissions on your Azure subscription (for granting API permissions)
+
+The script will:
+- ✅ Enable all required Azure resource providers
+- ✅ Create the custom `porter-aks-restricted` role
+- ✅ Create the service principal with proper permissions
+- ✅ Add Microsoft Graph API permissions
+- ✅ Grant admin consent (if you have permissions)
+- ✅ Display the credentials needed for Porter
+
+**After running the script:**
+1. Copy the displayed credentials to the Porter dashboard when creating your project
+2. Request quota increases if needed (see [Compute Quotas](#quotas) section below)
+3. Proceed with cluster provisioning in Porter
+
+<Info>
+If the script fails to grant admin consent automatically, you can grant it manually in the Azure Portal: **App registrations** > **azure-porter-restricted-sp** > **API permissions** > **Grant admin consent for Default Directory**.
+</Info>
+
+---
+
+If you prefer to set up manually or want to understand each step, continue with **Option 2** below.
+
+---
+
+### Option 2: Manual Setup
+
+#### Prerequisites[](#prerequisites "Direct link to heading")
 
 To provision through Porter, you must enable certain Azure resource providers for your subscription.
 
@@ -25,7 +77,7 @@ To provision through Porter, you must enable certain Azure resource providers fo
 
 It might take a few minutes for providers to complete registration. Once you confirm that all resource providers are enabled, proceed to the next section.
 
-## Creating the Service Principal[](#creating-service-principal "Direct link to heading")
+#### Creating the Service Principal[](#creating-service-principal "Direct link to heading")
 
 1. Create a new role with the Azure CLI
 
@@ -112,7 +164,7 @@ Select **Add a permission** > **Microsoft Graph** > **Application permissions** 
 
 Click **Add permissions** to save these permissions, and then click **Grant admin consent for Default Directory** to grant these permissions to your service principal.
 
-## Compute Quotas [](#quotas "Direct link to heading")
+#### Compute Quotas [](#quotas "Direct link to heading")
 
 By default, Azure limits the types of resources you can provision in your subscription. To provision a Porter cluster, you will need to request a quota increase for the compute resources you plan to use.
 
@@ -129,7 +181,7 @@ While the exact virtual machines provisioned by Porter will depend on your selec
 
 After selecting each resource family, click **Request quota increase** and input your desired quota limit. Requests should be approved automatically within a few minutes.  If your request is not approved automatically, fill out the support ticket as prompted. Approval is typically granted in a few hours.
 
-## Provisioning Your Porter Cluster[](#provisioning-porter-cluster "Direct link to heading")
+#### Provisioning Your Porter Cluster[](#provisioning-porter-cluster "Direct link to heading")
 
 Once you create your project and select Azure as your cloud provider, you will be prompted to provide the credentials for the service principal you created earlier.
 
