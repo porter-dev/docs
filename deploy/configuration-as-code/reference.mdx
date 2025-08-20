@@ -30,8 +30,7 @@ The following is a full reference for all the fields that can be set in a `porte
   - **ramMegabytes** - the amount of RAM to allocate to the service.
   - **gpuCoresNvidia** - the number of Nvidia GPU cores to allocate to the service.
   - **port** - the port that the service will listen on.
-  - **experimental** - configuration settings for features that are still in development.
-    - [connections](#connections) - a list of external connections for the service.
+  - [connections](#connections) - a list of external connections for the service.
   - additional type-specific fields. See full reference for [web](/deploy/configuration-as-code/services/web-service), [worker](/deploy/configuration-as-code/services/worker-service), and [job](/deploy/configuration-as-code/services/job-service) services.
 
 ### `version`
@@ -123,7 +122,7 @@ services:
 
 `array` - optional
 
-Currently, this only supports Cloud SQL connections.
+Cloud SQL connection (GCP)
 
 ```yaml
 services:
@@ -134,13 +133,30 @@ services:
     cpuCores: 1
     ramMegabytes: 1024
     port: 8080
-    experimental:
-      connections:
-      - type: cloudSql
-        config:
-          cloudSqlConnectionName: project-123456:us-east1:instance-name
-          cloudSqlDatabasePort: 5432
-          cloudSqlServiceAccount: service-account-name
-          # service accounts must be connected through
-          # the Connections tab under the application's cluster
+    connections:
+    - type: cloudSql
+      config:
+        cloudSqlConnectionName: project-123456:us-east1:instance-name
+        cloudSqlDatabasePort: 5432
+        cloudSqlServiceAccount: service-account-name
+        # service accounts must be connected through
+        # the Connections tab under the application's cluster
+```
+
+AWS Role connection
+
+*Note: The AWS Role connection feature is currently in development so may be subject to change.*
+
+```yaml
+services:
+  - name: web
+    type: web
+    run: python app.py
+    instances: 1
+    cpuCores: 1
+    ramMegabytes: 1024
+    port: 8080
+    connections:
+    - type: awsRole
+      role: iam-role-name
 ```
