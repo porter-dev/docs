@@ -5,7 +5,7 @@ title: 'Reference for porter.yaml'
 The following is a full reference for all the fields that can be set in a `porter.yaml` file.
 
 - [version](#version) \- the version of the `porter.yaml` file. The below documentation is for `v2`.
-- [name](#name) \- the name of the app.
+- [name](#name) \- the name of the app. Must be 31 characters or less. Must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character.
 - [build](#build) \- the build settings for the app. Only one of `build` or `image` can be set.
   - **method** - the build method for the app. Can be one of `docker` or `pack`.
   - **context** - the build context for the app.
@@ -22,7 +22,7 @@ The following is a full reference for all the fields that can be set in a `porte
 - [autoRollback](#autoRollback) \- the auto-rollback settings for the app.
   - **enabled** - whether auto-rollback is enabled.
 - [services](#services) \- a list of services for this app.
-  - **name** - the unique ID of the resource.
+  - **name** - the unique ID of the resource. Must be 31 characters or less. Must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character.
   - **type** - the type of service - being one of `web`, `worker`, or `job`.
   - **run** - the run command for the service.
   - **instances** - the number of instances of the service to run.
