@@ -47,3 +47,14 @@ Porter will by default use the environment variables from the base app, but stri
 ## Preview App URLs
 
 Preview apps can be made accessible via a unique URL that is generated when the preview is created. Similarly to environment groups, custom domains defined on your base app are also stripped out when creating the preview app in order to prevent collisions. If you want to make a preview web service accessible via a unique URL, make sure that the service is configured to be public.
+
+### Custom Domains
+
+Custom domains can be configured based on the PR branch name by using the `{BRANCH}` placeholder in the custom domain name while configuring the preview app template:
+
+![Custom Domains](/images/preview-environments/custom-domain-with-branch-placeholder.png)
+_Using the `{BRANCH}` placeholder in the custom domain name will result in a custom domain that is based on the PR branch name for each preview._
+
+For example, if you set the custom domain to `{BRANCH}.my-domain.com` and have a branch named `my-feature-branch`, the preview app will be accessible via `my-feature-branch.my-domain.com`.
+
+Note that in order to be compatible with this feature, the branch name must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character.
