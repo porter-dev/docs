@@ -17,28 +17,12 @@ _Any value that you can set when creating or updating an app can be changed spec
 
 ### Using `porter.yaml`
 
-Values set in the `previews` section of `porter.yaml` will be overlayed on top of the base configuration for a particular app. For example, the `api` service defined in the YAML below will use 128MB of RAM in all preview environments. Additionally, the `NODE_ENV` environment variable will be set to `development` in previews. Any values not specifically overriden in the `previews` section will be inherited from the base app.
+You can also define a separate `porter.yaml` file to be used specifically for preview apps. The format of this file is the same as non-preview `porter.yaml` files (full reference [here](/deploy/configuration-as-code/reference)).
 
-```yaml
-version: v2
+When creating the preview app template, you will be prompted to select the path of your preview `porter.yaml` file.
 
-services:
-  - name: api
-    type: web
-    port: 3000
-
-env:
-  NODE_ENV: production
-
-# any values set in this section will override the values above
-previews:
-  services:
-    - name: api
-      ramMegabytes: 128 # use less memory in previews
-
-  env:
-    NODE_ENV: development # change the NODE_ENV variable to development in previews
-```
+![Selecting Preview `porter.yaml` File](/images/preview-environments/choose-preview-porter-yaml.png)
+_Selecting the path of your preview `porter.yaml` file._
 
 ## Setting Environment Variables
 
