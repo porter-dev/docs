@@ -15,9 +15,9 @@ After enabling previews, you will be directed to a form where you can define wha
 ![Updating Values](/images/preview-environments/updating-values.png)
 _Any value that you can set when creating or updating an app can be changed specifically for preview environments._
 
-### Using `porter.yaml`
+### Using `porter.yaml` (Optional)
 
-You can also define a separate `porter.yaml` file to be used specifically for preview apps. The format of this file is the same as non-preview `porter.yaml` files (full reference [here](/deploy/configuration-as-code/reference)).
+You can also define a separate `porter.yaml` file to be used specifically for preview apps. The values in this file will override any values that are set while configuring the preview app template in the dashboard. The format of this file is the same as non-preview `porter.yaml` files (full reference [here](/deploy/configuration-as-code/reference)).
 
 When creating the preview app template, you will be prompted to select the path of your preview `porter.yaml` file.
 
