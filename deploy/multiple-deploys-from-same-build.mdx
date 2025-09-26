@@ -55,7 +55,7 @@ jobs:
 ```
 
 To set up this workflow, you need to:
-1. Choose one of your applications to serve as the base application (`PORTER_BASE_APP_NAME`). The built images will be pushed to the repository for that application.
+1. Choose one of your applications to serve as the base application (`PORTER_BASE_APP_NAME`). The built images will be pushed to the repository for that application. You can choose any application with the shared build image.
 2. Get the repository URI for the base application and set `PORTER_BASE_IMAGE_REPOSITORY_URI`.
 3. Set the other fields including `PORTER_CLUSTER`, `PORTER_PROJECT`, `PORTER_DEPLOYMENT_TARGET_ID`, and `PORTER_TOKEN`. If you previously created a GitHub workflow for the base application, you should be able to use the same values.
 4. Update the `deploy_apps` job to include the names of the applications that will be deployed from the same image (`deploy_apps.strategy.matrix.app`).
