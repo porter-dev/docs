@@ -17,9 +17,7 @@ env:
     PORTER_CLUSTER: <cluster-id>
     PORTER_DEPLOYMENT_TARGET_ID: <deployment-target-id>
     PORTER_HOST: https://dashboard.porter.run
-    PORTER_PR_NUMBER: ${{ github.event.number }}
     PORTER_PROJECT: <project-id>
-    PORTER_REPO_NAME: ${{ github.event.repository.name }}
     PORTER_TOKEN: ${{ secrets.<porter-token-secret-name> }}
 jobs:
   build_image:
