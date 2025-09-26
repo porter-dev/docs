@@ -59,6 +59,7 @@
         "deploy/deploy-from-github-repo",
         "deploy/deploy-from-docker-registry",
         "deploy/builds",
+        "deploy/multiple-deploys-from-same-build",
         "deploy/pre-deploy-jobs",
         "deploy/rollbacks",
         "deploy/blue-green-synced-deploy",
