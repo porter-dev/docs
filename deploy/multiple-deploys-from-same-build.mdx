@@ -1,0 +1,61 @@
+---
+title: 'Deploying Multiple Applications from the Same Build'
+---
+
+Sometimes you may want to run multiple applications that are using the same build image.
+In these cases, it may be more efficient to create a custom GitHub workflow that will build the image once
+and then deploy the applications from the same image.
+
+```
+"on":
+    push:
+        branches:
+            - main
+env:
+    PORTER_BASE_APP_NAME: base-app
+    PORTER_BASE_IMAGE_REPOSITORY_URI: <base-image-repository-uri>
+    PORTER_CLUSTER: <cluster-id>
+    PORTER_DEPLOYMENT_TARGET_ID: <deployment-target-id>
+    PORTER_HOST: https://dashboard.porter.run
+    PORTER_PR_NUMBER: ${{ github.event.number }}
+    PORTER_PROJECT: <project-id>
+    PORTER_REPO_NAME: ${{ github.event.repository.name }}
+    PORTER_TOKEN: ${{ secrets.<porter-token-secret-name> }}
+jobs:
+  build_image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Porter
+        uses: porter-dev/setup-porter@v0.1.1
+
+      - name: Build Image from Dockerfile
+        run: exec porter app build $PORTER_BASE_APP_NAME --build-method docker --build-context . --dockerfile ./Dockerfile --tag $GITHUB_SHA
+
+      - name: Push Image to Registry
+        run: exec porter app push $PORTER_BASE_APP_NAME --tag $GITHUB_SHA
+
+  deploy_apps:
+    runs-on: ubuntu-latest
+    needs: [build_image]
+    strategy:
+      matrix:
+        app: ["base-app", "app-with-same-image-1", "app-with-same-image-2"]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Porter
+        uses: porter-dev/setup-porter@v0.1.1
+
+      - name: Deploy App
+        run: exec porter app update ${{ matrix.app }} --image-repository $PORTER_BASE_IMAGE_REPOSITORY_URI --tag $GITHUB_SHA
+```
+
+To set up this workflow, you need to:
+1. Choose one of your applications to serve as the base application (`PORTER_BASE_APP_NAME`). The built images will be pushed to the repository for that application. You can choose any application with the shared build image.
+2. Get the repository URI for the base application and set `PORTER_BASE_IMAGE_REPOSITORY_URI`.
+3. Set the other fields including `PORTER_CLUSTER`, `PORTER_PROJECT`, `PORTER_DEPLOYMENT_TARGET_ID`, and `PORTER_TOKEN`. If you previously created a GitHub workflow for the base application, you should be able to use the same values.
+4. Update the `deploy_apps` job to include the names of the applications that will be deployed from the same image (`deploy_apps.strategy.matrix.app`).
