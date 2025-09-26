@@ -4,15 +4,41 @@ title: 'Overview'
 
 ## Getting Started
 
-Porter offers a simple way to create preview environments for your app. When enabled, preview environments are by default created automatically for every pull request that is opened in your GitHub repository.
+Porter offers a simple way to create preview environments for your application.
+These environments allow you to test changes in a production-like environment before merging.
+When enabled, preview environments are by default created automatically for every pull request that is opened in your GitHub repository.
+Each preview environment is created in isolation on your cluster and is destroyed once the pull request is closed or merged.
 
-A unique URL is generated for each PR that you use to access your app and test changes in a production-like environment before merging. Each preview environment is created in isolation on your cluster and is destroyed once the pull request is closed or merged.
+The first step to enabling preview environments is to configure a preview template.
 
-### Enabling Preview Environments
+## Configuring a Preview Template
 
-1. Navigate to the **Preview envs** tab on the Porter dashboard.
-2. Click the **Request to enable** button to submit a request to enable preview environments.
-3. The Porter team will review your request promptly.
+![Configuring a Preview Template](/images/preview-environments/configure-template-button.png)
 
-![Enabling](/images/preview-environments/enabling.png)
+Preview templates allow you to select an application that is currently deployed to your cluster and configure how it should be deployed as a preview application.
+
+This configuration includes:
+1. Addons to be created alongside the preview application. This includes things like databases and custom helm charts.
+![Configuring Template Addons](/images/preview-environments/configure-template-addons.png)
+
+2. Configuration overrides for services within the application. By default, the preview application will use the same configuration as the currently deployed application, but you can override any of these settings, including environment variables.
+![Configuring Template Service Overrides](/images/preview-environments/configure-template-service-overrides.png)
+
+## Merging in the GitHub Actions Workflow File
+
+After creating a preview template for an application, Porter will open a PR in that application's repository with a workflow file for spinning up a new preview environment when a PR is created.
+This PR must be merged for preview environments to be created.
+
+## Deploying Multiple Applications to the Same Preview Environment
+
+After setting up a preview template, you can further modify the template to specify other applications on your cluster that should be deployed alongside the preview application.
+Adding a required app will create a copy of that application in the preview environment.
+
+![Configuring Template Required Applications](/images/preview-environments/configure-template-required-apps.png)
+
+### Deploying Multiple Preview Applications
+
+If you would like to test changes across multiple applications/repositories, it is also possible to deploy multiple preview applications to the same preview environment.
+To do so, you must create multiple preview templates (one for each preview application that you would like to deploy).
+If deploying applications across multiple repositories, the PR branch name must also be the same for the preview applications to get deployed to the same environment.
 
