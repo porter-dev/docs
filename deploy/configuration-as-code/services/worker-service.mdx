@@ -10,6 +10,26 @@ The following is a full reference for all the fields that can be set for a worke
   - **maxInstances** \- the maximum number of instances to run.
   - **cpuThresholdPercent** \- the CPU threshold percentage to trigger autoscaling at.
   - **memoryThresholdPercent** \- the memory threshold percentage to trigger autoscaling at.
+- [healthCheck](#healthcheck) \- the health check configuration for the service. This will configure both the liveness and readiness checks.
+  - **enabled** \- whether the health check is enabled or not.
+  - **command** \- the command to run for the health check.
+  - **timeoutSeconds** \- the timeout for the health check command. Minimum value is 1.
+  - **initialDelaySeconds** \- (optional) the initial delay for executing the health check command. Minimum value is 0.
+- [livenessCheck](#livenesscheck) \- the liveness check configuration for the service. Cannot be used with healthCheck.
+  - **enabled** \- whether the liveness check is enabled or not.
+  - **command** \- the command to run for the liveness check.
+  - **timeoutSeconds** \- the timeout for the liveness check command. Minimum value is 1.
+  - **initialDelaySeconds** \- (optional) the initial delay for executing the liveness check command. Minimum value is 0.
+- [readinessCheck](#readinesscheck) \- the readiness check configuration for the service. Cannot be used with healthCheck.
+  - **enabled** \- whether the readiness check is enabled or not.
+  - **command** \- the command to run for the readiness check.
+  - **timeoutSeconds** \- the timeout for the readiness check command. Minimum value is 1.
+  - **initialDelaySeconds** \- (optional) the initial delay for executing the readiness check command. Minimum value is 0.
+- [startupCheck](#startupcheck) \- the startup check configuration for the service. Cannot be used with healthCheck.
+  - **enabled** \- whether the startup check is enabled or not.
+  - **command** \- the command to run for the startup check.
+  - **timeoutSeconds** \- the timeout for the startup check command. Minimum value is 1.
+  - **initialDelaySeconds** \- (optional) the initial delay for executing the startup check command. Minimum value is 0.
 
 ### `autoscaling`
 
@@ -24,4 +44,56 @@ autoscaling:
   maxInstances: 10
   cpuThresholdPercent: 80
   memoryThresholdPercent: 80
+```
+
+### `healthCheck`
+
+`object` - optional
+
+```yaml
+healthCheck:
+  enabled: true
+  command: ./healthz.sh
+  timeoutSeconds: 1
+  initialDelaySeconds: 15 #optional
+```
+
+## Advanced Health Checks
+
+Advanced health checks allow you to separately configure liveness, readiness, and startup health checks for your service. These cannot be enabled at the same time as the healthCheck field.
+
+### `livenessCheck`
+
+`object` - optional
+
+```yaml
+livenessCheck:
+  enabled: true
+  command: ./livez.sh
+  timeoutSeconds: 1
+  initialDelaySeconds: 15 #optional
+```
+
+### `readinessCheck`
+
+`object` - optional
+
+```yaml
+readinessCheck:
+  enabled: true
+  command: ./readyz.sh
+  timeoutSeconds: 1
+  initialDelaySeconds: 15 #optional
+```
+
+### `startupCheck`
+
+`object` - optional
+
+```yaml
+startupCheck:
+  enabled: true
+  command: ./startupz.sh
+  timeoutSeconds: 1
+  initialDelaySeconds: 15 #optional
 ```
