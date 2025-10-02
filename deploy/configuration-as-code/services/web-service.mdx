@@ -13,9 +13,6 @@ The following is a full reference for all the fields that can be set for a web s
 - [domains](#domains) \- the list of custom domains for the service, if the service is exposed publicly.
   - **name** \- the name of the domain.
 - [private](#private) \- whether the service is private or not.
-- [healthCheck](#healthcheck) \- the health check configuration for the service.
-  - **enabled** \- whether the health check is enabled or not.
-  - **httpPath** \- the path to check for the health check.
 - **serviceMeshEnabled** \- If 'true', enables enhanced communication between your services with improved performance, reliability, and monitoring. Recommended for applications with multiple services that communicate with each other, especially those using gRPC or WebSockets.
 - [ingressAnnotations](#ingressannotations) \- the ingress annotations to apply for the service.
 - [pathRouting](#pathrouting) \- the list of URL paths to service port mappings, if path-based routing is enabled.
@@ -30,6 +27,26 @@ If routing to a port on a different service, the port must be exposed on that se
     - `rewrite-all` \- (default) rewrite the entire path to the root path --> `/`.
     - `rewrite-prefix` \- rewrite the path for the URL path prefix only --> `/subpath`.
     - `rewrite-off` \- disable path rewriting --> `/api/v1/subpath`.
+- [healthCheck](#healthcheck) \- the health check configuration for the service. This will configure both the liveness and readiness checks.
+  - **enabled** \- whether the health check is enabled or not.
+  - **httpPath** \- the path to check for the health check.
+  - **timeoutSeconds** \- the timeout for the health check requests. Minimum value is 1.
+  - **initialDelaySeconds** \- (optional) the initial delay for sending the health check requests. Minimum value is 0.
+- [livenessCheck](#livenesscheck) \- the liveness check configuration for the service. Cannot be used with healthCheck.
+  - **enabled** \- whether the liveness check is enabled or not.
+  - **httpPath** \- the path to check for the liveness check.
+  - **timeoutSeconds** \- the timeout for the liveness check requests. Minimum value is 1.
+  - **initialDelaySeconds** \- (optional) the initial delay for sending the liveness check requests. Minimum value is 0.
+- [readinessCheck](#readinesscheck) \- the readiness check configuration for the service. Cannot be used with healthCheck.
+  - **enabled** \- whether the readiness check is enabled or not.
+  - **httpPath** \- the path to check for the readiness check.
+  - **timeoutSeconds** \- the timeout for the readiness check requests. Minimum value is 1.
+  - **initialDelaySeconds** \- (optional) the initial delay for sending the readiness check requests. Minimum value is 0.
+- [startupCheck](#startupcheck) \- the startup check configuration for the service. Cannot be used with healthCheck.
+  - **enabled** \- whether the startup check is enabled or not.
+  - **httpPath** \- the path to check for the startup check.
+  - **timeoutSeconds** \- the timeout for the startup check requests. Minimum value is 1.
+  - **initialDelaySeconds** \- (optional) the initial delay for sending the startup check requests. Minimum value is 0.
 
 ### `autoscaling`
 
@@ -61,16 +78,6 @@ domains:
 
 ```yaml
 private: true
-```
-
-### `healthCheck`
-
-`object` - optional
-
-```yaml
-healthCheck:
-  enabled: true
-  httpPath: /health
 ```
 
 ### `ingressAnnotations`
@@ -118,4 +125,56 @@ pathRoutingConfig:
 # rewrite-prefix will rewrite to "/subpath"
 # rewrite-all will rewrite to "/"
 # rewrite-off will leave the path as "/api/v1/subpath"
+```
+
+### `healthCheck`
+
+`object` - optional
+
+```yaml
+healthCheck:
+  enabled: true
+  httpPath: /healthz
+  timeoutSeconds: 1
+  initialDelaySeconds: 15 #optional
+```
+
+## Advanced Health Checks
+
+Advanced health checks allow you to separately configure liveness, readiness, and startup health checks for your service. These cannot be enabled at the same time as the healthCheck field.
+
+### `livenessCheck`
+
+`object` - optional
+
+```yaml
+livenessCheck:
+  enabled: true
+  httpPath: /livez
+  timeoutSeconds: 1
+  initialDelaySeconds: 15 #optional
+```
+
+### `readinessCheck`
+
+`object` - optional
+
+```yaml
+readinessCheck:
+  enabled: true
+  httpPath: /readyz
+  timeoutSeconds: 1
+  initialDelaySeconds: 15 #optional
+```
+
+### `startupCheck`
+
+`object` - optional
+
+```yaml
+startupCheck:
+  enabled: true
+  httpPath: /startupz
+  timeoutSeconds: 1
+  initialDelaySeconds: 15 #optional
 ```
