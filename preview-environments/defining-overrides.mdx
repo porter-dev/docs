@@ -42,3 +42,6 @@ _Using the `{BRANCH}` placeholder in the custom domain name will result in a cus
 For example, if you set the custom domain to `{BRANCH}.my-domain.com` and have a branch named `my-feature-branch`, the preview app will be accessible via `my-feature-branch.my-domain.com`.
 
 Note that in order to be compatible with this feature, the branch name must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character.
+You will also have to create a record in your DNS provider with a wildcard record for the base domain (e.g. `*.my-domain.com`) that points to the ingress IP for your cluster. This can be found in the **Networking** tab of any of your web services.
+![Cluster Ingress IP](/images/preview-environments/cluster-ingress-ip.png)
+_The ingress IP for your cluster can be found in the **Networking** tab of any of your web services._
