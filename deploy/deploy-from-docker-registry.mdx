@@ -1,58 +1,271 @@
 ---
-title: "Deploy from Docker Registry"
+title: "Deploy from a Docker registry"
 ---
 
-If you already have a CI/CD pipeline that builds and pushes your Docker image to an image registry, you may deploy your application directly from the said image registry.
-Porter supports native image registries from the three cloud providers: Elastic Container Registry (ECR), Google Artifact Registry (GAR), and Azure Container Registry (ACR).
+If you already have a container image built and pushed to a registry, Porter can deploy it directly without managing your build process. This approach works well when you have an existing CI/CD pipeline that produces Docker images, or when you're deploying third-party images that you don't build yourself.
 
-Please note that this option is available for those who want to maintain their existing CI/CD pipelines, and it's not required to build your applications using a `Dockerfile` on Porter.
-You can still buid your application using a `Dockerfile` while deploying from a GitHub Repository.
+Porter supports all major container registries including Amazon Elastic Container Registry (ECR), Google Artifact Registry (GAR), Azure Container Registry (ACR), Docker Hub, and any registry accessible via a standard Docker image URL.
 
-## Step 1: Build and push your container image to a Docker Registry.
+This guide covers deploying pre-built container images. If you want Porter to build your application from source code, see [Deploy from a Github repository](/deploy/deploy-from-github-repo).
 
-Before deploying an application from a Docker registry on Porter, you must first build your application and push it to the respective image registry offered by your cloud provider.
-Porter will automatically connect to the container registry it detects in your cloud account.
+---
 
-## Step 2: Select a Docker Image
+## Quick deploy
 
-From the application creation flow, select **Deploy from Docker Registry**. This will list all container images that are available inside the registry.
-Select the image you want to deploy from the list.
+Deploying a container image takes just a few steps since you're skipping the build process entirely.
 
-![image](/images/deploying-applications/deploy-from-docker-registry.png)
+### Specify your image
 
-## Step 3: Add Application Services
+From the Porter dashboard, navigate to your project and click **Create Application**. Porter defaults to the Github deployment flow. To deploy from a container registry instead, click **Or, deploy from a container registry** in the top right.
 
-You can now add services to your application, which will be deployed together using the specified docker image. Porter supports three types of applications: Web, Worker and Job.
-See [here](/deploy/types-of-services) for more information about the difference between service types.
+{/* [SCREENSHOT: Github deployment page with "Or, deploy from a container registry" link highlighted] */}
 
-If you had written a `porter.yaml` file as outlined in the [Configuration as Code](/deploy/configuration-as-code/overview) guide, you should see this list populated with the services you defined in your `porter.yaml` file.
-Note that writing this file is optional.
+You'll see two input fields: one for the image repository URL and one for the tag. Enter the full path to your image in the repository field. The format depends on your registry:
 
-![image](/images/deploying-applications/application-services.png)
+- **Docker Hub**: `docker.io/username/image` or just `username/image`
+- **Amazon ECR**: `123456789.dkr.ecr.us-east-1.amazonaws.com/my-app`
+- **Google Artifact Registry**: `us-docker.pkg.dev/project-id/repo/image`
+- **Azure Container Registry**: `myregistry.azurecr.io/my-app`
 
-## Step 4: Add Environment Variables
+In the tag field, enter the specific version you want to deploy—this might be `latest`, a semantic version like `1.2.3`, a git commit SHA, or any tag you've pushed to your registry.
 
-After adding services, you can add environment variables to your application. These environment variables will be available to all services in your application during runtime.
+{/* [SCREENSHOT: Container registry inputs showing image URL and tag fields with example values] */}
 
-![image](/images/deploying-applications/environment-vars.png)
+### Review your application
 
-## Step 5: Add a Pre-Deploy Job (Optional)
+Once you've entered both the image URL and tag, Porter creates an application configuration for you. The application name is derived from your image name—deploying `docker.io/myorg/api-server:v2.1` creates an application called `api-server`.
 
-You can also add a pre-deploy job to your application. This job will run its start command before your application services are deployed, and can be used to run database migrations, seed your database, or perform any other tasks that need to be completed before your application services are deployed.
-See [here](/deploy/pre-deploy-jobs) for more details.
+{/* [SCREENSHOT: Application card showing derived name and Docker image reference] */}
 
-# Updating your application
+Porter provides sensible defaults for resources: 0.5 CPU cores, 1 GB of RAM, and a single instance. Since Porter can't inspect your pre-built image the way it can with source code, you'll need to specify the port your container listens on (for web services) and optionally override the start command if your image's default CMD isn't what you want to run.
 
-Once you've deployed an application from a Docker registry, you may update the image tag of your application either from the dashboard or the CLI.
+### Deploy
 
-To update your image tag from the dashboard, navigate to **Image Settings** of your application and click on **Select Image Tag**.
+Once the application is created, you can review the app's start command and port, and click the configure button (gear icon) on the card to see other pre-configured values. When ready, deploy using the **Deploy** button.
 
-To update your image tag from the CLI, run the command:
+{/* [SCREENSHOT: Application card with configure button and Deploy button] */}
 
-```
+Porter pulls your image and starts running it. The sections below cover customizing the configuration when you need more control.
+
+---
+
+## Customizing your deployment
+
+Since Porter isn't building your image, configuration focuses on how to run your container rather than how to build it.
+
+### Understanding the container registry flow
+
+When you deploy from a container registry, Porter:
+
+1. Pulls your specified image from the registry
+2. Runs it with your configured services, resources, and environment
+3. Manages scaling, health checks, and networking
+
+There's no build step, no Dockerfile parsing, and no Github Actions workflow. Updates happen when you push a new image tag and tell Porter to deploy it (covered in the [Updating Your Application](#updating-your-application) section).
+
+This makes container registry deployments faster to set up, but requires you to manage your own build pipeline. It's ideal when you already have CI/CD infrastructure or when deploying images you don't control.
+
+---
+
+### Private registry authentication
+
+If your image is in a private registry that requires authentication, you'll need to configure credentials. How you do this depends on your registry type.
+
+#### Cloud provider registries
+
+For ECR, GAR, and ACR, Porter handles authentication automatically when your cluster runs in the same cloud provider. Your cluster's service account has permission to pull images from registries in the same account or project.
+
+If you're pulling from a registry in a different account, or if automatic authentication isn't working, you can configure credentials through Porter's integrations settings or by adding image pull secrets to your cluster.
+
+#### Docker Hub and other registries
+
+For Docker Hub private repositories or other registries requiring authentication, configure your credentials as a Kubernetes image pull secret. This is typically set up at the cluster level rather than per-application. Contact your cluster administrator or refer to the Kubernetes documentation on configuring image pull secrets.
+
+---
+
+### Service configuration
+
+Every application needs at least one service. Since Porter can't detect your container's purpose automatically, you'll specify what type of service to run and how to run it.
+
+#### Service types
+
+**Web services** expose HTTP endpoints. If your container runs a web server, API, or anything that responds to HTTP requests, configure it as a web service. You'll need to specify the port your application listens on.
+
+**Worker services** run continuously without accepting HTTP traffic. Use workers for queue processors, background jobs, or any process that runs indefinitely without serving web requests.
+
+**Job services** run on a schedule or on-demand, complete their work, and exit. Use jobs for periodic tasks like database cleanup, report generation, or batch processing.
+
+{/* [SCREENSHOT: Service type selection dropdown] */}
+
+#### Start command
+
+If your container's default entrypoint and command are correct, you can leave the start command empty. Porter runs whatever your Dockerfile specifies. To override the default, enter a start command that replaces the container's CMD.
+
+For example, if your image supports multiple modes, you might run the same image with different commands:
+- Web service: leave empty (uses default) or `npm start`
+- Worker service: `npm run worker`
+- Job service: `npm run cleanup`
+
+#### Port configuration
+
+Web services require a port number, which is the port inside the container where your application listens for HTTP traffic. This must match what your application actually binds to, not an external port.
+
+Common ports include 3000 (Node.js), 8080 (many frameworks), 80 (nginx), and 5000 (Flask). Check your application's configuration or the image documentation if you're unsure.
+
+{/* [SCREENSHOT: Port configuration input] */}
+
+---
+
+### Resource allocation and scaling
+
+Container deployments use the same resource and scaling options as Github deployments.
+
+#### CPU and memory
+
+Configure CPU allocation from 0.1 to 8 cores and memory from 128 MB to 16 GB. These represent guaranteed resources: your container always has access to at least this much compute capacity.
+
+Start with the defaults (0.5 cores, 1 GB memory) and adjust based on your application's actual usage. Porter's monitoring shows resource consumption over time, helping you right-size your allocation.
+
+{/* [SCREENSHOT: CPU and RAM sliders] */}
+
+#### Scaling
+
+Choose between fixed instances (always run N copies), resource-based autoscaling (scale based on CPU or memory utilization), or custom autoscaling with [KEDA (Kubernetes Event-Driven Autoscaling)](https://keda.sh) for metric-driven scaling.
+
+{/* [SCREENSHOT: Autoscaling configuration] */}
+
+---
+
+### Networking and domains
+
+Web services can be exposed publicly or kept private within your cluster.
+
+#### Public services
+
+By default, web services are publicly accessible. Porter provisions a URL where your service is reachable immediately after deployment. For production, you'll typically add a custom domain.
+
+Add your domain in the Networking section, then configure DNS by creating a CNAME record pointing to your cluster's ingress IP (displayed in Porter with a copy button). SSL certificates are provisioned automatically.
+
+{/* [SCREENSHOT: Custom domain configuration with DNS instructions] */}
+
+#### Private services
+
+Toggle a service to private when it should only be accessible by other services in your cluster. This is common for internal APIs, admin services, or backend services that sit behind a gateway.
+
+Private services get internal DNS names that other services in your cluster can use to communicate.
+
+---
+
+### Environment variables and secrets
+
+Most applications need runtime configuration. On the app configuration page, expand the **Environment variables** accordion to configure environment groups and variables for your application.
+
+{/* [SCREENSHOT: Environment variables accordion on app configuration page] */}
+
+Use the lock icon to mark sensitive values as secrets. Secrets are stored securely and masked in the dashboard, while regular variables are visible.
+
+For configuration shared across multiple applications, use environment groups. Select existing groups to sync their variables into your application. When you update the group, changes propagate to all applications using it.
+
+You can also upload a `.env` file to bulk-import variables rather than entering them one by one.
+
+{/* [SCREENSHOT: Environment groups selector] */}
+
+---
+
+### Health checks
+
+Health checks ensure your container is actually ready to serve traffic before Porter routes requests to it. This is especially important for container deployments where Porter doesn't know your application's startup behavior.
+
+Enable health checks and configure an HTTP endpoint that returns a 200-level response when your application is ready. Common paths include `/health`, `/healthz`, or `/api/health`.
+
+{/* [SCREENSHOT: Health check configuration] */}
+
+Set the initial delay based on how long your container takes to start up. If your application needs 30 seconds to initialize, set the initial delay to at least 30 seconds to avoid false failures.
+
+The timeout determines how long Porter waits for a response. If your health endpoint is slow (perhaps it checks database connectivity), increase the timeout accordingly.
+
+---
+
+### Pre-deployment jobs
+
+Even though you're not building from source, you might need to run setup tasks before your main application starts. Pre-deployment jobs run after Porter pulls your new image but before traffic routes to it.
+
+Common uses include database migrations, cache warming, or any initialization that should complete before the new version serves traffic.
+
+{/* [SCREENSHOT: Pre-deployment job configuration] */}
+
+Configure a start command for your pre-deployment job. This runs in a container using the same image you're deploying, so your migration scripts or setup tools need to be included in your Docker image.
+
+Set appropriate timeout and resource values. Migrations might need more time or memory than your running application, especially for large data transformations.
+
+---
+
+### Scheduled jobs and workers
+
+Container images often run background processes alongside or instead of web services.
+
+#### Workers
+
+Configure a worker service when your container should run continuously without serving HTTP traffic. Workers typically process messages from a queue, handle events, or perform ongoing background tasks.
+
+Workers use the same image as your other services but with a different start command. For example, your image might support both `npm start` (web server) and `npm run worker` (queue processor).
+
+{/* [SCREENSHOT: Worker service configuration] */}
+
+Workers support autoscaling. For queue-based workers, use custom metrics to scale based on queue depth, adding workers when messages accumulate and removing them when the queue empties.
+
+#### Jobs
+
+Configure a job service when your container should run on a schedule. Specify a cron expression for the schedule. Porter shows a human-readable description as you type.
+
+{/* [SCREENSHOT: Job with cron schedule] */}
+
+Examples:
+- `0 0 * * *` — daily at midnight
+- `0 */6 * * *` — every 6 hours
+- `0 9 * * 1-5` — weekdays at 9 AM
+- `*/30 * * * *` — every 30 minutes
+
+Set a job timeout to prevent runaway processes. Jobs exceeding the timeout are terminated. The concurrent execution toggle controls whether multiple instances of the same job can run simultaneously. Disable this for jobs that assume exclusive access to resources.
+
+---
+
+## Updating your application
+
+When you push a new image tag to your registry, Porter doesn't automatically deploy it. You have two options for triggering updates.
+
+### Manual updates
+
+From your application's dashboard in Porter, you can change the image tag to deploy a different version. This is useful for one-off deployments or rollbacks.
+
+{/* [SCREENSHOT: Update tag interface in application settings] */}
+
+### CLI updates
+
+For automated deployments, use the Porter CLI to update your application's image tag:
+
+```bash
 porter app update-tag APP_NAME --tag TAG_NAME
 ```
 
-To automate your deployments, you may embed this command into your existing CI/CD pipeline as the last step after the image has been built and pushed to a image registry.
+Replace `APP_NAME` with your application name in Porter and `TAG_NAME` with the new image tag you want to deploy.
 
-![image](/images/deploying-applications/update-docker-app.png)
+### CI/CD integration
+
+The most common pattern is adding the Porter CLI command to the end of your existing CI/CD pipeline. After your pipeline builds and pushes a new image, it calls Porter to deploy that tag.
+
+For example, in a Github Actions workflow:
+
+```yaml
+- name: Build and push image
+  run: |
+    docker build -t myregistry.com/myapp:${{ github.sha }} .
+    docker push myregistry.com/myapp:${{ github.sha }}
+
+- name: Deploy to Porter
+  run: porter app update-tag myapp --tag ${{ github.sha }}
+  env:
+    PORTER_TOKEN: ${{ secrets.PORTER_TOKEN }}
+```
+
+This keeps your existing build process intact while letting Porter handle the deployment. You maintain full control over when and how images are built, and Porter takes over once you're ready to deploy.
