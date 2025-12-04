@@ -1,10 +1,10 @@
 ---
-title: "Deploy from a Github repository"
+title: "Deploy from a GitHub repository"
 ---
 
-Porter connects to your Github repositories to build and deploy your applications. When you connect a repository, Porter detects your app's framework, identifies services, and configures sensible defaults.
+Porter connects to your GitHub repositories to build and deploy your applications. When you connect a repository, Porter detects your app's framework, identifies services, and configures sensible defaults.
 
-This guide covers deploying applications from Github. If you're deploying from a container registry instead, see [Deploy from a Docker registry](/deploy/deploy-from-docker-registry).
+This guide covers deploying applications from GitHub. If you're deploying from a container registry instead, see [Deploy from a Docker registry](/deploy/deploy-from-docker-registry).
 
 ---
 
@@ -14,13 +14,13 @@ For most applications, Porter's automatic detection handles the heavy lifting. H
 
 ### Connect your repository
 
-From the Porter dashboard, navigate to your project and click Create Application. Porter attempts to deploy from a Github repository by default.
+From the Porter dashboard, navigate to your project and click Create Application. Porter attempts to deploy from a GitHub repository by default.
 
-{/* [SCREENSHOT: Source selection screen showing Github and Container Registry options] */}
+{/* [SCREENSHOT: Source selection screen showing GitHub and Container Registry options] */}
 
-If this is your first time deploying from Github, you'll need to connect your Github account. Click Connect repositories to link Github, then authorize access to proceed. You can choose to grant access to all repositories or select specific ones. Porter only needs read access to detect your code, and write access to set up automated deployments.
+If this is your first time deploying from GitHub, you'll need to connect your GitHub account. Click Connect repositories to link GitHub, then authorize access to proceed. You can choose to grant access to all repositories or select specific ones. Porter only needs read access to detect your code, and write access to set up automated deployments.
 
-{/* [SCREENSHOT: Github repository selector with branch dropdown] */}
+{/* [SCREENSHOT: GitHub repository selector with branch dropdown] */}
 
 Once connected, select the repository containing your application code. Porter auto-selects the repository's default branch (usually `main` or `master`) so you can start deploying immediately. If you need a different target for non‑production, use the Branch selector to switch to `dev`, `staging`, or any other branch.
 
@@ -30,7 +30,7 @@ After you select a repository and branch, Porter scans your code. It identifies 
 
 {/* [SCREENSHOT: Detection in progress with loading indicator] */}
 
-Within a few seconds, you'll see a list of detected applications. Each card shows the app name (from your repo or directory), the detected framework or build method, and the path in your repository.
+Within a few seconds, you'll see a list of detected applications. Each card shows the app name (from your repo or directory), the detected framework or build method, and the path in your repository. If the detected build method isn't right for your application, click the configure button (gear icon) on the card to change it.
 
 {/* [SCREENSHOT: Detected applications list showing one or more application cards] */}
 
@@ -44,7 +44,7 @@ If Porter didn't detect an application you expected, or if you want to add anoth
 
 Once applications are detected, you can review each app's start command and port, and open each app's configuration page to see other pre‑configured values. When ready, deploy using the "Deploy X applications" button.
 
-Porter creates a Github Actions workflow in your repository that handles building and deploying your application on every push to your selected branch. Your first deployment starts as soon as you merge Porter's Github Actions pull request.
+Porter creates a GitHub Actions workflow in your repository that handles building and deploying your application on every push to your selected branch. Your first deployment starts as soon as you merge Porter's GitHub Actions pull request.
 
 {/* [SCREENSHOT: Deployment in progress or success state] */}
 
@@ -60,7 +60,15 @@ Porter's defaults work well for many applications, but you have full control ove
 
 ### Build configuration
 
-Porter needs to know how to turn your source code into a runnable container. There are two approaches: buildpacks and Docker (via Dockerfiles).
+Porter needs to know how to turn your source code into a runnable container. There are two approaches: Docker (via Dockerfiles) and buildpacks.
+
+#### Docker builds
+
+If your repository contains a Dockerfile, Porter can use it to build your application. This gives you complete control over the build process and is the right choice when you have custom system dependencies, need a specific base image, or have an application that buildpacks don't support.
+
+When you select Docker as your build method, you'll need to specify the path to your Dockerfile relative to the repository root. If your Dockerfile is at the root level, this is simply `Dockerfile`. For monorepos, it might be `./api/Dockerfile` or `./frontend/Dockerfile`.
+
+{/* [SCREENSHOT: Dockerfile path selector] */}
 
 #### Buildpacks
 
@@ -71,14 +79,6 @@ When Porter detects a supported framework, it selects the appropriate buildpack 
 {/* [SCREENSHOT: Build method selector showing framework options] */}
 
 Buildpacks work well when your application follows standard conventions for its framework. They handle dependency installation, asset compilation, and runtime configuration automatically.
-
-#### Docker builds
-
-If your repository contains a Dockerfile, Porter can use it to build your application instead of buildpacks. This gives you complete control over the build process and is the right choice when you have custom system dependencies, need a specific base image, or have an application that buildpacks don't support.
-
-When you select Docker as your build method, you'll need to specify the path to your Dockerfile relative to the repository root. If your Dockerfile is at the root level, this is simply `Dockerfile`. For monorepos, it might be `./api/Dockerfile` or `./services/web/Dockerfile`.
-
-{/* [SCREENSHOT: Dockerfile path selector] */}
 
 #### Build context
 
@@ -118,7 +118,7 @@ CPU is measured in cores, configurable from 0.1 (one-tenth of a core) up to 8 co
 
 {/* [SCREENSHOT: Resource allocation sliders for CPU and RAM] */}
 
-These values represent guaranteed resources. Your service will always have access to at least this much CPU and memory, regardless of what else is running in the cluster.
+These values represent guaranteed resources. Your service will always have access to at least this much CPU and memory, regardless of what else is running in the cluster. Note that the memory value is also a hard limit. If your service exceeds it, it will be restarted.
 
 #### Node groups
 
@@ -128,13 +128,13 @@ For most applications, the default node group is appropriate.
 
 #### Instance count and autoscaling
 
-By default, Porter runs a single instance of each service. For production workloads, you'll typically want multiple instances for redundancy and to handle traffic spikes.
+By default, Porter runs a single instance of each service. For production workloads, you'll typically want multiple instances for redundancy and to handle traffic spikes. See [Autoscaling](/configure/autoscaling) for a complete guide.
 
 Porter offers three scaling modes:
 
-**Fixed instances** runs a constant number of replicas. Set this to 2 or more for high availability. If one instance fails, others continue serving traffic while a replacement starts.
+**Fixed instances** runs a constant number of replicas. Set this to 3 or more for high availability. If one instance fails, others continue serving traffic while a replacement starts.
 
-**Resource-based autoscaling** automatically adjusts the number of instances based on CPU and memory utilization. You configure a minimum and maximum instance count, along with target utilization percentages.
+**Resource-based autoscaling** automatically adjusts the number of instances based on CPU and memory utilization. You configure a minimum and maximum instance count, along with target utilization percentages. The service will scale up when either CPU or memory utilization exceeds the configured threshold.
 
 {/* [SCREENSHOT: Autoscaling configuration with resource-based mode selected] */}
 
@@ -187,7 +187,7 @@ On the app configuration page, expand the **Environment variables** accordion to
 
 {/* [SCREENSHOT: Environment variable key-value editor with lock icons] */}
 
-The distinction between variables and secrets affects visibility in the Porter dashboard. Secret values are masked and can only be revealed intentionally. Both are stored securely and injected into your containers at runtime.
+The distinction between variables and secrets affects visibility in the Porter dashboard. Secret values cannot be viewed after they're set. You can update them, but not retrieve them. Both are stored securely and injected into your containers at runtime.
 
 #### Environment groups
 
@@ -195,7 +195,7 @@ If you have variables shared across multiple applications (like a database conne
 
 {/* [SCREENSHOT: Environment groups selector showing available groups] */}
 
-When you update a variable in an environment group, the change propagates to all applications using that group on their next deployment.
+When you update a variable in an environment group, Porter automatically triggers a deployment for all applications using that group.
 
 #### Uploading .env files
 
@@ -213,7 +213,7 @@ Health checks enable zero-downtime deployments by ensuring new instances are rea
 
 {/* [SCREENSHOT: Health check configuration with endpoint and timing options] */}
 
-Configure the health check with an HTTP path (like `/health` or `/api/health`) that your application exposes. The endpoint should return a 200-level status code when the service is ready to handle requests.
+Configure the health check with an HTTP path (like `/health` or `/api/health`) that your application exposes. The endpoint should return a 200-level status code when the service is ready to handle requests. For worker services, health checks use a command instead of an HTTP endpoint. Specify a shell command that exits with code 0 when the worker is healthy.
 
 The **initial delay** gives your application time to start up before health checks begin. Set this higher if your application has a slow initialization process.
 
@@ -221,7 +221,7 @@ The **timeout** determines how long Porter waits for a response before consideri
 
 #### Metrics scraping
 
-If your application exposes Prometheus metrics, Porter can scrape and forward them to your monitoring infrastructure. Enable metrics scraping and specify the port and path where your application serves metrics (commonly `/metrics` on the application port or a dedicated metrics port).
+If your application exposes Prometheus metrics, Porter can scrape and forward them to your monitoring infrastructure. Enable metrics scraping and specify the port and path where your application serves metrics (commonly `/metrics` on the application port or a dedicated metrics port). See [Custom Metrics Autoscaling](/observability/custom-metrics-and-autoscaling) for details on using these metrics for autoscaling.
 
 {/* [SCREENSHOT: Metrics scraping configuration] */}
 
@@ -281,7 +281,7 @@ Configure an appropriate timeout based on how long your migrations typically tak
 
 When you click Deploy, Porter initiates several processes:
 
-First, Porter creates a Github Actions workflow file in your repository at `.github/workflows/porter.yml`. This workflow triggers on pushes to your selected branch, building your application and deploying it to Porter. You'll see a pull request created with this workflow file, and merging this PR enables automated deployments.
+First, Porter creates a GitHub Actions workflow file in your repository at `.github/workflows/porter.yml`. This workflow triggers on pushes to your selected branch, building your application and deploying it to Porter. You'll see a pull request created with this workflow file, and merging this PR enables automated deployments.
 
 The initial deployment builds your application image using the configured build method and starts your services with the specified configuration. You can monitor deployment progress from the application dashboard, which shows build logs, deployment status, and any errors that occur.
 
@@ -289,4 +289,4 @@ The initial deployment builds your application image using the configured build 
 
 Once deployed, subsequent pushes to your branch trigger automatic rebuilds and deployments. Each deployment creates new container instances, runs health checks (if configured), and shifts traffic only after the new instances are ready.
 
-From your application dashboard, you can view logs, monitor resource usage, check deployment history, and make configuration changes. Changes to configuration trigger new deployments, while changes to environment variables can often take effect without a full rebuild.
+From your application dashboard, you can view logs, monitor resource usage, check deployment history, and make configuration changes. Configuration changes from the dashboard trigger new deployments but do not rebuild your application; rebuilds only happen when triggered from GitHub.

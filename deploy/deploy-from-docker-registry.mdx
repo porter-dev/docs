@@ -6,7 +6,7 @@ If you already have a container image built and pushed to a registry, Porter can
 
 Porter supports all major container registries including Amazon Elastic Container Registry (ECR), Google Artifact Registry (GAR), Azure Container Registry (ACR), Docker Hub, and any registry accessible via a standard Docker image URL.
 
-This guide covers deploying pre-built container images. If you want Porter to build your application from source code, see [Deploy from a Github repository](/deploy/deploy-from-github-repo).
+This guide covers deploying pre-built container images. If you want Porter to build your application from source code, see [Deploy from a GitHub repository](/deploy/deploy-from-github-repo).
 
 ---
 
@@ -16,9 +16,9 @@ Deploying a container image takes just a few steps since you're skipping the bui
 
 ### Specify your image
 
-From the Porter dashboard, navigate to your project and click **Create Application**. Porter defaults to the Github deployment flow. To deploy from a container registry instead, click **Or, deploy from a container registry** in the top right.
+From the Porter dashboard, navigate to your project and click **Create Application**. Porter defaults to the GitHub deployment flow. To deploy from a container registry instead, click **Or, deploy from a container registry** in the top right.
 
-{/* [SCREENSHOT: Github deployment page with "Or, deploy from a container registry" link highlighted] */}
+{/* [SCREENSHOT: GitHub deployment page with "Or, deploy from a container registry" link highlighted] */}
 
 You'll see two input fields: one for the image repository URL and one for the tag. Enter the full path to your image in the repository field. The format depends on your registry:
 
@@ -61,7 +61,7 @@ When you deploy from a container registry, Porter:
 2. Runs it with your configured services, resources, and environment
 3. Manages scaling, health checks, and networking
 
-There's no build step, no Dockerfile parsing, and no Github Actions workflow. Updates happen when you push a new image tag and tell Porter to deploy it (covered in the [Updating Your Application](#updating-your-application) section).
+There's no build step, no Dockerfile parsing, and no GitHub Actions workflow. Updates happen when you push a new image tag and tell Porter to deploy it (covered in the [Updating Your Application](#updating-your-application) section).
 
 This makes container registry deployments faster to set up, but requires you to manage your own build pipeline. It's ideal when you already have CI/CD infrastructure or when deploying images you don't control.
 
@@ -79,7 +79,11 @@ If you're pulling from a registry in a different account, or if automatic authen
 
 #### Docker Hub and other registries
 
-For Docker Hub private repositories or other registries requiring authentication, configure your credentials as a Kubernetes image pull secret. This is typically set up at the cluster level rather than per-application. Contact your cluster administrator or refer to the Kubernetes documentation on configuring image pull secrets.
+For Docker Hub private repositories or other registries requiring authentication, your credentials need to be configured as a Kubernetes image pull secret at the cluster level. [Reach out to us](mailto:support@porter.run) to set this up for your cluster.
+
+<Note>
+Using an authenticated registry that isn't your cloud provider's native registry (such as GitHub Container Registry or a self-hosted registry) requires additional manual configuration, including creating an ImagePullSecret and referencing it in your deployment.
+</Note>
 
 ---
 
@@ -118,7 +122,7 @@ Common ports include 3000 (Node.js), 8080 (many frameworks), 80 (nginx), and 500
 
 ### Resource allocation and scaling
 
-Container deployments use the same resource and scaling options as Github deployments.
+Container deployments use the same resource and scaling options as GitHub deployments.
 
 #### CPU and memory
 
@@ -130,7 +134,7 @@ Start with the defaults (0.5 cores, 1 GB memory) and adjust based on your applic
 
 #### Scaling
 
-Choose between fixed instances (always run N copies), resource-based autoscaling (scale based on CPU or memory utilization), or custom autoscaling with [KEDA (Kubernetes Event-Driven Autoscaling)](https://keda.sh) for metric-driven scaling.
+Choose between fixed instances (always run N copies), resource-based autoscaling (scale based on CPU or memory utilization), or [custom autoscaling](/configure/autoscaling) for metric-driven scaling.
 
 {/* [SCREENSHOT: Autoscaling configuration] */}
 
@@ -144,7 +148,7 @@ Web services can be exposed publicly or kept private within your cluster.
 
 By default, web services are publicly accessible. Porter provisions a URL where your service is reachable immediately after deployment. For production, you'll typically add a custom domain.
 
-Add your domain in the Networking section, then configure DNS by creating a CNAME record pointing to your cluster's ingress IP (displayed in Porter with a copy button). SSL certificates are provisioned automatically.
+Add your domain in the Networking section, then configure DNS to point to your cluster's load balancer (displayed in Porter with a copy button). For GKE and AKS clusters, create an A record pointing to the static IP. For EKS clusters, create a CNAME record pointing to the load balancer hostname. SSL certificates are provisioned automatically.
 
 {/* [SCREENSHOT: Custom domain configuration with DNS instructions] */}
 
@@ -216,7 +220,7 @@ Workers support autoscaling. For queue-based workers, use custom metrics to scal
 
 #### Jobs
 
-Configure a job service when your container should run on a schedule. Specify a cron expression for the schedule. Porter shows a human-readable description as you type.
+Configure a job service when your container should run on a schedule. Specify a cron expression for the schedule (all times are in UTC). Porter shows a human-readable description as you type.
 
 {/* [SCREENSHOT: Job with cron schedule] */}
 
@@ -254,7 +258,7 @@ Replace `APP_NAME` with your application name in Porter and `TAG_NAME` with the 
 
 The most common pattern is adding the Porter CLI command to the end of your existing CI/CD pipeline. After your pipeline builds and pushes a new image, it calls Porter to deploy that tag.
 
-For example, in a Github Actions workflow:
+For example, in a GitHub Actions workflow:
 
 ```yaml
 - name: Build and push image
