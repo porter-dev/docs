@@ -130,19 +130,6 @@ For most applications, the default node group is appropriate.
 
 By default, Porter runs a single instance of each service. For production workloads, you'll typically want multiple instances for redundancy and to handle traffic spikes. See [Autoscaling](/configure/autoscaling) for a complete guide.
 
-Porter offers three scaling modes:
-
-**Fixed instances** runs a constant number of replicas. Set this to 3 or more for high availability. If one instance fails, others continue serving traffic while a replacement starts.
-
-**Resource-based autoscaling** automatically adjusts the number of instances based on CPU and memory utilization. You configure a minimum and maximum instance count, along with target utilization percentages. The service will scale up when either CPU or memory utilization exceeds the configured threshold.
-
-{/* [SCREENSHOT: Autoscaling configuration with resource-based mode selected] */}
-
-**Custom autoscaling** uses [KEDA (Kubernetes Event-Driven Autoscaling)](https://keda.sh) to scale based on any Prometheus metric. This is useful for scaling workers based on queue depth, or web services based on request latency. You provide a PromQL query and a threshold value—Porter scales up when the metric exceeds the threshold and scales down when it drops below.
-
-{/* [SCREENSHOT: Custom autoscaling with KEDA metric configuration] */}
-
-
 ---
 
 ### Networking and domains
