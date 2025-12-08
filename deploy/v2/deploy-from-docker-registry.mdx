@@ -89,26 +89,9 @@ Using an authenticated registry that isn't your cloud provider's native registry
 
 ### Configuring services
 
-A Porter application consists of one or more **services**—web services for HTTP traffic, workers for background processing, and jobs for scheduled tasks. Since Porter can't detect your container's purpose automatically, you'll specify what type of service to run and how to run it.
+A Porter application consists of one or more **services**—web services for HTTP traffic, workers for background processing, and jobs for scheduled tasks. By default, Porter configures a single web service.
 
 For a complete guide to service types, resource allocation, networking, environment variables, health checks, and more, see [Services](/deploy/v2/services).
-
-#### Start command
-
-If your container's default entrypoint and command are correct, you can leave the start command empty. Porter runs whatever your Dockerfile specifies. To override the default, enter a start command that replaces the container's CMD.
-
-For example, if your image supports multiple modes, you might run the same image with different commands:
-- Web service: leave empty (uses default) or `npm start`
-- Worker service: `npm run worker`
-- Job service: `npm run cleanup`
-
-#### Port configuration
-
-Web services require a port number, which is the port inside the container where your application listens for HTTP traffic. This must match what your application actually binds to, not an external port.
-
-Common ports include 3000 (Node.js), 8080 (many frameworks), 80 (nginx), and 5000 (Flask). Check your application's configuration or the image documentation if you're unsure.
-
-![Port configuration input](/images/deploy/v2/docker-port-config.webp)
 
 ---
 

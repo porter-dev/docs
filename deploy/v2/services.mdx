@@ -18,6 +18,27 @@ Service names must be lowercase letters, numbers, and hyphens only. They're used
 
 ---
 
+## Start command and port
+
+Every service needs to know how to run your application.
+
+### Start command
+
+The start command tells Porter what process to run inside your container. For GitHub deployments, Porter often detects this automatically based on your framework. For Docker deployments, leave the start command empty to use your image's default CMD, or specify a command to override it.
+
+If your image supports multiple modes, you can run the same image with different commands for each service:
+- Web service: `npm start` or leave empty for default
+- Worker service: `npm run worker`
+- Job service: `npm run cleanup`
+
+### Port
+
+Web services require a port number—the port inside the container where your application listens for HTTP traffic. This must match what your application actually binds to, not an external port.
+
+Common ports include 3000 (Node.js), 8080 (many frameworks), 80 (nginx), and 5000 (Flask). Check your application's configuration or Dockerfile if you're unsure.
+
+---
+
 ## Resource allocation and scaling
 
 Every service needs compute resources. Porter lets you configure exactly how much CPU and memory each service receives, and how it scales under load.
