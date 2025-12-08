@@ -18,7 +18,7 @@ Deploying a container image takes just a few steps since you're skipping the bui
 
 From the Porter dashboard, navigate to your project and click **Create Application**. Porter defaults to the GitHub deployment flow. To deploy from a container registry instead, click **Or, deploy from a container registry** in the top right.
 
-{/* [SCREENSHOT: GitHub deployment page with "Or, deploy from a container registry" link highlighted] */}
+![GitHub deployment page with container registry link](/images/deploy/v2/github-deploy-registry-link.webp)
 
 You'll see two input fields: one for the image repository URL and one for the tag. Enter the full path to your image in the repository field. The format depends on your registry:
 
@@ -29,13 +29,13 @@ You'll see two input fields: one for the image repository URL and one for the ta
 
 In the tag field, enter the specific version you want to deploy—this might be `latest`, a semantic version like `1.2.3`, a git commit SHA, or any tag you've pushed to your registry.
 
-{/* [SCREENSHOT: Container registry inputs showing image URL and tag fields with example values] */}
+![Container registry image URL and tag inputs](/images/deploy/v2/container-registry-inputs.webp)
 
 ### Review your application
 
-Once you've entered both the image URL and tag, Porter creates an application configuration for you. The application name is derived from your image name—deploying `docker.io/myorg/api-server:v2.1` creates an application called `api-server`.
+Once you've entered both the image URL and tag, Porter creates an application configuration for you. The application name is derived from your image name. Deploying `docker.io/myorg/api-server:v2.1` creates an application called `api-server`.
 
-{/* [SCREENSHOT: Application card showing derived name and Docker image reference] */}
+![Application card showing derived name and Docker image](/images/deploy/v2/app-card-docker.webp)
 
 Porter provides sensible defaults for resources: 0.5 CPU cores, 1 GB of RAM, and a single instance. Since Porter can't inspect your pre-built image the way it can with source code, you'll need to specify the port your container listens on (for web services) and optionally override the start command if your image's default CMD isn't what you want to run.
 
@@ -43,7 +43,7 @@ Porter provides sensible defaults for resources: 0.5 CPU cores, 1 GB of RAM, and
 
 Once the application is created, you can review the app's start command and port, and click the configure button (gear icon) on the card to see other pre-configured values. When ready, deploy using the **Deploy** button.
 
-{/* [SCREENSHOT: Application card with configure button and Deploy button] */}
+![Application card with configure and deploy buttons](/images/deploy/v2/app-card-deploy-button.webp)
 
 Porter pulls your image and starts running it. The sections below cover customizing the configuration when you need more control.
 
@@ -99,7 +99,7 @@ Every application needs at least one service. Since Porter can't detect your con
 
 **Job services** run on a schedule or on-demand, complete their work, and exit. Use jobs for periodic tasks like database cleanup, report generation, or batch processing.
 
-{/* [SCREENSHOT: Service type selection dropdown] */}
+![Service type selection dropdown](/images/deploy/v2/docker-service-type-dropdown.webp)
 
 #### Start command
 
@@ -116,7 +116,7 @@ Web services require a port number, which is the port inside the container where
 
 Common ports include 3000 (Node.js), 8080 (many frameworks), 80 (nginx), and 5000 (Flask). Check your application's configuration or the image documentation if you're unsure.
 
-{/* [SCREENSHOT: Port configuration input] */}
+![Port configuration input](/images/deploy/v2/docker-port-config.webp)
 
 ---
 
@@ -130,13 +130,13 @@ Configure CPU allocation from 0.1 to 8 cores and memory from 128 MB to 16 GB. Th
 
 Start with the defaults (0.5 cores, 1 GB memory) and adjust based on your application's actual usage. Porter's monitoring shows resource consumption over time, helping you right-size your allocation.
 
-{/* [SCREENSHOT: CPU and RAM sliders] */}
+![CPU and RAM sliders](/images/deploy/v2/docker-cpu-ram-sliders.webp)
 
 #### Scaling
 
 Choose between fixed instances (always run N copies), resource-based autoscaling (scale based on CPU or memory utilization), or [custom autoscaling](/configure/autoscaling) for metric-driven scaling.
 
-{/* [SCREENSHOT: Autoscaling configuration] */}
+![Autoscaling configuration](/images/deploy/v2/autoscaling-config.webp)
 
 ---
 
@@ -150,7 +150,7 @@ By default, web services are publicly accessible. Porter provisions a URL where 
 
 Add your domain in the Networking section, then configure DNS to point to your cluster's load balancer (displayed in Porter with a copy button). For GKE and AKS clusters, create an A record pointing to the static IP. For EKS clusters, create a CNAME record pointing to the load balancer hostname. SSL certificates are provisioned automatically.
 
-{/* [SCREENSHOT: Custom domain configuration with DNS instructions] */}
+![Custom domain configuration with DNS instructions](/images/deploy/v2/docker-custom-domain-dns.webp)
 
 #### Private services
 
@@ -164,7 +164,7 @@ Private services get internal DNS names that other services in your cluster can 
 
 Most applications need runtime configuration. On the app configuration page, expand the **Environment variables** accordion to configure environment groups and variables for your application.
 
-{/* [SCREENSHOT: Environment variables accordion on app configuration page] */}
+![Environment variables accordion](/images/deploy/v2/env-vars-accordion.webp)
 
 Use the lock icon to mark sensitive values as secrets. Secrets are stored securely and masked in the dashboard, while regular variables are visible.
 
@@ -172,7 +172,7 @@ For configuration shared across multiple applications, use environment groups. S
 
 You can also upload a `.env` file to bulk-import variables rather than entering them one by one.
 
-{/* [SCREENSHOT: Environment groups selector] */}
+![Environment groups selector](/images/deploy/v2/env-groups-selector.webp)
 
 ---
 
@@ -182,7 +182,7 @@ Health checks ensure your container is actually ready to serve traffic before Po
 
 Enable health checks and configure an HTTP endpoint that returns a 200-level response when your application is ready. Common paths include `/health`, `/healthz`, or `/api/health`.
 
-{/* [SCREENSHOT: Health check configuration] */}
+![Health check configuration](/images/deploy/v2/docker-health-check-config.webp)
 
 Set the initial delay based on how long your container takes to start up. If your application needs 30 seconds to initialize, set the initial delay to at least 30 seconds to avoid false failures.
 
@@ -196,7 +196,7 @@ Even though you're not building from source, you might need to run setup tasks b
 
 Common uses include database migrations, cache warming, or any initialization that should complete before the new version serves traffic.
 
-{/* [SCREENSHOT: Pre-deployment job configuration] */}
+![Pre-deployment job configuration](/images/deploy/v2/pre-deploy-config.webp)
 
 Configure a start command for your pre-deployment job. This runs in a container using the same image you're deploying, so your migration scripts or setup tools need to be included in your Docker image.
 
@@ -214,7 +214,7 @@ Configure a worker service when your container should run continuously without s
 
 Workers use the same image as your other services but with a different start command. For example, your image might support both `npm start` (web server) and `npm run worker` (queue processor).
 
-{/* [SCREENSHOT: Worker service configuration] */}
+![Worker service configuration](/images/deploy/v2/docker-worker-config.webp)
 
 Workers support autoscaling. For queue-based workers, use custom metrics to scale based on queue depth, adding workers when messages accumulate and removing them when the queue empties.
 
@@ -222,7 +222,7 @@ Workers support autoscaling. For queue-based workers, use custom metrics to scal
 
 Configure a job service when your container should run on a schedule. Specify a cron expression for the schedule (all times are in UTC). Porter shows a human-readable description as you type.
 
-{/* [SCREENSHOT: Job with cron schedule] */}
+![Job with cron schedule](/images/deploy/v2/docker-job-cron-config.webp)
 
 Examples:
 - `0 0 * * *` — daily at midnight
@@ -242,7 +242,7 @@ When you push a new image tag to your registry, Porter doesn't automatically dep
 
 From your application's dashboard in Porter, you can change the image tag to deploy a different version. This is useful for one-off deployments or rollbacks.
 
-{/* [SCREENSHOT: Update tag interface in application settings] */}
+![Update tag interface](/images/deploy/v2/update-tag-interface.webp)
 
 ### CLI updates
 

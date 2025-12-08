@@ -16,11 +16,11 @@ For most applications, Porter's automatic detection handles the heavy lifting. H
 
 From the Porter dashboard, navigate to your project and click Create Application. Porter attempts to deploy from a GitHub repository by default.
 
-{/* [SCREENSHOT: Source selection screen showing GitHub and Container Registry options] */}
+![Source selection screen](/images/deploy/v2/github-source-selection.webp)
 
 If this is your first time deploying from GitHub, you'll need to connect your GitHub account. Click Connect repositories to link GitHub, then authorize access to proceed. You can choose to grant access to all repositories or select specific ones. Porter only needs read access to detect your code, and write access to set up automated deployments.
 
-{/* [SCREENSHOT: GitHub repository selector with branch dropdown] */}
+![GitHub repository and branch selector](/images/deploy/v2/github-repo-branch-selector.webp)
 
 Once connected, select the repository containing your application code. Porter auto-selects the repository's default branch (usually `main` or `master`) so you can start deploying immediately. If you need a different target for non‑production, use the Branch selector to switch to `dev`, `staging`, or any other branch.
 
@@ -28,25 +28,23 @@ Once connected, select the repository containing your application code. Porter a
 
 After you select a repository and branch, Porter scans your code. It identifies frameworks and languages, locates Dockerfiles, and determines the required services.
 
-{/* [SCREENSHOT: Detection in progress with loading indicator] */}
+![Detection in progress](/images/deploy/v2/detection-loading.webp)
 
 Within a few seconds, you'll see a list of detected applications. Each card shows the app name (from your repo or directory), the detected framework or build method, and the path in your repository. If the detected build method isn't right for your application, click the configure button (gear icon) on the card to change it.
 
-{/* [SCREENSHOT: Detected applications list showing one or more application cards] */}
+![Detected applications list](/images/deploy/v2/detected-apps-list.webp)
 
 For a simple repository with a single application, you'll typically see one card. For monorepos containing multiple services, Porter detects each application separately. For example, a Node.js API in `/api`, a React frontend in `/web`, and a Python worker in `/jobs` each appear as distinct applications you can configure independently.
 
 If Porter didn't detect an application you expected, or if you want to add another manually, click Add Application. To edit a detected application, click the configure button (gear icon) on the card to make updates.
 
-{/* [SCREENSHOT: Settings button highlighted on application card] */}
+![Settings button on application card](/images/deploy/v2/app-card-settings-button.webp)
 
 ### Deploy
 
 Once applications are detected, you can review each app's start command and port, and open each app's configuration page to see other pre‑configured values. When ready, deploy using the "Deploy X applications" button.
 
 Porter creates a GitHub Actions workflow in your repository that handles building and deploying your application on every push to your selected branch. Your first deployment starts as soon as you merge Porter's GitHub Actions pull request.
-
-{/* [SCREENSHOT: Deployment in progress or success state] */}
 
 That's it for a basic deployment. Porter has configured your application with production-ready defaults: appropriate resource allocation, a web service listening on the detected port, and automatic builds on every commit.
 
@@ -68,7 +66,7 @@ If your repository contains a Dockerfile, Porter can use it to build your applic
 
 When you select Docker as your build method, you'll need to specify the path to your Dockerfile relative to the repository root. If your Dockerfile is at the root level, this is simply `Dockerfile`. For monorepos, it might be `./api/Dockerfile` or `./frontend/Dockerfile`.
 
-{/* [SCREENSHOT: Dockerfile path selector] */}
+![Dockerfile path selector](/images/deploy/v2/dockerfile-path-selector.webp)
 
 #### Buildpacks
 
@@ -76,17 +74,17 @@ Buildpacks automatically detect your application's language and dependencies, th
 
 When Porter detects a supported framework, it selects the appropriate buildpack automatically. You'll see the detected framework displayed on the application card. If the detection isn't quite right, you can override it by selecting a different framework from the dropdown in an application's configuration page.
 
-{/* [SCREENSHOT: Build method selector showing framework options] */}
+![Build method selector](/images/deploy/v2/build-method-selector.webp)
 
 Buildpacks work well when your application follows standard conventions for its framework. They handle dependency installation, asset compilation, and runtime configuration automatically.
 
-#### Build context
+#### Build path
 
-The build context determines which directory Porter uses as the root for your build. For most repositories, this is `./` (the repository root). In a monorepo, you'll typically set this to the directory containing the specific application, like `./api` or `./frontend`.
+The build path determines which directory Porter uses as the root for your build. For most repositories, this is `./` (the repository root). In a monorepo, you'll typically set this to the directory containing the specific application, like `./api` or `./frontend`.
 
-The build context affects where Porter looks for your Dockerfile (if using Docker builds) and which files are available during the build process.
+The build path affects where Porter looks for your Dockerfile (if using Docker builds) and which files are available during the build process.
 
-{/* [SCREENSHOT: Build context path selector] */}
+![Build path selector](/images/deploy/v2/build-path-selector.webp)
 
 ---
 
@@ -100,7 +98,7 @@ A Porter application consists of one or more **services**. Services are the indi
 
 **Job services** run on a schedule or on-demand, execute their task, and then stop. Use jobs for database maintenance, report generation, cleanup tasks, or any work that runs periodically rather than continuously.
 
-{/* [SCREENSHOT: Service type selector dropdown showing Web, Worker, and Job options] */}
+![Service type selector](/images/deploy/v2/service-type-dropdown.webp)
 
 By default, Porter configures a single web service for detected applications. You can add additional services by clicking **Add Service** and selecting the appropriate type. Each service within an application shares the same codebase and build, but can have different start commands, resource allocations, and configurations.
 
@@ -116,7 +114,7 @@ Every service needs compute resources. Porter lets you configure exactly how muc
 
 CPU is measured in cores, configurable from 0.1 (one-tenth of a core) up to 8 cores. Memory is measured in megabytes, from 128 MB up to 16 GB. The defaults (0.5 cores and 1 GB of memory) work well for lightweight services. Increase these values for compute-intensive workloads or applications with large memory footprints.
 
-{/* [SCREENSHOT: Resource allocation sliders for CPU and RAM] */}
+![Resource allocation sliders for CPU and RAM](/images/deploy/v2/cpu-ram-sliders.webp)
 
 These values represent guaranteed resources. Your service will always have access to at least this much CPU and memory, regardless of what else is running in the cluster. Note that the memory value is also a hard limit. If your service exceeds it, it will be restarted.
 
@@ -138,19 +136,17 @@ Web services can be exposed to the internet or kept private within your cluster.
 
 #### Public vs. private
 
-By default, web services are public—accessible from the internet. Toggle a service to **private** when it should only be reachable by other services in your cluster. Private services are useful for internal APIs, admin interfaces, or services that sit behind a public-facing gateway.
+By default, web services are public, i.e., accessible from the internet. Toggle a service to **private** when it should only be reachable by other services in your cluster. Private services are useful for internal APIs, admin interfaces, or services that sit behind a public-facing gateway.
 
-{/* [SCREENSHOT: Networking tab showing public/private toggle] */}
+![Public/private toggle](/images/deploy/v2/public-private-toggle.webp)
 
 #### Custom domains
 
-To serve your application on your own domain, add it in the Domains section. You can configure multiple domains for a single service. This is useful for handling `www` and non-`www` versions, or serving the same application on different domains.
+To serve your application on your own domain, add it in the Domains section. You can configure multiple domains for a single service—useful for handling `www` and non-`www` versions, or serving the same application on different domains.
 
-{/* [SCREENSHOT: Custom domain configuration with domain input field] */}
+After adding a domain, configure DNS by creating a CNAME record (or an A record for apex domains) pointing to your cluster's ingress IP address. Porter displays this address with a copy button. DNS propagation typically takes a few minutes, though it can occasionally take longer.
 
-After adding a domain, you'll need to configure DNS. Porter displays your cluster's ingress IP address with a copy button. Create a CNAME record (or an A record for apex domains) pointing your domain to this address. DNS propagation typically takes a few minutes, though it can occasionally take longer.
-
-{/* [SCREENSHOT: DNS configuration instructions showing cluster ingress IP] */}
+![Custom domain configuration with DNS instructions](/images/deploy/v2/custom-domain-dns.webp)
 
 Porter automatically provisions and renews SSL certificates for your custom domains using Let's Encrypt.
 
@@ -160,7 +156,7 @@ For complex routing scenarios, you can add custom NGINX ingress annotations. The
 
 Common uses include custom rewrite rules, rate limiting, authentication requirements, CORS headers, and proxy buffer configuration. The annotation keys follow the `nginx.ingress.kubernetes.io/` prefix convention.
 
-{/* [SCREENSHOT: Custom NGINX annotations key-value editor] */}
+![Custom NGINX annotations](/images/deploy/v2/nginx-annotations.webp)
 
 ---
 
@@ -172,7 +168,7 @@ Most applications need configuration values that vary between environments: data
 
 On the app configuration page, expand the **Environment variables** accordion to define key-value pairs that become environment variables in your running containers. Type the variable name and value, and click the lock icon to mark a value as a secret.
 
-{/* [SCREENSHOT: Environment variable key-value editor with lock icons] */}
+![Environment variable editor with lock icons](/images/deploy/v2/env-vars-accordion.webp)
 
 The distinction between variables and secrets affects visibility in the Porter dashboard. Secret values cannot be viewed after they're set. You can update them, but not retrieve them. Both are stored securely and injected into your containers at runtime.
 
@@ -180,7 +176,7 @@ The distinction between variables and secrets affects visibility in the Porter d
 
 If you have variables shared across multiple applications (like a database connection string or third-party API key) you can organize them into environment groups. Select existing groups from the dropdown to sync their variables into your application.
 
-{/* [SCREENSHOT: Environment groups selector showing available groups] */}
+![Environment groups selector](/images/deploy/v2/env-groups-selector.webp)
 
 When you update a variable in an environment group, Porter automatically triggers a deployment for all applications using that group.
 
@@ -188,7 +184,7 @@ When you update a variable in an environment group, Porter automatically trigger
 
 For applications with many environment variables, you can upload an existing `.env` file rather than entering each variable manually. Click **Upload an .env file** and paste in your file contents. Porter parses the `KEY=VALUE` format, skipping comments and empty lines.
 
-{/* [SCREENSHOT: .env file upload modal] */}
+![.env file upload modal](/images/deploy/v2/env-file-upload.webp)
 
 ---
 
@@ -198,7 +194,7 @@ For applications with many environment variables, you can upload an existing `.e
 
 Health checks enable zero-downtime deployments by ensuring new instances are ready before receiving traffic. When enabled, Porter waits for your health endpoint to return a successful response before routing traffic to a new instance, and automatically restarts instances that become unhealthy.
 
-{/* [SCREENSHOT: Health check configuration with endpoint and timing options] */}
+![Health check configuration](/images/deploy/v2/health-check-config.webp)
 
 Configure the health check with an HTTP path (like `/health` or `/api/health`) that your application exposes. The endpoint should return a 200-level status code when the service is ready to handle requests. For worker services, health checks use a command instead of an HTTP endpoint. Specify a shell command that exits with code 0 when the worker is healthy.
 
@@ -210,7 +206,7 @@ The **timeout** determines how long Porter waits for a response before consideri
 
 If your application exposes Prometheus metrics, Porter can scrape and forward them to your monitoring infrastructure. Enable metrics scraping and specify the port and path where your application serves metrics (commonly `/metrics` on the application port or a dedicated metrics port). See [Custom Metrics Autoscaling](/observability/custom-metrics-and-autoscaling) for details on using these metrics for autoscaling.
 
-{/* [SCREENSHOT: Metrics scraping configuration] */}
+![Metrics scraping configuration](/images/deploy/v2/metrics-scraping.webp)
 
 #### Sleep mode
 
@@ -226,7 +222,7 @@ Not every workload serves HTTP traffic. Porter supports background workers and s
 
 Workers run continuously, processing tasks from queues, handling events, or performing ongoing background work. Configure a worker with a start command that runs your processing logic: for example, `python worker.py` or `node src/consumer.js`.
 
-{/* [SCREENSHOT: Worker service configuration showing start command and resources] */}
+![Worker service configuration](/images/deploy/v2/worker-config.webp)
 
 Workers support the same resource allocation and autoscaling options as web services. For queue-based workers, custom autoscaling with KEDA lets you scale based on queue depth, adding workers when messages back up and removing them when the queue empties.
 
@@ -234,7 +230,7 @@ Workers support the same resource allocation and autoscaling options as web serv
 
 Jobs run on a schedule and exit when complete. The cron schedule field accepts standard cron syntax with five fields: minute, hour, day of month, month, and day of week. Porter displays a human-readable description of your schedule as you type.
 
-{/* [SCREENSHOT: Job configuration with cron schedule showing human-readable description] */}
+![Job configuration with cron schedule](/images/deploy/v2/job-cron-config.webp)
 
 Some example schedules:
 - `0 0 * * *` runs daily at midnight
@@ -254,7 +250,7 @@ The **concurrent execution** toggle controls whether multiple instances of the s
 
 Some deployments need setup work before the main application starts, most commonly, database migrations. Pre-deployment jobs (also called migration jobs) run after your new code builds but before traffic routes to new instances.
 
-{/* [SCREENSHOT: Pre-deployment job configuration panel] */}
+![Pre-deployment job configuration](/images/deploy/v2/pre-deploy-config.webp)
 
 Enable the pre-deployment job and configure a start command for your migration script: for example, `npm run migrate`, `python manage.py migrate`, or `bundle exec rails db:migrate`.
 
@@ -271,8 +267,6 @@ When you click Deploy, Porter initiates several processes:
 First, Porter creates a GitHub Actions workflow file in your repository at `.github/workflows/porter.yml`. This workflow triggers on pushes to your selected branch, building your application and deploying it to Porter. You'll see a pull request created with this workflow file, and merging this PR enables automated deployments.
 
 The initial deployment builds your application image using the configured build method and starts your services with the specified configuration. You can monitor deployment progress from the application dashboard, which shows build logs, deployment status, and any errors that occur.
-
-{/* [SCREENSHOT: Deployment progress view or application dashboard] */}
 
 Once deployed, subsequent pushes to your branch trigger automatic rebuilds and deployments. Each deployment creates new container instances, runs health checks (if configured), and shifts traffic only after the new instances are ready.
 
