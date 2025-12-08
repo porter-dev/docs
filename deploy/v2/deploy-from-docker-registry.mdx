@@ -87,19 +87,11 @@ Using an authenticated registry that isn't your cloud provider's native registry
 
 ---
 
-### Service configuration
+### Configuring services
 
-Every application needs at least one service. Since Porter can't detect your container's purpose automatically, you'll specify what type of service to run and how to run it.
+A Porter application consists of one or more **services**—web services for HTTP traffic, workers for background processing, and jobs for scheduled tasks. Since Porter can't detect your container's purpose automatically, you'll specify what type of service to run and how to run it.
 
-#### Service types
-
-**Web services** expose HTTP endpoints. If your container runs a web server, API, or anything that responds to HTTP requests, configure it as a web service. You'll need to specify the port your application listens on.
-
-**Worker services** run continuously without accepting HTTP traffic. Use workers for queue processors, background jobs, or any process that runs indefinitely without serving web requests.
-
-**Job services** run on a schedule or on-demand, complete their work, and exit. Use jobs for periodic tasks like database cleanup, report generation, or batch processing.
-
-![Service type selection dropdown](/images/deploy/v2/docker-service-type-dropdown.webp)
+For a complete guide to service types, resource allocation, networking, environment variables, health checks, and more, see [Services](/deploy/v2/services).
 
 #### Start command
 
@@ -117,120 +109,6 @@ Web services require a port number, which is the port inside the container where
 Common ports include 3000 (Node.js), 8080 (many frameworks), 80 (nginx), and 5000 (Flask). Check your application's configuration or the image documentation if you're unsure.
 
 ![Port configuration input](/images/deploy/v2/docker-port-config.webp)
-
----
-
-### Resource allocation and scaling
-
-Container deployments use the same resource and scaling options as GitHub deployments.
-
-#### CPU and memory
-
-Configure CPU allocation from 0.1 to 8 cores and memory from 128 MB to 16 GB. These represent guaranteed resources: your container always has access to at least this much compute capacity.
-
-Start with the defaults (0.5 cores, 1 GB memory) and adjust based on your application's actual usage. Porter's monitoring shows resource consumption over time, helping you right-size your allocation.
-
-![CPU and RAM sliders](/images/deploy/v2/docker-cpu-ram-sliders.webp)
-
-#### Scaling
-
-Choose between fixed instances (always run N copies), resource-based autoscaling (scale based on CPU or memory utilization), or [custom autoscaling](/configure/autoscaling) for metric-driven scaling.
-
-![Autoscaling configuration](/images/deploy/v2/autoscaling-config.webp)
-
----
-
-### Networking and domains
-
-Web services can be exposed publicly or kept private within your cluster.
-
-#### Public services
-
-By default, web services are publicly accessible. Porter provisions a URL where your service is reachable immediately after deployment. For production, you'll typically add a custom domain.
-
-Add your domain in the Networking section, then configure DNS to point to your cluster's load balancer (displayed in Porter with a copy button). For GKE and AKS clusters, create an A record pointing to the static IP. For EKS clusters, create a CNAME record pointing to the load balancer hostname. SSL certificates are provisioned automatically.
-
-![Custom domain configuration with DNS instructions](/images/deploy/v2/docker-custom-domain-dns.webp)
-
-#### Private services
-
-Toggle a service to private when it should only be accessible by other services in your cluster. This is common for internal APIs, admin services, or backend services that sit behind a gateway.
-
-Private services get internal DNS names that other services in your cluster can use to communicate.
-
----
-
-### Environment variables and secrets
-
-Most applications need runtime configuration. On the app configuration page, expand the **Environment variables** accordion to configure environment groups and variables for your application.
-
-![Environment variables accordion](/images/deploy/v2/env-vars-accordion.webp)
-
-Use the lock icon to mark sensitive values as secrets. Secrets are stored securely and masked in the dashboard, while regular variables are visible.
-
-For configuration shared across multiple applications, use environment groups. Select existing groups to sync their variables into your application. When you update the group, changes propagate to all applications using it.
-
-You can also upload a `.env` file to bulk-import variables rather than entering them one by one.
-
-![Environment groups selector](/images/deploy/v2/env-groups-selector.webp)
-
----
-
-### Health checks
-
-Health checks ensure your container is actually ready to serve traffic before Porter routes requests to it. This is especially important for container deployments where Porter doesn't know your application's startup behavior.
-
-Enable health checks and configure an HTTP endpoint that returns a 200-level response when your application is ready. Common paths include `/health`, `/healthz`, or `/api/health`.
-
-![Health check configuration](/images/deploy/v2/docker-health-check-config.webp)
-
-Set the initial delay based on how long your container takes to start up. If your application needs 30 seconds to initialize, set the initial delay to at least 30 seconds to avoid false failures.
-
-The timeout determines how long Porter waits for a response. If your health endpoint is slow (perhaps it checks database connectivity), increase the timeout accordingly.
-
----
-
-### Pre-deployment jobs
-
-Even though you're not building from source, you might need to run setup tasks before your main application starts. Pre-deployment jobs run after Porter pulls your new image but before traffic routes to it.
-
-Common uses include database migrations, cache warming, or any initialization that should complete before the new version serves traffic.
-
-![Pre-deployment job configuration](/images/deploy/v2/pre-deploy-config.webp)
-
-Configure a start command for your pre-deployment job. This runs in a container using the same image you're deploying, so your migration scripts or setup tools need to be included in your Docker image.
-
-Set appropriate timeout and resource values. Migrations might need more time or memory than your running application, especially for large data transformations.
-
----
-
-### Scheduled jobs and workers
-
-Container images often run background processes alongside or instead of web services.
-
-#### Workers
-
-Configure a worker service when your container should run continuously without serving HTTP traffic. Workers typically process messages from a queue, handle events, or perform ongoing background tasks.
-
-Workers use the same image as your other services but with a different start command. For example, your image might support both `npm start` (web server) and `npm run worker` (queue processor).
-
-![Worker service configuration](/images/deploy/v2/docker-worker-config.webp)
-
-Workers support autoscaling. For queue-based workers, use custom metrics to scale based on queue depth, adding workers when messages accumulate and removing them when the queue empties.
-
-#### Jobs
-
-Configure a job service when your container should run on a schedule. Specify a cron expression for the schedule (all times are in UTC). Porter shows a human-readable description as you type.
-
-![Job with cron schedule](/images/deploy/v2/docker-job-cron-config.webp)
-
-Examples:
-- `0 0 * * *` — daily at midnight
-- `0 */6 * * *` — every 6 hours
-- `0 9 * * 1-5` — weekdays at 9 AM
-- `*/30 * * * *` — every 30 minutes
-
-Set a job timeout to prevent runaway processes. Jobs exceeding the timeout are terminated. The concurrent execution toggle controls whether multiple instances of the same job can run simultaneously. Disable this for jobs that assume exclusive access to resources.
 
 ---
 

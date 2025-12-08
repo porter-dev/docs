@@ -1,0 +1,175 @@
+---
+title: "Services"
+---
+
+A Porter application consists of one or more **services**. Services are the individual processes that make up your application, and they come in three types:
+
+**Web services** handle HTTP traffic. If your application serves a website, API, or any other HTTP endpoint, it runs as a web service. Web services can be exposed to the internet with custom domains, or kept private within your cluster for internal communication.
+
+**Worker services** run continuously in the background without accepting HTTP traffic. Use workers for queue processors, background job runners, event consumers, or any long-running process that doesn't need to respond to web requests.
+
+**Job services** run on a schedule or on-demand, execute their task, and then stop. Use jobs for database maintenance, report generation, cleanup tasks, or any work that runs periodically rather than continuously.
+
+![Service type selector](/images/deploy/v2/service-type-dropdown.webp)
+
+You can add additional services by clicking **Add Service** and selecting the appropriate type. Each service within an application shares the same codebase and build, but can have different start commands, resource allocations, and configurations.
+
+Service names must be lowercase letters, numbers, and hyphens only. They're used internally for routing and identification.
+
+---
+
+## Resource allocation and scaling
+
+Every service needs compute resources. Porter lets you configure exactly how much CPU and memory each service receives, and how it scales under load.
+
+### CPU and memory
+
+CPU is measured in cores, configurable from 0.1 (one-tenth of a core) up to 8 cores. Memory is measured in megabytes, from 128 MB up to 16 GB. The defaults (0.5 cores and 1 GB of memory) work well for lightweight services. Increase these values for compute-intensive workloads or applications with large memory footprints.
+
+![Resource allocation sliders for CPU and RAM](/images/deploy/v2/cpu-ram-sliders.webp)
+
+These values represent guaranteed resources. Your service will always have access to at least this much CPU and memory, regardless of what else is running in the cluster. Note that the memory value is also a hard limit. If your service exceeds it, it will be restarted.
+
+### Node groups
+
+If your cluster has more than one node group to pick from, you can select them here. When you choose a node group with GPU support, an additional slider appears for configuring GPU allocation.
+
+For most applications, the default node group is appropriate.
+
+### Scaling
+
+By default, Porter runs a single instance of each service. For production workloads, you'll typically want multiple instances for redundancy and to handle traffic spikes. See [Autoscaling](/configure/autoscaling) for a complete guide.
+
+---
+
+## Networking and domains
+
+Web services can be exposed to the internet or kept private within your cluster.
+
+### Public services
+
+By default, web services are public, i.e., accessible from the internet. Porter provisions a URL where your service is reachable immediately after deployment.
+
+![Public/private toggle](/images/deploy/v2/public-private-toggle.webp)
+
+### Private services
+
+Toggle a service to **private** when it should only be reachable by other services in your cluster. Private services are useful for internal APIs, admin interfaces, or services that sit behind a public-facing gateway.
+
+Private services get internal DNS names that other services in your cluster can use to communicate.
+
+### Custom domains
+
+To serve your application on your own domain, add it in the Domains section. You can configure multiple domains for a single service—useful for handling `www` and non-`www` versions, or serving the same application on different domains.
+
+After adding a domain, configure DNS by creating a CNAME record (or an A record for apex domains) pointing to your cluster's ingress IP address. Porter displays this address with a copy button. DNS propagation typically takes a few minutes, though it can occasionally take longer.
+
+![Custom domain configuration with DNS instructions](/images/deploy/v2/custom-domain-dns.webp)
+
+Porter automatically provisions and renews SSL certificates for your custom domains using Let's Encrypt.
+
+### Advanced routing with NGINX annotations
+
+For complex routing scenarios, you can add custom NGINX ingress annotations. These key-value pairs are applied directly to the Kubernetes ingress resource, giving you access to NGINX's full feature set.
+
+Common uses include custom rewrite rules, rate limiting, authentication requirements, CORS headers, and proxy buffer configuration. The annotation keys follow the `nginx.ingress.kubernetes.io/` prefix convention.
+
+![Custom NGINX annotations](/images/deploy/v2/nginx-annotations.webp)
+
+---
+
+## Environment variables and secrets
+
+Most applications need configuration values that vary between environments: database URLs, API keys, feature flags, and other settings.
+
+### Adding variables
+
+On the app configuration page, expand the **Environment variables** accordion to define key-value pairs that become environment variables in your running containers. Type the variable name and value, and click the lock icon to mark a value as a secret.
+
+![Environment variable editor with lock icons](/images/deploy/v2/env-vars-accordion.webp)
+
+The distinction between variables and secrets affects visibility in the Porter dashboard. Secret values cannot be viewed after they're set. You can update them, but not retrieve them. Both are stored securely and injected into your containers at runtime.
+
+### Environment groups
+
+If you have variables shared across multiple applications (like a database connection string or third-party API key) you can organize them into environment groups. Select existing groups from the dropdown to sync their variables into your application.
+
+![Environment groups selector](/images/deploy/v2/env-groups-selector.webp)
+
+When you update a variable in an environment group, Porter automatically triggers a deployment for all applications using that group.
+
+### Uploading .env files
+
+For applications with many environment variables, you can upload an existing `.env` file rather than entering each variable manually. Click **Upload an .env file** and paste in your file contents. Porter parses the `KEY=VALUE` format, skipping comments and empty lines.
+
+![.env file upload modal](/images/deploy/v2/env-file-upload.webp)
+
+---
+
+## Health checks
+
+Health checks enable zero-downtime deployments by ensuring new instances are ready before receiving traffic. When enabled, Porter waits for your health endpoint to return a successful response before routing traffic to a new instance, and automatically restarts instances that become unhealthy.
+
+![Health check configuration](/images/deploy/v2/health-check-config.webp)
+
+Configure the health check with an HTTP path (like `/health` or `/api/health`) that your application exposes. The endpoint should return a 200-level status code when the service is ready to handle requests. For worker services, health checks use a command instead of an HTTP endpoint. Specify a shell command that exits with code 0 when the worker is healthy.
+
+The **initial delay** gives your application time to start up before health checks begin. Set this higher if your application has a slow initialization process.
+
+The **timeout** determines how long Porter waits for a response before considering the check failed.
+
+### Metrics scraping
+
+If your application exposes Prometheus metrics, Porter can scrape and forward them to your monitoring infrastructure. Enable metrics scraping and specify the port and path where your application serves metrics (commonly `/metrics` on the application port or a dedicated metrics port). See [Custom Metrics Autoscaling](/observability/custom-metrics-and-autoscaling) for details on using these metrics for autoscaling.
+
+![Metrics scraping configuration](/images/deploy/v2/metrics-scraping.webp)
+
+### Sleep mode
+
+For non-production environments, sleep mode lets you pause a service to save costs. Sleeping services maintain their configuration but stop running instances. This is useful for staging environments that don't need to run overnight or on weekends.
+
+---
+
+## Pre-deployment jobs
+
+Some deployments need setup work before the main application starts, most commonly, database migrations. Pre-deployment jobs (also called migration jobs) run after your new code builds but before traffic routes to new instances.
+
+![Pre-deployment job configuration](/images/deploy/v2/pre-deploy-config.webp)
+
+Enable the pre-deployment job and configure a start command for your migration script: for example, `npm run migrate`, `python manage.py migrate`, or `bundle exec rails db:migrate`.
+
+Pre-deployment jobs have their own resource allocation separate from your application services. Migrations are typically short-lived but may need more memory than your running application, especially for large data transformations.
+
+Configure an appropriate timeout based on how long your migrations typically take. The job must complete successfully before deployment continues. If it fails, the deployment halts, and your previous version continues running—your users never see a partially-migrated state.
+
+---
+
+## Scheduled jobs and workers
+
+Not every workload serves HTTP traffic. Porter supports background workers and scheduled jobs for processing that happens outside the request-response cycle.
+
+### Workers
+
+Workers run continuously, processing tasks from queues, handling events, or performing ongoing background work. Configure a worker with a start command that runs your processing logic: for example, `python worker.py` or `node src/consumer.js`.
+
+![Worker service configuration](/images/deploy/v2/worker-config.webp)
+
+Workers support the same resource allocation and autoscaling options as web services. For queue-based workers, custom autoscaling with KEDA lets you scale based on queue depth, adding workers when messages back up and removing them when the queue empties.
+
+### Jobs
+
+Jobs run on a schedule and exit when complete. The cron schedule field accepts standard cron syntax with five fields: minute, hour, day of month, month, and day of week. Porter displays a human-readable description of your schedule as you type.
+
+![Job configuration with cron schedule](/images/deploy/v2/job-cron-config.webp)
+
+Some example schedules:
+- `0 0 * * *` runs daily at midnight
+- `0 */4 * * *` runs every 4 hours
+- `0 9 * * 1-5` runs at 9 AM on weekdays
+- `*/15 * * * *` runs every 15 minutes
+
+Configure the timeout to set a maximum execution time. Jobs exceeding this limit are terminated, preventing runaway processes from consuming resources indefinitely.
+
+The **concurrent execution** toggle controls whether multiple instances of the same job can run simultaneously. Disable this for jobs that shouldn't overlap.
+
+**Suspend cron job** temporarily pauses the schedule without removing the job configuration, useful during maintenance windows.
