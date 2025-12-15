@@ -1,28 +1,34 @@
 ---
-title: "Migrating from Porter Cloud to Porter Standard"
+title: "Migrating applications from Porter Cloud to Porter Standard"
 ---
 
-Everything about running applications on Porter Cloud remains the same on Porter Standard.
+Before you begin, ensure that you have the following on hand:
 
-At a high-level, migrating to Porter Standard involves:
-
-1. Provisioning your infrastructure on a Porter Standard project
-2. Copying your applications to your new project
-3. Cutting over DNS entries from Porter Cloud to your new project
-
-## Provisioning your infrastructure on Porter Standard[](#provisioning "Direct link to heading")
-
-[Create a project](https://dashboard.porter.run) if you haven't already.
-
-You will be prompted to connect a cloud account and provision infrastructure. See our [docs](/provision/overview) for more information.
-
-## Copying applications from Porter Cloud to Porter Standard[](#provisioning "Direct link to heading")
-
-Porter saves your application configuration in a consolidated `porter.yaml` format, which you can use to copy configuration to your new project.
+<Steps>
+  <Step title="A project on Porter Standard">
+    [Create a project](https://dashboard.porter.run) if you haven't already.
+  </Step>
+  <Step title="Infrastructure provisioned in your new project">
+    See our [provisioning docs](/provision/overview) for more information.
+  </Step>
+  <Step title="The Porter CLI installed">
+    Follow [our docs](/cli/installation) to install.
+  </Step>
+  <Step title="An API token for your project">
+    <Info>
+      Only required if your application CI is configured through Porter.
+    </Info>
+    Navigate to the [API Tokens](https://dashboard.porter.run/settings/members) page
+    in the `Settings` tab to generate a new token with the `Developer` role. You
+    must have admin permissions to create API tokens.
+  </Step>
+</Steps>
 
 ### Exporting your application configuration from Porter Cloud
 
-First, you'll have to save your application configuration as a YAML file on your local device.
+Porter saves your application configuration in a consolidated `porter.yaml` format, which you can use to copy configuration to your new project.
+
+You can export this configuration via the CLI or the dashboard.
 
 <Tabs>
   <Tab title="CLI">
@@ -30,7 +36,7 @@ First, you'll have to save your application configuration as a YAML file on your
     ```bash
       porter config
     ```
-    If the host is not https://cloud.porter.run and/or the project does not match your ID, run the following:
+    If the host is not https://cloud.porter.run or the project does not match your ID, run the following:
     ```bash
       porter auth login --host https://cloud.porter.run
       porter config set-project
@@ -120,8 +126,10 @@ You will have to generate a new API token for `PORTER_TOKEN`:
 2. [Create a new Github secret](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets) with this value
 3. Reference the secret key name as the value for `PORTER_TOKEN`
 
-## Move DNS for custom domains to Porter Standard[](#dns "Direct link to heading")
+### Point DNS to your Porter Standard load balancer[](#dns "Direct link to heading")
 
-If you rely on any web services being publicly accessible, you will have to update your DNS settings to point to the load balancer associated with your new infrastructure.
+If you have configured custom domains for any of your web services, you will have to update your DNS settings to point to the load balancer associated with your new infrastructure.
 
 You can find your load balancer IP by navigating to your application on the Porter dashboard, going to the `Overview` tab, expanding one of your web services, and going to the `Networking` tab.
+
+If you rely on Porter-generated domains (`onporter.run`), you will have to update your services to use the new domains generated on your Porter Standard project.
