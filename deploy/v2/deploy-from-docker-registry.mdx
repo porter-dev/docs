@@ -67,26 +67,6 @@ This makes container registry deployments faster to set up, but requires you to 
 
 ---
 
-### Private registry authentication
-
-If your image is in a private registry that requires authentication, you'll need to configure credentials. How you do this depends on your registry type.
-
-#### Cloud provider registries
-
-For ECR, GAR, and ACR, Porter handles authentication automatically when your cluster runs in the same cloud provider. Your cluster's service account has permission to pull images from registries in the same account or project.
-
-If you're pulling from a registry in a different account, or if automatic authentication isn't working, you can configure credentials through Porter's integrations settings or by adding image pull secrets to your cluster.
-
-#### Docker Hub and other registries
-
-For Docker Hub private repositories or other registries requiring authentication, your credentials need to be configured as a Kubernetes image pull secret at the cluster level. [Reach out to us](mailto:support@porter.run) to set this up for your cluster.
-
-<Note>
-Using an authenticated registry that isn't your cloud provider's native registry (such as GitHub Container Registry or a self-hosted registry) requires additional manual configuration, including creating an ImagePullSecret and referencing it in your deployment.
-</Note>
-
----
-
 ### Configuring services
 
 A Porter application consists of one or more **services**—web services for HTTP traffic, workers for background processing, and jobs for scheduled tasks. By default, Porter configures a single web service.
