@@ -23,16 +23,13 @@ This eliminates the need to rely on static AWS credentials and makes it easier t
 2. You will be directed to your AWS console to create a CloudFormation stack. If this window did not appear, please ensure that your browser has not blocked the pop-up window. This stack will create the role Porter will assume to manage your infrastructure.
    Scroll to the bottom of the screen. Check the "I acknowledge..." box and click on **Create Stack**. It may take a few minutes for the role to be fully created. After creation you can proceed to selecting provisioning settings.
 
-![Create Stack](/images/provisioning-infrastructure/create-stack.png)
-
-<Info>
-  If you want to use Porter with less expansive permissions than what is
-  provisioned by the CloudFormation stack, please [contact
-  us](https://cal.com/talk-to-porter/15min) to inquire about Porter Enterprise.
-  Porter Enterprise requires [minimum IAM
-  permissions](enterprise/provisioning-on-aws#permissions-for-eks) that are
-  smaller in scope.{" "}
-</Info>
+   {" "}
+   <Info>
+     If you want to use Porter with less expansive permissions than what is
+     provisioned by the CloudFormation stack, please contact us through the support widget to inquire about Porter
+     Enterprise. Porter Enterprise requires minimum IAM permissions that are
+     smaller in scope.{" "}
+   </Info>
 
 3. After creating the role, navigate back to the Porter dashboard and click **Continue**. You will be prompted to select the AWS region that you want to provision your infrastructure in.
    Porter supports all AWS regions.
@@ -46,7 +43,41 @@ This eliminates the need to rely on static AWS credentials and makes it easier t
 
 5. Once you click **Provision**, Porter will start spinning up the requisite infrastructure in your account. This may take up to 30 minutes.
 
-Once you click **Provision Resources**, Porter will install all the requisite resources in your AWS account using the IAM credentials you have created. This may take up to 30 minutes.
+## Troubleshooting Initial Provisioning[](#troubleshooting-initial-provisioning "Direct link to heading")
+
+### Provisioning takes longer than 30 minutes
+
+If your cluster has been provisioning for more than 30 minutes, there may be an issue. Check the following:
+
+- Verify that the IAM role still exists in your AWS account and hasn't been deleted
+- Check your AWS Service Quotas to ensure they were approved
+- Verify that the selected region supports the requested instance types
+
+If issues persist, contact us through the dashboard chat bot with your project ID.
+
+### Permission errors during provisioning
+
+If you encounter permission errors:
+
+- Verify the CloudFormation stack created successfully and the role exists
+- Ensure the role has not been modified after creation
+- Check that your AWS account has not applied SCPs (Service Control Policies) that restrict Porter's actions
+
+### Quota increase requests not approved
+
+AWS typically approves quota increases automatically, but some may require manual review:
+
+- Check the status of quota requests in the [AWS Service Quotas console](https://console.aws.amazon.com/servicequotas/)
+- Requests under manual review typically take 24-48 hours
+- If urgent, you can contact AWS support to expedite the review
+
+### CloudFormation stack creation fails
+
+If the CloudFormation stack fails to create:
+
+- Ensure you have sufficient permissions in your AWS account to create IAM roles
+- Check that you're logged into the correct AWS account (the account ID should match)
+- Verify your account is in good standing and billing is enabled
 
 ## Deleting Provisioned Resources[](#deleting-provisioned-resources "Direct link to heading")
 
