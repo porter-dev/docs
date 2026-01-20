@@ -20,7 +20,7 @@ To use Porter on GCP, you must first enable some APIs on your project.
 
 ![APIs and services](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/75c924c8-88d4-40a7-5a35-5e29261f4d00/large "Screen Shot 2021-05-06 at 6.23.07 PM.png")
 
-2. Click on the **Enable APIs and Services** button at the top. This will bring up a catalog of APIs that you can enable on GCP. Enable the following four APIs:
+2. Click on the **Enable APIs and Services** button at the top. This will bring up a catalog of APIs that you can enable on GCP. Enable the following five APIs:
 
 - Compute Engine API
 - Kubernetes Engine API
@@ -64,20 +64,13 @@ Select **Done** to create the service account.
 
 1. Select "GCP" from the cloud providers:
 
-![Select GCP](https://github.com/porter-dev/porter-archive/assets/10238219/84cc53f0-b7cc-4449-8a4d-9f7b1f297438 "Cloud providers")
-
-2. Click "Drop a GCP Service Account JSON here, or click to browse." and upload the JSON key file from the Prerequisites step, then click "Continue":
-
-![Upload GCP Service Account](/images/provisioning-infrastructure/gcp-service-account.png)
+2. Click "Drop a GCP Service Account JSON here, or click to browse." and upload the JSON key file from the Prerequisites step, then click "Continue"
 
 3. Select the region that you would like to provision in, then click "Provision"
 
-4. Before you are able to provision a cluster you must pass all provision checks. Troubleshooting steps will be shown on the dashboard if you
-   encounter these errors.
+4. Before you are able to provision a cluster you must pass all provision checks. Troubleshooting steps will be shown on the dashboard if you encounter these errors.
+5. Once you click **Provision**, Porter will start spinning up the requisite infrastructure in your account. This may take up to 30 minutes.
 
-![Provision](/images/provisioning-infrastructure/gcp-preflight-checks.png)
-
-After clicking **Provision** from Porter, installation will begin automatically.
 
 ## Deleting Provisioned Resources[](#deleting-provisioned-resources "Direct link to heading")
 

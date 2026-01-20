@@ -11,6 +11,12 @@ You can set up Azure for Porter in two ways:
 
 ### Option 1: Automated Setup Script (Recommended)
 
+**Prerequisites for the script:**
+
+- Azure CLI installed and authenticated (`az login`)
+- `jq` command-line JSON processor installed
+- Admin permissions on your Azure subscription (for granting API permissions)
+
 Download and run our automated setup script that handles all the configuration steps for you:
 
 ```bash
@@ -24,12 +30,8 @@ chmod +x setup-azure-porter.sh
 ./setup-azure-porter.sh [your-subscription-id]
 ```
 
-**Prerequisites for the script:**
-- Azure CLI installed and authenticated (`az login`)
-- `jq` command-line JSON processor installed
-- Admin permissions on your Azure subscription (for granting API permissions)
-
 The script will:
+
 - ✅ Enable all required Azure resource providers
 - ✅ Create the custom `porter-aks-restricted` role
 - ✅ Create the service principal with proper permissions
@@ -38,12 +40,16 @@ The script will:
 - ✅ Display the credentials needed for Porter
 
 **After running the script:**
+
 1. Copy the displayed credentials to the Porter dashboard when creating your project
 2. Request quota increases if needed (see [Compute Quotas](#quotas) section below)
 3. Proceed with cluster provisioning in Porter
 
 <Info>
-If the script fails to grant admin consent automatically, you can grant it manually in the Azure Portal: **App registrations** > **azure-porter-restricted-sp** > **API permissions** > **Grant admin consent for Default Directory**.
+  If the script fails to grant admin consent automatically, you can grant it
+  manually in the Azure Portal: **App registrations** >
+  **azure-porter-restricted-sp** > **API permissions** > **Grant admin consent
+  for Default Directory**.
 </Info>
 
 ---
@@ -63,17 +69,18 @@ To provision through Porter, you must enable certain Azure resource providers fo
 ![Resource providers](https://github.com/porter-dev/api-contracts/assets/66391417/b163d9fa-a1fb-47e3-b642-6bf42f0da0cf)
 
 2. Enable the following providers by selecting the providers and clicking **Register**:
-* Microsoft.Capacity
-* Microsoft.Compute
-* Microsoft.ContainerRegistry
-* Microsoft.ContainerService
-* Microsoft.ManagedIdentity
-* Microsoft.Network
-* Microsoft.OperationalInsights
-* Microsoft.OperationsManagement
-* Microsoft.ResourceGraph
-* Microsoft.Resources
-* Microsoft.Storage
+
+- Microsoft.Capacity
+- Microsoft.Compute
+- Microsoft.ContainerRegistry
+- Microsoft.ContainerService
+- Microsoft.ManagedIdentity
+- Microsoft.Network
+- Microsoft.OperationalInsights
+- Microsoft.OperationsManagement
+- Microsoft.ResourceGraph
+- Microsoft.Resources
+- Microsoft.Storage
 
 It might take a few minutes for providers to complete registration. Once you confirm that all resource providers are enabled, proceed to the next section.
 
@@ -82,10 +89,12 @@ It might take a few minutes for providers to complete registration. Once you con
 1. Create a new role with the Azure CLI
 
 <Info>
-    The following commands can be run in the Azure Cloud Shell (selecting the `Bash` option) or in your local terminal after installing the Azure CLI and authenticating with `az login`.
+  The following commands can be run in the Azure Cloud Shell (selecting the
+  `Bash` option) or in your local terminal after installing the Azure CLI and
+  authenticating with `az login`.
 </Info>
 
-Most of the permissions required by Porter to manage your infrastructure come with Azure's built-in Contributor role.  However, this role does not allow for role assignments, which are crucial for Porter.
+Most of the permissions required by Porter to manage your infrastructure come with Azure's built-in Contributor role. However, this role does not allow for role assignments, which are crucial for Porter.
 
 For this reason, we need to create a new role that combines the Contributor scope along with permissions to create role assignments. We will do this through the Azure CLI.
 
@@ -124,7 +133,7 @@ envsubst << EOF | az role definition create --role-definition @-
 }
 EOF
 ```
-  
+
 2. Create a new service principal through the Azure CLI that uses the role you just created:
 
 ```
@@ -154,13 +163,13 @@ In your Azure portal, search for **App registrations**. Under the **All applicat
 
 Select **Add a permission** > **Microsoft Graph** > **Application permissions** and select the following seven permissions:
 
-* Application.ReadWrite.All
-* Directory.ReadWrite.All
-* Domain.Read.All
-* Group.Create
-* Group.ReadWrite.All
-* RoleManagement.ReadWrite.Directory
-* User.ReadWrite.All
+- Application.ReadWrite.All
+- Directory.ReadWrite.All
+- Domain.Read.All
+- Group.Create
+- Group.ReadWrite.All
+- RoleManagement.ReadWrite.Directory
+- User.ReadWrite.All
 
 Click **Add permissions** to save these permissions, and then click **Grant admin consent for Default Directory** to grant these permissions to your service principal.
 
@@ -170,28 +179,35 @@ By default, Azure limits the types of resources you can provision in your subscr
 
 In your Azure portal, navigate to your subscription and select **Usage + quotas**. Set the resource filter to **Compute** and region to your desired region.
 
-![Usage Quotas](https://github.com/porter-dev/porter-archive/assets/66391417/62e75cda-f8c2-48d8-9b62-83601c5c18ee)
-
 While the exact virtual machines provisioned by Porter will depend on your selected region's availability, the following table lists the default virtual machine types that Porter will provision along with recommended initial quota limits:
 
-|         Resource Family       | Recommended Quota  |
-| ----------------------------- | ------ |
-| Total Regional vCPUs          |   40   |
-| Standard Basv2 Family vCPUs   |   40   |
+| Resource Family             | Recommended Quota |
+| --------------------------- | ----------------- |
+| Total Regional vCPUs        | 40                |
+| Standard Basv2 Family vCPUs | 40                |
 
-After selecting each resource family, click **Request quota increase** and input your desired quota limit. Requests should be approved automatically within a few minutes.  If your request is not approved automatically, fill out the support ticket as prompted. Approval is typically granted in a few hours.
+After selecting each resource family, click **Request quota increase** and input your desired quota limit. Requests should be approved automatically within a few minutes. If your request is not approved automatically, fill out the support ticket as prompted. Approval is typically granted in a few hours.
 
-#### Provisioning Your Porter Cluster[](#provisioning-porter-cluster "Direct link to heading")
+## Provisioning Your Porter Cluster[](#provisioning-porter-cluster "Direct link to heading")
 
-Once you create your project and select Azure as your cloud provider, you will be prompted to provide the credentials for the service principal you created earlier.
-
-![Azure credentials](https://github.com/porter-dev/porter-archive/assets/66391417/d52e86f3-4157-4cd8-a9d4-2c824b6c2ce3)
+1. Once you create your project and select Azure as your cloud provider, you will be prompted to provide the credentials for the service principal you created earlier.
+2. After providing your credentials, hit "Continue". In the case that you do not have credits, we have provided a breakdown of the monthly costs on Azure.
+3. On the next page, you will be able to configure your Azure cluster. For choosing an Azure tier, we recommend choosing a Free tier for non-production workloads, and the Standard tier for production workloads.
+   This is something you are able to change after creating your cluster, should your needs change. You will also be prompted to select a region, and have the option to cutomize your machine type. In the case you
+   don't have specific preferences, the default is a safe start. This is also something you will be able to update once your cluster has been provisioned.
+   <Info>
+   For guidance on choosing a region, if you have an external database to
+   Porter, we recommend choosing a region close to your database. Otherwise,
+   consider choosing a region near your primary customer base.
+   </Info>
+4. Once you click **Provision**, Porter will start spinning up the requisite infrastructure in your account. This may take up to 30 minutes.
 
 ## Rotating Service Principal Credentials[](#-rotating-service-principal-credentials "Direct link to heading")
 
 Azure mandates that client secrets for Service Principals(the `password` field displayed when you create a Service Principal) expire every 365 days. When a client secret expires, Porter loses the ability to manage your infrastructure or push new deployments. Note that in the event of a client secret's expiration, _your cluster continues to function normally, and existing workloads are not affected_.
 
 To refresh your client secret:
+
 1. Visit [https://aka.ms/NewClientSecret](https://aka.ms/NewClientSecret) and select the app ID for the service principal that was used to create your cluster(to check what your app ID is, you can navigate to `Integrations` on the Porter dashboard and select `Azure`).
 2. Generate a fresh client secret, and copy new value.
 3. Navigate to `Integrations` on the Porter dashboard and select `Azure`.
@@ -199,18 +215,19 @@ To refresh your client secret:
 
 ## Deleting Provisioned Resources[](#deleting-provisioned-resources "Direct link to heading")
 
-<Warning>Deleting resources on Azure via Porter may result in dangling resources. After clicking delete, please make sure to check your Azure portal to see if all resources have properly been removed. You can remove any dangling resources via either the Azure console or the Azure CLI.</Warning>
+<Warning>
+  Deleting resources on Azure via Porter may result in dangling resources. After
+  clicking delete, please make sure to check your Azure portal to see if all
+  resources have properly been removed. You can remove any dangling resources
+  via either the Azure console or the Azure CLI.
+</Warning>
 
 We recommend that you delete all provisioned resources through Porter as well as confirm resources have been deleted from the Azure portal. This will ensure that you do not get charged on Azure for lingering resources.
 
 To delete resources, click on **Additional settings** from the **Infrastructure** tab.
 
-![Cluster settings](https://github.com/porter-dev/porter-archive/assets/66391417/87e7f207-c7cc-4f4f-a7cb-de4366e1c839 "Direct link to heading")
-
 Click **Delete Cluster** to remove the cluster from Porter and delete resources in your Azure console. It may take up to 30 minutes for these resources to be deleted from your Azure subscription.
 
 To confirm that resources have been deleted, navigate to your Azure portal and search for **Resource groups**. You should expect to see a resource group named `<PROJECT_ID>-<AZURE_REGION>` containing an Azure container registry with your application build images. By default, Porter will not delete your build images, so you will need to delete this resource group manually.
 
-No other resource groups should be present.  If any are, you should delete them manually by clicking on the resource group and selecting **Delete resource group**.
-
-![Azure portal resource groups](https://github.com/porter-dev/porter-archive/assets/66391417/ddfe6f23-935f-432c-a23c-799012d96067 "Screen Shot 2021-01-09 at 3.02.07 PM.png")
+No other resource groups should be present. If any are, you should delete them manually by clicking on the resource group and selecting **Delete resource group**.
