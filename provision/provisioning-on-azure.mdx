@@ -159,8 +159,6 @@ Running this will display the following output, which you will need when you go 
 
 In your Azure portal, search for **App registrations**. Under the **All applications** tab, you should see the newly-created service principal. Select the principal and navigate to the API Permissions tab:
 
-![API Permissions](https://github.com/porter-dev/porter-archive/assets/66391417/3b633d51-f205-4136-9b81-7b6d54abaa5c)
-
 Select **Add a permission** > **Microsoft Graph** > **Application permissions** and select the following seven permissions:
 
 - Application.ReadWrite.All
@@ -196,9 +194,9 @@ After selecting each resource family, click **Request quota increase** and input
    This is something you are able to change after creating your cluster, should your needs change. You will also be prompted to select a region, and have the option to cutomize your machine type. In the case you
    don't have specific preferences, the default is a safe start. This is also something you will be able to update once your cluster has been provisioned.
    <Info>
-   For guidance on choosing a region, if you have an external database to
-   Porter, we recommend choosing a region close to your database. Otherwise,
-   consider choosing a region near your primary customer base.
+     For guidance on choosing a region, if you have an external database to
+     Porter, we recommend choosing a region close to your database. Otherwise,
+     consider choosing a region near your primary customer base.
    </Info>
 4. Once you click **Provision**, Porter will start spinning up the requisite infrastructure in your account. This may take up to 30 minutes.
 
