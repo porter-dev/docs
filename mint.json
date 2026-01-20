@@ -61,7 +61,8 @@
           "group": "v2",
           "pages": [
             "deploy/v2/deploy-from-github-repo",
-            "deploy/v2/deploy-from-docker-registry"
+            "deploy/v2/deploy-from-docker-registry",
+            "deploy/v2/configuring-application-services"
           ]
         },
         {

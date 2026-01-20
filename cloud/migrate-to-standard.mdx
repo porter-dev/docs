@@ -1,0 +1,135 @@
+---
+title: "Migrating applications from Porter Cloud to Porter Standard"
+---
+
+Before you begin, ensure that you have the following on hand:
+
+<Steps>
+  <Step title="A project on Porter Standard">
+    [Create a project](https://dashboard.porter.run) if you haven't already.
+  </Step>
+  <Step title="Infrastructure provisioned in your new project">
+    See our [provisioning docs](/provision/overview) for more information.
+  </Step>
+  <Step title="The Porter CLI installed">
+    Follow [our docs](/cli/installation) to install.
+  </Step>
+  <Step title="An API token for your project">
+    <Info>
+      Only required if your application CI is configured through Porter.
+    </Info>
+    Navigate to the [API Tokens](https://dashboard.porter.run/settings/members) page
+    in the `Settings` tab to generate a new token with the `Developer` role. You
+    must have admin permissions to create API tokens.
+  </Step>
+</Steps>
+
+### Exporting your application configuration from Porter Cloud
+
+Porter saves your application configuration in a consolidated `porter.yaml` format, which you can use to copy configuration to your new project.
+
+You can export this configuration via the CLI or the dashboard.
+
+<Tabs>
+  <Tab title="CLI">
+    Make sure your CLI is authenticated to your Porter Cloud project:
+    ```bash
+      porter config
+    ```
+    If the host is not https://cloud.porter.run or the project does not match your ID, run the following:
+    ```bash
+      porter auth login --host https://cloud.porter.run
+      porter config set-project
+    ```
+
+    Copy your application configuration to a local file by running:
+    ```bash
+      porter app yaml YOUR_APP > /file/on/your/local
+    ```
+
+  </Tab>
+  <Tab title="Dashboard">
+Navigate to the settings tab of your application:
+![App Settings](/images/cloud-migration/app-settings.webp)
+
+Click on the Export button and save the content on a local file:
+![App YAML](/images/cloud-migration/app-yaml-compressed.webp)
+
+  </Tab>
+</Tabs>
+
+<Warning>
+If you have any `onporter.run` domains configured on your services, you will have to remove them from the outputted yaml before continuing:
+
+```
+...
+  domains:
+  - name: web-1237-9889f3a8-r2aac6bv.onporter.run
+...
+```
+
+</Warning>
+
+<Warning>
+
+If you have configured secret variables in your application environment, these
+will not be exported with the app configuration. Run the following to retrieve
+all your secret and non-secret variables:
+
+```bash
+porter env pull -a YOUR_APP
+```
+
+</Warning>
+
+### Creating your application on Porter Standard
+
+    Make sure your CLI is authenticated to your Porter Standard project:
+    ```
+      porter auth login --host https://dashboard.porter.run
+      porter config set-project
+    ```
+
+    Run the following to create your application in your new project:
+    ```bash
+      porter apply -f /file/on/your/local --no-build
+    ```
+
+### Push new code changes to Porter Standard
+
+If you are running builds through Porter, you will have to update your Github workflow file to point to the new project.
+
+<Info>
+  You can find this workflow file in the `.github` folder in the root of your
+  Github repository. Porter generates a workflow file with the prefix
+  `porter-app`/`porter_app`, but if you copied the file manually it may have a
+  different name.
+</Info>
+
+The following variables will have to be updated in the `env` block of the workflow file:
+
+- `PORTER_PROJECT`
+- `PORTER_CLUSTER`
+- `PORTER_HOST`
+- `PORTER_DEPLOYMENT_TARGET_ID`
+- `PORTER_TOKEN`
+
+![Workflow File Diff](/images/cloud-migration/workflow-file-diff.webp)
+
+To find the updated values for `PORTER_PROJECT`, `PORTER_CLUSTER` and `PORTER_HOST`, run `porter config` after authenticating to Porter Standard and copy the values for `project`, `cluster` and `host`.
+
+If your Github workflow file has the `PORTER_DEPLOYMENT_TARGET_ID` field, you can remove it entirely.
+
+You will have to generate a new API token for `PORTER_TOKEN`:
+
+1. Navigate to the [API Tokens](https://dashboard.porter.run/settings/members) page in the `Settings` tab to generate a new token with the `Developer` role. You must have admin permissions to create API tokens.
+2. [Create a new Github secret](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets) with this value
+3. Reference the secret key name as the value for `PORTER_TOKEN`
+
+### Point DNS to your Porter Standard load balancer[](#dns "Direct link to heading")
+
+If you have configured custom domains for any of your web services, you will have to update your DNS settings to point to the load balancer associated with your new infrastructure.
+
+You can find your load balancer IP by navigating to your application on the Porter dashboard, going to the `Overview` tab, expanding one of your web services, and going to the `Networking` tab.
+
+If you rely on Porter-generated domains (`onporter.run`), you will have to update your services to use the new domains generated on your Porter Standard project.
