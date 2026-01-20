@@ -28,24 +28,21 @@ If you have not yet provisioned a cluster on one of the cloud providers, check o
 ## Select an instance type
 
 1. Select the `Infrastructure` section on the left side of the dashboard
-2. Select the `Configuration` tab
+2. Select the `Overview` tab
 
-![Infrastructure Tab](/images/provisioning-infrastructure/infrastructure-tab-configuration.png)
 
-3. Expand the `Advanced Settings` dropdown
+3. Expand the `Default node group` dropdown
 
-![Advanced Settings](/images/provisioning-infrastructure/infrastructure-tab-configuration-advanced-settings-expanded.png)
 
-The following settings should be displayed:
+    The following settings should be displayed:
 
-- **Cluster Version** - the version of the underlying Kubernetes cluster.
-- **Machine Type** - The underlying instance of the nodes that your applications are running on. The options here will vary per cloud provider.
-- **Maximum number of nodes** - The maximum number of nodes that your cluster will autoscale to under high load.
-- **Minimum number of nodes** - The minimum number of nodes that your cluster will autoscale to under low load.
+    - **Machine type** - The underlying instance of the nodes that your applications are running on. The options here will vary per cloud provider.
+    - **Maximum number of nodes** - The maximum number of nodes that your cluster will autoscale to under high load.
+    - **Minimum number of nodes** - The minimum number of nodes that your cluster will autoscale to under low load.
+    - **Disk size** - The storage capacity of the disk attached to each node in the cluster. 
 
-4. Select the appropriate **Machine Type** from the dropdown, then scroll to the bottom of the page, and click `Provision`.
+4. Select the appropriate **Machine type** from the dropdown, then scroll to the bottom of the page, and click `Update`.
 
-![Provision Button](/images/provisioning-infrastructure/infrastructure-tab-configuration-provision-enabled.png)
 
 - For more information on each cloud provider and their specific instance types, see our [FAQ at the bottom of this page](/provision/changing-instance-types#how-much-will-my-instance-type-cost)
 
@@ -58,7 +55,7 @@ This happens frequently as each cloud provider releases new instances on a phase
 
 Porter extensively tests the compatibility of instance types across a wide range of cluster and application configurations.
 Whilst the instance types that are available on Porter suit the most common needs of our users, we will be happy to add requested instance types for any cloud provider.
-Message us from the dashboard through the chat bot, or send us an email at support@porter.run.
+Message us from the dashboard through the chat bot.
 
 ### How much will my instance type cost?
 

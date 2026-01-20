@@ -5,8 +5,6 @@ sidebarTitle: "Overview"
 
 Porter provisions and manages the underlying infrastructure in your own cloud. During project creation, Porter will prompt you to provision resources in a cloud provider of your choice.
 
-![image](/images/provisioning-infrastructure/cloud-selection.png)
-
 For step by step instructions on how to provision infrastructure in each cloud provider, see the link below.
 
 <Card
@@ -33,4 +31,26 @@ The cost of your infrastructure varies entirely on the amount of resources you u
 
 ### What does Porter-provisioned infrastructure consist of?
 
-Infrastructure provisioned by Porter on AWS includes a VPC, a Network Load Balancer, and an EKS cluster. The EKS cluster consists of three node groups: 2 t3.medium instances for system workloads, 1 t3.large instance for the monitoring workloads, and a t3.medium instance for your application workloads that scales based on your usage. On GCP and Azure, the architecture is identical with equivalent components on each cloud provider.
+Infrastructure provisioned by Porter on AWS includes a VPC, a Network Load Balancer, and an EKS cluster. On GCP and Azure, the architecture is identical with equivalent components on each cloud provider (VPC/VNet, Load Balancer, and managed Kubernetes cluster).
+
+#### Default Node Group Configuration
+
+By default, Porter provisions three node groups in your cluster:
+
+| Node Group | Purpose | AWS Default | Azure Default | GCP Default |
+|------------|---------|-------------|---------------|-------------|
+| **System** | Kubernetes system workloads | 2x t3.medium | 2x Standard_B2s | 2x e2-medium |
+| **Monitoring** | Observability stack (metrics, logs) | 1x t3.large | 1x Standard_B2ms | 1x e2-standard-2 |
+| **Application** | Your application workloads | 1x t3.medium (autoscales) | 1x Standard_B2s (autoscales) | 1x e2-medium (autoscales) |
+
+**Application node group details:**
+- **Initial size:** 1 node
+- **Autoscaling:** Enabled by default
+- **Maximum nodes:** Scales based on workload demand and configured limits
+- **Minimum nodes:** 1 node to ensure availability
+
+**Disk size:** Each node includes 50GB of disk storage by default across all cloud providers.
+
+<Info>
+  You can customize machine types, node counts, and disk sizes after initial provisioning through the Infrastructure tab in the Porter dashboard.
+</Info>
