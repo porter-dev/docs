@@ -21,9 +21,9 @@ As documented in the [zero-downtime deployments doc](/configure/zero-downtime-de
 
 When the start command isn't set correctly, application logs will never show in the dashboard, and you will see a message in the "System" logs stating that the OCI container runtime is unable to start the process. Make sure that you've set the start command correctly.
 
-##### info
-
+<Info>
 You can read more about the start command for web applications in the [basic configuration](/configure/basic-configuration#setting-the-start-command).
+</Info>
 
 One method to check which commands are set in the `$PATH` of your container is to set the start command to `sleep infinity`, and then use the porter run command to get shell access. From this shell, you could for example run:
 

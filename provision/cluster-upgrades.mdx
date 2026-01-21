@@ -36,7 +36,7 @@ Kubernetes follows a release cycle where there are - approximately - three minor
 
 # Upgrade Path
 
-When a new version of upstream Kubernetes is released, we closely track the corresponding release on public clouds in conjunction with the wider community as well as our public cloud partners(AWS/MSA/GCP). 
+When a new version of upstream Kubernetes is released, we closely track the corresponding release on public clouds in conjunction with the wider community as well as our public cloud partners (AWS, Google Cloud, Azure). 
 
 1. Whilst waiting for public clouds to launch the new version on their managed versions, we start conducting initial compatibility tests with upstream Kubernetes against our systems, to catch any potential issues.
 
@@ -50,4 +50,4 @@ When a new version of upstream Kubernetes is released, we closely track the corr
 
 3. After our tests are successful, we announce a timeline for upgrades over our comms channels on Slack. At this point, while we typically announce a window during low-traffic hours when upgrades are conducted, customers have the option of scheduling a specific slot.
 
-4. When a cluster is upgraded, we upgrade system components, all app templates, the managed cluster control plane as well as all nodegroups. While this operation is meant to be non-disruptive, there are certain prerequisites on the customers' end to ensure zero downtime(see the section below for more details). 
+4. When a cluster is upgraded, we upgrade system components, all app templates, the managed cluster control plane as well as all nodegroups. While this operation is meant to be non-disruptive, there are certain prerequisites on the customers' end to ensure zero downtime (see the section below for more details). 
