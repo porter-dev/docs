@@ -10,7 +10,7 @@ Check out our [deployment documentation](/deploy/overview), [infrastructure prov
     <h2 className="text-2xl font-bold mt-8">Cloud Account</h2>
     <p>Your cloud provider account where Porter provisions and manages infrastructure. Porter connects to your AWS, GCP, or Azure account using secure access methods, maintaining full ownership and control in your own cloud. All infrastructure costs can be covered with your cloud credits.</p>
   </div>
-    <img src="/images/getting-started/cloud-account.png" alt="Cloud account connection" className="rounded-lg" />
+    <img src="/images/getting-started/cloud-account.webp" alt="Cloud account connection" className="rounded-lg" />
 </div>
 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 my-8">
@@ -19,7 +19,7 @@ Check out our [deployment documentation](/deploy/overview), [infrastructure prov
     <p>A managed Kubernetes cluster that Porter provisions in your cloud account to run your applications. Porter abstracts away the complexity of Kubernetes while intelligently allocating your applications across available nodes based on resource requirements.</p>
   </div>
   <div>
-    <img src="/images/getting-started/cluster.png" alt="Cluster configuration" className="rounded-lg" />
+    <img src="/images/getting-started/cluster.webp" alt="Cluster configuration" className="rounded-lg" />
   </div>
 </div>
 
@@ -29,7 +29,7 @@ Check out our [deployment documentation](/deploy/overview), [infrastructure prov
     <p>Groups of compute instances that make up your cluster. Porter provisions three default node groups: System (for Kubernetes workloads), Monitoring (for observability), and Application (for your workloads, with autoscaling).</p>
   </div>
   <div>
-    <img src="/images/getting-started/node-groups.png" alt="Node groups configuration" className="rounded-lg" />
+    <img src="/images/getting-started/node-groups.webp" alt="Node groups configuration" className="rounded-lg" />
   </div>
 </div>
 
@@ -39,7 +39,7 @@ Check out our [deployment documentation](/deploy/overview), [infrastructure prov
     <p>A group of services that share the same build and environment variables. When you deploy from a Git repository, Porter builds your code once and can run multiple services from that same build. Porter also supports deployment from both public and private Docker registries</p>
   </div>
   <div>
-    <img src="/images/getting-started/apps.png" alt="Configure applications" className="rounded-lg" />
+    <img src="/images/getting-started/apps.webp" alt="Configure applications" className="rounded-lg" />
   </div>
 </div>
 
@@ -49,6 +49,6 @@ Check out our [deployment documentation](/deploy/overview), [infrastructure prov
     <p>Individual processes that make up your application. Each service can have different start commands, resource allocations, and configurations. Porter supports three types: <strong>Web</strong> (HTTP traffic), <strong>Worker</strong> (background processes), and <strong>Job</strong> (scheduled or on-demand tasks).</p>
   </div>
   <div>
-    <img src="/images/getting-started/services.png" alt="Service types" className="rounded-lg" />
+    <img src="/images/getting-started/services.webp" alt="Service types" className="rounded-lg" />
   </div>
 </div>
