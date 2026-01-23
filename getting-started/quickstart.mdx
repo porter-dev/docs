@@ -3,3 +3,429 @@ title: "Quickstart"
 description: "Get up and running with Porter in minutes"
 ---
 
+This guide walks you through deploying your first application on Porter, from creating an account to seeing your app live at a public URL.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+<AccordionGroup>
+  <Accordion title="Cloud provider account" icon="cloud">
+    An active account with **AWS**, **GCP**, or **Azure** with admin or owner permissions. Porter provisions infrastructure in your cloud account, so you'll need permissions to create resources like Kubernetes clusters, networking components, and IAM roles.
+  </Accordion>
+  <Accordion title="GitHub account" icon="github">
+    A GitHub account with a repository you want to deploy. Porter connects to GitHub to build and deploy your code, and creates a GitHub Actions workflow for continuous deployment.
+  </Accordion>
+  <Accordion title="A deployable application" icon="code">
+    Your application should:
+    - Have a start command or Dockerfile
+    - Be pushed to a GitHub repository (or have a container image in a registry)
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Step 1: Sign up and create a project
+
+1. Navigate to [dashboard.porter.run](https://dashboard.porter.run) and create an account
+2. Click **Create Project**
+3. Enter a project name
+
+![Create project screen](/images/getting-started/step-1.webp)
+
+<Info>
+Project names must be 1-25 characters, using only lowercase letters, numbers, and hyphens.
+</Info>
+
+---
+
+## Step 2: Select your cloud provider
+
+Choose the cloud provider where you want Porter to provision your infrastructure.
+
+![Cloud provider selection](/images/getting-started/step-2.webp)
+
+If you've previously connected a cloud account to Porter, you can reuse those credentials.
+
+![Existing cloud accounts](/images/getting-started/step-2-existing.webp)
+
+---
+
+## Step 3: Set up your cluster
+
+Porter provisions a Kubernetes cluster in your cloud account. The setup process varies by provider.
+
+<Tabs>
+  <Tab title="AWS">
+    Porter uses AWS IAM role assumption to securely access your account without storing static credentials.
+
+    <Steps>
+      <Step title="Enter your AWS Account ID">
+        Log into your [AWS Console](https://console.aws.amazon.com) and find your 12-digit Account ID in the top-right corner. Enter this ID in Porter.
+      </Step>
+      <Step title="Create the CloudFormation stack">
+        Click **Grant Permissions**. Porter opens the AWS CloudFormation console to create a stack that provisions the `porter-manager` IAM role.
+
+        ![Create CloudFormation stack](/images/getting-started/step-3-aws-create-stack.webp)
+
+        <Warning>
+        If the popup is blocked, check your browser settings and allow popups from Porter.
+        </Warning>
+
+        Scroll to the bottom of the CloudFormation page, check the **I acknowledge that AWS CloudFormation might create IAM resources** box, and click **Create Stack**.
+
+        <Info>
+        The IAM role must remain in your AWS account for Porter to manage your infrastructure. Deleting it will prevent Porter from making changes.
+        </Info>
+      </Step>
+      <Step title="Review costs">
+        Porter displays estimated monthly costs for your infrastructure (~$225/month for AWS).
+
+        ![AWS cost review](/images/getting-started/step-3-aws-review-costs.webp)
+
+        These estimates are for the default cluster configuration. Actual costs vary based on usage, region, and any customizations you make.
+
+        Review the cost breakdown and click **Accept** to continue.
+      </Step>
+      <Step title="Configure and provision">
+        Porter pre-configures your cluster with sensible defaults:
+
+        - **Cluster name**: Auto-generated based on your project
+        - **Region**: Defaults to `us-east-1`
+        - **Node groups**: Pre-configured with appropriate instance types
+
+        ![AWS cluster configuration](/images/getting-started/step-3-aws-configure-and-provision.webp)
+
+        <Accordion title="AWS resource quota limits">
+        If AWS is limiting your account's resource quota, Porter will display a warning and offer to auto-request quota increases on your behalf. Check **Allow Porter to auto-request AWS quota** to enable this.
+
+        ![AWS quota limits](/images/getting-started/step-3-aws-limiting-quota.webp)
+
+        Alternatively, you can manually request quota increases through the [AWS Service Quotas console](https://console.aws.amazon.com/servicequotas/).
+        </Accordion>
+
+        You can customize these settings or accept the defaults. Click **Provision** to start creating your infrastructure.
+
+        <Warning>
+        Provisioning takes approximately 30-45 minutes. You can close the browser and return later. Porter continues working in the background.
+        </Warning>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="GCP">
+    Porter connects to GCP using a service account with permissions to manage your infrastructure.
+
+    <Steps>
+      <Step title="Enable required APIs">
+        In your [GCP Console](https://console.cloud.google.com), navigate to **APIs & Services** and enable these five APIs:
+
+        - Compute Engine API
+        - Kubernetes Engine API
+        - Cloud Resource Manager API
+        - Container Registry API
+        - Artifact Registry API
+      </Step>
+      <Step title="Create a service account">
+        1. Navigate to **IAM & Admin** > **Service Accounts**
+        2. Click **Create Service Account**
+        3. Name your service account (e.g., `porter-service-account`)
+        4. Grant these five permissions:
+           - **Cloud Storage > Storage Admin**
+           - **Compute Engine > Compute Admin**
+           - **Kubernetes Engine > Kubernetes Engine Admin**
+           - **Service Accounts > Service Account User**
+           - **Artifact Registry > Artifact Registry Administrator**
+        5. Click **Done** to create the account
+        6. Under **Actions**, select **Manage keys**
+        7. Click **Add Key** > **Create new key** > **JSON**
+        8. The JSON key file downloads automatically. Keep it safe
+      </Step>
+      <Step title="Upload the service account key">
+        In Porter, click **Drop a GCP Service Account JSON here, or click to browse** and upload the JSON key file you downloaded.
+
+        ![Upload GCP service account key](/images/getting-started/step-3-gcp-upload-json.webp)
+
+        Porter verifies the credentials and permissions. This typically takes about a minute.
+      </Step>
+      <Step title="Review costs">
+        Porter displays estimated monthly costs for your infrastructure (~$253/month for GCP).
+
+        ![GCP cost review](/images/getting-started/step-3-gcp-review-costs.webp)
+
+        These estimates are for the default cluster configuration. Actual costs vary based on usage, region, and any customizations you make.
+
+        Review the cost breakdown and click **Accept** to continue.
+      </Step>
+      <Step title="Configure and provision">
+        Porter pre-configures your cluster with sensible defaults:
+
+        - **Cluster name**: Auto-generated based on your project
+        - **Region**: Defaults to `us-east1`
+        - **Node groups**: Pre-configured with appropriate instance types
+
+        ![GCP cluster configuration](/images/getting-started/step-3-gcp-configure-and-provision.webp)
+
+        You can customize these settings or accept the defaults. Click **Provision** to start creating your infrastructure.
+
+        <Warning>
+        Provisioning takes approximately 30-45 minutes. You can close the browser and return later. Porter continues working in the background.
+        </Warning>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Azure">
+    Porter connects to Azure using a service principal with permissions to manage your infrastructure.
+
+    <Steps>
+      <Step title="Create a service principal">
+        Before connecting Azure to Porter, you need to create a service principal. You can do this using our automated script or manually.
+
+        <AccordionGroup>
+          <Accordion title="Option 1: Automated setup (recommended)">
+            If you have the Azure CLI installed and authenticated (`az login`), run our setup script:
+
+            ```bash
+            # Download the setup script
+            curl -O https://raw.githubusercontent.com/porter-dev/docs/main/scripts/setup-azure-porter.sh
+
+            # Make it executable
+            chmod +x setup-azure-porter.sh
+
+            # Run the script (optionally provide subscription ID)
+            ./setup-azure-porter.sh [your-subscription-id]
+            ```
+
+            The script creates the required role, service principal, and grants necessary permissions. Copy the output credentials for the next step.
+          </Accordion>
+          <Accordion title="Option 2: Manual setup">
+            For manual setup, follow the detailed instructions in our [Azure provisioning guide](/provision/provisioning-on-azure#option-2-manual-setup). You'll need to:
+
+            1. Enable required Azure resource providers
+            2. Create a custom IAM role
+            3. Create a service principal
+            4. Grant Microsoft Graph API permissions
+          </Accordion>
+        </AccordionGroup>
+      </Step>
+      <Step title="Enter your credentials">
+        In Porter, enter the following values from your service principal:
+
+        | Field | Description |
+        |-------|-------------|
+        | **Subscription ID** | Your Azure subscription ID |
+        | **Application (Client) ID** | The `appId` from your service principal |
+        | **Client Secret** | The `password` from your service principal |
+        | **Tenant ID** | The `tenant` from your service principal |
+
+        ![Azure credentials entry](/images/getting-started/step-3-azure-permissions.webp)
+
+        Porter verifies the credentials immediately when you submit.
+      </Step>
+      <Step title="Review costs">
+        Porter displays estimated monthly costs for your infrastructure (~$165/month for Azure).
+
+        ![Azure cost review](/images/getting-started/step-3-azure-review-costs.webp)
+
+        These estimates are for the default cluster configuration. Actual costs vary based on usage, region, and any customizations you make.
+
+        Review the cost breakdown and click **Accept** to continue.
+      </Step>
+      <Step title="Configure and provision">
+        Porter pre-configures your cluster with sensible defaults:
+
+        - **Cluster name**: Auto-generated based on your project
+        - **Region**: Defaults to `eastus`
+        - **Node groups**: Pre-configured with appropriate instance types
+
+        ![Azure cluster configuration](/images/getting-started/step-3-azure-configure-and-provision.webp)
+
+        You can customize these settings or accept the defaults. Click **Provision** to start creating your infrastructure.
+
+        <Warning>
+        Provisioning takes approximately 30-45 minutes. You can close the browser and return later. Porter continues working in the background.
+        </Warning>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Step 4: Create your first application
+
+Once your cluster is ready, you'll see the Porter dashboard. Click **Create Application** to deploy your code.
+
+<Tabs>
+  <Tab title="Deploy from a GitHub repository">
+    Porter builds your application from source code and sets up automated deployments on every push.
+
+    <Steps>
+      <Step title="Connect GitHub">
+        If this is your first deployment, you'll need to connect your GitHub account:
+
+        ![Source selection screen](/images/deploy/v2/github-source-selection.webp)
+
+        1. Click **Connect repositories**
+        2. Authorize the Porter GitHub App
+        3. Choose which repositories Porter can access (all repositories or select specific ones)
+
+        Porter needs read access to detect your code structure and write access to create the deployment workflow.
+      </Step>
+      <Step title="Select your repository">
+        1. Choose the repository containing your application
+        2. Select the branch to deploy (defaults to `main` or `master`)
+
+        ![GitHub repository and branch selector](/images/deploy/v2/github-repo-branch-selector.webp)
+      </Step>
+      <Step title="Review detected applications">
+        Porter scans your repository and automatically detects:
+
+        - Frameworks and languages (Node.js, Python, Go, etc.)
+        - Dockerfiles
+        - Service types (web servers, workers, etc.)
+
+        ![Detected applications list](/images/deploy/v2/detected-apps-list.webp)
+
+        You'll see a card for each detected application showing the app name, detected framework, and repository path.
+
+        <Info>
+        For monorepos with multiple services, Porter detects each application separately. A Node.js API in `/api` and a React frontend in `/web` appear as distinct applications.
+        </Info>
+      </Step>
+      <Step title="Configure your application (optional)">
+        Click the **gear icon** on any application card to customize:
+
+        ![Settings button on application card](/images/deploy/v2/app-card-settings-button.webp)
+
+        - **Build method**: Docker (using your Dockerfile) or Buildpacks (automatic)
+        - **Start command**: The command to run your application
+        - **Port**: The port your application listens on
+
+        For most applications, Porter's detected defaults work without changes.
+      </Step>
+      <Step title="Deploy">
+        Click **Deploy** to start your deployment.
+      </Step>
+      <Step title="Merge the GitHub Actions PR">
+        <Warning>
+        This step is critical. Your application won't be available until you merge the PR.
+        </Warning>
+
+        Porter creates a pull request in your repository containing a GitHub Actions workflow file at `.github/workflows/porter.yml`. This workflow handles building and deploying your application on every push.
+
+        After clicking Deploy, you'll see:
+        - A **toast notification** with a "View PR" button that links directly to the pull request
+        - A **warning banner** on your app's page with a "Merge PR" link
+
+        ![Merge PR banner](/images/getting-started/step-4-github-merge-pr-banner.webp)
+
+        Click either link to open the pull request on GitHub, then merge it. After merging, click **Refresh** on the banner to update the status. GitHub Actions triggers automatically and your first deployment begins.
+
+        <Accordion title="What's in the workflow file?">
+        The workflow Porter creates looks like this:
+
+        ```yaml
+        on:
+          push:
+            branches:
+              - main
+        name: Deploy to Porter
+        jobs:
+          porter-deploy:
+            runs-on: ubuntu-latest
+            steps:
+              - uses: actions/checkout@v4
+              - uses: porter-dev/setup-porter@v0.1.0
+              - run: porter apply
+                env:
+                  PORTER_TOKEN: ${{ secrets.PORTER_APP_... }}
+        ```
+        </Accordion>
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Deploy from a Docker registry">
+    This approach works well when you have an existing CI/CD pipeline or are deploying third-party images.
+
+    <Steps>
+      <Step title="Select container registry">
+        From the Create Application screen, click **Or, deploy from a container registry** in the top right.
+
+        ![Container registry link](/images/deploy/v2/github-deploy-registry-link.webp)
+      </Step>
+      <Step title="Specify your image">
+        Enter your image details:
+
+        - **Image repository**: The full path to your image
+          - Docker Hub: `docker.io/username/image` or `username/image`
+          - Amazon ECR: `123456789.dkr.ecr.us-east-1.amazonaws.com/my-app`
+          - Google Artifact Registry: `us-docker.pkg.dev/project-id/repo/image`
+          - Azure Container Registry: `myregistry.azurecr.io/my-app`
+        - **Tag**: The version to deploy (e.g., `latest`, `v1.2.3`, or a commit SHA)
+
+        ![Container registry inputs](/images/deploy/v2/container-registry-inputs.webp)
+      </Step>
+      <Step title="Configure your application">
+        Porter creates an application configuration with sensible defaults. Since Porter can't inspect your pre-built image, you'll need to specify:
+
+        - **Port**: The port your container listens on (for web services)
+        - **Start command**: Override the image's default CMD if needed
+
+        Click the **gear icon** to adjust resources (CPU, RAM, instances) if the defaults don't fit your needs.
+      </Step>
+      <Step title="Deploy">
+        Click **Deploy** to pull your image and start running it.
+
+        <Info>
+        To update your application later, push a new image tag and use the Porter CLI:
+        ```bash
+        porter app update-tag APP_NAME --tag NEW_TAG
+        ```
+        </Info>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+---
+
+## Step 5: View your running application
+
+Return to the Porter dashboard to monitor your deployment:
+
+1. Click on your application to view deployment progress
+2. Watch the build logs as Porter builds your container image
+3. Monitor the deployment as Porter starts your application
+
+Once the deployment completes, your application status changes to **Running**.
+
+### Access your application
+
+Porter automatically provisions a public URL for your application at `*.onporter.run`. Click the URL in your dashboard to visit your deployed application.
+
+![Deployed application](/images/getting-started/step-5-deployed.webp)
+
+<Check>
+Congratulations! Your application is now live and will automatically redeploy whenever you push to your selected branch.
+</Check>
+
+---
+
+## Next steps
+
+Now that your application is running, explore these guides to customize your deployment:
+
+<CardGroup cols={2}>
+  <Card title="Custom domains" icon="globe" href="/configure/custom-domains">
+    Connect your own domain name to your application.
+  </Card>
+  <Card title="Environment groups" icon="key" href="/configure/environment-groups">
+    Configure secrets and environment variables for your app.
+  </Card>
+  <Card title="Autoscaling" icon="chart-line" href="/configure/autoscaling">
+    Scale your application automatically based on traffic.
+  </Card>
+  <Card title="Types of services" icon="cubes" href="/deploy/types-of-services">
+    Add workers, jobs, and configure service settings.
+  </Card>
+</CardGroup>
