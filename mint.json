@@ -52,60 +52,79 @@
           ]
         },
         {
-          "group": "Deploy",
+          "group": "Applications",
           "pages": [
-            "deploy/overview",
-            "deploy/types-of-services",
-            "deploy/v1-and-v2",
             {
-              "group": "v2",
+              "group": "Deploy",
               "pages": [
-                "deploy/v2/deploy-from-github-repo",
-                "deploy/v2/deploy-from-docker-registry",
-                "deploy/v2/configuring-application-services"
-              ]
-            },
-            {
-              "group": "v1",
-              "pages": [
-                "deploy/v1/deploy-from-github-repo",
-                "deploy/v1/deploy-from-docker-registry"
-              ]
-            },
-            "deploy/builds",
-            "deploy/multiple-deploys-from-same-build",
-            "deploy/pre-deploy-jobs",
-            "deploy/rollbacks",
-            "deploy/using-other-ci-tools",
-            {
-              "group": "Configuration as Code",
-              "pages": [
-                "deploy/configuration-as-code/overview",
-                "deploy/configuration-as-code/reference",
-                "deploy/configuration-as-code/addons-porter-yaml",
+                "deploy/overview",
+                "deploy/types-of-services",
+                "deploy/v1-and-v2",
                 {
-                  "group": "Service Configuration",
+                  "group": "v2",
                   "pages": [
-                    "deploy/configuration-as-code/services/web-service",
-                    "deploy/configuration-as-code/services/worker-service",
-                    "deploy/configuration-as-code/services/job-service",
-                    "deploy/configuration-as-code/services/predeploy"
+                    "deploy/v2/deploy-from-github-repo",
+                    "deploy/v2/deploy-from-docker-registry",
+                    "deploy/v2/configuring-application-services"
+                  ]
+                },
+                {
+                  "group": "v1",
+                  "pages": [
+                    "deploy/v1/deploy-from-github-repo",
+                    "deploy/v1/deploy-from-docker-registry"
+                  ]
+                },
+                "deploy/builds",
+                "deploy/multiple-deploys-from-same-build",
+                "deploy/pre-deploy-jobs",
+                "deploy/rollbacks",
+                "deploy/using-other-ci-tools",
+                {
+                  "group": "Configuration as Code",
+                  "pages": [
+                    "deploy/configuration-as-code/overview",
+                    "deploy/configuration-as-code/reference",
+                    "deploy/configuration-as-code/addons-porter-yaml",
+                    {
+                      "group": "Service Configuration",
+                      "pages": [
+                        "deploy/configuration-as-code/services/web-service",
+                        "deploy/configuration-as-code/services/worker-service",
+                        "deploy/configuration-as-code/services/job-service",
+                        "deploy/configuration-as-code/services/predeploy"
+                      ]
+                    }
                   ]
                 }
               ]
+            },
+            {
+              "group": "Configure",
+              "pages": [
+                "configure/basic-configuration",
+                "configure/environment-groups",
+                "configure/autoscaling",
+                "configure/custom-domains",
+                "configure/health-checks",
+                "configure/zero-downtime-deployments",
+                "configure/advanced-networking"
+              ]
+            },
+            {
+              "group": "Observability",
+              "pages": [
+                "observability/monitoring",
+                "observability/logging",
+                "observability/alerts",
+                "observability/app-metadata",
+                "observability/custom-metrics-and-autoscaling"
+              ]
+            },
+            {
+              "group": "Debug",
+              "pages": ["debug/common-errors"]
             }
-          ]
-        },
-        {
-          "group": "Configure",
-          "pages": [
-            "configure/basic-configuration",
-            "configure/environment-groups",
-            "configure/autoscaling",
-            "configure/custom-domains",
-            "configure/health-checks",
-            "configure/zero-downtime-deployments",
-            "configure/advanced-networking"
           ]
         },
         {
@@ -151,20 +170,6 @@
               ]
             }
           ]
-        },
-        {
-          "group": "Observability",
-          "pages": [
-            "observability/monitoring",
-            "observability/logging",
-            "observability/alerts",
-            "observability/app-metadata",
-            "observability/custom-metrics-and-autoscaling"
-          ]
-        },
-        {
-          "group": "Debug",
-          "pages": ["debug/common-errors"]
         },
         {
           "group": "Preview Environments",
