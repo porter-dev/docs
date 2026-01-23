@@ -42,24 +42,11 @@ services:
 
 **Type:** `string` - **Optional**
 
-A cron expression that defines when the job should run. Uses standard 5-field cron syntax.
+A cron expression that defines when the job should run. Uses [standard 5-field cron syntax](https://en.wikipedia.org/wiki/Cron).
 
 ```yaml
 cron: "0 0 * * *"
 ```
-
-**Cron Format:**
-
-```
-*    *    *    *    *
-1    2    3    4    5
-```
-
-1. Minute (0 - 59)
-2. Hour (0 - 23)
-3. Day of month (1 - 31)
-4. Month (1 - 12)
-5. Day of week (0 - 6, Sunday to Saturday)
 
 **Common Schedules:**
 
