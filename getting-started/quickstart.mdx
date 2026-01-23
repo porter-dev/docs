@@ -13,9 +13,6 @@ Before you begin, make sure you have:
   <Accordion title="Cloud provider account" icon="cloud">
     An active account with **AWS**, **GCP**, or **Azure** with admin or owner permissions. Porter provisions infrastructure in your cloud account, so you'll need permissions to create resources like Kubernetes clusters, networking components, and IAM roles.
   </Accordion>
-  <Accordion title="GitHub account" icon="github">
-    A GitHub account with a repository you want to deploy. Porter connects to GitHub to build and deploy your code, and creates a GitHub Actions workflow for continuous deployment.
-  </Accordion>
   <Accordion title="A deployable application" icon="code">
     Your application should:
     - Have a start command or Dockerfile
@@ -97,7 +94,7 @@ Porter provisions a Kubernetes cluster in your cloud account. The setup process 
         ![AWS cluster configuration](/images/getting-started/step-3-aws-configure-and-provision.webp)
 
         <Accordion title="AWS resource quota limits">
-        If AWS is limiting your account's resource quota, Porter will display a warning and offer to auto-request quota increases on your behalf. Check **Allow Porter to auto-request AWS quota** to enable this.
+        If AWS is limiting your account's resource quota, Porter will display a warning and offer to auto-request quota increases on your behalf. **Allow Porter to auto-request AWS quota** is enabled by default.
 
         ![AWS quota limits](/images/getting-started/step-3-aws-limiting-quota.webp)
 
