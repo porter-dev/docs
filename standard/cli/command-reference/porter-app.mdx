@@ -108,7 +108,7 @@ porter app logs my-app --since 12h
 ```
 
 ```bash Time Range
-porter app logs my-app --from 2024-01-01T10:00:00Z --to 2024-01-01T12:00:00Z
+porter app logs my-app --from 2025-01-15T10:00:00Z --to 2025-01-15T12:00:00Z
 ```
 
 ```bash Limit Results
@@ -266,26 +266,12 @@ List all applications in the current project and cluster.
 porter app list
 ```
 
----
-
-## `porter app delete`
-
-Delete an application from Porter.
-
-**Usage:**
-```bash
-porter app delete [APP_NAME] [flags]
+**Example Output:**
 ```
-
-**Options:**
-
-| Flag | Description |
-|------|-------------|
-| `--yes` | Skip confirmation prompt |
-
-<Warning>
-This action is destructive and cannot be undone. All services and data associated with the app will be deleted.
-</Warning>
+NAME            CLUSTER   DEPLOYMENT_TARGET   CREATED_AT        GIT_REPOSITORY              IMAGE_REPOSITORY
+my-api          12345     default             2025-01-15 10:30  github.com/org/my-api       123456.dkr.ecr...
+my-worker       12345     default             2025-01-10 09:15  github.com/org/my-worker    123456.dkr.ecr...
+```
 
 ---
 
