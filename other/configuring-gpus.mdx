@@ -44,40 +44,8 @@ GPU workloads on Porter use fixed node groups with GPU-enabled instance types. T
 
     ![Fixed Node Group Configuration](/images/provisioning-infrastructure/cost-opt-1.png)
 
-    ### Recommended GPU Instance Types
-
-    <Tabs>
-      <Tab title="AWS">
-        | Instance Type | GPU | GPU Memory | Use Case |
-        |---------------|-----|------------|----------|
-        | `g4dn.xlarge` | 1x NVIDIA T4 | 16 GB | Inference, light training |
-        | `g4dn.2xlarge` | 1x NVIDIA T4 | 16 GB | Inference with more CPU/RAM |
-        | `g5.xlarge` | 1x NVIDIA A10G | 24 GB | Training, larger models |
-        | `g5.2xlarge` | 1x NVIDIA A10G | 24 GB | Training with more CPU/RAM |
-        | `p3.2xlarge` | 1x NVIDIA V100 | 16 GB | High-performance training |
-      </Tab>
-
-      <Tab title="Azure">
-        | Instance Type | GPU | GPU Memory | Use Case |
-        |---------------|-----|------------|----------|
-        | `Standard_NC4as_T4_v3` | 1x NVIDIA T4 | 16 GB | Inference, light training |
-        | `Standard_NC8as_T4_v3` | 1x NVIDIA T4 | 16 GB | Inference with more CPU/RAM |
-        | `Standard_NC6s_v3` | 1x NVIDIA V100 | 16 GB | High-performance training |
-        | `Standard_NC24s_v3` | 4x NVIDIA V100 | 64 GB | Multi-GPU training |
-      </Tab>
-
-      <Tab title="Google Cloud">
-        | Instance Type | GPU | GPU Memory | Use Case |
-        |---------------|-----|------------|----------|
-        | `g2-standard-4` | 1x NVIDIA L4 | 24 GB | Inference, light training |
-        | `g2-standard-8` | 1x NVIDIA L4 | 24 GB | Inference with more CPU/RAM |
-        | `n1-standard-4` + T4 | 1x NVIDIA T4 | 16 GB | Cost-effective inference |
-        | `a2-highgpu-1g` | 1x NVIDIA A100 | 40 GB | High-performance training |
-      </Tab>
-    </Tabs>
-
     <Warning>
-      GPU instances are significantly more expensive than standard instances. Set minimum nodes to 0 if your workload can tolerate cold starts, allowing nodes to scale down when not in use.
+      GPU instances are significantly more expensive than standard instances. Set minimum nodes to 0 if your workload can tolerate cold starts, allowing nodes to scale down when not in use. Note that this adds cold start latency (typically 2-5 minutes) when nodes need to spin up.
     </Warning>
   </Step>
 
@@ -126,54 +94,6 @@ Once your GPU node group is ready, you can deploy applications that use GPU reso
   </Step>
 </Steps>
 
-## Verifying GPU Access
-
-To verify your application has GPU access, you can check from within your container:
-
-```bash
-# For NVIDIA GPUs, run nvidia-smi
-nvidia-smi
-```
-
-You should see output showing your GPU model, memory usage, and any running processes.
-
-If using PyTorch or TensorFlow, you can verify GPU access in your application code:
-
-```python
-# PyTorch
-import torch
-print(f"GPU available: {torch.cuda.is_available()}")
-print(f"GPU count: {torch.cuda.device_count()}")
-print(f"GPU name: {torch.cuda.get_device_name(0)}")
-
-# TensorFlow
-import tensorflow as tf
-print(f"GPUs available: {tf.config.list_physical_devices('GPU')}")
-```
-
-## Best Practices
-
-### Use Scale-to-Zero for Cost Savings
-
-If your GPU workload is intermittent (e.g., batch inference, scheduled training), set minimum nodes to 0. Your GPU nodes will scale down when not in use, potentially saving hundreds of dollars per month.
-
-<Info>
-  Scale-to-zero adds cold start latency (typically 2-5 minutes) when nodes need to spin up. For latency-sensitive workloads, keep at least one node running.
-</Info>
-
-### Choose the Right Instance Size
-
-- **Inference**: Start with smaller instances like `g4dn.xlarge` (AWS) or `g2-standard-4` (GCP)
-- **Training**: Use larger instances with more GPU memory like `g5.xlarge` or `a2-highgpu-1g`
-- **Multi-GPU**: Only use multi-GPU instances if your framework supports distributed training
-
-### Monitor GPU Utilization
-
-Use Porter's monitoring to track GPU utilization. If utilization is consistently low, consider:
-- Using a smaller instance type
-- Batching requests for better throughput
-- Reducing minimum nodes if you have idle capacity
-
 ## Troubleshooting
 
 <AccordionGroup>
@@ -185,28 +105,17 @@ Use Porter's monitoring to track GPU utilization. If utilization is consistently
     - The node group maximum nodes hasn't been reached
   </Accordion>
 
-  <Accordion title="GPU not detected in container">
-    Verify that:
-
-    - You've assigned the service to the GPU node group
-    - You've requested GPU resources in the service configuration
-    - The container image has NVIDIA drivers/CUDA installed
-  </Accordion>
-
   <Accordion title="Out of memory errors">
     GPU memory errors indicate your model or batch size is too large:
 
     - Reduce batch size
     - Use a larger GPU instance with more VRAM
-    - Enable gradient checkpointing for training workloads
-    - Use mixed precision (FP16) to reduce memory usage
   </Accordion>
 
   <Accordion title="Slow cold starts">
     GPU nodes take longer to start than CPU nodes due to driver initialization:
 
     - Keep minimum nodes at 1 for latency-sensitive workloads
-    - Use preemptible/spot instances for cost savings if cold starts are acceptable
     - Consider keeping a warm pool of nodes during peak hours
   </Accordion>
 </AccordionGroup>
