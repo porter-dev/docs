@@ -56,13 +56,26 @@
           "pages": [
             "deploy/overview",
             "deploy/types-of-services",
-            "deploy/deploy-from-github-repo",
-            "deploy/deploy-from-docker-registry",
+            "deploy/v1-and-v2",
+            {
+              "group": "v2",
+              "pages": [
+                "deploy/v2/deploy-from-github-repo",
+                "deploy/v2/deploy-from-docker-registry",
+                "deploy/v2/configuring-application-services"
+              ]
+            },
+            {
+              "group": "v1",
+              "pages": [
+                "deploy/v1/deploy-from-github-repo",
+                "deploy/v1/deploy-from-docker-registry"
+              ]
+            },
             "deploy/builds",
             "deploy/multiple-deploys-from-same-build",
             "deploy/pre-deploy-jobs",
             "deploy/rollbacks",
-            "deploy/blue-green-synced-deploy",
             "deploy/using-other-ci-tools",
             {
               "group": "Configuration as Code",
