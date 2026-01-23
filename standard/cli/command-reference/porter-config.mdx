@@ -1,25 +1,106 @@
 ---
-title: "porter config"
+title: 'porter config'
 ---
 
-`porter config` contains commands for controlling local configuration settings.
+`porter config` contains commands for managing local CLI configuration settings.
 
-### `porter config`[](#porter-config "Direct link to heading")
+---
 
-Running `porter config` with no subcommands will output the current configuration file to the terminal. Note that this configuration may be overwritten through a combination of flags and environment variables.
+## `porter config`
 
-### `porter config set-host [HOSTNAME]`[](#porter-config-set-host-hostname "Direct link to heading")
+Display the current CLI configuration, including project, cluster, and authentication details.
 
-Saves the host in the default configuration. Note this host must include the protocol and should not contain trailing slashes. For example:
-
+**Usage:**
+```bash
+porter config
 ```
+
+**Example Output:**
+```
+Project: 12345
+Cluster: 67890
+Token: porter_tk_...
+Host: https://dashboard.porter.run
+```
+
+<Info>
+Configuration values can be overridden using flags or environment variables. See [Basic Usage](/cli/basic-usage) for details.
+</Info>
+
+---
+
+## `porter config set-host`
+
+Set the Porter API host. This is typically only needed for self-hosted Porter instances.
+
+**Usage:**
+```bash
+porter config set-host [HOSTNAME]
+```
+
+```bash
 porter config set-host https://dashboard.porter.run
 ```
 
-### `porter config set-project`[](#porter-config-set-project "Direct link to heading")
+<Warning>
+The hostname must include the protocol (`https://`) and should not contain trailing slashes.
+</Warning>
 
-Saves the project ID in the default configuration from a list of projects that you have access to.
+---
 
-### `porter config set-cluster`[](#porter-config-set-cluster "Direct link to heading")
+## `porter config set-project`
 
-Saves the cluster ID in the default configuration from a list of clusters that the current project has access to.
+Set the active project. This command shows a list of projects you have access to and lets you select one.
+
+**Usage:**
+```bash
+porter config set-project [PROJECT_ID]
+```
+
+<CodeGroup>
+```bash Interactive Selection
+porter config set-project
+```
+
+```bash Direct ID
+porter config set-project 12345
+```
+</CodeGroup>
+
+---
+
+## `porter config set-cluster`
+
+Set the active cluster. This command shows a list of clusters in the current project and lets you select one.
+
+**Usage:**
+```bash
+porter config set-cluster [CLUSTER_ID]
+```
+
+<CodeGroup>
+```bash Interactive Selection
+porter config set-cluster
+```
+
+```bash Direct ID
+porter config set-cluster 67890
+```
+</CodeGroup>
+
+<Tip>
+Run `porter cluster list` first to see available clusters and their IDs.
+</Tip>
+
+---
+
+## Configuration File
+
+Porter stores configuration in `~/.porter/config.json`. You can also override settings using environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `PORTER_PROJECT` | Override project ID |
+| `PORTER_CLUSTER` | Override cluster ID |
+| `PORTER_TOKEN` | Override authentication token |
+| `PORTER_HOST` | Override API host |
