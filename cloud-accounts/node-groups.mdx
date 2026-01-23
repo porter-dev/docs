@@ -1,0 +1,98 @@
+---
+title: "Node Groups"
+description: "Configure node groups and optimize compute costs for your Porter cluster"
+---
+
+Porter provides flexible options for managing compute resources in your cluster.
+You can add custom node groups for specialized workloads or enable cost
+optimization to reduce infrastructure spend.
+
+    ### Creating a Custom Node Group
+
+    <Steps>
+      <Step title="Navigate to Infrastructure">
+        From your Porter dashboard, click on the **Infrastructure** tab in the left sidebar.
+      </Step>
+
+      <Step title="Select your cluster">
+        Click on **Cluster** to view your cluster configuration and node groups.
+      </Step>
+
+      <Step title="Add a node group">
+        Click **Add an additional node group** to open the node group configuration panel.
+      </Step>
+
+      <Step title="Configure the node group">
+        <Tabs>
+          <Tab title="Cost Optimization">
+            ## Cost Optimization for Node Groups
+
+            Set your maximum CPU cores limit to prevent unexpected scaling. This helps prevent unexpected cost increases by setting a cap.
+
+            ![Cost Optimization Configuration](/images/provisioning-infrastructure/cost-opt-2.png)
+
+
+            ### Limitations
+
+            The following node group configurations should continue using fixed instance types until we support cost optimization for them:
+
+            - GPU instances (e.g., instances with NVIDIA GPUs)
+            - Spot instances
+            - Instances in public subnets
+            - Instances with specialized hardware requirements
+          </Tab>
+          <Tab title="Fixed Node Groups">
+            ## Fixed Node Groups
+            
+            Fixed node groups uses a specific fixed instance type approach. Applications built on this will only be scheduled on the exact instance type. This gives you more control, but has the limitation of over-provisioning certain resources if configured incorrectly.
+
+            ![Cost Optimization Configuration](/images/provisioning-infrastructure/cost-opt-1.png)
+
+            Configure your node group with the following settings:
+
+            | Setting | Description |
+            |---------|-------------|
+            | **Instance type** | The machine type for nodes in this group |
+            | **Minimum nodes** | The minimum number of nodes to maintain (set to 0 for scale-to-zero) |
+            | **Maximum nodes** | The upper limit for autoscaling |
+
+            <Info>
+              Choose instance types based on your workload requirements. For GPU workloads, create a second node group and select instances with GPU support (e.g., `g4dn.xlarge` on AWS, `Standard_NC4as_T4_v3` on Azure, `g2-standard-4` on GCP).
+            </Info>
+          </Tab>
+        </Tabs>
+
+
+        <Info>
+          **Health Checks Required**: For production applications, ensure proper health checks are configured before scheduling them on cost-optimized node groups. This ensures your applications can be safely rescheduled on new nodes without causing any disruption as nodes are reshuffled.
+        </Info>
+      </Step>
+
+      <Step title="Save and apply">
+        Click **Save** to create the node group. Porter will provision the new nodes in your cluster. This may take a few minutes.
+      </Step>
+    </Steps>
+
+    ### Assigning Workloads
+
+    Once your custom node group is created, you can assign applications to run on it:
+
+    1. Navigate to your application in the Porter dashboard
+    2. Go to the **Services** tab
+    3. Click the service you want to assign
+    4. Under **General**, find the **Node group** selector
+    5. Select your custom node group from the dropdown
+    6. Save and redeploy your application
+
+    ### Deleting a Node Group
+
+    To remove a custom node group:
+
+    1. First, migrate any workloads running on the node group to another node group
+    2. Navigate to **Infrastructure** → **Cluster**
+    3. Find the node group you want to delete
+    4. Click the delete icon and confirm
+
+    <Warning>
+      Ensure no workloads are scheduled on the node group before deleting. Workloads will be disrupted if their node group is removed.
+    </Warning>
