@@ -1,0 +1,72 @@
+---
+title: 'porter apply'
+---
+
+##### Prerequisites
+
+- You've logged in to the Porter CLI after running [porter auth login](/enterprise/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/enterprise/cli/command-reference/porter-config)
+- You're connected to the correct cluster by running [porter config set-cluster](/enterprise/cli/command-reference/porter-config)
+
+### `porter apply`[](#porter-apply 'Direct link to heading')
+
+The `porter apply` command creates or updates applications by either applying a porter.yaml configuration file or rebuilding existing applications with their current configuration.
+
+### Usage Patterns[](#usage-patterns 'Direct link to heading')
+
+```bash
+# Apply a porter.yaml configuration file
+porter apply -f porter.yaml
+
+# Rebuild existing app without a configuration file
+porter apply --app my-app
+
+# Use environment variables (useful in CI/CD)
+export PORTER_APP_NAME=my-app
+porter apply
+```
+
+By default, the command runs from a git repository and uses the current commit SHA as the image tag.
+
+### Configuration Precedence[](#configuration-precedence 'Direct link to heading')
+
+Configuration values are resolved in the following order (highest priority first):
+1. Command-line flags
+2. Environment variables
+3. Values in porter.yaml
+
+**Key Environment Variables:**
+
+- `PORTER_APP_NAME` or `PORTER_STACK_NAME` - Application name (replaces `--app` flag)
+- `PORTER_PROJECT` - Project ID
+- `PORTER_CLUSTER` - Cluster ID
+- `PORTER_NAMESPACE` - Kubernetes namespace
+- `PORTER_TAG` - Image tag (defaults to git commit SHA)
+
+### Common Flags[](#common-flags 'Direct link to heading')
+
+**Build Control:**
+- `--build-method [docker|pack]` - Build method
+- `--build-context PATH` - Build context directory
+- `--dockerfile PATH` - Dockerfile path (for docker builds)
+- `--builder NAME` - Builder for pack builds
+- `--attach-buildpacks LIST` - Buildpacks for pack builds
+- `--no-build` - Skip building a new image
+- `--tag TAG` - Override image tag
+
+**Configuration:**
+- `--variables KEY=VALUE,...` - Set environment variables
+- `--secrets KEY=VALUE,...` - Set secret environment variables
+- `--attach-env-groups LIST` - Attach environment groups
+- `--helm-overrides-file PATH` - Helm value overrides file
+
+**Deployment:**
+- `--target NAME` - Deployment target
+- `--preview` - Deploy as preview environment
+- `--wait` - Wait for deployment completion
+- `--exact` - Apply exact configuration (don't merge with existing)
+- `--predeploy` - Run predeploy job
+
+**Validation:**
+- `--validate` - Validate porter.yaml without deploying
+- `--dry-run` - Server-side validation without building/deploying
