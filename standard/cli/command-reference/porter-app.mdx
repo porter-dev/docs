@@ -2,157 +2,281 @@
 title: 'porter app'
 ---
 
-##### Prerequisites
+`porter app` contains commands for managing and interacting with your applications.
 
-- You've logged in to the Porter CLI after running [porter auth login](/enterprise/cli/command-reference/porter-auth)
-- You're connected to the correct project by running [porter config set-project](/enterprise/cli/command-reference/porter-config)
-- You're connected to the correct cluster by running [porter config set-cluster](/enterprise/cli/command-reference/porter-config)
+## Prerequisites
 
-### `porter app run`[](#porter-run 'Direct link to heading')
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
+- You're connected to the correct cluster by running [porter config set-cluster](/standard/cli/command-reference/porter-config)
 
-The `porter app run` command allows users to execute a command on a remote container:
+---
 
-```
-porter app run [APP_NAME] -- [COMMAND] [args...]
-```
+## `porter app run`
 
-The `APP_NAME` is the name of the application on the Porter dashboard.
+Execute a command in your application's container. By default, this spins up an ephemeral copy of your container that is deleted when the command completes.
 
-Running `porter app run` spins up an ephemeral copy of your application
-container. This container will be deleted when your command completes,
-or when you exit your interactive shell session.
-
-To connect to an existing running container, you can specify the `-e` flag:
-
-```
-porter app run -e [APP_NAME] -- [COMMAND] [args...]
+**Usage:**
+```bash
+porter app run [APP_NAME] [flags] -- [COMMAND] [args...]
 ```
 
-**Common Usage** [](#porter-run-examples 'Direct link to heading')
+**Options:**
 
-```
-porter app run [APP_NAME] -- bash
-```
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--existing` | `-e` | Connect to an existing running container instead of spinning up a new one |
+| `--job` | | Trigger a manual run of the specified job |
+| `--wait` | | Wait for the job to complete before exiting (used with `--job`) |
+| `--allow-concurrent` | | Allow concurrent runs for jobs that normally restrict it |
+| `--service` | | Specify which service to connect to |
 
-This will launch an interactive shell session through which you can run other commands, like `ls`, `ps`, etc. If `bash` isn't found on your container, you can also try `sh` for a similar result.
-
-**Running Jobs** [](#porter-run-job-examples 'Direct link to heading')
-
-You can also use this command to trigger manual job runs for existing jobs in your application using the `--job` flag.
-
-```
-porter app run [APP_NAME] --job [JOB_NAME]
-```
-
-You can wait for the job to complete before exiting using the `--wait` flag:
-
-```
-porter app run [APP_NAME] --job [JOB_NAME] --wait
+<CodeGroup>
+```bash Interactive Shell
+porter app run my-app -- bash
 ```
 
-For jobs that do not allow concurrent runs, you can override this behavior using the `--allow-concurrent` flag:
-
-```
-porter app run [APP_NAME] --job [JOB_NAME] --allow-concurrent
+```bash Existing Container
+porter app run -e my-app -- bash
 ```
 
-### `porter app logs`[](#porter-logs 'Direct link to heading')
-
-The `porter app logs` command allows users to stream new logs or view historical logs from their application:
-
-```
-porter app logs [APP_NAME]
+```bash Trigger Job
+porter app run my-app --job my-job
 ```
 
-The following flags can be used to filter the logs:
-
-```yaml
-# --service:
-# filter logs by service name
-porter app logs [APP_NAME] --service [SERVICE_NAME]
-
-# --search:
-# search for a specific string in the logs
-porter app logs [APP_NAME] --search [SEARCH_STRING]
-
-# --revision:
-# stream logs from a specific revision
-porter app logs [APP_NAME] --revision=[REVISION_NUMBER]
+```bash Wait for Job
+porter app run my-app --job my-job --wait
 ```
 
-By default, the command will stream new logs. Setting the `--since` flag or the `--from --to` flags will switch to pulling historical logs:
-
-```yaml
-# --since:
-# pull logs over the specified duration
-# looking back from the current time
-porter app logs [APP_NAME] --since 12h
-
-# --from and --to:
-# pull logs between the specified timestamps
-porter app logs [APP_NAME] --from 2021-01-01T10:00:00Z --to 2021-01-01T12:00:00Z
-
-# with timezone:
-porter app logs [APP_NAME] --from 2021-01-01T06:00:00-04:00 --to 2021-01-01T08:00:00-04:00
+```bash Concurrent Job
+porter app run my-app --job my-job --allow-concurrent
 ```
 
+```bash Run Command
+porter app run my-app -- python manage.py migrate
+```
+</CodeGroup>
 
-When viewing historical logs, these additional flags can be used:
+<Info>
+If `bash` isn't available in your container, try `sh` for a similar interactive experience.
+</Info>
 
-```yaml
-# --limit:
-# the number of lines of historical logs to return
-# defaults to 100
-porter app logs [APP_NAME] --since 12h --limit=[LIMIT]
+---
 
-# --newest-first:
-# return the newest historical logs first
-# defaults to true
-porter app logs [APP_NAME] --since 12h --newest-first=false
+## `porter app logs`
+
+Stream real-time logs or view historical logs from your application.
+
+**Usage:**
+```bash
+porter app logs [APP_NAME] [flags]
 ```
 
-### `porter app build`[](#porter-build 'Direct link to heading')
+**Options:**
 
-The `porter app build` command builds a new container image for an app based on it's existing build settings. Any build setting can be overridden with a corresponding flag.
+| Flag | Description |
+|------|-------------|
+| `--service` | Filter logs by service name |
+| `--search` | Search for a specific string in the logs |
+| `--revision` | Stream logs from a specific revision |
 
-For example, to start a Docker build for an app in the `./frontend` directory, you can run:
+**Historical Log Options:**
 
-```
-porter app build [APP_NAME] --build-context ./frontend --dockerfile ./frontend/Dockerfile
-```
+| Flag | Description |
+|------|-------------|
+| `--since` | Pull logs from the specified duration (e.g., `12h`, `30m`) |
+| `--from` | Start timestamp for historical logs (RFC3339 format) |
+| `--to` | End timestamp for historical logs (RFC3339 format) |
+| `--limit` | Number of lines to return (default: 100) |
+| `--newest-first` | Return newest logs first (default: true) |
 
-### `porter app push`[](#porter-push 'Direct link to heading')
-
-The `porter app push` command pushes a container image to the default registry for the app. This command can be used with the `app build` command to build and push an image as discrete steps.
-
-The `--tag` flag can be used to specify the image tag to push. Otherwise, the head of the current branch will be used as the tag.
-
-```
-porter app push [APP_NAME] --tag [TAG]
-```
-
-### `porter app update`[](#porter-update 'Direct link to heading')
-
-The `porter app update` command updates the specified app with the provided configuration. This command differs from "porter apply" in that it only updates the app, but does not attempt to build a new image. This is similar to updating the app in the Porter dashboard.
-
-```
-porter app update [APP_NAME] -f porter.yaml
+<CodeGroup>
+```bash Stream Live Logs
+porter app logs my-app
 ```
 
-### `porter app update-tag`[](#porter-update-tag 'Direct link to heading')
-
-`porter app update-tag` updates the image of the specified application with the tag provided by the `--tag` flag. For example:
-
-```
-porter app update-tag <YOUR_APP_NAME> --tag <GITHUB_SHA>
+```bash Filter by Service
+porter app logs my-app --service web
 ```
 
-This command is functionally equivalent to running either `porter apply` or `porter app update` with the `--tag` flag.
-
-### `porter app yaml`[](#porter-yaml 'Direct link to heading')
-
-`porter app yaml` returns the Porter YAML for the specified application. For example:
-
+```bash Search Logs
+porter app logs my-app --search "error"
 ```
-porter app yaml <YOUR_APP_NAME>
+
+```bash Historical Logs
+porter app logs my-app --since 12h
 ```
+
+```bash Time Range
+porter app logs my-app --from 2025-01-15T10:00:00Z --to 2025-01-15T12:00:00Z
+```
+
+```bash Limit Results
+porter app logs my-app --since 24h --limit 500
+```
+</CodeGroup>
+
+<Info>
+By default, the command streams new logs. Setting `--since` or `--from`/`--to` switches to pulling historical logs.
+</Info>
+
+---
+
+## `porter app build`
+
+Build a new container image for an app based on its existing build settings. Any build setting can be overridden with flags.
+
+**Usage:**
+```bash
+porter app build [APP_NAME] [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--build-context` | Override the build context directory |
+| `--dockerfile` | Override the Dockerfile path |
+| `--tag` | Specify a custom image tag |
+| `--method` | Build method (`docker` or `pack`) |
+| `--builder` | Builder image for buildpack builds |
+| `--buildpacks` | Comma-separated list of buildpacks |
+
+<CodeGroup>
+```bash Basic Build
+porter app build my-app
+```
+
+```bash Custom Context
+porter app build my-app --build-context ./frontend --dockerfile ./frontend/Dockerfile
+```
+
+```bash With Tag
+porter app build my-app --tag v1.2.3
+```
+</CodeGroup>
+
+---
+
+## `porter app push`
+
+Push a container image to the default registry for the app. Can be used with `porter app build` to build and push as discrete steps.
+
+**Usage:**
+```bash
+porter app push [APP_NAME] [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--tag` | Specify the image tag to push (defaults to current branch HEAD) |
+
+<CodeGroup>
+```bash Push Latest
+porter app push my-app
+```
+
+```bash Push Specific Tag
+porter app push my-app --tag v1.2.3
+```
+</CodeGroup>
+
+---
+
+## `porter app update`
+
+Update an application with the provided configuration without building a new image. This is similar to updating the app in the Porter dashboard.
+
+**Usage:**
+```bash
+porter app update [APP_NAME] [flags]
+```
+
+**Options:**
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--file` | `-f` | Path to the `porter.yaml` configuration file |
+| `--tag` | | Update the image tag |
+
+<CodeGroup>
+```bash Update from YAML
+porter app update my-app -f porter.yaml
+```
+
+```bash Update Image Tag
+porter app update my-app --tag v1.2.3
+```
+</CodeGroup>
+
+<Info>
+This command differs from `porter apply` in that it only updates the app configuration without attempting to build a new image.
+</Info>
+
+---
+
+## `porter app update-tag`
+
+Update the image tag for an application. This is functionally equivalent to running `porter apply` or `porter app update` with the `--tag` flag.
+
+**Usage:**
+```bash
+porter app update-tag [APP_NAME] [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--tag` | The new image tag to deploy (required) |
+
+```bash
+porter app update-tag my-app --tag abc123def
+```
+
+---
+
+## `porter app yaml`
+
+Export the current Porter YAML configuration for an application. Useful for bootstrapping a `porter.yaml` file or inspecting the current configuration.
+
+**Usage:**
+```bash
+porter app yaml [APP_NAME]
+```
+
+```bash
+porter app yaml my-app
+```
+
+<Tip>
+Redirect the output to create a `porter.yaml` file: `porter app yaml my-app > porter.yaml`
+</Tip>
+
+---
+
+## `porter app list`
+
+List all applications in the current project and cluster.
+
+**Usage:**
+```bash
+porter app list
+```
+
+**Example Output:**
+```
+NAME            CLUSTER   DEPLOYMENT_TARGET   CREATED_AT        GIT_REPOSITORY              IMAGE_REPOSITORY
+my-api          12345     default             2025-01-15 10:30  github.com/org/my-api       123456.dkr.ecr...
+my-worker       12345     default             2025-01-10 09:15  github.com/org/my-worker    123456.dkr.ecr...
+```
+
+---
+
+## Related Commands
+
+- [porter apply](/standard/cli/command-reference/porter-apply) - Deploy an app using configuration-as-code
+- [porter job](/standard/cli/command-reference/porter-job) - Manage jobs
+- [porter env](/standard/cli/command-reference/porter-env) - Manage environment variables

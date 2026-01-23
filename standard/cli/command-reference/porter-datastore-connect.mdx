@@ -2,22 +2,43 @@
 title: 'porter datastore connect'
 ---
 
-##### Prerequisites
+`porter datastore connect` creates a secure tunnel to connect to Porter-provisioned datastores from your local machine.
 
-- You've logged in to the Porter CLI after running [porter auth login](/enterprise/cli/command-reference/porter-auth)
-- You're connected to the correct project by running [porter config set-project](/enterprise/cli/command-reference/porter-config)
-- You have used Porter to provision a datastore
+## Prerequisites
 
-## Datastores[](#applications 'Direct link to heading')
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
+- You have a Porter-provisioned datastore (PostgreSQL, Redis, etc.)
 
-`porter datastore connect` creates a secure tunnel through which you can connect to your Porter-provisioned datastore locally. For example:
+---
 
+## Usage
+
+```bash
+porter datastore connect <DATASTORE_NAME> [flags]
 ```
-porter datastore connect <YOUR_DATASTORE_NAME>
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--port` | Local port for the tunnel (default: 8122) |
+
+---
+
+## Examples
+
+<CodeGroup>
+```bash Connect to Datastore
+porter datastore connect my-postgres
 ```
 
-Example output from running this command:
+```bash Custom Port
+porter datastore connect my-postgres --port 5433
+```
+</CodeGroup>
 
+**Example Output:**
 ```
 Secure tunnel setup complete! While the tunnel is running, you can connect to your datastore using the following credentials:
  Host: 127.0.0.1
@@ -26,21 +47,33 @@ Secure tunnel setup complete! While the tunnel is running, you can connect to yo
  Password: <YOUR_DATASTORE_PASSWORD>
 
 Starting proxy...[CTRL-C to exit]
-Forwarding from 127.0.0.1:8122 -> 6379
-Forwarding from [::1]:8122 -> 6379
-Handling connection for 8122
+Forwarding from 127.0.0.1:8122 -> 5432
 ```
 
-While the secure tunnel is running, you can run the following command in a separate shell to connect to your datastore (assuming the datastore is a redis cache):
+---
 
+## Connecting to Your Datastore
+
+While the tunnel is running, connect using your preferred client in a separate terminal:
+
+<CodeGroup>
+```bash PostgreSQL
+psql -h 127.0.0.1 -p 8122 -U postgres -d postgres
 ```
+
+```bash Redis
 redis-cli -p 8122 -a <YOUR_DATASTORE_PASSWORD> --tls
 ```
 
-### Port
-
-If you would like to specify the port on which to connect to the secure tunnel, you can use the `--port` flag. By default, this is set to 8122.
-
+```bash MySQL
+mysql -h 127.0.0.1 -P 8122 -u root -p
 ```
-porter datastore connect <YOUR_DATASTORE_NAME> --port <YOUR_PORT>
-```
+</CodeGroup>
+
+<Info>
+The tunnel stays open until you press `CTRL-C`. Keep the terminal open while you need access to the datastore.
+</Info>
+
+<Warning>
+The connection credentials are displayed when the tunnel starts. Make sure to note the password if you need it for your client.
+</Warning>

@@ -1,14 +1,38 @@
 ---
-title: "porter project"
+title: 'porter project'
 ---
 
-##### Prerequisites
+`porter project` contains commands for viewing and managing Porter projects.
 
-* You've logged in to the Porter CLI after running [porter auth login](/enterprise/cli/command-reference/porter-auth)
+## Prerequisites
 
-  
-`porter project` contains commands for interacting with a Porter project.
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
 
-### `porter project list`[](#porter-project-list "Direct link to heading")
+---
 
-This lists all projects that the authenticated user has access to.
+## `porter project list`
+
+List all projects that you have access to.
+
+**Usage:**
+```bash
+porter project list
+```
+
+**Example Output:**
+```
+ID      NAME              ROLE
+12345   my-company-prod   admin
+67890   my-company-dev    developer
+```
+
+<Tip>
+Use `porter config set-project` to switch between projects after listing them.
+</Tip>
+
+---
+
+## Related Commands
+
+- [porter config set-project](/standard/cli/command-reference/porter-config) - Set the active project
+- [porter cluster list](/standard/cli/command-reference/porter-cluster) - List clusters in the current project
