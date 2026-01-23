@@ -2,40 +2,58 @@
 title: 'Worker Services'
 ---
 
-The following is a full reference for all the fields that can be set for a worker service in `porter.yaml`.
+Worker services are background processing services that don't expose HTTP endpoints. They're ideal for queue consumers, background jobs, and long-running processes. This is a complete reference for all fields that can be set for a worker service in `porter.yaml`.
 
-- [autoscaling](#autoscaling) \- the autoscaling configuration for the service.
-  - **enabled** \- whether autoscaling is enabled or not.
-  - **minInstances** \- the minimum number of instances to run.
-  - **maxInstances** \- the maximum number of instances to run.
-  - **cpuThresholdPercent** \- the CPU threshold percentage to trigger autoscaling at.
-  - **memoryThresholdPercent** \- the memory threshold percentage to trigger autoscaling at.
-- [healthCheck](#healthcheck) \- the health check configuration for the service. This will configure both the liveness and readiness checks.
-  - **enabled** \- whether the health check is enabled or not.
-  - **command** \- the command to run for the health check.
-  - **timeoutSeconds** \- the timeout for the health check command. Minimum value is 1.
-  - **initialDelaySeconds** \- (optional) the initial delay for executing the health check command. Minimum value is 0.
-- [livenessCheck](#livenesscheck) \- the liveness check configuration for the service. Cannot be used with healthCheck.
-  - **enabled** \- whether the liveness check is enabled or not.
-  - **command** \- the command to run for the liveness check.
-  - **timeoutSeconds** \- the timeout for the liveness check command. Minimum value is 1.
-  - **initialDelaySeconds** \- (optional) the initial delay for executing the liveness check command. Minimum value is 0.
-- [readinessCheck](#readinesscheck) \- the readiness check configuration for the service. Cannot be used with healthCheck.
-  - **enabled** \- whether the readiness check is enabled or not.
-  - **command** \- the command to run for the readiness check.
-  - **timeoutSeconds** \- the timeout for the readiness check command. Minimum value is 1.
-  - **initialDelaySeconds** \- (optional) the initial delay for executing the readiness check command. Minimum value is 0.
-- [startupCheck](#startupcheck) \- the startup check configuration for the service. Cannot be used with healthCheck.
-  - **enabled** \- whether the startup check is enabled or not.
-  - **command** \- the command to run for the startup check.
-  - **timeoutSeconds** \- the timeout for the startup check command. Minimum value is 1.
-  - **initialDelaySeconds** \- (optional) the initial delay for executing the startup check command. Minimum value is 0.
+## Field Reference
 
-### `autoscaling`
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Service identifier (max 31 chars) |
+| `type` | string | Yes | Must be `worker` |
+| `run` | string | Yes | Command to execute |
+| `cpuCores` | number | Yes | CPU allocation |
+| `ramMegabytes` | integer | Yes | Memory allocation in MB |
+| `instances` | integer | No | Number of replicas (default: 1) |
+| `autoscaling` | object | No | Autoscaling configuration |
+| `healthCheck` | object | No | Combined health check config |
+| `livenessCheck` | object | No | Liveness probe config |
+| `readinessCheck` | object | No | Readiness probe config |
+| `startupCheck` | object | No | Startup probe config |
+| `connections` | array | No | External cloud connections |
+| `serviceMeshEnabled` | boolean | No | Enable service mesh |
+| `terminationGracePeriodSeconds` | integer | No | Graceful shutdown timeout |
+| `gpuCoresNvidia` | integer | No | NVIDIA GPU cores |
+| `nodeGroup` | string | No | Node group UUID |
 
-`object` - optional
+---
 
-All fields are optional.
+## Basic Example
+
+```yaml
+services:
+  - name: queue-worker
+    type: worker
+    run: npm run worker
+    cpuCores: 0.5
+    ramMegabytes: 512
+    instances: 3
+```
+
+---
+
+## `autoscaling`
+
+**Type:** `object` - **Optional**
+
+Configure horizontal pod autoscaling based on CPU and memory utilization.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `enabled` | boolean | Enable autoscaling |
+| `minInstances` | integer | Minimum number of replicas |
+| `maxInstances` | integer | Maximum number of replicas |
+| `cpuThresholdPercent` | integer | CPU usage threshold (0-100) |
+| `memoryThresholdPercent` | integer | Memory usage threshold (0-100) |
 
 ```yaml
 autoscaling:
@@ -46,54 +64,257 @@ autoscaling:
   memoryThresholdPercent: 80
 ```
 
-### `healthCheck`
+<Info>
+When autoscaling is enabled, the `instances` field is ignored.
+</Info>
 
-`object` - optional
+---
+
+## `healthCheck`
+
+**Type:** `object` - **Optional**
+
+Configure a combined health check that applies to liveness, readiness, and startup probes. Worker services use command-based health checks since they don't expose HTTP endpoints.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `enabled` | boolean | Enable health checks |
+| `command` | string | Command to run for health check |
+| `timeoutSeconds` | integer | Command timeout (min: 1) |
+| `initialDelaySeconds` | integer | Initial delay before checking (min: 0) |
 
 ```yaml
 healthCheck:
   enabled: true
-  command: ./healthz.sh
-  timeoutSeconds: 1
-  initialDelaySeconds: 15 #optional
+  command: ./healthcheck.sh
+  timeoutSeconds: 5
+  initialDelaySeconds: 15
 ```
+
+<Warning>
+Cannot be used together with `livenessCheck`, `readinessCheck`, or `startupCheck`. Use either the combined `healthCheck` or the individual checks.
+</Warning>
+
+---
 
 ## Advanced Health Checks
 
-Advanced health checks allow you to separately configure liveness, readiness, and startup health checks for your service. These cannot be enabled at the same time as the healthCheck field.
+For fine-grained control, configure liveness, readiness, and startup probes separately.
 
 ### `livenessCheck`
 
-`object` - optional
+**Type:** `object` - **Optional**
+
+Determines if the container should be restarted.
 
 ```yaml
 livenessCheck:
   enabled: true
   command: ./livez.sh
-  timeoutSeconds: 1
-  initialDelaySeconds: 15 #optional
+  timeoutSeconds: 5
+  initialDelaySeconds: 15
 ```
 
 ### `readinessCheck`
 
-`object` - optional
+**Type:** `object` - **Optional**
+
+Determines if the container is ready to receive work.
 
 ```yaml
 readinessCheck:
   enabled: true
   command: ./readyz.sh
-  timeoutSeconds: 1
-  initialDelaySeconds: 15 #optional
+  timeoutSeconds: 5
+  initialDelaySeconds: 5
 ```
 
 ### `startupCheck`
 
-`object` - optional
+**Type:** `object` - **Optional**
+
+Used for slow-starting containers. Other probes are disabled until this passes.
 
 ```yaml
 startupCheck:
   enabled: true
   command: ./startupz.sh
-  timeoutSeconds: 1
-  initialDelaySeconds: 15 #optional
+  timeoutSeconds: 10
+  initialDelaySeconds: 0
+```
+
+---
+
+## `connections`
+
+**Type:** `array` - **Optional**
+
+Connect to external cloud services. See [Reference](/deploy/configuration-as-code/reference#connections) for full documentation.
+
+<CodeGroup>
+```yaml AWS Role
+connections:
+  - type: awsRole
+    role: my-iam-role
+```
+
+```yaml Cloud SQL (GCP)
+connections:
+  - type: cloudSql
+    config:
+      cloudSqlConnectionName: project:region:instance
+      cloudSqlDatabasePort: 5432
+      cloudSqlServiceAccount: my-service-account
+```
+
+```yaml Persistent Disk
+connections:
+  - type: disk
+    config:
+      mountPath: /data
+      sizeGb: 10
+```
+</CodeGroup>
+
+---
+
+## `serviceMeshEnabled`
+
+**Type:** `boolean` - **Optional**
+
+Enable service mesh for enhanced inter-service communication with improved performance, reliability, and monitoring.
+
+```yaml
+serviceMeshEnabled: true
+```
+
+<Info>
+Useful for workers that need to communicate with other services in your cluster.
+</Info>
+
+---
+
+## `terminationGracePeriodSeconds`
+
+**Type:** `integer` - **Optional**
+
+Seconds to wait for graceful shutdown before forcefully terminating the container.
+
+```yaml
+terminationGracePeriodSeconds: 120
+```
+
+<Tip>
+Set this to a value higher than your longest expected job. This gives workers time to complete in-progress work before shutdown.
+</Tip>
+
+---
+
+## `gpuCoresNvidia`
+
+**Type:** `integer` - **Optional**
+
+Allocate NVIDIA GPU cores for ML workloads or GPU-accelerated processing.
+
+```yaml
+gpuCoresNvidia: 1
+nodeGroup: gpu-node-group-uuid
+```
+
+<Info>
+Requires a node group with GPU-enabled instances.
+</Info>
+
+---
+
+## Complete Example
+
+```yaml
+services:
+  - name: queue-processor
+    type: worker
+    run: npm run worker
+    cpuCores: 1
+    ramMegabytes: 2048
+
+    # Autoscaling
+    autoscaling:
+      enabled: true
+      minInstances: 2
+      maxInstances: 20
+      cpuThresholdPercent: 70
+      memoryThresholdPercent: 80
+
+    # Health checks
+    livenessCheck:
+      enabled: true
+      command: ./healthcheck.sh
+      timeoutSeconds: 5
+    readinessCheck:
+      enabled: true
+      command: ./ready.sh
+      timeoutSeconds: 3
+
+    # Cloud connections
+    connections:
+      - type: awsRole
+        role: worker-sqs-access
+
+    # Service mesh
+    serviceMeshEnabled: true
+
+    # Graceful shutdown (allow 2 minutes for jobs to complete)
+    terminationGracePeriodSeconds: 120
+
+```
+
+---
+
+## Common Use Cases
+
+### Queue Consumer
+
+```yaml
+services:
+  - name: sqs-consumer
+    type: worker
+    run: node src/workers/sqs-consumer.js
+    cpuCores: 0.5
+    ramMegabytes: 512
+    instances: 5
+    terminationGracePeriodSeconds: 60
+    connections:
+      - type: awsRole
+        role: sqs-consumer-role
+```
+
+### Background Job Processor
+
+```yaml
+services:
+  - name: job-processor
+    type: worker
+    run: bundle exec sidekiq
+    cpuCores: 1
+    ramMegabytes: 1024
+    autoscaling:
+      enabled: true
+      minInstances: 2
+      maxInstances: 10
+      cpuThresholdPercent: 70
+    terminationGracePeriodSeconds: 300
+```
+
+### ML Inference Worker
+
+```yaml
+services:
+  - name: ml-worker
+    type: worker
+    run: python worker.py
+    cpuCores: 4
+    ramMegabytes: 8192
+    gpuCoresNvidia: 1
+    nodeGroup: gpu-node-group-uuid
+    instances: 2
 ```

@@ -1,171 +1,544 @@
 ---
 title: 'Reference for porter.yaml'
+sidebarTitle: 'Reference'
 ---
 
-The following is a full reference for all the fields that can be set in a `porter.yaml` file.
+This is the complete reference for all fields that can be set in a `porter.yaml` file.
 
-- [version](#version) \- the version of the `porter.yaml` file. The below documentation is for `v2`.
-- [name](#name) \- the name of the app. Must be 31 characters or less. Must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character.
-- [build](#build) \- the build settings for the app. Only one of `build` or `image` can be set.
-  - **method** - the build method for the app. Can be one of `docker` or `pack`.
-  - **context** - the build context for the app.
-  - **dockerfile** - the path to the Dockerfile for the app, if the method is `docker`.
-  - **builder** - the builder image to use for the app, if the method is `pack`.
-  - **buildpacks** - the buildpacks to use for the app, if the method is `pack`.
-- [image](#image) \- the image settings for the app. Only one of `build` or `image` can be set.
-  - **repository** - the image repository.
-  - **tag** - the image tag.
-- [env](#env) \- the environment variables for the app.
-- [envGroups] \- a list of environment groups that will be attached to the app.
-- [predeploy](#predeploy) \- the pre-deploy job for the app.
-  - **run** - the run command for the pre-deploy job.
-- [autoRollback](#autoRollback) \- the auto-rollback settings for the app.
-  - **enabled** - whether auto-rollback is enabled.
-- [services](#services) \- a list of services for this app.
-  - **name** - the unique ID of the resource. Must be 31 characters or less. Must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character.
-  - **type** - the type of service - being one of `web`, `worker`, or `job`.
-  - **run** - the run command for the service.
-  - **instances** - the number of instances of the service to run.
-  - **cpuCores** - the number of CPU cores to allocate to the service.
-  - **ramMegabytes** - the amount of RAM to allocate to the service.
-  - **gpuCoresNvidia** - the number of Nvidia GPU cores to allocate to the service.
-  - **port** - the port that the service will listen on.
-  - **nodeGroup** - the ID of the user node group to run the service on. If not provided, the service will be run on the default node group.
-  - [connections](#connections) - a list of external connections for the service.
-  - additional type-specific fields. See full reference for [web](/deploy/configuration-as-code/services/web-service), [worker](/deploy/configuration-as-code/services/worker-service), and [job](/deploy/configuration-as-code/services/job-service) services.
+## Top-Level Fields
 
-### `version`
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `version` | string | Yes | Must be `v2` |
+| `name` | string | Conditional | App name. Required unless `PORTER_APP_NAME` env var is set |
+| `build` | object | Conditional | Build configuration. Cannot be used with `image` |
+| `image` | object | Conditional | Pre-built image configuration. Cannot be used with `build` |
+| `services` | array | Yes | List of service definitions |
+| `env` | object | No | Environment variables |
+| `envGroups` | string[] | No | Names of environment groups to attach |
+| `predeploy` | object | No | Pre-deploy job configuration |
+| `initialDeploy` | object | No | Job to run only on first deployment |
+| `autoRollback` | object | No | Automatic rollback settings |
+| `requiredApps` | array | No | App dependencies that must deploy first |
+| `deploymentStrategy` | object | No | Rolling or blue-green deployment configuration |
+| `efsStorage` | object | No | AWS EFS storage configuration |
 
-`string` - required
+<Warning>
+You must specify either `build` or `image`, but not both. Use `build` when Porter should build your container image, or `image` when using a pre-built image from a registry.
+</Warning>
+
+---
+
+## `version`
+
+**Type:** `string` - **Required**
+
+The schema version. Must be `v2`.
 
 ```yaml
 version: v2
 ```
 
-### `name`
+---
 
-`string` - optional
+## `name`
 
-Either `name` must or the `PORTER_APP_NAME` environment variable must be set when running `porter apply`.
+**Type:** `string` - **Required** (unless `PORTER_APP_NAME` is set)
+
+The application name. Must be 31 characters or less, consist of lowercase alphanumeric characters or `-`, and start and end with an alphanumeric character.
 
 ```yaml
 name: my-app
 ```
 
-### `build`
+---
 
-`object` - optional
+## `build`
 
-```yaml
+**Type:** `object` - **Optional**
+
+Configuration for building container images. Cannot be used together with `image`.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `method` | string | Yes | Build method: `docker` or `pack` |
+| `context` | string | Yes | Build context directory |
+| `dockerfile` | string | Conditional | Dockerfile path (required if method is `docker`) |
+| `builder` | string | Conditional | Builder image (required if method is `pack`) |
+| `buildpacks` | string[] | No | List of buildpacks (for `pack` method) |
+
+<CodeGroup>
+```yaml Docker Build
+build:
+  method: docker
+  context: .
+  dockerfile: ./Dockerfile
+```
+
+```yaml Buildpack Build
 build:
   method: pack
   context: .
   builder: heroku/buildpacks:20
   buildpacks:
     - heroku/python
+    - heroku/nodejs
 ```
+</CodeGroup>
 
-### `image`
+---
 
-`object` - optional
+## `image`
+
+**Type:** `object` - **Optional**
+
+Configuration for using a pre-built container image. Cannot be used together with `build`.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `repository` | string | Yes | Image repository URL |
+| `tag` | string | No | Image tag (can be overridden with `--tag` flag) |
 
 ```yaml
 image:
-  repository: my-registry/my-app
-  tag: latest
+  repository: my-registry.io/my-app
+  tag: v1.2.3
 ```
 
-### `env`
+---
 
-`object` - optional
+## `env`
+
+**Type:** `object` - **Optional**
+
+Environment variables to set for all services. Values must be strings.
 
 ```yaml
 env:
-  PORT: 8080
+  NODE_ENV: production
+  LOG_LEVEL: info
+  DATABASE_URL: "${DATABASE_URL}"  # Reference from env group
 ```
 
-### `predeploy`
+<Info>
+For sensitive values, use environment groups instead of hardcoding them in `porter.yaml`.
+</Info>
 
-`object` - optional
+---
+
+## `envGroups`
+
+**Type:** `string[]` - **Optional**
+
+Names of environment groups to attach to the application. Environment groups must already exist in your Porter project.
+
+```yaml
+envGroups:
+  - production-secrets
+  - shared-config
+  - database-credentials
+```
+
+---
+
+## `predeploy`
+
+**Type:** `object` - **Optional**
+
+A job that runs before deploying services. Commonly used for database migrations.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `run` | string | Yes | Command to execute |
+| `cpuCores` | number | No | CPU allocation |
+| `ramMegabytes` | number | No | Memory allocation |
 
 ```yaml
 predeploy:
-  run: echo "predeploy"
+  run: npm run migrate
+  cpuCores: 0.5
+  ramMegabytes: 512
 ```
 
-### `autoRollback`
+See [Predeploy Configuration](/deploy/configuration-as-code/services/predeploy) for more details.
 
-`object` - optional
+---
 
-When this attribute is enabled, Porter will automatically rollback all services in the app to the latest previously successfully-deployed version if the any service of the new version fails to deploy.
+## `initialDeploy`
+
+**Type:** `object` - **Optional**
+
+A job that runs only on the first deployment of the application. Useful for one-time setup tasks like database seeding.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `run` | string | Yes | Command to execute |
+| `cpuCores` | number | No | CPU allocation |
+| `ramMegabytes` | number | No | Memory allocation |
+
+```yaml
+initialDeploy:
+  run: npm run seed
+  cpuCores: 0.25
+  ramMegabytes: 256
+```
+
+---
+
+## `autoRollback`
+
+**Type:** `object` - **Optional**
+
+Configure automatic rollback when deployments fail.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `enabled` | boolean | Yes | Enable or disable auto-rollback |
 
 ```yaml
 autoRollback:
   enabled: true
 ```
 
+When enabled, Porter automatically rolls back all services to the last successfully deployed version if any service fails to deploy.
+
+---
+
+## `requiredApps`
+
+**Type:** `array` - **Optional**
+
+Define dependencies on other applications that must be deployed before this app.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Name of the required app |
+| `fromTarget` | string | No | Deployment target of the required app |
+
+```yaml
+requiredApps:
+  - name: database-app
+  - name: auth-service
+    fromTarget: production
+```
+
+---
+
+## `deploymentStrategy`
+
+**Type:** `object` - **Optional**
+
+Configure how deployments are rolled out.
+
+### Rolling Deployment (Default)
+
+```yaml
+deploymentStrategy:
+  rolling:
+    maxSurge: 25%
+    maxUnavailable: 25%
+```
+
+### Blue-Green Deployment
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `blueGreen.group` | string | Yes | Name of the blue-green deployment group |
+
+```yaml
+deploymentStrategy:
+  blueGreen:
+    group: my-blue-green-group
+```
+
+---
+
+## `efsStorage`
+
+**Type:** `object` - **Optional**
+
+Configure AWS EFS (Elastic File System) storage for persistent data. Only available on AWS clusters.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `enabled` | boolean | Yes | Enable EFS storage |
+| `fileSystemId` | string | Yes | AWS EFS file system ID |
+
+```yaml
+efsStorage:
+  enabled: true
+  fileSystemId: fs-0123456789abcdef0
+```
+
+---
+
 ## `services`
 
-`array` - required
+**Type:** `array` - **Required**
+
+List of service definitions. Each service represents a deployable unit of your application.
+
+### Common Service Fields
+
+These fields apply to all service types:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Unique service identifier (max 31 chars, lowercase alphanumeric and `-`) |
+| `type` | string | Yes | Service type: `web`, `worker`, or `job` |
+| `run` | string | Yes | Command to execute |
+| `instances` | integer | No | Number of replicas (not for jobs) |
+| `cpuCores` | number | Yes | CPU allocation (e.g., `0.5`, `1`, `2`) |
+| `ramMegabytes` | integer | Yes | Memory allocation in MB |
+| `gpuCoresNvidia` | integer | No | NVIDIA GPU cores to allocate |
+| `port` | integer | Conditional | Port the service listens on (required for `web`) |
+| `nodeGroup` | string | No | UUID of a user node group to run on |
+| `connections` | array | No | External cloud service connections |
+| `terminationGracePeriodSeconds` | integer | No | Seconds to wait before force-killing pods |
+| `serviceMeshEnabled` | boolean | No | Enable service mesh for inter-service communication |
+| `metricsScraping` | object | No | Prometheus metrics scraping configuration |
+
+### Service Types
+
+| Type | Description | Documentation |
+|------|-------------|---------------|
+| `web` | HTTP services with public or private endpoints | [Web Services](/deploy/configuration-as-code/services/web-service) |
+| `worker` | Background processing services | [Worker Services](/deploy/configuration-as-code/services/worker-service) |
+| `job` | Scheduled or on-demand tasks | [Job Services](/deploy/configuration-as-code/services/job-service) |
+
+### Basic Example
 
 ```yaml
 services:
-  - name: web
+  - name: api
     type: web
-    run: python app.py
-    instances: 1
-    cpuCores: 1
-    ramMegabytes: 1024
+    run: node server.js
     port: 8080
-  - name: web-on-user-node-group
-    type: web
-    run: python app.py
+    cpuCores: 0.5
+    ramMegabytes: 512
+    instances: 2
+
+  - name: worker
+    type: worker
+    run: node worker.js
+    cpuCores: 0.25
+    ramMegabytes: 256
     instances: 1
-    cpuCores: 1
-    ramMegabytes: 1024
-    port: 8080
-    nodeGroup: 123e4567-e89b-12d3-a456-426614174000
+
+  - name: cleanup
+    type: job
+    run: node cleanup.js
+    cpuCores: 0.1
+    ramMegabytes: 128
+    cron: "0 0 * * *"
 ```
 
-### `connections`
+---
 
-`array` - optional
+## `connections`
 
-Cloud SQL connection (GCP)
+**Type:** `array` - **Optional**
+
+Configure connections to external cloud services.
+
+### AWS Role Connection
+
+Attach an IAM role to your service for AWS API access.
 
 ```yaml
 services:
-  - name: web
+  - name: api
     type: web
-    run: python app.py
-    instances: 1
-    cpuCores: 1
-    ramMegabytes: 1024
+    run: node server.js
     port: 8080
+    cpuCores: 0.5
+    ramMegabytes: 512
     connections:
-    - type: cloudSql
-      config:
-        cloudSqlConnectionName: project-123456:us-east1:instance-name
-        cloudSqlDatabasePort: 5432
-        cloudSqlServiceAccount: service-account-name
-        # service accounts must be connected through
-        # the Connections tab under the application's cluster
+      - type: awsRole
+        role: my-iam-role-name
 ```
 
-AWS role connection
+<Info>
+AWS roles must be configured in the Connections tab of your cluster settings.
+</Info>
 
-*Note: The AWS role connection feature is currently in development so may be subject to change.*
+### Cloud SQL Connection (GCP)
+
+Connect to Google Cloud SQL instances.
 
 ```yaml
 services:
-  - name: web
+  - name: api
     type: web
-    run: python app.py
-    instances: 1
+    run: node server.js
+    port: 8080
+    cpuCores: 0.5
+    ramMegabytes: 512
+    connections:
+      - type: cloudSql
+        config:
+          cloudSqlConnectionName: project-123:us-east1:instance-name
+          cloudSqlDatabasePort: 5432
+          cloudSqlServiceAccount: my-service-account
+```
+
+### Persistent Disk Connection
+
+Attach persistent storage to your service.
+
+```yaml
+services:
+  - name: api
+    type: web
+    run: node server.js
+    port: 8080
+    cpuCores: 0.5
+    ramMegabytes: 512
+    connections:
+      - type: disk
+        config:
+          mountPath: /data
+          sizeGb: 10
+```
+
+---
+
+## `gpu`
+
+**Type:** `object` - **Optional**
+
+Configure GPU resources for machine learning workloads.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `gpuCoresNvidia` | integer | Number of NVIDIA GPU cores |
+
+```yaml
+services:
+  - name: ml-inference
+    type: web
+    run: python serve.py
+    port: 8080
+    cpuCores: 2
+    ramMegabytes: 4096
+    gpuCoresNvidia: 1
+    nodeGroup: gpu-node-group-uuid
+```
+
+<Info>
+GPU workloads require a node group with GPU-enabled instances.
+</Info>
+
+---
+
+## `metricsScraping`
+
+**Type:** `object` - **Optional**
+
+Configure Prometheus metrics scraping for custom application metrics.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `enabled` | boolean | Enable metrics scraping |
+| `path` | string | HTTP path to scrape (default: `/metrics`) |
+| `port` | integer | Port to scrape metrics from |
+
+```yaml
+services:
+  - name: api
+    type: web
+    run: node server.js
+    port: 8080
+    cpuCores: 0.5
+    ramMegabytes: 512
+    metricsScraping:
+      enabled: true
+      path: /metrics
+      port: 9090
+```
+
+---
+
+## Complete Example
+
+```yaml
+version: v2
+name: my-production-app
+
+build:
+  method: docker
+  context: .
+  dockerfile: ./Dockerfile
+
+env:
+  NODE_ENV: production
+  LOG_LEVEL: info
+
+envGroups:
+  - production-secrets
+  - database-credentials
+
+predeploy:
+  run: npm run migrate
+  cpuCores: 0.5
+  ramMegabytes: 512
+
+autoRollback:
+  enabled: true
+
+services:
+  # Public API
+  - name: api
+    type: web
+    run: npm start
+    port: 8080
     cpuCores: 1
     ramMegabytes: 1024
-    port: 8080
-    connections:
-    - type: awsRole
-      role: iam-role-name
+    autoscaling:
+      enabled: true
+      minInstances: 2
+      maxInstances: 20
+      cpuThresholdPercent: 70
+      memoryThresholdPercent: 80
+    healthCheck:
+      enabled: true
+      httpPath: /health
+      timeoutSeconds: 5
+    domains:
+      - name: api.example.com
+    ingressAnnotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    serviceMeshEnabled: true
+
+  # Background worker
+  - name: worker
+    type: worker
+    run: npm run worker
+    cpuCores: 0.5
+    ramMegabytes: 512
+    instances: 3
+    terminationGracePeriodSeconds: 60
+    healthCheck:
+      enabled: true
+      command: ./healthcheck.sh
+      timeoutSeconds: 5
+
+  # Scheduled cleanup job
+  - name: daily-cleanup
+    type: job
+    run: npm run cleanup
+    cpuCores: 0.25
+    ramMegabytes: 256
+    cron: "0 3 * * *"
+    timeoutSeconds: 3600
 ```
+
+---
+
+## Related Documentation
+
+- [Web Services](/deploy/configuration-as-code/services/web-service) - Web service configuration
+- [Worker Services](/deploy/configuration-as-code/services/worker-service) - Worker service configuration
+- [Job Services](/deploy/configuration-as-code/services/job-service) - Job service configuration
+- [Predeploy Jobs](/deploy/configuration-as-code/services/predeploy) - Pre-deploy job configuration
+- [porter apply](/standard/cli/command-reference/porter-apply) - CLI reference for deployments

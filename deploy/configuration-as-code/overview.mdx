@@ -1,65 +1,184 @@
 ---
 title: 'Overview'
+sidebarTitle: 'Overview'
 ---
 
-## Getting Started with `porter.yaml`
+## What is porter.yaml?
 
-Writing a `porter.yaml` for your app is a great way to maintain a single source of truth on how your app should be built and deployed. Though this file is not required, it can reduce the time it takes to get started with a Porter app.
-Once you start creating your app in Porter and select a Github repository, Porter will automatically read your `porter.yaml` to prepopulate settings for your app's services.
+`porter.yaml` is a configuration file that defines how your application should be built and deployed on Porter. It serves as a single source of truth for your application's infrastructure, enabling version-controlled, repeatable deployments.
 
-### Example `porter.yaml`
+<Info>
+Think of `porter.yaml` like a `Dockerfile` for your entire application stack - it declares your services, their resources, environment variables, and deployment settings in one place.
+</Info>
 
-The following is an example of a v2 `porter.yaml` file, which is the latest version of the spec. This example covers many of the available fields, but not all of them. For a full list of configurable options, see the [full reference](/deploy/configuration-as-code/reference).
+## When to Use Configuration-as-Code
+
+### CI/CD Pipelines
+
+Deploy your application automatically on every push using `porter apply`:
+
+```bash
+porter apply -f porter.yaml --wait
+```
+
+### Version-Controlled Infrastructure
+
+Track infrastructure changes alongside your code. Every deployment configuration change goes through code review.
+
+### Preview Environments
+
+Spin up isolated environments for pull requests with consistent configuration:
+
+```bash
+porter apply -f porter.yaml --preview
+```
+
+### Team Collaboration
+
+Share deployment configurations across your team. New team members can understand the entire application architecture from a single file.
+
+### Multi-Environment Deployments
+
+Use the same base configuration across development, staging, and production with environment-specific overrides.
+
+## How It Works
+
+<Steps>
+  <Step title="Define Configuration">
+    Create a `porter.yaml` file in your repository that describes your application's services, resources, and settings.
+  </Step>
+  <Step title="Run porter apply">
+    The Porter CLI reads your configuration and sends it to the Porter API.
+  </Step>
+  <Step title="Build (if configured)">
+    If a `build` section is defined, Porter builds and pushes your container image.
+  </Step>
+  <Step title="Deploy">
+    Porter deploys or updates your services according to the configuration.
+  </Step>
+</Steps>
+
+## Getting Started
+
+### 1. Export Existing Configuration
+
+If you already have an app deployed on Porter, export its current configuration:
+
+```bash
+porter app yaml my-app > porter.yaml
+```
+
+### 2. Create from Scratch
+
+Start with a minimal configuration:
 
 ```yaml
 version: v2
 name: my-app
 
 services:
-  - name: api
+  - name: web
     type: web
-    run: node index.js
-    port: 8080
-    cpuCores: 0.1
-    ramMegabytes: 256
-    autoscaling:
-      enabled: true
-      minInstances: 1
-      maxInstances: 3
-      memoryThresholdPercent: 60
-      cpuThresholdPercent: 60
-    private: false
-    domains:
-      - name: test1.example.com
-    healthCheck:
-      enabled: true
-      httpPath: /healthz
-  - name: example-wkr
-    type: worker
-    run: echo 'work'
-    port: 8081
-    cpuCores: 0.1
-    ramMegabytes: 256
-    instances: 1
-  - name: example-job
-    type: job
-    run: echo 'hello world'
-    allowConcurrent: true
-    cpuCores: 0.1
-    ramMegabytes: 256
-    cron: '*/10 * * * *'
-
-predeploy:
-  run: ls
+    run: npm start
+    port: 3000
+    cpuCores: 0.5
+    ramMegabytes: 512
 
 build:
-	method: docker
-	context: ./
-	dockerfile: ./app/Dockerfile
+  method: docker
+  context: .
+  dockerfile: ./Dockerfile
+```
 
+### 3. Deploy
+
+Apply the configuration to deploy your app:
+
+```bash
+porter apply -f porter.yaml
+```
+
+## Example Configuration
+
+This example demonstrates common configuration patterns:
+
+```yaml
+version: v2
+name: my-app
+
+# Build configuration (or use 'image' for pre-built images)
+build:
+  method: docker
+  context: .
+  dockerfile: ./Dockerfile
+
+# Environment variables
 env:
   NODE_ENV: production
+  LOG_LEVEL: info
 
+# Attach shared environment groups
 envGroups:
-- production-env-group
+  - production-secrets
+  - shared-config
+
+# Pre-deploy job (runs before service deployment)
+predeploy:
+  run: npm run migrate
+
+# Auto-rollback on failed deployments
+autoRollback:
+  enabled: true
+
+# Service definitions
+services:
+  # Web service (publicly accessible)
+  - name: api
+    type: web
+    run: npm start
+    port: 8080
+    cpuCores: 0.5
+    ramMegabytes: 512
+    autoscaling:
+      enabled: true
+      minInstances: 2
+      maxInstances: 10
+      cpuThresholdPercent: 70
+    healthCheck:
+      enabled: true
+      httpPath: /health
+
+  # Worker service (background processing)
+  - name: worker
+    type: worker
+    run: npm run worker
+    cpuCores: 0.25
+    ramMegabytes: 256
+    instances: 2
+
+  # Scheduled job
+  - name: cleanup
+    type: job
+    run: npm run cleanup
+    cpuCores: 0.1
+    ramMegabytes: 128
+    cron: "0 0 * * *"  # Daily at midnight
 ```
+
+## Configuration vs Dashboard
+
+<Warning>
+When you deploy using `porter apply`, the configuration in `porter.yaml` takes precedence. Changes made in the Porter dashboard may be overwritten on the next deployment.
+</Warning>
+
+For consistent deployments, we recommend:
+- Use `porter.yaml` as the source of truth for production
+- Use the dashboard for experimentation and one-off changes
+- Export dashboard changes with `porter app yaml` to update your configuration file
+
+## Next Steps
+
+- [Full Reference](/deploy/configuration-as-code/reference) - Complete documentation of all configuration options
+- [Service Configuration](/deploy/configuration-as-code/services/web-service) - Detailed service type documentation
+- [porter apply Command](/standard/cli/command-reference/porter-apply) - CLI reference for deployments
+- [Using Other CI Tools](/deploy/using-other-ci-tools) - Integrate with GitHub Actions, GitLab CI, etc.
