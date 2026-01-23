@@ -40,15 +40,15 @@
       "pages": [
         "introduction",
         {
-          "group": "Provision",
+          "group": "Cloud Accounts",
           "pages": [
-            "provision/overview",
-            "provision/provisioning-on-aws",
-            "provision/provisioning-on-azure",
-            "provision/provisioning-on-gcp",
-            "provision/changing-instance-types",
-            "provision/cluster-upgrades",
-            "provision/cost-optimization"
+            "cloud-accounts/overview",
+            "cloud-accounts/provisioning-on-aws",
+            "cloud-accounts/provisioning-on-azure",
+            "cloud-accounts/provisioning-on-gcp",
+            "cloud-accounts/changing-instance-types",
+            "cloud-accounts/cluster-upgrades",
+            "cloud-accounts/cost-optimization"
           ]
         },
         {
