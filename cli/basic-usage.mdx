@@ -2,59 +2,184 @@
 title: "Basic Usage"
 ---
 
-To set up and authenticate with the CLI, run the following command:
+This guide covers the essential commands and configuration options for the Porter CLI.
 
-```
-porter auth login
-```
+## Quick Start
 
-This command will automatically set a project ID and a cluster ID in your default configuration file, if you have a project and cluster. You can always view your default configuration by running `porter config`. You can see all projects that you have access to by running:
+<Steps>
+  <Step title="Login to Porter">
+    Authenticate with your Porter account:
+    ```bash
+    porter auth login
+    ```
+    This opens your browser to complete authentication and automatically configures your default project and cluster.
+  </Step>
+  <Step title="Verify Configuration">
+    Check your current CLI configuration:
+    ```bash
+    porter config
+    ```
+  </Step>
+  <Step title="Deploy Your App">
+    Deploy using a `porter.yaml` file:
+    ```bash
+    porter apply -f porter.yaml
+    ```
+  </Step>
+</Steps>
 
-```
+## Project and Cluster Configuration
+
+After logging in, you may need to switch between projects or clusters.
+
+### List Available Projects
+
+```bash
 porter projects list
 ```
 
-And you can set a project via:
+### Set Active Project
 
-```
+```bash
 porter config set-project [PROJECT_ID]
 ```
 
-Next, you can see all clusters that you have access to via:
+### List Available Clusters
 
-```
+```bash
 porter clusters list
 ```
 
-And similarly, you can set the cluster:
+### Set Active Cluster
 
-```
+```bash
 porter config set-cluster [CLUSTER_ID]
 ```
 
-## Environment Variables and Global Flags[](#environment-variables-and-global-flags "Direct link to heading")
+### View Current Configuration
 
-The following environment variables can be set in order to authenticate to and target a specific Porter project or cluster:
-
-```
-PORTER_PROJECT
-PORTER_CLUSTER
-PORTER_TOKEN
+```bash
+porter config
 ```
 
-These are also supported as global flags:
+## Global Flags
 
+These flags can be used with any Porter command:
+
+| Flag | Description |
+|------|-------------|
+| `--project <id>` | Override the project ID for this command |
+| `--cluster <id>` | Override the cluster ID for this command |
+| `--token <string>` | Use a specific authentication token |
+| `-h, --help` | Display help for the command |
+
+<CodeGroup>
+```bash Override Project
+porter app logs my-app --project 12345
 ```
---cluster uint   cluster ID of Porter cluster
---project uint   project ID of Porter project
---token string   token for Porter authentication
+
+```bash Override Cluster
+porter app run my-app --cluster 67890 -- bash
+```
+</CodeGroup>
+
+## Environment Variables
+
+Environment variables provide an alternative way to configure the CLI, which is especially useful in CI/CD pipelines.
+
+| Variable | Description | Equivalent Flag |
+|----------|-------------|-----------------|
+| `PORTER_PROJECT` | Project ID to use | `--project` |
+| `PORTER_CLUSTER` | Cluster ID to use | `--cluster` |
+| `PORTER_TOKEN` | Authentication token | `--token` |
+| `PORTER_HOST` | Custom Porter API host | N/A |
+| `PORTER_APP_NAME` | Default app name for commands | `--app` |
+
+<Info>
+Environment variables take precedence over values in your config file, but flags take precedence over environment variables.
+</Info>
+
+### Example: CI/CD Configuration
+
+```bash
+export PORTER_TOKEN="your-deploy-token"
+export PORTER_PROJECT="12345"
+export PORTER_CLUSTER="67890"
+
+porter apply -f porter.yaml --wait
 ```
 
-## Viewing Help Instructions[](#viewing-help-instructions "Direct link to heading")
+## Common Workflows
 
-You can view help instructions for any command via the `-h`, or `--help` flag. For example:
+### Local Development
 
+```bash
+# Login and configure
+porter auth login
+
+# View your app's logs
+porter app logs my-app
+
+# Open a shell in your app's container
+porter app run my-app -- bash
+
+# View current app configuration
+porter app yaml my-app
 ```
+
+### CI/CD Deployment
+
+```bash
+# Deploy with explicit configuration
+PORTER_TOKEN=$DEPLOY_TOKEN \
+PORTER_PROJECT=$PROJECT_ID \
+PORTER_CLUSTER=$CLUSTER_ID \
+porter apply -f porter.yaml --wait
+```
+
+### Managing Environment Variables
+
+```bash
+# List environment groups
+porter env list
+
+# Create a new environment group
+porter env create my-env-group
+
+# Set environment variables
+porter env set my-env-group KEY=value
+```
+
+### Debugging
+
+```bash
+# Stream live logs
+porter app logs my-app
+
+# View historical logs
+porter app logs my-app --since 1h
+
+# Connect to a running container
+porter app run -e my-app -- bash
+```
+
+## Viewing Help
+
+You can view help instructions for any command using the `-h` or `--help` flag:
+
+```bash
+# General help
 porter -h
-porter cluster -h
+
+# Help for a specific command
+porter app -h
+
+# Help for a subcommand
+porter app run -h
 ```
+
+## Next Steps
+
+- Learn about [configuration-as-code](/deploy/configuration-as-code/overview) with `porter.yaml`
+- Explore the [full command reference](/standard/cli/command-reference/porter-apply) for detailed options
+- Set up [CI/CD deployment](/deploy/using-other-ci-tools) for automated deployments
