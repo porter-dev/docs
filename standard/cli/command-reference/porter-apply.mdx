@@ -3,7 +3,11 @@ title: 'porter apply'
 sidebarTitle: 'porter apply'
 ---
 
-`porter apply` is the primary command for deploying applications using configuration-as-code. It reads a `porter.yaml` file and applies the configuration to deploy or update your application.
+`porter apply` is the primary command for deploying applications using configuration-as-code. It reads a `porter.yaml` file, **builds a new container image**, and **deploys your application** to the cluster.
+
+By default, `porter apply` performs a full build and deploy cycle. Use `--no-build` to skip building and deploy with an existing image.
+
+You can also pass environment variables and secrets directly via command-line flags (`--variables`, `--secrets`) without modifying your `porter.yaml`.
 
 <Info>
 This command is the recommended way to deploy applications in CI/CD pipelines and for version-controlled infrastructure.
@@ -20,7 +24,6 @@ porter apply -f porter.yaml [flags]
 - You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
 - You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
 - You're connected to the correct cluster by running [porter config set-cluster](/standard/cli/command-reference/porter-config)
-- You have a valid `porter.yaml` file in your project
 
 ## Options
 
@@ -35,19 +38,32 @@ porter apply -f porter.yaml [flags]
 | Flag | Short | Description |
 |------|-------|-------------|
 | `--app` | | Override the app name specified in `porter.yaml` |
-| `--target` | `-x` | Specify a deployment target |
+| `--target` | `-x` | Specify a deployment target (name or ID) |
 | `--wait` | `-w` | Wait for the deployment to complete before exiting |
-| `--preview` | `-p` | Deploy to a preview environment |
+| `--preview` | `-p` | Deploy to a preview environment based on current git branch |
 
 ### Build Options
 
 | Flag | Description |
 |------|-------------|
-| `--no-build` | Skip building a new image and use the existing image |
+| `--no-build` | Skip building a new image and deploy with an existing image |
 | `--no-pull` | Don't pull the previous image before building |
-| `--tag` | Specify a custom image tag |
+| `--tag` | Specify a custom image tag (overrides value in porter.yaml) |
+| `--image-repository` | Set the image repository to use |
 | `--build-context` | Override the build context directory |
-| `--dockerfile` | Override the Dockerfile path |
+| `--build-method` | Set build method: `docker` or `pack` |
+| `--dockerfile` | Override the Dockerfile path (for docker builds) |
+| `--builder` | Set the builder to use (for pack builds) |
+| `--attach-buildpacks` | Attach buildpacks to use (for pack builds) |
+| `--remote` | Build remotely using kpack in the cluster instead of locally (experimental) |
+| `--verbose` | Show verbose output during build |
+
+### Environment Options
+
+| Flag | Description |
+|------|-------------|
+| `--variables` | Set environment variables as key=value pairs (overrides porter.yaml) |
+| `--secrets` | Set secrets as key=value pairs (overrides porter.yaml) |
 
 ### Validation Options
 
@@ -59,11 +75,11 @@ porter apply -f porter.yaml [flags]
 
 ### Advanced Options
 
-| Flag | Description |
-|------|-------------|
-| `--predeploy` | Run the predeploy job before deploying services |
-| `--helm-overrides-file` | Path to a file containing Helm value overrides |
-| `--attach-env-groups` | Comma-separated list of environment groups to attach |
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--predeploy` | | Run the predeploy job before deploying services |
+| `--helm-overrides-file` | `-v` | Path to a file containing Helm value overrides |
+| `--attach-env-groups` | | Comma-separated list of environment groups to attach |
 
 ## Environment Variables
 
@@ -86,7 +102,7 @@ porter apply -f porter.yaml
 
 ```bash Wait for Completion
 # Deploy and wait for the deployment to complete
-porter apply -f porter.yaml --wait
+porter apply -f porter.yaml
 ```
 
 ```bash Custom App Name
@@ -109,7 +125,7 @@ porter apply -f porter.yaml --validate
 PORTER_TOKEN=$PORTER_DEPLOY_TOKEN \
 PORTER_PROJECT=$PROJECT_ID \
 PORTER_CLUSTER=$CLUSTER_ID \
-porter apply -f porter.yaml --wait
+porter apply -f porter.yaml
 ```
 
 ```bash Skip Build
@@ -121,6 +137,11 @@ porter apply -f porter.yaml --no-build --tag v1.2.3
 # Run predeploy job before deployment
 porter apply -f porter.yaml --predeploy --wait
 ```
+
+```bash With Environment Variables
+# Deploy with runtime environment variables and secrets
+porter apply -f porter.yaml --variables LOG_LEVEL=debug,NODE_ENV=production --secrets API_KEY=secret123
+```
 </CodeGroup>
 
 ## Workflow
@@ -131,11 +152,11 @@ When you run `porter apply`, the following steps occur:
   <Step title="Parse Configuration">
     Porter reads and validates your `porter.yaml` file
   </Step>
-  <Step title="Build Image (if applicable)">
-    If a `build` section is defined, Porter builds and pushes a new container image
+  <Step title="Build Image">
+    Porter builds and pushes a new container image (unless `--no-build` is specified)
   </Step>
   <Step title="Run Predeploy (if enabled)">
-    If `--predeploy` is specified or `predeploy` is defined, the predeploy job runs first
+    If `--predeploy` is specified or `predeploy` is defined in porter.yaml, the predeploy job runs first
   </Step>
   <Step title="Deploy Services">
     Porter deploys or updates all services defined in the configuration
@@ -178,7 +199,7 @@ For CI/CD pipelines, use environment variables for authentication and the `--wai
     PORTER_TOKEN: ${{ secrets.PORTER_TOKEN }}
     PORTER_PROJECT: ${{ secrets.PORTER_PROJECT }}
     PORTER_CLUSTER: ${{ secrets.PORTER_CLUSTER }}
-  run: porter apply -f porter.yaml --wait
+  run: porter apply -f porter.yaml
 ```
 
 ### GitLab CI Example
@@ -186,7 +207,7 @@ For CI/CD pipelines, use environment variables for authentication and the `--wai
 ```yaml
 deploy:
   script:
-    - porter apply -f porter.yaml --wait
+    - porter apply -f porter.yaml
   variables:
     PORTER_TOKEN: $PORTER_TOKEN
     PORTER_PROJECT: $PORTER_PROJECT

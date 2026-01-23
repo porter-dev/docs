@@ -19,6 +19,7 @@ This guide covers the essential commands and configuration options for the Porte
     ```bash
     porter config
     ```
+    If necessary, [switch your project and/or cluster](#project-and-cluster-configuration)
   </Step>
   <Step title="Deploy Your App">
     Deploy using a `porter.yaml` file:
@@ -92,7 +93,7 @@ Environment variables provide an alternative way to configure the CLI, which is 
 | `PORTER_PROJECT` | Project ID to use | `--project` |
 | `PORTER_CLUSTER` | Cluster ID to use | `--cluster` |
 | `PORTER_TOKEN` | Authentication token | `--token` |
-| `PORTER_HOST` | Custom Porter API host | N/A |
+| `PORTER_HOST` | Custom Porter API host | `--host` |
 | `PORTER_APP_NAME` | Default app name for commands | `--app` |
 
 <Info>
@@ -106,7 +107,7 @@ export PORTER_TOKEN="your-deploy-token"
 export PORTER_PROJECT="12345"
 export PORTER_CLUSTER="67890"
 
-porter apply -f porter.yaml --wait
+porter apply -f porter.yaml
 ```
 
 ## Common Workflows
@@ -120,7 +121,7 @@ porter auth login
 # View your app's logs
 porter app logs my-app
 
-# Open a shell in your app's container
+# Run a command in an ephemeral copy of your app
 porter app run my-app -- bash
 
 # View current app configuration
@@ -134,20 +135,23 @@ porter app yaml my-app
 PORTER_TOKEN=$DEPLOY_TOKEN \
 PORTER_PROJECT=$PROJECT_ID \
 PORTER_CLUSTER=$CLUSTER_ID \
-porter apply -f porter.yaml --wait
+porter apply -f porter.yaml
 ```
 
 ### Managing Environment Variables
 
 ```bash
-# List environment groups
-porter env list
+# Pull environment variables from an app
+porter env pull -a my-app
 
-# Create a new environment group
-porter env create my-env-group
+# Pull environment variables from an environment group
+porter env pull -g my-env-group
 
-# Set environment variables
-porter env set my-env-group KEY=value
+# Set environment variables on an app
+porter env set -a my-app -v KEY=value
+
+# Set secrets on an environment group
+porter env set -g my-env-group -s API_KEY=secret123
 ```
 
 ### Debugging
@@ -159,8 +163,8 @@ porter app logs my-app
 # View historical logs
 porter app logs my-app --since 1h
 
-# Connect to a running container
-porter app run -e my-app -- bash
+# Run a command in an ephemeral copy of your app
+porter app run my-app -- bash
 ```
 
 ## Viewing Help

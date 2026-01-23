@@ -12,6 +12,22 @@ title: 'porter env'
 
 ---
 
+## Global Flags
+
+These flags are available on all `porter env` subcommands:
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--app` | `-a` | Target application |
+| `--group` | `-g` | Target environment group |
+| `--target` | `-x` | Deployment target name |
+
+<Info>
+You must specify either `--app` or `--group`, but not both.
+</Info>
+
+---
+
 ## `porter env pull`
 
 Pull environment variables from an application or environment group to your local machine.
@@ -25,9 +41,9 @@ porter env pull [flags]
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--app` | `-a` | Pull variables from an application |
-| `--group` | `-g` | Pull variables from an environment group |
-| `--file` | `-f` | Output file path (default: `.env`) |
+| `--file` | `-f` | Output file path (writes to stdout if not specified) |
+| `--variables` | `-v` | Output only variables (excludes secrets) |
+| `--secrets` | `-s` | Output only secrets (excludes variables) |
 
 <CodeGroup>
 ```bash From Application
@@ -38,13 +54,21 @@ porter env pull -a my-app
 porter env pull -g production-secrets
 ```
 
-```bash To Custom File
+```bash To File
 porter env pull -a my-app -f .env.local
+```
+
+```bash Variables Only
+porter env pull -a my-app -v
+```
+
+```bash Secrets Only
+porter env pull -g my-env-group -s -f secrets.env
 ```
 </CodeGroup>
 
 <Info>
-This creates a `.env` file in your current directory with all the environment variables.
+By default, both variables and secrets are output together. Use `-v` or `-s` to filter. You cannot use both flags at the same time.
 </Info>
 
 ---
@@ -62,40 +86,47 @@ porter env set [flags]
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--app` | `-a` | Target application |
-| `--group` | `-g` | Target environment group |
-| `--variables` | | Comma-separated key=value pairs for plain variables |
-| `--secrets` | | Comma-separated key=value pairs for secret variables |
+| `--variables` | `-v` | Variables to set as key=value pairs |
+| `--secrets` | `-s` | Secrets to set as key=value pairs |
+| `--skip-redeploys` | | Skip re-deploying apps linked to the environment group |
 
 <CodeGroup>
 ```bash Set App Variables
-porter env set -a my-app --variables KEY1=value1,KEY2=value2
+porter env set -a my-app -v KEY1=value1,KEY2=value2
 ```
 
 ```bash Set Group Variables
-porter env set -g my-env-group --variables KEY1=value1
+porter env set -g my-env-group -v KEY1=value1
 ```
 
 ```bash Set Secrets
-porter env set -g my-env-group --secrets API_KEY=secret123,DB_PASSWORD=pass456
+porter env set -g my-env-group -s API_KEY=secret123,DB_PASSWORD=pass456
 ```
 
 ```bash Set Both
 porter env set -g my-env-group \
-  --variables NODE_ENV=production,LOG_LEVEL=info \
-  --secrets DATABASE_URL=postgres://...
+  -v NODE_ENV=production,LOG_LEVEL=info \
+  -s DATABASE_URL=postgres://...
+```
+
+```bash Skip Redeploys
+porter env set -g my-env-group -v KEY=value --skip-redeploys
 ```
 </CodeGroup>
 
 <Warning>
-Use `--secrets` for sensitive values like API keys and passwords. These are encrypted and not visible in logs.
+Use `-s/--secrets` for sensitive values like API keys and passwords. These are encrypted and not visible in logs.
 </Warning>
+
+<Info>
+When updating an environment group, all apps linked to the group will be re-deployed unless you use `--skip-redeploys`.
+</Info>
 
 ---
 
 ## `porter env unset`
 
-Remove environment variables from an application or environment group.
+Remove environment variables or secrets from an application or environment group.
 
 **Usage:**
 ```bash
@@ -106,19 +137,35 @@ porter env unset [flags]
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--app` | `-a` | Target application |
-| `--group` | `-g` | Target environment group |
-| `--variables` | | Comma-separated list of variable names to remove |
+| `--variables` | `-v` | Comma-separated list of variable names to remove |
+| `--secrets` | `-s` | Comma-separated list of secret names to remove |
+| `--skip-redeploys` | | Skip re-deploying apps linked to the environment group |
 
 <CodeGroup>
-```bash Unset from App
-porter env unset -a my-app --variables KEY1,KEY2
+```bash Unset Variables from App
+porter env unset -a my-app -v KEY1,KEY2
+```
+
+```bash Unset Secrets from App
+porter env unset -a my-app -s API_KEY,DB_PASSWORD
 ```
 
 ```bash Unset from Group
-porter env unset -g my-env-group --variables OLD_KEY,UNUSED_VAR
+porter env unset -g my-env-group -v OLD_KEY,UNUSED_VAR
+```
+
+```bash Unset Both Variables and Secrets
+porter env unset -g my-env-group -v VAR1 -s SECRET1
+```
+
+```bash Skip Redeploys
+porter env unset -g my-env-group -v KEY --skip-redeploys
 ```
 </CodeGroup>
+
+<Info>
+When updating an environment group, all apps linked to the group will be re-deployed unless you use `--skip-redeploys`.
+</Info>
 
 ---
 
