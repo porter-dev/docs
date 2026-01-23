@@ -61,7 +61,7 @@ If your application is killed due to a non-zero exit code, it typically indicate
 Under the hood, every application which runs on Porter is running a [Docker image](https://docs.docker.com/get-started/overview/#images). This Docker image is pulled from a registry, which typically requires authentication credentials. If you are facing an image pull error, make sure you've checked the following items:
 
 * The image repository exists in the registry, and the image repository contains an image with the image tag set on Porter
-* You have connected an image registry to Porter. For more information, see the [deploy overview guide](/deploy/overview) or the doc on [deploying from a Docker registry](/deploy/v2/deploy-from-docker-registry)
+* You have connected an image registry to Porter. For more information, see the [deploy overview guide](/deploy/overview) or the doc on [deploying from a Docker registry](/deploy/deploy-from-docker-registry)
 * Your authentication credentials have not been revoked and have not expired. To check this, navigate to the **Integrations** tab on Porter, and select **Docker Registry**. If you are able to view the list of images for your registry, Porter is able to access that image registry.
 
 ## Networking Issues[](#networking-issues "Direct link to heading")
