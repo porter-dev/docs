@@ -2,71 +2,127 @@
 title: 'porter env'
 ---
 
-##### Prerequisites
+`porter env` contains commands for managing environment variables and secrets.
 
-- You've logged in to the Porter CLI after running [porter auth login](/enterprise/cli/command-reference/porter-auth)
-- You're connected to the correct project by running [porter config set-project](/enterprise/cli/command-reference/porter-config)
-- You're connected to the correct cluster by running [porter config set-cluster](/enterprise/cli/command-reference/porter-config)
+## Prerequisites
 
-### `porter env pull`[](#porter-env 'Direct link to heading')
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
+- You're connected to the correct cluster by running [porter config set-cluster](/standard/cli/command-reference/porter-config)
 
-The `porter env` command allows users to pull environment variables from an existing environment group or application.
+---
 
-```
-porter env pull [args...]
-```
+## `porter env pull`
 
-To pull variables from an existing app, you can specify the `-a` flag:
+Pull environment variables from an application or environment group to your local machine.
 
-```
-porter env pull -a [APP_NAME]
-```
-
-To pull variables from an existing environment group, you can specify the `-g` flag:
-
-```
-porter env pull -g [ENV_GROUP_NAME]
+**Usage:**
+```bash
+porter env pull [flags]
 ```
 
-### `porter env set`[](#porter-env-set 'Direct link to heading')
+**Options:**
 
-The `porter env set` command allows users to set environment variables and secrets for an existing environment group or application.
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--app` | `-a` | Pull variables from an application |
+| `--group` | `-g` | Pull variables from an environment group |
+| `--file` | `-f` | Output file path (default: `.env`) |
 
-```
-porter env set [args...]
-```
-
-To set variables for an existing app, you can specify the `-a` flag:
-
-```
-porter env set -a [APP_NAME] --variables KEY1=VALUE1,KEY2=VALUE2
-```
-
-To set variables for an existing environment group, you can specify the `-g` flag:
-
-```
-porter env set \
--g [ENV_GROUP_NAME] \
---variables KEY1=VALUE1,KEY2=VALUE2 \
---secrets SECRET1=VALUE1,SECRET2=VALUE2
+<CodeGroup>
+```bash From Application
+porter env pull -a my-app
 ```
 
-### `porter env unset`[](#porter-env-unset 'Direct link to heading')
-
-The `porter env unset` command allows users to unset environment variables and secrets for an existing environment group or application.
-
-```
-porter env unset [args...]
+```bash From Environment Group
+porter env pull -g production-secrets
 ```
 
-To unset variables for an existing app, you can specify the `-a` flag:
+```bash To Custom File
+porter env pull -a my-app -f .env.local
+```
+</CodeGroup>
 
-```
-porter env unset -a [APP_NAME] --variables KEY1,KEY2
+<Info>
+This creates a `.env` file in your current directory with all the environment variables.
+</Info>
+
+---
+
+## `porter env set`
+
+Set environment variables and secrets for an application or environment group.
+
+**Usage:**
+```bash
+porter env set [flags]
 ```
 
-To unset variables for an existing environment group, you can specify the `-g` flag:
+**Options:**
 
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--app` | `-a` | Target application |
+| `--group` | `-g` | Target environment group |
+| `--variables` | | Comma-separated key=value pairs for plain variables |
+| `--secrets` | | Comma-separated key=value pairs for secret variables |
+
+<CodeGroup>
+```bash Set App Variables
+porter env set -a my-app --variables KEY1=value1,KEY2=value2
 ```
-porter env unset -g [ENV_GROUP_NAME] --variables KEY1,KEY2
+
+```bash Set Group Variables
+porter env set -g my-env-group --variables KEY1=value1
 ```
+
+```bash Set Secrets
+porter env set -g my-env-group --secrets API_KEY=secret123,DB_PASSWORD=pass456
+```
+
+```bash Set Both
+porter env set -g my-env-group \
+  --variables NODE_ENV=production,LOG_LEVEL=info \
+  --secrets DATABASE_URL=postgres://...
+```
+</CodeGroup>
+
+<Warning>
+Use `--secrets` for sensitive values like API keys and passwords. These are encrypted and not visible in logs.
+</Warning>
+
+---
+
+## `porter env unset`
+
+Remove environment variables from an application or environment group.
+
+**Usage:**
+```bash
+porter env unset [flags]
+```
+
+**Options:**
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--app` | `-a` | Target application |
+| `--group` | `-g` | Target environment group |
+| `--variables` | | Comma-separated list of variable names to remove |
+
+<CodeGroup>
+```bash Unset from App
+porter env unset -a my-app --variables KEY1,KEY2
+```
+
+```bash Unset from Group
+porter env unset -g my-env-group --variables OLD_KEY,UNUSED_VAR
+```
+</CodeGroup>
+
+---
+
+## Related Commands
+
+- [porter app update](/standard/cli/command-reference/porter-app#porter-update) - Update app configuration
+- [porter apply](/standard/cli/command-reference/porter-apply) - Deploy with environment variables in porter.yaml

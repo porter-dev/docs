@@ -117,6 +117,7 @@
         {
           "group": "v2 Command Reference",
           "pages": [
+            "standard/cli/command-reference/porter-apply",
             "standard/cli/command-reference/porter-auth",
             "standard/cli/command-reference/porter-cluster",
             "standard/cli/command-reference/porter-config",

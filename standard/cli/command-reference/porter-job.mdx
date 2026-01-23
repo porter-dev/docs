@@ -2,44 +2,87 @@
 title: 'porter job'
 ---
 
-##### Prerequisites
+`porter job` contains commands for viewing and managing job runs.
 
-- You've logged in to the Porter CLI after running [porter auth login](/enterprise/cli/command-reference/porter-auth)
-- You're connected to the correct project by running [porter config set-project](/enterprise/cli/command-reference/porter-config)
+## Prerequisites
 
-### `porter job runs`[](#porter-job-runs 'Direct link to heading')
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
+- You're connected to the correct cluster by running [porter config set-cluster](/standard/cli/command-reference/porter-config)
 
-The `porter job runs` command allows users to view the job runs for a project, with optional filters applied. The returned job runs will be sorted by creation time, with the most recent job runs appearing first.
+---
 
+## `porter job runs`
+
+View job runs with optional filters. Results are sorted by creation time, with the most recent runs first.
+
+**Usage:**
+```bash
+porter job runs [flags]
 ```
-porter job runs [JOB_NAME]
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--job` | Filter by job name |
+| `--app` | Filter by application name |
+| `--revision` | Filter by revision number (requires `--app`) |
+| `--target` | Filter by deployment target (use `ALL` for all targets) |
+| `--status` | Filter by status (`running`, `succeeded`, `failed`) |
+| `--limit` | Maximum number of runs to return (default: 100) |
+
+<CodeGroup>
+```bash All Recent Runs
+porter job runs
 ```
 
-The following flags can be used to filter the job runs:
-
-```yaml
-# --job:
-# filter job runs by job name
-porter job runs --job [JOB_NAME]
-
-# --app:
-# filter job runs by application name
-porter job runs --app [APP_NAME]
-
-# --revision:
-# filter job runs by revision number (requires --app)
-porter job runs --app [APP_NAME] --revision [REVISION_NUMBER]
-
-# --target:
-# filter job runs by deployment target, will use the default target if not provided
-# can pass "ALL" to pull runs across all deployment targets
-porter job runs --target [TARGET_NAME]
-
-# --status:
-# filter job runs by status
-porter job runs --status [STATUS]
-
-# --limit:
-# limit the number of job runs returned, defaults to 100
-porter job runs --limit [LIMIT]
+```bash Filter by Job Name
+porter job runs --job cleanup-job
 ```
+
+```bash Filter by App
+porter job runs --app my-app
+```
+
+```bash Filter by Status
+porter job runs --status failed
+```
+
+```bash Combined Filters
+porter job runs --app my-app --job migration --status succeeded --limit 10
+```
+
+```bash All Targets
+porter job runs --target ALL
+```
+</CodeGroup>
+
+**Example Output:**
+```
+ID          JOB             APP         STATUS      STARTED              DURATION
+abc123      cleanup         my-app      succeeded   2024-01-15 10:00:00  45s
+def456      migration       my-app      succeeded   2024-01-15 09:30:00  2m30s
+ghi789      cleanup         my-app      failed      2024-01-15 08:00:00  10s
+```
+
+---
+
+## Triggering Jobs
+
+To manually trigger a job run, use `porter app run`:
+
+```bash
+porter app run my-app --job my-job --wait
+```
+
+<Tip>
+Use `--wait` to block until the job completes, which is useful in CI/CD pipelines.
+</Tip>
+
+---
+
+## Related Commands
+
+- [porter app run](/standard/cli/command-reference/porter-app#porter-app-run) - Trigger a manual job run
+- [porter app logs](/standard/cli/command-reference/porter-app#porter-app-logs) - View job logs
