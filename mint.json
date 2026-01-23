@@ -36,181 +36,183 @@
   },
   "navigation": [
     {
-      "group": "Home",
-      "pages": ["introduction"]
-    },
-    {
-      "group": "Provision",
+      "group": "",
       "pages": [
-        "provision/overview",
-        "provision/provisioning-on-aws",
-        "provision/provisioning-on-azure",
-        "provision/provisioning-on-gcp",
-        "provision/changing-instance-types",
-        "provision/cluster-upgrades",
-        "provision/cost-optimization"
-      ]
-    },
-    {
-      "group": "Deploy",
-      "pages": [
-        "deploy/overview",
-        "deploy/types-of-services",
-        "deploy/v1-and-v2",
+        "introduction",
         {
-          "group": "v2",
+          "group": "Provision",
           "pages": [
-            "deploy/v2/deploy-from-github-repo",
-            "deploy/v2/deploy-from-docker-registry",
-            "deploy/v2/configuring-application-services"
+            "provision/overview",
+            "provision/provisioning-on-aws",
+            "provision/provisioning-on-azure",
+            "provision/provisioning-on-gcp",
+            "provision/changing-instance-types",
+            "provision/cluster-upgrades",
+            "provision/cost-optimization"
           ]
         },
         {
-          "group": "v1",
+          "group": "Deploy",
           "pages": [
-            "deploy/v1/deploy-from-github-repo",
-            "deploy/v1/deploy-from-docker-registry"
-          ]
-        },
-        "deploy/builds",
-        "deploy/multiple-deploys-from-same-build",
-        "deploy/pre-deploy-jobs",
-        "deploy/rollbacks",
-        "deploy/using-other-ci-tools",
-        {
-          "group": "Configuration as Code",
-          "pages": [
-            "deploy/configuration-as-code/overview",
-            "deploy/configuration-as-code/reference",
-            "deploy/configuration-as-code/addons-porter-yaml",
+            "deploy/overview",
+            "deploy/types-of-services",
+            "deploy/v1-and-v2",
             {
-              "group": "Service Configuration",
+              "group": "v2",
               "pages": [
-                "deploy/configuration-as-code/services/web-service",
-                "deploy/configuration-as-code/services/worker-service",
-                "deploy/configuration-as-code/services/job-service",
-                "deploy/configuration-as-code/services/predeploy"
+                "deploy/v2/deploy-from-github-repo",
+                "deploy/v2/deploy-from-docker-registry",
+                "deploy/v2/configuring-application-services"
+              ]
+            },
+            {
+              "group": "v1",
+              "pages": [
+                "deploy/v1/deploy-from-github-repo",
+                "deploy/v1/deploy-from-docker-registry"
+              ]
+            },
+            "deploy/builds",
+            "deploy/multiple-deploys-from-same-build",
+            "deploy/pre-deploy-jobs",
+            "deploy/rollbacks",
+            "deploy/using-other-ci-tools",
+            {
+              "group": "Configuration as Code",
+              "pages": [
+                "deploy/configuration-as-code/overview",
+                "deploy/configuration-as-code/reference",
+                "deploy/configuration-as-code/addons-porter-yaml",
+                {
+                  "group": "Service Configuration",
+                  "pages": [
+                    "deploy/configuration-as-code/services/web-service",
+                    "deploy/configuration-as-code/services/worker-service",
+                    "deploy/configuration-as-code/services/job-service",
+                    "deploy/configuration-as-code/services/predeploy"
+                  ]
+                }
               ]
             }
           ]
-        }
-      ]
-    },
-    {
-      "group": "Configure",
-      "pages": [
-        "configure/basic-configuration",
-        "configure/environment-groups",
-        "configure/autoscaling",
-        "configure/custom-domains",
-        "configure/health-checks",
-        "configure/zero-downtime-deployments",
-        "configure/advanced-networking"
-      ]
-    },
-    {
-      "group": "Command Line Interface (CLI)",
-      "pages": [
-        "cli/installation",
-        "cli/basic-usage",
-        "cli/v1-and-v2",
+        },
         {
-          "group": "v2 Command Reference",
+          "group": "Configure",
           "pages": [
-            "standard/cli/command-reference/porter-auth",
-            "standard/cli/command-reference/porter-cluster",
-            "standard/cli/command-reference/porter-config",
-            "standard/cli/command-reference/porter-project",
-            "standard/cli/command-reference/porter-app",
-            "standard/cli/command-reference/porter-datastore-connect",
-            "standard/cli/command-reference/porter-env",
-            "standard/cli/command-reference/porter-target",
-            "standard/cli/command-reference/porter-job"
+            "configure/basic-configuration",
+            "configure/environment-groups",
+            "configure/autoscaling",
+            "configure/custom-domains",
+            "configure/health-checks",
+            "configure/zero-downtime-deployments",
+            "configure/advanced-networking"
           ]
         },
         {
-          "group": "v1 Command Reference",
+          "group": "Command Line Interface (CLI)",
           "pages": [
-            "enterprise/cli/command-reference/porter-auth",
-            "enterprise/cli/command-reference/porter-cluster",
-            "enterprise/cli/command-reference/porter-config",
-            "enterprise/cli/command-reference/porter-connect",
-            "enterprise/cli/command-reference/porter-create",
-            "enterprise/cli/command-reference/porter-delete",
-            "enterprise/cli/command-reference/porter-get",
-            "enterprise/cli/command-reference/porter-helm",
-            "enterprise/cli/command-reference/porter-job",
-            "enterprise/cli/command-reference/porter-kubectl",
-            "enterprise/cli/command-reference/porter-list",
-            "enterprise/cli/command-reference/porter-logs",
-            "enterprise/cli/command-reference/porter-project",
-            "enterprise/cli/command-reference/porter-registry",
-            "enterprise/cli/command-reference/porter-run",
-            "enterprise/cli/command-reference/porter-stack",
-            "enterprise/cli/command-reference/porter-update"
+            "cli/installation",
+            "cli/basic-usage",
+            "cli/v1-and-v2",
+            {
+              "group": "v2 Command Reference",
+              "pages": [
+                "standard/cli/command-reference/porter-auth",
+                "standard/cli/command-reference/porter-cluster",
+                "standard/cli/command-reference/porter-config",
+                "standard/cli/command-reference/porter-project",
+                "standard/cli/command-reference/porter-app",
+                "standard/cli/command-reference/porter-datastore-connect",
+                "standard/cli/command-reference/porter-env",
+                "standard/cli/command-reference/porter-target",
+                "standard/cli/command-reference/porter-job"
+              ]
+            },
+            {
+              "group": "v1 Command Reference",
+              "pages": [
+                "enterprise/cli/command-reference/porter-auth",
+                "enterprise/cli/command-reference/porter-cluster",
+                "enterprise/cli/command-reference/porter-config",
+                "enterprise/cli/command-reference/porter-connect",
+                "enterprise/cli/command-reference/porter-create",
+                "enterprise/cli/command-reference/porter-delete",
+                "enterprise/cli/command-reference/porter-get",
+                "enterprise/cli/command-reference/porter-helm",
+                "enterprise/cli/command-reference/porter-job",
+                "enterprise/cli/command-reference/porter-kubectl",
+                "enterprise/cli/command-reference/porter-list",
+                "enterprise/cli/command-reference/porter-logs",
+                "enterprise/cli/command-reference/porter-project",
+                "enterprise/cli/command-reference/porter-registry",
+                "enterprise/cli/command-reference/porter-run",
+                "enterprise/cli/command-reference/porter-stack",
+                "enterprise/cli/command-reference/porter-update"
+              ]
+            }
+          ]
+        },
+        {
+          "group": "Observability",
+          "pages": [
+            "observability/monitoring",
+            "observability/logging",
+            "observability/alerts",
+            "observability/app-metadata",
+            "observability/custom-metrics-and-autoscaling"
+          ]
+        },
+        {
+          "group": "Debug",
+          "pages": ["debug/common-errors"]
+        },
+        {
+          "group": "Preview Environments",
+          "pages": [
+            "preview-environments/overview",
+            "preview-environments/defining-overrides",
+            "preview-environments/custom-workflows"
+          ]
+        },
+        {
+          "group": "Security and Compliance",
+          "pages": [
+            "security-and-compliance/role-based-access-control",
+            "security-and-compliance/static-egress-ip",
+            "security-and-compliance/configuring-alb",
+            "security-and-compliance/cloudflare-dns",
+            "security-and-compliance/soc2-hipaa",
+            "security-and-compliance/porter-ip-ranges"
+          ]
+        },
+        {
+          "group": "Language Specific Guides",
+          "pages": [
+            "guides/nodejs/deploy-nodejs",
+            "guides/rails/deploy-rails",
+            "guides/flask/deploy-flask",
+            "guides/golang/deploy-golang",
+            "guides/fastapi/deploy-fastapi",
+            "guides/nextjs/deploy-nextjs"
+          ]
+        },
+        {
+          "group": "Other Guides",
+          "pages": [
+            "other/deleting-dangling-resources",
+            "other/aws-vpc-peering",
+            "other/kubernetes-101",
+            "other/migrate-from-heroku",
+            "other/tailscale"
+          ]
+        },
+        {
+          "group": "Terms & Privacy",
+          "pages": [
+            "terms-and-privacy/terms-of-service",
+            "terms-and-privacy/privacy-policy"
           ]
         }
-      ]
-    },
-    {
-      "group": "Observability",
-      "pages": [
-        "observability/monitoring",
-        "observability/logging",
-        "observability/alerts",
-        "observability/app-metadata",
-        "observability/custom-metrics-and-autoscaling"
-      ]
-    },
-    {
-      "group": "Debug",
-      "pages": ["debug/common-errors"]
-    },
-    {
-      "group": "Preview Environments",
-      "pages": [
-        "preview-environments/overview",
-        "preview-environments/defining-overrides",
-        "preview-environments/custom-workflows"
-      ]
-    },
-    {
-      "group": "Security and Compliance",
-      "pages": [
-        "security-and-compliance/role-based-access-control",
-        "security-and-compliance/static-egress-ip",
-        "security-and-compliance/configuring-alb",
-        "security-and-compliance/cloudflare-dns",
-        "security-and-compliance/soc2-hipaa",
-        "security-and-compliance/porter-ip-ranges"
-      ]
-    },
-    {
-      "group": "Language Specific Guides",
-      "pages": [
-        "guides/nodejs/deploy-nodejs",
-        "guides/rails/deploy-rails",
-        "guides/flask/deploy-flask",
-        "guides/golang/deploy-golang",
-        "guides/fastapi/deploy-fastapi",
-        "guides/nextjs/deploy-nextjs"
-      ]
-    },
-    {
-      "group": "Other Guides",
-      "pages": [
-        "other/deleting-dangling-resources",
-        "other/aws-vpc-peering",
-        "other/kubernetes-101",
-        "other/migrate-from-heroku",
-        "other/tailscale"
-      ]
-    },
-    {
-      "group": "Terms & Privacy",
-      "pages": [
-        "terms-and-privacy/terms-of-service",
-        "terms-and-privacy/privacy-policy"
       ]
     }
   ],
