@@ -3,19 +3,16 @@ title: "Running GPU Workloads"
 description: "Set up GPU node groups and deploy GPU-accelerated workloads on Porter"
 ---
 
-This guide walks you through setting up GPU infrastructure on Porter, from creating a GPU node group to deploying your first GPU-accelerated application.
+This guide walks you through setting up GPU infrastructure on Porter, from
+creating a GPU node group to deploying your first GPU-accelerated application.
 
-## Overview
-
-GPU workloads on Porter use fixed node groups with GPU-enabled instance types. This gives you precise control over which GPU hardware your applications run on. Common use cases include:
-
-- Machine learning inference
-- Model training and fine-tuning
-- Video transcoding
-- Scientific computing
+You can deploy GPU-enabled workloads on Porter by creating a fixed node group
+and selecting a GPU-enabled instance type. Note that this has to be the
+**second** node group in your cluster as the default node group is reserved for
+CPU workloads.
 
 <Info>
-  GPU node groups use fixed instance types because cost optimization does not currently support GPU instances. This means you select a specific GPU instance type and Porter scales by adding or removing instances of that exact type.
+  GPUs are only supported on fixed node groups because cost optimization does not currently support GPU instances. This means you select a specific GPU instance type and Porter scales by adding or removing instances of that exact type.
 </Info>
 
 ## Creating a GPU Node Group
@@ -45,7 +42,7 @@ GPU workloads on Porter use fixed node groups with GPU-enabled instance types. T
     ![Fixed Node Group Configuration](/images/provisioning-infrastructure/cost-opt-1.png)
 
     <Warning>
-      GPU instances are significantly more expensive than standard instances. Set minimum nodes to a low amount so nodes can scale down when not in use. Note that a low minimum nodes can add cold start latency (typically 2-5 minutes) when nodes need to spin up.
+      GPU instances are significantly more expensive than standard instances. Set minimum nodes to a low amount so nodes can scale down when not in use. Note that a low minimum nodes can add cold start latency when nodes need to spin up.
     </Warning>
   </Step>
 
