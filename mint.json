@@ -199,6 +199,7 @@
         {
           "group": "Other Guides",
           "pages": [
+            "other/gpu-workloads",
             "other/deleting-dangling-resources",
             "other/aws-vpc-peering",
             "other/kubernetes-101",
