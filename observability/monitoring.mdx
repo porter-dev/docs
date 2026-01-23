@@ -9,9 +9,7 @@ Porter provides observability around your basic application metrics. Below are t
 - Network Usage
 - Network Throughput (number of networking errors from NGINX)
 
-![Metrics Tab](/images/observability/monitoring.png)
+All metrics are retained up to 14 days by default and are collected via [Prometheus](https://prometheus.io/) that runs inside your own cluster. Porter is responsible for the reliability of this prometheus instance and manages it on an ongoing basis.
 
-All metrics are retained up to 30 days by default and are collected via [Prometheus](https://prometheus.io/) that runs inside your own cluster. Porter is responsible for the reliability of this prometheus instance and manages it on an ongoing basis.
-
-While these metrics support basic use cases, for advanced options we recommend using a 3rd party addon such as DataDog, Mezmo, New Relic, or Cloudwatch.
-Installing these addons is as simple as one click. You can find a list of 3rd party observability tools that Porter supports inside the **Addons** tab.
+While these metrics support basic use cases, for advanced options we recommend using a 3rd party addon such as DataDog, Mezmo, or New Relic.
+Installing these addons is as simple as one click. You can find a list of 3rd party observability tools that Porter supports inside the **Add-ons** tab.

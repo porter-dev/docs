@@ -32,3 +32,10 @@ jobs:
 ```
 
 For more information on Github Actions, see the [Github Actions documentation](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions).
+
+## Opening a shell
+
+In cases where you need to open a shell into a preview env's running apps, you need to first retrieve the preview env name and then run `porter app run`:
+
+1. Retrieve the preview env name by running `porter target list --preview`. Copy the name of the preview env you'd like to open a shell into.
+2. Next, run `porter app run <APP_NAME> -x <TARGET_NAME> -- <COMMAND>` where `<APP_NAME>` is the name of the underlying app the preview env uses as a template, and `<TARGET_NAME>` is the preview env name you copied from running the first command. This will spin up a new replica and open a shell; if you wish to use an existing running replica, add the `-e` flag to `porter app run`. 

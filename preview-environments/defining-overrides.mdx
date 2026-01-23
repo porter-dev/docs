@@ -34,11 +34,15 @@ Preview apps can be made accessible via a unique URL that is generated when the 
 
 ### Custom Domains
 
-Custom domains can be configured based on the PR branch name by using the `{BRANCH}` placeholder in the custom domain name while configuring the preview app template:
+Custom domains can be configured based on the PR branch name and number by using the `{BRANCH}` and `{PR_NUMBER}` placeholders in the custom domain name while configuring the preview app template:
 
 ![Custom Domains](/images/preview-environments/custom-domain-with-branch-placeholder.png)
-_Using the `{BRANCH}` placeholder in the custom domain name will result in a custom domain that is based on the PR branch name for each preview._
+_Using the `{BRANCH}` or `{PR_NUMBER}` placeholders in the custom domain name will result in a custom domain that is based on the PR branch name or number for each preview._
 
 For example, if you set the custom domain to `{BRANCH}.my-domain.com` and have a branch named `my-feature-branch`, the preview app will be accessible via `my-feature-branch.my-domain.com`.
+If you set the custom domain to `{PR_NUMBER}.my-domain.com` and have a PR number of `123`, the preview app will be accessible via `123.my-domain.com`.
 
 Note that in order to be compatible with this feature, the branch name must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character.
+You will also have to create a wildcard record in your DNS provider for the base domain (e.g. `*.my-domain.com`) that points to the ingress IP for your cluster. The ingress IP can be found in the **Networking** tab of any of your web services.
+![Cluster Ingress IP](/images/preview-environments/cluster-ingress-ip.png)
+_The ingress IP for your cluster can be found in the **Networking** tab of any of your web services._

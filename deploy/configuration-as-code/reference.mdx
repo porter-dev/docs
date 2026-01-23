@@ -30,6 +30,7 @@ The following is a full reference for all the fields that can be set in a `porte
   - **ramMegabytes** - the amount of RAM to allocate to the service.
   - **gpuCoresNvidia** - the number of Nvidia GPU cores to allocate to the service.
   - **port** - the port that the service will listen on.
+  - **nodeGroup** - the ID of the user node group to run the service on. If not provided, the service will be run on the default node group.
   - [connections](#connections) - a list of external connections for the service.
   - additional type-specific fields. See full reference for [web](/deploy/configuration-as-code/services/web-service), [worker](/deploy/configuration-as-code/services/worker-service), and [job](/deploy/configuration-as-code/services/job-service) services.
 
@@ -116,6 +117,14 @@ services:
     cpuCores: 1
     ramMegabytes: 1024
     port: 8080
+  - name: web-on-user-node-group
+    type: web
+    run: python app.py
+    instances: 1
+    cpuCores: 1
+    ramMegabytes: 1024
+    port: 8080
+    nodeGroup: 123e4567-e89b-12d3-a456-426614174000
 ```
 
 ### `connections`
