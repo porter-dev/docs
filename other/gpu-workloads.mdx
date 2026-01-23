@@ -1,5 +1,5 @@
 ---
-title: "Configuring GPUs"
+title: "Running GPU Workloads"
 description: "Set up GPU node groups and deploy GPU-accelerated workloads on Porter"
 ---
 
@@ -39,13 +39,13 @@ GPU workloads on Porter use fixed node groups with GPU-enabled instance types. T
     | Setting | Description |
     |---------|-------------|
     | **Instance type** | Select a GPU-enabled instance type (see table below) |
-    | **Minimum nodes** | Set to 0 for scale-to-zero, or 1+ if you need always-on GPU capacity |
+    | **Minimum nodes** | Select minimum number of nodes that will be available at all times |
     | **Maximum nodes** | The upper limit for autoscaling based on demand |
 
     ![Fixed Node Group Configuration](/images/provisioning-infrastructure/cost-opt-1.png)
 
     <Warning>
-      GPU instances are significantly more expensive than standard instances. Set minimum nodes to 0 if your workload can tolerate cold starts, allowing nodes to scale down when not in use. Note that this adds cold start latency (typically 2-5 minutes) when nodes need to spin up.
+      GPU instances are significantly more expensive than standard instances. Set minimum nodes to a low amount so nodes can scale down when not in use. Note that a low minimum nodes can add cold start latency (typically 2-5 minutes) when nodes need to spin up.
     </Warning>
   </Step>
 
