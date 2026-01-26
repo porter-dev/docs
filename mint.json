@@ -178,17 +178,6 @@
           ]
         },
         {
-          "group": "Language Specific Guides",
-          "pages": [
-            "guides/nodejs/deploy-nodejs",
-            "guides/rails/deploy-rails",
-            "guides/flask/deploy-flask",
-            "guides/golang/deploy-golang",
-            "guides/fastapi/deploy-fastapi",
-            "guides/nextjs/deploy-nextjs"
-          ]
-        },
-        {
           "group": "Other Guides",
           "pages": [
             "other/gpu-workloads",
