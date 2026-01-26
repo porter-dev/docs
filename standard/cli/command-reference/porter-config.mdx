@@ -21,34 +21,11 @@ Configuration values can be overridden using flags or environment variables. See
 
 ---
 
-## `porter config set-host`
-
-Saves the host in the default configuration.
-
-**Usage:**
-```bash
-porter config set-host [HOSTNAME]
-```
-
-```bash
-porter config set-host https://dashboard.porter.run
-```
-
-<Warning>
-The hostname must include the protocol (`https://`) and should not contain trailing slashes.
-</Warning>
-
----
-
 ## `porter config set-project`
 
 Set the active project. This command shows a list of projects you have access to and lets you select one.
 
 **Usage:**
-```bash
-porter config set-project [PROJECT_ID]
-```
-
 <CodeGroup>
 ```bash Interactive Selection
 porter config set-project
@@ -66,10 +43,6 @@ porter config set-project 12345
 Set the active cluster. This command shows a list of clusters in the current project and lets you select one.
 
 **Usage:**
-```bash
-porter config set-cluster [CLUSTER_ID]
-```
-
 <CodeGroup>
 ```bash Interactive Selection
 porter config set-cluster
