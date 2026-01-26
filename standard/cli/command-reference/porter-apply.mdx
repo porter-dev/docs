@@ -92,11 +92,11 @@ You can also configure `porter apply` using environment variables. These are aut
 | Variable | Description |
 |----------|-------------|
 | `PORTER_TOKEN` | Authentication token (required for CI/CD) |
+| `PORTER_HOST` | Porter API host URL |
 | `PORTER_PROJECT` | Target project ID |
 | `PORTER_CLUSTER` | Target cluster ID |
-| `PORTER_HOST` | Porter API host URL |
-| `PORTER_APP_NAME` | Override the app name (alternative to `--app`) |
-| `PORTER_DEPLOYMENT_TARGET_ID` | Target deployment environment ID |
+| `PORTER_APP_NAME` | App name (alternative to `--app`) |
+| `PORTER_DEPLOYMENT_TARGET_ID` | Deployment target ID |
 | `PORTER_TAG` | Image tag to deploy |
 
 ## Examples
@@ -195,7 +195,7 @@ The workflow below is similar to what Porter automatically creates when you conn
 ### GitHub Actions Workflow
 
 ```yaml
-name: Deploy to Porter
+name: Deploy to my-app
 
 on:
   push:
@@ -203,31 +203,30 @@ on:
       - main
 
 jobs:
-  deploy:
+  porter-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Porter CLI
-        run: |
-          curl -fsSL https://install.porter.run | bash
-          echo "$HOME/.porter" >> $GITHUB_PATH
-
-      - name: Get short SHA
+      - name: Set Github tag
         id: vars
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Deploy to Porter
-        env:
-          PORTER_APP_NAME: my-app
-          PORTER_CLUSTER: ${{ secrets.PORTER_CLUSTER }}
-          PORTER_DEPLOYMENT_TARGET_ID: ${{ secrets.PORTER_DEPLOYMENT_TARGET_ID }}
-          PORTER_HOST: ${{ secrets.PORTER_HOST }}
-          PORTER_PROJECT: ${{ secrets.PORTER_PROJECT }}
-          PORTER_TAG: ${{ steps.vars.outputs.sha_short }}
-          PORTER_TOKEN: ${{ secrets.PORTER_TOKEN }}
+      - name: Setup porter
+        uses: porter-dev/setup-porter@v0.1.0
+
+      - name: Deploy stack
         run: porter apply
+        timeout-minutes: 30
+        env:
+          PORTER_CLUSTER: "1"
+          PORTER_HOST: https://dashboard.getporter.dev
+          PORTER_PROJECT: "1"
+          PORTER_TOKEN: ${{ secrets.PORTER_TOKEN }}
+          PORTER_TAG: ${{ steps.vars.outputs.sha_short }}
+          PORTER_APP_NAME: my-app
+          PORTER_DEPLOYMENT_TARGET_ID: your-deployment-target-id
 ```
 
 ## Related Commands
