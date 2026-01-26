@@ -1,0 +1,516 @@
+---
+title: "Provisioning Cloud Provider"
+sidebarTitle: "Cloud Provider"
+---
+
+Porter provisions and manages the underlying infrastructure in your own cloud. During project creation, Porter will prompt you to provision resources in a cloud provider of your choice.
+
+Select your cloud provider below for step-by-step provisioning instructions.
+
+<Card
+  title="Provisioning on AWS"
+  icon="aws"
+  href="/provision/provisioning-on-aws"
+></Card>
+<Card
+  title="Provisioning on Azure"
+  icon="microsoft"
+  href="/provision/provisioning-on-azure"
+></Card>
+<Card
+  title="Provisioning on GCP"
+  icon="google"
+  href="/provision/provisioning-on-gcp"
+></Card>
+
+    Porter provisions infrastructure in your own AWS account through the `AssumeRole` [operation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html).
+    Simply put, Porter can _assume_ the role that you create in your own AWS account as long as you declare that you trust Porter to do so.
+    This eliminates the need to rely on static AWS credentials and makes it easier to revoke access for security purposes. Porter creates a CloudFormation to manage this role in your account using 3 simple steps.
+
+    <Info>
+      The IAM role Porter creates must be kept in your AWS account for Porter to
+      keep managing your infrastructure. Deleting this role will cause Porter to
+      fail and stop managing your infrastructure.
+    </Info>
+
+    <Steps>
+      <Step title="Grant permissions">
+        After selecting AWS as your cloud provider you will be prompted to login to your AWS account. Upon successful login you will be prompted to provide the AWS Account ID of the account in which you wish to provision your cluster in.
+        You can find your Account ID at the top right corner of your [AWS console](https://console.aws.amazon.com).
+        Input your Account ID and click on **Grant Permissions**.
+      </Step>
+
+      <Step title="Create CloudFormation stack">
+        You will be directed to your AWS console to create a CloudFormation stack. If this window did not appear, please ensure that your browser has not blocked the pop-up window. This stack will create the role Porter will assume to manage your infrastructure.
+        Scroll to the bottom of the screen. Check the "I acknowledge..." box and click on **Create Stack**. It may take a few minutes for the role to be fully created. After creation you can proceed to selecting provisioning settings.
+
+        <Info>
+          If you want to use Porter with less expansive permissions than what is
+          provisioned by the CloudFormation stack, please contact us through the support widget to inquire about Porter
+          Enterprise. Porter Enterprise requires minimum IAM permissions that are
+          smaller in scope.
+        </Info>
+      </Step>
+
+      <Step title="Select region">
+        On the next page, you will be prompted to select the AWS region that you want to provision your infrastructure in.
+        Porter supports all AWS regions.
+
+        <Info>
+          For guidance on choosing a region, if you have an external database to
+          Porter, we recommend choosing a region close to your database. Otherwise,
+          consider choosing a region near your primary customer base.
+        </Info>
+      </Step>
+
+      <Step title="Handle quota limits">
+        If there are any quota limits on your account imposed by AWS, Porter will request them on your behalf by default. Alternatively, if you wish to manually request quota increases,
+        follow the links prompting you to the AWS dashboard. If you go the manual route, you will not be able to provision your cluster until these quota increase requests have been approved.
+      </Step>
+
+      <Step title="Provision">
+        Once you click **Provision**, Porter will start spinning up the requisite infrastructure in your account. This may take up to 30 minutes.
+      </Step>
+    </Steps>
+
+    ### Troubleshooting
+
+    <AccordionGroup>
+      <Accordion title="Provisioning takes longer than 30 minutes">
+        If your cluster has been provisioning for more than 45 minutes, there may be an issue. Check the following:
+
+        - Verify that the IAM role still exists in your AWS account and hasn't been deleted
+        - Check your AWS Service Quotas to ensure they were approved
+        - Verify that the selected region supports the requested instance types
+
+        If issues persist, contact us through the dashboard chat bot with your project ID.
+      </Accordion>
+
+      <Accordion title="Permission errors during provisioning">
+        If you encounter permission errors:
+
+        - Verify the CloudFormation stack created successfully and the role exists
+        - Ensure the role has not been modified after creation
+        - Check that your AWS account has not applied SCPs (Service Control Policies) that restrict Porter's actions
+      </Accordion>
+
+      <Accordion title="Quota increase requests not approved">
+        AWS typically approves quota increases automatically, but some may require manual review:
+
+        - Check the status of quota requests in the [AWS Service Quotas console](https://console.aws.amazon.com/servicequotas/)
+        - Requests under manual review typically take 24-48 hours
+        - If urgent, you can contact AWS support to expedite the review
+      </Accordion>
+
+      <Accordion title="CloudFormation stack creation fails">
+        If the CloudFormation stack fails to create:
+
+        - Ensure you have sufficient permissions in your AWS account to create IAM roles
+        - Check that you're logged into the correct AWS account (the account ID should match)
+        - Verify your account is in good standing and billing is enabled
+      </Accordion>
+    </AccordionGroup>
+
+    ### Deleting Provisioned Resources
+
+    <Warning>
+      For Porter to delete your resources, it needs the IAM role that was initially
+      created during provisioning. Please make sure to delete the resources first,
+      and then delete the IAM role after. If you've already deleted the IAM role,
+      you will have to delete the resources [directly from the AWS
+      console.](/other/deleting-dangling-resources)
+    </Warning>
+
+    To delete resources that have been provisioned by Porter, click on the Infrastructure tab on the sidebar of the dashboard. There you can find the **Delete Cluster** button.
+
+    Once the cluster has been deleted, navigate to **CloudFormation Stacks** in your AWS console to delete the role that was created during initial provisioning. This will revoke Porter's access to your account.
+    Select the stack named `PorterRole` and click **Delete**.
+
+    <Warning>
+      Deleting resources on AWS via Porter may result in dangling resources. After
+      clicking delete, please make sure to check your AWS console to see if all
+      resources have properly been removed. You can remove any dangling resources
+      via either the AWS console or the CLI.
+    </Warning>
+
+    For a guide on how to delete the dangling resources, see [Deleting Dangling Resources](/other/deleting-dangling-resources).
+  </Tab>
+
+  <Tab title="Azure">
+    ## Setup Options
+
+    You can set up Azure for Porter in two ways:
+
+    - **[Option 1: Automated Setup Script (Recommended)](#option-1-automated-setup-script-recommended)** - One-click setup using our script
+    - **[Option 2: Manual Setup](#option-2-manual-setup)** - Step-by-step manual configuration
+
+    ### Option 1: Automated Setup Script (Recommended)
+
+    **Prerequisites for the script:**
+
+    - Azure CLI installed and authenticated (`az login`)
+    - `jq` command-line JSON processor installed
+    - Admin permissions on your Azure subscription (for granting API permissions)
+
+    Download and run our automated setup script that handles all the configuration steps for you:
+
+    ```bash
+    # Download the setup script
+    curl -O https://raw.githubusercontent.com/porter-dev/docs/main/scripts/setup-azure-porter.sh
+
+    # Make it executable
+    chmod +x setup-azure-porter.sh
+
+    # Run the script (optionally provide subscription ID)
+    ./setup-azure-porter.sh [your-subscription-id]
+    ```
+
+    The script will:
+
+    - ✅ Enable all required Azure resource providers
+    - ✅ Create the custom `porter-aks-restricted` role
+    - ✅ Create the service principal with proper permissions
+    - ✅ Add Microsoft Graph API permissions
+    - ✅ Grant admin consent (if you have permissions)
+    - ✅ Display the credentials needed for Porter
+
+    **After running the script:**
+
+    1. Copy the displayed credentials to the Porter dashboard when creating your project
+    2. Request quota increases if needed (see [Compute Quotas](#compute-quotas) section below)
+    3. Proceed with cluster provisioning in Porter
+
+    <Info>
+      If the script fails to grant admin consent automatically, you can grant it
+      manually in the Azure Portal: **App registrations** >
+      **azure-porter-restricted-sp** > **API permissions** > **Grant admin consent
+      for Default Directory**.
+    </Info>
+
+    ---
+
+    ### Option 2: Manual Setup
+
+    <Steps>
+      <Step title="Enable resource providers">
+        In the Azure portal, search for **Subscriptions**, select the subscription you would like to use to provision, and click the **Resource providers** tab in the subscription console.
+
+        ![Resource providers](https://github.com/porter-dev/api-contracts/assets/66391417/b163d9fa-a1fb-47e3-b642-6bf42f0da0cf)
+
+        Enable the following providers by selecting the providers and clicking **Register**:
+
+        - Microsoft.Capacity
+        - Microsoft.Compute
+        - Microsoft.ContainerRegistry
+        - Microsoft.ContainerService
+        - Microsoft.ManagedIdentity
+        - Microsoft.Network
+        - Microsoft.OperationalInsights
+        - Microsoft.OperationsManagement
+        - Microsoft.ResourceGraph
+        - Microsoft.Resources
+        - Microsoft.Storage
+
+        It might take a few minutes for providers to complete registration.
+      </Step>
+
+      <Step title="Create a custom role">
+        <Info>
+          The following commands can be run in the Azure Cloud Shell (selecting the
+          `Bash` option) or in your local terminal after installing the Azure CLI and
+          authenticating with `az login`.
+        </Info>
+
+        Set the `PORTER_AZURE_SUBSCRIPTION_ID` environment variable to your subscription id:
+
+        ```bash
+        PORTER_AZURE_SUBSCRIPTION_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        ```
+
+        Run the following command to create the role:
+
+        ```bash
+        envsubst << EOF | az role definition create --role-definition @-
+        {
+            "assignableScopes": ["/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"],
+            "description": "Grants Porter access to manage resources for an AKS cluster.",
+            "id": "/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}/providers/Microsoft.Authorization/roleDefinitions/porter-aks-restricted",
+            "isCustom": true,
+            "name": "porter-aks-restricted",
+            "permissions": [
+                {
+                    "actions": ["*"],
+                    "dataActions": [],
+                    "notActions": [
+                        "Microsoft.Authorization/elevateAccess/Action",
+                        "Microsoft.Blueprint/blueprintAssignments/write",
+                        "Microsoft.Blueprint/blueprintAssignments/delete",
+                        "Microsoft.Compute/galleries/share/action"
+                    ],
+                    "notDataActions": []
+                }
+            ],
+            "roleName": "Contributor",
+            "roleType": "BuiltInRole",
+            "type": "Microsoft.Authorization/roleDefinitions"
+        }
+        EOF
+        ```
+      </Step>
+
+      <Step title="Create a service principal">
+        Create a new service principal through the Azure CLI that uses the role you just created:
+
+        ```bash
+        az ad sp create-for-rbac \
+        --name="azure-porter-restricted-sp" \
+        --role="porter-aks-restricted" \
+        --scopes="/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"
+        ```
+
+        Running this will display the following output, which you will need when you go to provision your cluster on the Porter dashboard:
+
+        ```json
+        {
+          "appId": "00000000-0000-0000-0000-000000000000",
+          "displayName": "azure-porter-restricted-sp",
+          "name": "azure-porter-restricted-sp",
+          "password": "0000-0000-0000-0000-000000000000",
+          "tenant": "00000000-0000-0000-0000-000000000000"
+        }
+        ```
+      </Step>
+
+      <Step title="Grant API permissions">
+        In your Azure portal, search for **App registrations**. Under the **All applications** tab, you should see the newly-created service principal. Select the principal and navigate to the API Permissions tab.
+
+        Select **Add a permission** > **Microsoft Graph** > **Application permissions** and select the following seven permissions:
+
+        - Application.ReadWrite.All
+        - Directory.ReadWrite.All
+        - Domain.Read.All
+        - Group.Create
+        - Group.ReadWrite.All
+        - RoleManagement.ReadWrite.Directory
+        - User.ReadWrite.All
+
+        Click **Add permissions** to save these permissions, and then click **Grant admin consent for Default Directory** to grant these permissions to your service principal.
+      </Step>
+    </Steps>
+
+    ### Compute Quotas
+
+    By default, Azure limits the types of resources you can provision in your subscription. To provision a Porter cluster, you will need to request a quota increase for the compute resources you plan to use.
+
+    In your Azure portal, navigate to your subscription and select **Usage + quotas**. Set the resource filter to **Compute** and region to your desired region.
+
+    | Resource Family             | Recommended Quota |
+    | --------------------------- | ----------------- |
+    | Total Regional vCPUs        | 40                |
+    | Standard Basv2 Family vCPUs | 40                |
+
+    After selecting each resource family, click **Request quota increase** and input your desired quota limit. Requests should be approved automatically within a few minutes.
+
+    ### Provisioning Your Porter Cluster
+
+    <Steps>
+      <Step title="Provide credentials">
+        Once you create your project and select Azure as your cloud provider, you will be prompted to provide the credentials for the service principal you created earlier.
+      </Step>
+
+      <Step title="Review costs">
+        After providing your credentials, hit "Continue". In the case that you do not have cloud credits, we have provided a breakdown of the monthly costs on Azure.
+      </Step>
+
+      <Step title="Configure cluster">
+        On the next page, you will be able to configure your Azure cluster. For choosing an Azure tier, we recommend choosing a Free tier for non-production workloads, and the Standard tier for production workloads.
+        This is something you are able to change after creating your cluster, should your needs change.
+
+        <Info>
+          For guidance on choosing a region, if you have an external database to
+          Porter, we recommend choosing a region close to your database. Otherwise,
+          consider choosing a region near your primary customer base.
+        </Info>
+      </Step>
+
+      <Step title="Provision">
+        Once you click **Provision**, Porter will start spinning up the requisite infrastructure in your account. This may take up to 30 minutes.
+      </Step>
+    </Steps>
+
+    ### Rotating Service Principal Credentials
+
+    Azure mandates that client secrets for Service Principals expire every 365 days. When a client secret expires, Porter loses the ability to manage your infrastructure or push new deployments. Note that in the event of a client secret's expiration, _your cluster continues to function normally, and existing workloads are not affected_.
+
+    To refresh your client secret:
+
+    1. Visit [https://aka.ms/NewClientSecret](https://aka.ms/NewClientSecret) and select the app ID for the service principal that was used to create your cluster
+    2. Generate a fresh client secret, and copy new value
+    3. Navigate to `Integrations` on the Porter dashboard and select `Azure`
+    4. Update the value of the `Password` field with the new value you generated on Azure, and hit `Update`
+
+    ### Deleting Provisioned Resources
+
+    <Warning>
+      Deleting resources on Azure via Porter may result in dangling resources. After
+      clicking delete, please make sure to check your Azure portal to see if all
+      resources have properly been removed. You can remove any dangling resources
+      via either the Azure console or the Azure CLI.
+    </Warning>
+
+    We recommend that you delete all provisioned resources through Porter as well as confirm resources have been deleted from the Azure portal. This will ensure that you do not get charged on Azure for lingering resources.
+
+    To delete resources, click on **Additional settings** from the **Infrastructure** tab.
+
+    Click **Delete Cluster** to remove the cluster from Porter and delete resources in your Azure console. It may take up to 30 minutes for these resources to be deleted from your Azure subscription.
+
+    To confirm that resources have been deleted, navigate to your Azure portal and search for **Resource groups**. You should expect to see a resource group named `<PROJECT_ID>-<AZURE_REGION>` containing an Azure container registry with your application build images. By default, Porter will not delete your build images, so you will need to delete this resource group manually.
+  </Tab>
+
+  <Tab title="Google Cloud">
+    Porter runs on a Kubernetes cluster in your own Google Cloud account. You can provision a cluster through Porter by providing the credentials of a GCP service account.
+
+    <Info>
+      Quick Installation uses **Owner** permissions to set up Porter. You can
+      optionally specify the minimum IAM policies for provisioning both a cluster
+      and registry.
+    </Info>
+
+    ## Prerequisites
+
+    ### Enabling GCP APIs
+
+    To use Porter on GCP, you must first enable some APIs on your project.
+
+    <Steps>
+      <Step title="Navigate to APIs & Services">
+        Navigate to the **APIs & Services** tab of your project.
+
+        ![APIs and services](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/75c924c8-88d4-40a7-5a35-5e29261f4d00/large "Screen Shot 2021-05-06 at 6.23.07 PM.png")
+      </Step>
+
+      <Step title="Enable required APIs">
+        Click on the **Enable APIs and Services** button at the top. This will bring up a catalog of APIs that you can enable on GCP. Enable the following five APIs:
+
+        - Compute Engine API
+        - Kubernetes Engine API
+        - Cloud Resource Manager API
+        - Container Registry API
+        - Artifact Registry API
+
+        It might take a few minutes for each of these APIs to be enabled.
+      </Step>
+    </Steps>
+
+    ### Creating a Service Account
+
+    <Steps>
+      <Step title="Navigate to Service Accounts">
+        Go to your [Google Cloud console](https://console.cloud.google.com/) and navigate to **IAM & Admin** → **Service Accounts**.
+
+        ![Service accounts](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/c7dbb5ea-64ff-4ac5-4b97-6b4ff403cb00/large "Screen Shot 2021-04-15 at 6.41.26 PM.png")
+      </Step>
+
+      <Step title="Create Service Account">
+        Select **Create Service Account**.
+
+        ![Create service account](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/a625aa4d-08d9-4a47-885a-d470fd1a3100/large "Screen Shot 2021-04-15 at 6.45.42 PM.png")
+      </Step>
+
+      <Step title="Grant permissions">
+        After naming your service account, grant the service account these five permissions:
+
+        - **Cloud Storage > Storage Admin**
+        - **Compute Engine > Compute Admin**
+        - **Kubernetes Engine > Kubernetes Engine Admin**
+        - **Service Accounts > Service Account User**
+        - **Artifact Registry > Artifact Registry Administrator**
+
+        Select **Done** to create the service account.
+
+        ![Create service account confirmation](/images/provisioning-infrastructure/gcp-service-account-permissions.png)
+      </Step>
+
+      <Step title="Create JSON key">
+        Once the service account has been created, under **Actions** select **Manage keys**.
+
+        ![Manage keys](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/7ed41d02-b6dd-40cf-b2aa-bdbb23155900/large "Screen Shot 2021-04-15 at 6.51.25 PM.png")
+
+        Select **ADD KEY** → **Create new key** and then choose **JSON** as your key type. After creation, your JSON key will automatically be downloaded as a file. You will need this key later.
+
+        ![Download JSON](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/9e17f17a-9d9e-4bdc-5978-55275f3d9a00/large "Screen Shot 2021-04-15 at 6.56.30 PM.png")
+      </Step>
+    </Steps>
+
+    ## Provisioning a Cluster
+
+    <Steps>
+      <Step title="Select GCP">
+        Select "GCP" from the cloud providers.
+      </Step>
+
+      <Step title="Upload credentials">
+        Click "Drop a GCP Service Account JSON here, or click to browse." and upload the JSON key file from the Prerequisites step, then click "Continue".
+      </Step>
+
+      <Step title="Select region">
+        Select the region that you would like to provision in, then click "Provision".
+      </Step>
+
+      <Step title="Pass provision checks">
+        Before you are able to provision a cluster you must pass all provision checks. Troubleshooting steps will be shown on the dashboard if you encounter these errors.
+      </Step>
+
+      <Step title="Provision">
+        Once you click **Provision**, Porter will start spinning up the requisite infrastructure in your account. This may take up to 30 minutes.
+      </Step>
+    </Steps>
+
+    ### Deleting Provisioned Resources
+
+    <Warning>
+      Deleting resources on GCP via Porter may result in dangling resources. After
+      clicking delete, please make sure to check your GCP console to see if all
+      resources have properly been removed. You can remove any dangling resources
+      via either the GCP console or the gcloud CLI.
+    </Warning>
+
+    We recommend that you delete all provisioned resources through Porter as well as confirm resources have been deleted from the GCP console. This will ensure that you do not get charged on GCP for lingering resources.
+
+    To delete resources, click on **Additional Settings** from the **Infrastructure** tab.
+
+    Click **Delete Cluster** to remove the cluster from Porter and delete resources in your GCP console. It may take up to 30 minutes for these resources to be deleted from your GCP console.
+  </Tab>
+</Tabs>
+
+## FAQ
+
+### How much does the underlying infrastructure cost?
+
+The cost of your infrastructure varies entirely on the amount of resources you use. By default, clusters provisioned by Porter cost around $200 per month. **All of the underlying infrastructure cost can be covered with your cloud credits from AWS, Google Cloud, and Azure.**
+
+### What does Porter-provisioned infrastructure consist of?
+
+Infrastructure provisioned by Porter on AWS includes a VPC, a Network Load Balancer, and an EKS cluster. On GCP and Azure, the architecture is identical with equivalent components on each cloud provider (VPC/VNet, Load Balancer, and managed Kubernetes cluster).
+
+#### Default Node Group Configuration
+
+By default, Porter provisions three node groups in your cluster:
+
+| Node Group | Purpose | AWS Default | Azure Default | GCP Default |
+|------------|---------|-------------|---------------|-------------|
+| **System** | Kubernetes system workloads | 2x t3.medium | 2x Standard_B2s | 2x e2-medium |
+| **Monitoring** | Observability stack (metrics, logs) | 1x t3.large | 1x Standard_B2ms | 1x e2-standard-2 |
+| **Application** | Your application workloads | 1x t3.medium (autoscales) | 1x Standard_B2s (autoscales) | 1x e2-medium (autoscales) |
+
+**Application node group details:**
+- **Initial size:** 1 node
+- **Autoscaling:** Enabled by default
+- **Maximum nodes:** Scales based on workload demand and configured limits
+- **Minimum nodes:** 1 node to ensure availability
+
+**Disk size:** Each node includes 50GB of disk storage by default across all cloud providers.
+
+<Info>
+  You can customize machine types, node counts, and disk sizes after initial provisioning through the Infrastructure tab in the Porter dashboard.
+</Info>
