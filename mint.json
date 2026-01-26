@@ -24,13 +24,6 @@
     "name": "Get Started",
     "url": "https://porter.run"
   },
-  "anchors": [
-    {
-      "name": "Get Started",
-      "icon": "play",
-      "url": "https://dashboard.porter.run"
-    }
-  ],
   "modeToggle": {
     "default": "dark"
   },
@@ -38,7 +31,14 @@
     {
       "group": "",
       "pages": [
-        "introduction",
+        {
+          "group": "Getting Started",
+          "pages": [
+            "getting-started/introduction",
+            "getting-started/concepts",
+            "getting-started/quickstart"
+          ]
+        },
         {
           "group": "Cloud Accounts",
           "pages": [
@@ -48,7 +48,7 @@
             "cloud-accounts/provisioning-on-gcp",
             "cloud-accounts/changing-instance-types",
             "cloud-accounts/cluster-upgrades",
-            "cloud-accounts/cost-optimization"
+            "cloud-accounts/node-groups"
           ]
         },
         {
@@ -59,22 +59,9 @@
               "pages": [
                 "deploy/overview",
                 "deploy/types-of-services",
-                "deploy/v1-and-v2",
-                {
-                  "group": "v2",
-                  "pages": [
-                    "deploy/v2/deploy-from-github-repo",
-                    "deploy/v2/deploy-from-docker-registry",
-                    "deploy/v2/configuring-application-services"
-                  ]
-                },
-                {
-                  "group": "v1",
-                  "pages": [
-                    "deploy/v1/deploy-from-github-repo",
-                    "deploy/v1/deploy-from-docker-registry"
-                  ]
-                },
+                "deploy/deploy-from-github-repo",
+                "deploy/deploy-from-docker-registry",
+                "deploy/configuring-application-services",
                 "deploy/builds",
                 "deploy/multiple-deploys-from-same-build",
                 "deploy/pre-deploy-jobs",
@@ -135,6 +122,7 @@
             {
               "group": "Command Reference",
               "pages": [
+                "standard/cli/command-reference/porter-apply",
                 "standard/cli/command-reference/porter-auth",
                 "standard/cli/command-reference/porter-cluster",
                 "standard/cli/command-reference/porter-config",
@@ -164,17 +152,6 @@
             "security-and-compliance/cloudflare-dns",
             "security-and-compliance/soc2-hipaa",
             "security-and-compliance/porter-ip-ranges"
-          ]
-        },
-        {
-          "group": "Language Specific Guides",
-          "pages": [
-            "guides/nodejs/deploy-nodejs",
-            "guides/rails/deploy-rails",
-            "guides/flask/deploy-flask",
-            "guides/golang/deploy-golang",
-            "guides/fastapi/deploy-fastapi",
-            "guides/nextjs/deploy-nextjs"
           ]
         },
         {
