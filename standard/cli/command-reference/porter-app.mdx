@@ -14,7 +14,7 @@ title: 'porter app'
 
 ## `porter app run`
 
-Runs a command inside a connected cluster container. By default, this spins up an ephemeral copy of your container that is deleted when the command completes.
+Runs a command inside your application's environment. By default, this spins up an ephemeral copy of your application that is deleted when the command completes.
 
 **Usage:**
 ```bash
@@ -30,7 +30,7 @@ porter app run [application] -- COMMAND [args...] [flags]
 | `--interactive` | | Run in interactive mode (default: false) |
 | `--job` | | Name of the job to run (runs the job as defined and returns the job run ID without waiting) |
 | `--wait` | | Wait for the command to complete before exiting for non-interactive mode (default: false) |
-| `--allow-concurrent` | | Allow concurrent job runs when using `--job` |
+| `--allow-concurrent` | | Allow concurrent job runs when using `--job` (overrides job config if concurrency is disabled) |
 | `--cpu` | | CPU allocation in millicores (1000 millicores = 1 vCPU) |
 | `--ram` | | RAM allocation in Mi (1024 Mi = 1 GB) |
 | `--verbose` | `-v` | Print verbose output |
@@ -41,7 +41,7 @@ porter app run my-app -- bash
 ```
 
 ```bash Existing Container
-porter app run -e my-app -- bash
+porter app run my-app -e -- bash
 ```
 
 ```bash Trigger Job
@@ -97,7 +97,7 @@ porter app logs [application] [flags]
 |------|-------------|
 | `--service` | The name of the service to get logs for |
 | `--search` | Search for a specific string in the logs |
-| `--revision` | The revision number to get logs for (default: -1) |
+| `--revision` | The revision number to get logs for (default: -1, which is the latest revision) |
 
 **Historical Log Options:**
 
@@ -178,7 +178,7 @@ porter app build my-app --tag v1.2.3
 ```
 
 ```bash With Buildpacks
-porter app build my-app --build-method pack --builder heroku/buildpacks:20 --attach-buildpacks heroku/nodejs
+porter app build my-app --build-method pack --builder heroku/builder:22 --attach-buildpacks heroku/nodejs
 ```
 </CodeGroup>
 

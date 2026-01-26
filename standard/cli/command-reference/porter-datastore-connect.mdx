@@ -15,7 +15,7 @@ title: 'porter datastore connect'
 ## Usage
 
 ```bash
-porter datastore connect <DATASTORE_NAME> [flags]
+porter datastore connect [DATASTORE_NAME] [flags]
 ```
 
 **Options:**
@@ -50,7 +50,7 @@ psql -h 127.0.0.1 -p 8122 -U postgres -d postgres
 ```
 
 ```bash Redis
-redis-cli -p 8122 -a <YOUR_DATASTORE_PASSWORD> --tls
+redis-cli -p 8122 -a [YOUR_DATASTORE_PASSWORD] --tls
 ```
 
 ```bash MySQL
