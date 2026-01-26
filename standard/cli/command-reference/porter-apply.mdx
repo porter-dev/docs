@@ -220,7 +220,7 @@ jobs:
         timeout-minutes: 30
         env:
           PORTER_CLUSTER: "1"
-          PORTER_HOST: https://dashboard.getporter.dev
+          PORTER_HOST: https://dashboard.porter.run
           PORTER_PROJECT: "1"
           PORTER_TOKEN: ${{ secrets.PORTER_TOKEN }}
           PORTER_TAG: ${{ steps.vars.outputs.sha_short }}
