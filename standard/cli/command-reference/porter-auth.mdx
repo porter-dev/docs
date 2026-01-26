@@ -1,25 +1,56 @@
 ---
-title: "porter auth"
+title: 'porter auth'
 ---
 
-`porter auth` contains commands for authenticating with a Porter instance.
+`porter auth` contains commands for authenticating with Porter.
 
-### `porter auth login`[](#porter-auth-login "Direct link to heading")
+---
 
-Logs a user in to the Porter instance. This command will by default attempt to open your default browser to authenticate you. If this does not succeed, the command will output a URL to visit which will redirect you to the Porter instance.
+## `porter auth login`
 
-If you would like to log in via a cookie-based mechanism by inputting an email/password, run:
+Authenticate with your Porter account. By default, this opens your browser to complete authentication.
 
+**Usage:**
+```bash
+porter auth login [flags]
 ```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--manual` | Log in by entering email and password instead of browser auth |
+| `--token` | Log in using an existing token |
+
+<CodeGroup>
+```bash Browser Login (Default)
+porter auth login
+```
+
+```bash Manual Login
 porter auth login --manual
 ```
 
-If you would like to log in using a token that you can find by running `porter config`:
-
+```bash Token Login
+porter auth login --token <YOUR_TOKEN>
 ```
-porter auth --token <YOUR_TOKEN>
+</CodeGroup>
+
+<Info>
+After logging in, Porter automatically sets your default project and cluster if you have access to any. You can view these with `porter config`.
+</Info>
+
+---
+
+## `porter auth logout`
+
+Log out from Porter and clear your local credentials.
+
+**Usage:**
+```bash
+porter auth logout
 ```
 
-### `porter auth logout`[](#porter-auth-logout "Direct link to heading")
-
-Logs a user out from a Porter instance.
+<Tip>
+After logging out, you'll need to run `porter auth login` again before using other commands.
+</Tip>
