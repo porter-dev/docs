@@ -2,6 +2,9 @@
 title: 'porter apply'
 sidebarTitle: 'porter apply'
 ---
+<Info>
+This command is the recommended way to deploy applications in CI/CD pipelines and for version-controlled infrastructure.
+</Info>
 
 `porter apply` is the primary command for deploying applications using configuration-as-code. It reads a `porter.yaml` file, **builds a new container image**, and **deploys your application** to the cluster.
 
@@ -9,10 +12,6 @@ By default, `porter apply` performs a full build and deploy cycle. Use `--no-bui
 
 <Info>
 You can run `porter apply` without a `porter.yaml` file to deploy using the existing application configuration. This is useful for triggering a new build and deploy without changing any settings.
-</Info>
-
-<Info>
-This command is the recommended way to deploy applications in CI/CD pipelines and for version-controlled infrastructure.
 </Info>
 
 ## Usage
