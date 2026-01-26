@@ -1,0 +1,71 @@
+---
+title: "Concepts"
+description: "Key concepts to understand when using Porter"
+---
+
+Check out our [deployment documentation](/deploy/overview), [infrastructure provisioning guides](/provision/overview), and more.
+
+<div className="mt-8 mb-12">
+<Columns cols={2}>
+  <div className="max-w-xs">
+    <h2 className="!mt-0">Cloud Account</h2>
+
+    Your cloud provider account where Porter provisions and manages infrastructure. Porter connects to your AWS, GCP, or Azure account using secure access methods, maintaining full ownership and control in your own cloud. All infrastructure costs can be covered with your cloud credits.
+  </div>
+  <Frame>
+    <img src="/images/getting-started/cloud-account.webp" alt="Cloud account connection" />
+  </Frame>
+</Columns>
+</div>
+
+<div className="mb-12">
+<Columns cols={2}>
+  <div className="max-w-xs">
+    <h2 className="!mt-0">Cluster</h2>
+
+    A managed Kubernetes cluster that Porter provisions in your cloud account to run your applications. Porter abstracts away the complexity of Kubernetes while intelligently allocating your applications across available nodes based on resource requirements.
+  </div>
+  <Frame>
+    <img src="/images/getting-started/cluster.webp" alt="Cluster configuration" />
+  </Frame>
+</Columns>
+</div>
+
+<div className="mb-12">
+<Columns cols={2}>
+  <div className="max-w-xs">
+    <h2 className="!mt-0">Node Group</h2>
+
+    Groups of compute instances that make up your cluster. Porter provisions three default node groups: System (for Kubernetes workloads), Monitoring (for observability), and Application (for your workloads, with autoscaling).
+  </div>
+  <Frame>
+    <img src="/images/getting-started/node-groups.webp" alt="Node groups configuration" />
+  </Frame>
+</Columns>
+</div>
+
+<div className="mb-12">
+<Columns cols={2}>
+  <div className="max-w-xs">
+    <h2 className="!mt-0">Application</h2>
+
+    A group of services that share the same build and environment variables. When you deploy from a Git repository, Porter builds your code once and can run multiple services from that same build. Porter also supports deployment from both public and private Docker registries.
+  </div>
+  <Frame>
+    <img src="/images/getting-started/apps.webp" alt="Configure applications" />
+  </Frame>
+</Columns>
+</div>
+
+<div className="mb-12">
+<Columns cols={2}>
+  <div className="max-w-xs">
+    <h2 className="!mt-0">Service</h2>
+
+    Individual processes that make up your application. Each service can have different start commands, resource allocations, and configurations. Porter supports three types: **Web** (HTTP traffic), **Worker** (background processes), and **Job** (scheduled or on-demand tasks).
+  </div>
+  <Frame>
+    <img src="/images/getting-started/services.webp" alt="Service types" />
+  </Frame>
+</Columns>
+</div>
