@@ -7,7 +7,9 @@ sidebarTitle: 'porter apply'
 
 By default, `porter apply` performs a full build and deploy cycle. Use `--no-build` to skip building and deploy with an existing image.
 
-You can also pass environment variables and secrets directly via command-line flags (`--variables`, `--secrets`) without modifying your `porter.yaml`.
+<Info>
+You can run `porter apply` without a `porter.yaml` file to deploy using the existing application configuration. This is useful for triggering a new build and deploy without changing any settings.
+</Info>
 
 <Info>
 This command is the recommended way to deploy applications in CI/CD pipelines and for version-controlled infrastructure.
@@ -27,20 +29,23 @@ porter apply -f porter.yaml [flags]
 
 ## Options
 
-### Required Flags
-
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--file` | `-f` | Path to the `porter.yaml` configuration file |
-
 ### Deployment Options
 
 | Flag | Short | Description |
 |------|-------|-------------|
+| `--file` | `-f` | Path to the `porter.yaml` configuration file (optional if app already exists) |
 | `--app` | | Override the app name specified in `porter.yaml` |
 | `--target` | `-x` | Specify a deployment target (name or ID) |
 | `--wait` | `-w` | Wait for the deployment to complete before exiting |
 | `--preview` | `-p` | Deploy to a preview environment based on current git branch |
+
+<Warning>
+**Use `--exact` with caution.** When set, this flag disables config merging with existing app configuration—any settings not explicitly defined in your `porter.yaml` will be overwritten. Most users should avoid this flag unless they need to completely replace the application configuration.
+</Warning>
+
+| Flag | Description |
+|------|-------------|
+| `--exact` | Disable config merging with existing app configuration |
 
 ### Build Options
 
@@ -55,10 +60,11 @@ porter apply -f porter.yaml [flags]
 | `--dockerfile` | Override the Dockerfile path (for docker builds) |
 | `--builder` | Set the builder to use (for pack builds) |
 | `--attach-buildpacks` | Attach buildpacks to use (for pack builds) |
-| `--remote` | Build remotely using kpack in the cluster instead of locally (experimental) |
 | `--verbose` | Show verbose output during build |
 
 ### Environment Options
+
+You can pass environment variables and secrets directly via command-line flags without modifying your `porter.yaml`.
 
 | Flag | Description |
 |------|-------------|
@@ -69,28 +75,29 @@ porter apply -f porter.yaml [flags]
 
 | Flag | Description |
 |------|-------------|
-| `--validate` | Validate the `porter.yaml` file without deploying |
-| `--dry-run` | Perform server-side validation without applying changes |
-| `--exact` | Disable config merging with existing app configuration |
+| `--validate` | Check that the `porter.yaml` file is valid YAML syntax |
+| `--dry-run` | Perform server-side validation to confirm the configuration is valid without applying changes |
 
 ### Advanced Options
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--predeploy` | | Run the predeploy job before deploying services |
 | `--helm-overrides-file` | `-v` | Path to a file containing Helm value overrides |
 | `--attach-env-groups` | | Comma-separated list of environment groups to attach |
 
 ## Environment Variables
 
-You can also configure `porter apply` using environment variables:
+You can also configure `porter apply` using environment variables. These are automatically set in the GitHub workflow that Porter generates for your application.
 
 | Variable | Description |
 |----------|-------------|
-| `PORTER_APP_NAME` | Override the app name (alternative to `--app`) |
+| `PORTER_TOKEN` | Authentication token (required for CI/CD) |
 | `PORTER_PROJECT` | Target project ID |
 | `PORTER_CLUSTER` | Target cluster ID |
-| `PORTER_TOKEN` | Authentication token |
+| `PORTER_HOST` | Porter API host URL |
+| `PORTER_APP_NAME` | Override the app name (alternative to `--app`) |
+| `PORTER_DEPLOYMENT_TARGET_ID` | Target deployment environment ID |
+| `PORTER_TAG` | Image tag to deploy |
 
 ## Examples
 
@@ -102,12 +109,7 @@ porter apply -f porter.yaml
 
 ```bash Wait for Completion
 # Deploy and wait for the deployment to complete
-porter apply -f porter.yaml
-```
-
-```bash Custom App Name
-# Deploy with a different app name
-porter apply -f porter.yaml --app my-staging-app
+porter apply -f porter.yaml --wait
 ```
 
 ```bash Preview Environment
@@ -115,9 +117,14 @@ porter apply -f porter.yaml --app my-staging-app
 porter apply -f porter.yaml --preview
 ```
 
-```bash Validation Only
-# Validate the configuration without deploying
+```bash Validate YAML Syntax
+# Check that porter.yaml is valid YAML
 porter apply -f porter.yaml --validate
+```
+
+```bash Dry Run
+# Validate the full configuration server-side without deploying
+porter apply -f porter.yaml --dry-run
 ```
 
 ```bash CI/CD Pipeline
@@ -133,11 +140,6 @@ porter apply -f porter.yaml
 porter apply -f porter.yaml --no-build --tag v1.2.3
 ```
 
-```bash With Predeploy
-# Run predeploy job before deployment
-porter apply -f porter.yaml --predeploy --wait
-```
-
 ```bash With Environment Variables
 # Deploy with runtime environment variables and secrets
 porter apply -f porter.yaml --variables LOG_LEVEL=debug,NODE_ENV=production --secrets API_KEY=secret123
@@ -150,13 +152,10 @@ When you run `porter apply`, the following steps occur:
 
 <Steps>
   <Step title="Parse Configuration">
-    Porter reads and validates your `porter.yaml` file
+    Porter reads and validates your `porter.yaml` file (if provided)
   </Step>
   <Step title="Build Image">
     Porter builds and pushes a new container image (unless `--no-build` is specified)
-  </Step>
-  <Step title="Run Predeploy (if enabled)">
-    If `--predeploy` is specified or `predeploy` is defined in porter.yaml, the predeploy job runs first
   </Step>
   <Step title="Deploy Services">
     Porter deploys or updates all services defined in the configuration
@@ -187,56 +186,48 @@ services:
 
 ## CI/CD Integration
 
-<Tip>
-For CI/CD pipelines, use environment variables for authentication and the `--wait` flag to ensure deployments complete before the pipeline continues.
-</Tip>
+Most users deploy with `porter apply` through GitHub Actions. Porter automatically generates a GitHub workflow for your application that handles authentication and deployment.
 
-### GitHub Actions Example
+<Info>
+The workflow below is similar to what Porter automatically creates when you connect your GitHub repository. You can find it in your repository at `.github/workflows/porter_<app-name>.yml`.
+</Info>
 
-```yaml
-- name: Deploy to Porter
-  env:
-    PORTER_TOKEN: ${{ secrets.PORTER_TOKEN }}
-    PORTER_PROJECT: ${{ secrets.PORTER_PROJECT }}
-    PORTER_CLUSTER: ${{ secrets.PORTER_CLUSTER }}
-  run: porter apply -f porter.yaml
-```
-
-### GitLab CI Example
+### GitHub Actions Workflow
 
 ```yaml
-deploy:
-  script:
-    - porter apply -f porter.yaml
-  variables:
-    PORTER_TOKEN: $PORTER_TOKEN
-    PORTER_PROJECT: $PORTER_PROJECT
-    PORTER_CLUSTER: $PORTER_CLUSTER
-```
+name: Deploy to Porter
 
-## Troubleshooting
+on:
+  push:
+    branches:
+      - main
 
-<Warning>
-If your deployment fails, check the following common issues:
-- Ensure your `porter.yaml` is valid by running `porter apply -f porter.yaml --validate`
-- Verify you're authenticated with `porter auth login`
-- Check that your project and cluster are correctly configured with `porter config`
-</Warning>
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-### Validation Errors
+      - name: Set up Porter CLI
+        run: |
+          curl -fsSL https://install.porter.run | bash
+          echo "$HOME/.porter" >> $GITHUB_PATH
 
-Run with `--validate` to check your configuration:
+      - name: Get short SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-```bash
-porter apply -f porter.yaml --validate
-```
-
-### Dry Run
-
-Use `--dry-run` for server-side validation without making changes:
-
-```bash
-porter apply -f porter.yaml --dry-run
+      - name: Deploy to Porter
+        env:
+          PORTER_APP_NAME: my-app
+          PORTER_CLUSTER: ${{ secrets.PORTER_CLUSTER }}
+          PORTER_DEPLOYMENT_TARGET_ID: ${{ secrets.PORTER_DEPLOYMENT_TARGET_ID }}
+          PORTER_HOST: ${{ secrets.PORTER_HOST }}
+          PORTER_PROJECT: ${{ secrets.PORTER_PROJECT }}
+          PORTER_TAG: ${{ steps.vars.outputs.sha_short }}
+          PORTER_TOKEN: ${{ secrets.PORTER_TOKEN }}
+        run: porter apply
 ```
 
 ## Related Commands
