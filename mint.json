@@ -48,7 +48,7 @@
             "cloud-accounts/provisioning-on-gcp",
             "cloud-accounts/changing-instance-types",
             "cloud-accounts/cluster-upgrades",
-            "cloud-accounts/cost-optimization"
+            "cloud-accounts/node-groups"
           ]
         },
         {
