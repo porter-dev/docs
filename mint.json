@@ -43,9 +43,7 @@
           "group": "Cloud Accounts",
           "pages": [
             "cloud-accounts/overview",
-            "cloud-accounts/provisioning-on-aws",
-            "cloud-accounts/provisioning-on-azure",
-            "cloud-accounts/provisioning-on-gcp",
+            "cloud-accounts/provisioning",
             "cloud-accounts/changing-instance-types",
             "cloud-accounts/cluster-upgrades",
             "cloud-accounts/node-groups"
