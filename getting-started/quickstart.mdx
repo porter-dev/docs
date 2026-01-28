@@ -382,7 +382,7 @@ Once your cluster is ready, you'll see the Porter dashboard. Click **Create Appl
       </Step>
     </Steps>
   </Tab>
-   <Tab title="Deploy using the CLI">
+   <Tab title="Deploy from the CLI">
     Use the Porter CLI to deploy your application with a `porter.yaml` configuration file.
 
     <Steps>
@@ -415,6 +415,10 @@ Once your cluster is ready, you'll see the Porter dashboard. Click **Create Appl
         version: v2
         name: my-app
 
+        build:
+          method: pack
+          builder: heroku/builder:24
+
         services:
           - name: web
             type: web
@@ -424,7 +428,7 @@ Once your cluster is ready, you'll see the Porter dashboard. Click **Create Appl
             ramMegabytes: 512
         ```
 
-        Adjust the `run` command and `port` to match your application. See the [porter.yaml reference](/deploy/configuration-as-code/reference) for all available options.
+        This is the simplest initial configuration. See the [porter.yaml reference](/deploy/configuration-as-code/reference) for all available options.
       </Step>
       <Step title="Deploy your application">
         Run `porter apply` to build and deploy:
