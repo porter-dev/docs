@@ -416,8 +416,8 @@ Once your cluster is ready, you'll see the Porter dashboard. Click **Create Appl
         name: my-app
 
         build:
-          method: pack
-          builder: heroku/builder:24
+          method: docker
+          dockerfile: ./Dockerfile
 
         services:
           - name: web
