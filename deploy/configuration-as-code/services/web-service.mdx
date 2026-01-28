@@ -308,8 +308,7 @@ connections:
 connections:
   - type: disk
     config:
-      mountPath: /data
-      sizeGb: 10
+      diskName: my-disk
 ```
 </CodeGroup>
 
@@ -342,12 +341,14 @@ Configure Prometheus metrics scraping for custom application metrics.
 | `enabled` | boolean | Enable metrics scraping |
 | `path` | string | HTTP path to scrape (default: `/metrics`) |
 | `port` | integer | Port to scrape metrics from |
+| `scrapeIntervalSeconds` | integer | Scrape interval in seconds (default: 60) |
 
 ```yaml
 metricsScraping:
   enabled: true
   path: /metrics
   port: 9090
+  scrapeIntervalSeconds: 60
 ```
 
 ---
@@ -437,6 +438,7 @@ services:
       enabled: true
       path: /metrics
       port: 9090
+      scrapeIntervalSeconds: 60
 
     # Cloud connections
     connections:
