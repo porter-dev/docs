@@ -2,57 +2,95 @@
 title: 'Web Services'
 ---
 
-The following is a full reference for all the fields that can be set for a web service in `porter.yaml`.
+Web services are HTTP-based services that can be exposed publicly or kept private within your cluster. This is a complete reference for all fields that can be set for a web service in `porter.yaml`.
 
-- [autoscaling](#autoscaling) \- the autoscaling configuration for the service.
-  - **enabled** \- whether autoscaling is enabled or not.
-  - **minInstances** \- the minimum number of instances to run.
-  - **maxInstances** \- the maximum number of instances to run.
-  - **cpuThresholdPercent** \- the CPU threshold percentage to trigger autoscaling at.
-  - **memoryThresholdPercent** \- the memory threshold percentage to trigger autoscaling at.
-- [domains](#domains) \- the list of custom domains for the service, if the service is exposed publicly.
-  - **name** \- the name of the domain.
-- [private](#private) \- whether the service is private or not.
-- **serviceMeshEnabled** \- If 'true', enables enhanced communication between your services with improved performance, reliability, and monitoring. Recommended for applications with multiple services that communicate with each other, especially those using gRPC or WebSockets.
-- [ingressAnnotations](#ingressannotations) \- the ingress annotations to apply for the service.
-- [pathRouting](#pathrouting) \- the list of URL paths to service port mappings, if path-based routing is enabled.
-Note that a path must be specified for the default port (set in [services.port](/deploy/configuration-as-code/reference)).
-If routing to a port on a different service, the port must be exposed on that service (either as the default port or through a path routing rule).
-  - **path** \- the URL path.
-  - **port** \- the port to route to.
-  - **appName** \- (optional) the name of the application to route to (as it appears in the dashboard). Defaults to the application of the current service.
-  - **serviceName** \- (optional) the name of the service to route to (as it appears in the dashboard). Defaults to the current service. Must be specified if appName is set.
-- [pathRoutingConfig](#pathroutingconfig) \- optional configuration options for path-based routing.
-  - **rewriteMode** \- mode for rewriting URL paths. If the path set in **pathRouting** is `/api/v1`, then `api/v1/subpath` will be rewritten as follows:
-    - `rewrite-all` \- (default) rewrite the entire path to the root path --> `/`.
-    - `rewrite-prefix` \- rewrite the path for the URL path prefix only --> `/subpath`.
-    - `rewrite-off` \- disable path rewriting --> `/api/v1/subpath`.
-- [healthCheck](#healthcheck) \- the health check configuration for the service. This will configure both the liveness and readiness checks.
-  - **enabled** \- whether the health check is enabled or not.
-  - **httpPath** \- the path to check for the health check.
-  - **timeoutSeconds** \- the timeout for the health check requests. Minimum value is 1.
-  - **initialDelaySeconds** \- (optional) the initial delay for sending the health check requests. Minimum value is 0.
-- [livenessCheck](#livenesscheck) \- the liveness check configuration for the service. Cannot be used with healthCheck.
-  - **enabled** \- whether the liveness check is enabled or not.
-  - **httpPath** \- the path to check for the liveness check.
-  - **timeoutSeconds** \- the timeout for the liveness check requests. Minimum value is 1.
-  - **initialDelaySeconds** \- (optional) the initial delay for sending the liveness check requests. Minimum value is 0.
-- [readinessCheck](#readinesscheck) \- the readiness check configuration for the service. Cannot be used with healthCheck.
-  - **enabled** \- whether the readiness check is enabled or not.
-  - **httpPath** \- the path to check for the readiness check.
-  - **timeoutSeconds** \- the timeout for the readiness check requests. Minimum value is 1.
-  - **initialDelaySeconds** \- (optional) the initial delay for sending the readiness check requests. Minimum value is 0.
-- [startupCheck](#startupcheck) \- the startup check configuration for the service. Cannot be used with healthCheck.
-  - **enabled** \- whether the startup check is enabled or not.
-  - **httpPath** \- the path to check for the startup check.
-  - **timeoutSeconds** \- the timeout for the startup check requests. Minimum value is 1.
-  - **initialDelaySeconds** \- (optional) the initial delay for sending the startup check requests. Minimum value is 0.
+## Field Reference
 
-### `autoscaling`
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Service identifier (max 31 chars) |
+| `type` | string | Yes | Must be `web` |
+| `run` | string | Yes | Command to execute |
+| `port` | integer | Yes | Port the service listens on |
+| `cpuCores` | number | Yes | CPU allocation |
+| `ramMegabytes` | integer | Yes | Memory allocation in MB |
+| `instances` | integer | No | Number of replicas (default: 1) |
+| `private` | boolean | No | Make service private (default: false) |
+| `disableTLS` | boolean | No | Disable TLS termination |
+| `autoscaling` | object | No | Autoscaling configuration |
+| `domains` | array | No | Custom domain configuration |
+| `healthCheck` | object | No | Combined health check config |
+| `livenessCheck` | object | No | Liveness probe config |
+| `readinessCheck` | object | No | Readiness probe config |
+| `startupCheck` | object | No | Startup probe config |
+| `pathRouting` | array | No | Path-based routing rules |
+| `pathRoutingConfig` | object | No | Path routing options |
+| `ingressAnnotations` | object | No | Custom ingress annotations |
+| `connections` | array | No | External cloud connections |
+| `serviceMeshEnabled` | boolean | No | Enable service mesh |
+| `metricsScraping` | object | No | Prometheus metrics config |
+| `terminationGracePeriodSeconds` | integer | No | Graceful shutdown timeout |
+| `gpuCoresNvidia` | integer | No | NVIDIA GPU cores |
+| `nodeGroup` | string | No | Node group UUID |
 
-`object` - optional
+---
 
-All fields are optional.
+## Basic Example
+
+```yaml
+services:
+  - name: api
+    type: web
+    run: node server.js
+    port: 8080
+    cpuCores: 0.5
+    ramMegabytes: 512
+    instances: 2
+```
+
+---
+
+## `private`
+
+**Type:** `boolean` - **Optional**
+
+When `true`, the service is only accessible within the cluster (not publicly exposed).
+
+```yaml
+private: true
+```
+
+---
+
+## `disableTLS`
+
+**Type:** `boolean` - **Optional**
+
+Disable TLS termination at the load balancer. Only use this for services that handle their own TLS or for internal testing.
+
+```yaml
+disableTLS: true
+```
+
+<Warning>
+Disabling TLS exposes your service over HTTP. Only use this when you have a specific requirement.
+</Warning>
+
+---
+
+## `autoscaling`
+
+**Type:** `object` - **Optional**
+
+Configure horizontal pod autoscaling based on CPU and memory utilization.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `enabled` | boolean | Enable autoscaling |
+| `minInstances` | integer | Minimum number of replicas |
+| `maxInstances` | integer | Maximum number of replicas |
+| `cpuThresholdPercent` | integer | CPU usage threshold (0-100) |
+| `memoryThresholdPercent` | integer | Memory usage threshold (0-100) |
 
 ```yaml
 autoscaling:
@@ -63,35 +101,116 @@ autoscaling:
   memoryThresholdPercent: 80
 ```
 
-### `domains`
+<Info>
+When autoscaling is enabled, the `instances` field is ignored.
+</Info>
 
-`array` - optional
+---
+
+## `domains`
+
+**Type:** `array` - **Optional**
+
+Configure custom domains for your web service.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Domain name |
 
 ```yaml
 domains:
   - name: example.com
 ```
 
-### `private`
+---
 
-`boolean` - optional
+## `healthCheck`
+
+**Type:** `object` - **Optional**
+
+Configure a combined health check that applies to liveness, readiness, and startup probes.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `enabled` | boolean | Enable health checks |
+| `httpPath` | string | HTTP endpoint to check |
+| `timeoutSeconds` | integer | Request timeout (min: 1) |
+| `initialDelaySeconds` | integer | Initial delay before checking (min: 0) |
 
 ```yaml
-private: true
+healthCheck:
+  enabled: true
+  httpPath: /healthz
+  timeoutSeconds: 1
+  initialDelaySeconds: 15
 ```
 
-### `ingressAnnotations`
+<Warning>
+Cannot be used together with `livenessCheck`, `readinessCheck`, or `startupCheck`. Use either the combined `healthCheck` or the individual checks.
+</Warning>
 
-`object` - optional
+---
+
+## Advanced Health Checks
+
+For fine-grained control, configure liveness, readiness, and startup probes separately.
+
+### `livenessCheck`
+
+**Type:** `object` - **Optional**
+
+Determines if the container should be restarted.
 
 ```yaml
-ingressAnnotations:
-  nginx.ingress.kubernetes.io/proxy-connect-timeout: '"18000"'
+livenessCheck:
+  enabled: true
+  httpPath: /livez
+  timeoutSeconds: 1
+  initialDelaySeconds: 15
 ```
 
-### `pathRouting`
+### `readinessCheck`
 
-`array` - optional
+**Type:** `object` - **Optional**
+
+Determines if the container is ready to receive traffic.
+
+```yaml
+readinessCheck:
+  enabled: true
+  httpPath: /readyz
+  timeoutSeconds: 1
+  initialDelaySeconds: 15
+```
+
+### `startupCheck`
+
+**Type:** `object` - **Optional**
+
+Used for slow-starting containers. Other probes are disabled until this passes.
+
+```yaml
+startupCheck:
+  enabled: true
+  httpPath: /startupz
+  timeoutSeconds: 1
+  initialDelaySeconds: 15
+```
+
+---
+
+## `pathRouting`
+
+**Type:** `array` - **Optional**
+
+Configure path-based routing to direct requests to different ports or services.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `path` | string | Yes | URL path prefix |
+| `port` | integer | Yes | Port to route to |
+| `serviceName` | string | No | Service to route to (defaults to current) |
+| `appName` | string | No | Application to route to (requires `serviceName`) |
 
 ```yaml
 pathRouting:
@@ -99,18 +218,38 @@ pathRouting:
     port: 8080
   - path: /api/v2/
     port: 8081
-  - path: /api/v3/
-    port: 8082
-    serviceName: other-service-in-same-app
-  - path: /api/v4/
-    port: 8083
-    appName: other-app
-    serviceName: other-service-in-other-app
+  - path: /admin/
+    port: 9000
+    serviceName: admin-service
+  - path: /auth/
+    port: 8080
+    appName: auth-app
+    serviceName: auth-service
 ```
 
-### `pathRoutingConfig`
+<Info>
+A path must be specified for the default port set in `services.port`.
+</Info>
 
-`object` - optional
+---
+
+## `pathRoutingConfig`
+
+**Type:** `object` - **Optional**
+
+Configure path rewriting behavior for path-based routing.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `rewriteMode` | string | Path rewrite mode |
+
+**Rewrite Modes:**
+
+| Mode | Description | Example: `/api/v1/users` |
+|------|-------------|--------------------------|
+| `rewrite-all` | Rewrite entire path to root (default) | `/` |
+| `rewrite-prefix` | Remove the matched prefix only | `/users` |
+| `rewrite-off` | No rewriting, keep original path | `/api/v1/users` |
 
 ```yaml
 pathRouting:
@@ -120,61 +259,192 @@ pathRouting:
     port: 8081
 pathRoutingConfig:
   rewriteMode: rewrite-prefix
-
-# for the path "/api/v1/subpath"
-# rewrite-prefix will rewrite to "/subpath"
-# rewrite-all will rewrite to "/"
-# rewrite-off will leave the path as "/api/v1/subpath"
 ```
 
-### `healthCheck`
+---
 
-`object` - optional
+## `ingressAnnotations`
+
+**Type:** `object` - **Optional**
+
+Add custom NGINX ingress annotations for advanced configuration.
 
 ```yaml
-healthCheck:
-  enabled: true
-  httpPath: /healthz
-  timeoutSeconds: 1
-  initialDelaySeconds: 15 #optional
+ingressAnnotations:
+  nginx.ingress.kubernetes.io/proxy-connect-timeout: "18000"
 ```
 
-## Advanced Health Checks
+<Tip>
+Common use cases include increasing upload limits, configuring timeouts, and enabling WebSocket support.
+</Tip>
 
-Advanced health checks allow you to separately configure liveness, readiness, and startup health checks for your service. These cannot be enabled at the same time as the healthCheck field.
+---
 
-### `livenessCheck`
+## `connections`
 
-`object` - optional
+**Type:** `array` - **Optional**
 
-```yaml
-livenessCheck:
-  enabled: true
-  httpPath: /livez
-  timeoutSeconds: 1
-  initialDelaySeconds: 15 #optional
+Connect to external cloud services. See [Reference](/deploy/configuration-as-code/reference#connections) for full documentation.
+
+<CodeGroup>
+```yaml AWS Role
+connections:
+  - type: awsRole
+    role: my-iam-role
 ```
 
-### `readinessCheck`
-
-`object` - optional
-
-```yaml
-readinessCheck:
-  enabled: true
-  httpPath: /readyz
-  timeoutSeconds: 1
-  initialDelaySeconds: 15 #optional
+```yaml Cloud SQL (GCP)
+connections:
+  - type: cloudSql
+    config:
+      cloudSqlConnectionName: project:region:instance
+      cloudSqlDatabasePort: 5432
+      cloudSqlServiceAccount: my-service-account
 ```
 
-### `startupCheck`
+```yaml Persistent Disk
+connections:
+  - type: disk
+    config:
+      diskName: my-disk
+```
+</CodeGroup>
 
-`object` - optional
+---
+
+## `serviceMeshEnabled`
+
+**Type:** `boolean` - **Optional**
+
+Enable service mesh for enhanced inter-service communication with improved performance, reliability, and monitoring.
 
 ```yaml
-startupCheck:
+serviceMeshEnabled: true
+```
+
+<Info>
+Recommended for applications with multiple services that communicate with each other, especially those using gRPC or WebSockets.
+</Info>
+
+---
+
+## `metricsScraping`
+
+**Type:** `object` - **Optional**
+
+Configure Prometheus metrics scraping for custom application metrics.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `enabled` | boolean | Enable metrics scraping |
+| `path` | string | HTTP path to scrape (default: `/metrics`) |
+| `port` | integer | Port to scrape metrics from |
+| `scrapeIntervalSeconds` | integer | Scrape interval in seconds (default: 60) |
+
+```yaml
+metricsScraping:
   enabled: true
-  httpPath: /startupz
-  timeoutSeconds: 1
-  initialDelaySeconds: 15 #optional
+  path: /metrics
+  port: 9090
+  scrapeIntervalSeconds: 60
+```
+
+---
+
+## `terminationGracePeriodSeconds`
+
+**Type:** `integer` - **Optional**
+
+Seconds to wait for graceful shutdown before forcefully terminating the container.
+
+```yaml
+terminationGracePeriodSeconds: 60
+```
+
+<Tip>
+Increase this value for services that need time to complete in-flight requests or cleanup tasks.
+</Tip>
+
+---
+
+## `gpuCoresNvidia`
+
+**Type:** `integer` - **Optional**
+
+Allocate NVIDIA GPU cores for ML inference or GPU-accelerated workloads.
+
+```yaml
+gpuCoresNvidia: 1
+nodeGroup: gpu-node-group-uuid
+```
+
+<Info>
+Requires a node group with GPU-enabled instances.
+</Info>
+
+---
+
+## Complete Example
+
+```yaml
+services:
+  - name: api
+    type: web
+    run: npm start
+    port: 8080
+    cpuCores: 1
+    ramMegabytes: 1024
+
+    # Autoscaling
+    autoscaling:
+      enabled: true
+      minInstances: 1
+      maxInstances: 10
+      cpuThresholdPercent: 80
+      memoryThresholdPercent: 80
+
+    # Custom domains
+    domains:
+      - name: example.com
+
+    # Health checks
+    livenessCheck:
+      enabled: true
+      httpPath: /livez
+      timeoutSeconds: 1
+      initialDelaySeconds: 15
+    readinessCheck:
+      enabled: true
+      httpPath: /readyz
+      timeoutSeconds: 1
+      initialDelaySeconds: 15
+
+    # Path routing
+    pathRouting:
+      - path: /api/v1/
+        port: 8080
+      - path: /api/v2/
+        port: 8081
+    pathRoutingConfig:
+      rewriteMode: rewrite-prefix
+
+    # Ingress configuration
+    ingressAnnotations:
+      nginx.ingress.kubernetes.io/proxy-connect-timeout: "18000"
+
+    # Service mesh and metrics
+    serviceMeshEnabled: true
+    metricsScraping:
+      enabled: true
+      path: /metrics
+      port: 9090
+      scrapeIntervalSeconds: 60
+
+    # Cloud connections
+    connections:
+      - type: awsRole
+        role: api-s3-access
+
+    # Graceful shutdown
+    terminationGracePeriodSeconds: 30
 ```
