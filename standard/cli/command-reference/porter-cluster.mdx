@@ -1,15 +1,32 @@
 ---
-title: "porter cluster"
+title: 'porter cluster'
 ---
 
-##### Prerequisites
+`porter cluster` contains commands for viewing and managing clusters.
 
-* You've logged in to the Porter CLI after running [porter auth login](/enterprise/cli/command-reference/porter-auth)
-* You're connected to the correct project by running [porter config set-project](/enterprise/cli/command-reference/porter-config)
+## Prerequisites
 
-  
-`porter cluster` contains commands for reading from a connected cluster.
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
 
-### `porter cluster list`[](#porter-cluster-list "Direct link to heading")
+---
 
-This lists all clusters under a certain project.
+## `porter cluster list`
+
+List all clusters in the current project.
+
+**Usage:**
+```bash
+porter cluster list
+```
+
+<Tip>
+Use `porter config set-cluster` to switch between clusters after listing them.
+</Tip>
+
+---
+
+## Related Commands
+
+- [porter config set-cluster](/standard/cli/command-reference/porter-config) - Set the active cluster
+- [porter project list](/standard/cli/command-reference/porter-project) - List available projects

@@ -50,7 +50,7 @@ apps:
         port: 80
         sleep: false
         private: true
-    envGroups: # Environment groups can be used to inject environment variables from the addons into the service.
+    envGroups:
       - cache
       - db
     image:
@@ -92,7 +92,7 @@ addons:
       config:
         name: db
         masterUserPassword: password
-        allocatedStorage: 2 # Persistent storage size in GB. Cannot be changed after creation.
+        allocatedStorage: 2
         cpuCores: 0.1
         ramMegabytes: 110
 ```
