@@ -3,13 +3,10 @@ title: 'Overview'
 sidebarTitle: 'Overview'
 ---
 
-## What is porter.yaml?
+## Getting Started with `porter.yaml`
 
-`porter.yaml` is a configuration file that defines how your application should be built and deployed on Porter. It serves as a single source of truth for your application's infrastructure, enabling version-controlled, repeatable deployments.
-
-<Info>
-Think of `porter.yaml` like a `Dockerfile` for your entire application stack - it declares your services, their resources, environment variables, and deployment settings in one place.
-</Info>
+Writing a `porter.yaml` for your app is a great way to maintain a single source of truth on how your app should be built and deployed. Though this file is not required, it can reduce the time it takes to get started with a Porter app.
+Once you start creating your app in Porter and select a Github repository, Porter will automatically read your `porter.yaml` to prepopulate settings for your app's services.
 
 ## When to Use Configuration-as-Code
 
@@ -90,72 +87,67 @@ Apply the configuration to deploy your app:
 porter apply -f porter.yaml
 ```
 
-## Example Configuration
+### Example `porter.yaml`
 
-This example demonstrates common configuration patterns:
+The following is an example of a v2 `porter.yaml` file, which is the latest version of the spec. This example covers many of the available fields, but not all of them. For a full list of configurable options, see the [full reference](/deploy/configuration-as-code/reference).
 
 ```yaml
 version: v2
 name: my-app
 
-# Build configuration (or use 'image' for pre-built images)
-build:
-  method: docker
-  context: .
-  dockerfile: ./Dockerfile
-
-# Environment variables
-env:
-  NODE_ENV: production
-  LOG_LEVEL: info
-
-# Attach shared environment groups
-envGroups:
-  - production-secrets
-  - shared-config
-
-# Pre-deploy job (runs before service deployment)
-predeploy:
-  run: npm run migrate
-
-# Auto-rollback on failed deployments
-autoRollback:
-  enabled: true
-
-# Service definitions
 services:
-  # Web service (publicly accessible)
   - name: api
     type: web
-    run: npm start
+    run: node index.js
     port: 8080
-    cpuCores: 0.5
-    ramMegabytes: 512
+    cpuCores: 0.1
+    ramMegabytes: 256
     autoscaling:
       enabled: true
-      minInstances: 2
-      maxInstances: 10
-      cpuThresholdPercent: 70
+      minInstances: 1
+      maxInstances: 3
+      memoryThresholdPercent: 60
+      cpuThresholdPercent: 60
+    private: false
+    domains:
+      - name: test1.example.com
     healthCheck:
       enabled: true
-      httpPath: /health
-
-  # Worker service (background processing)
-  - name: worker
+      httpPath: /healthz
+  - name: example-wkr
     type: worker
-    run: npm run worker
-    cpuCores: 0.25
-    ramMegabytes: 256
-    instances: 2
-
-  # Scheduled job
-  - name: cleanup
-    type: job
-    run: npm run cleanup
+    run: echo 'work'
+    port: 8081
     cpuCores: 0.1
-    ramMegabytes: 128
-    cron: "0 0 * * *"  # Daily at midnight
+    ramMegabytes: 256
+    instances: 1
+  - name: example-job
+    type: job
+    run: echo 'hello world'
+    allowConcurrent: true
+    cpuCores: 0.1
+    ramMegabytes: 256
+    cron: '*/10 * * * *'
+
+predeploy:
+  run: ls
+
+build:
+	method: docker
+	context: ./
+	dockerfile: ./app/Dockerfile
+
+env:
+  NODE_ENV: production
+
+envGroups:
+- production-env-group
 ```
+
+For detailed configuration options for each service type, see:
+- [Web Service](/deploy/configuration-as-code/services/web-service)
+- [Worker Service](/deploy/configuration-as-code/services/worker-service)
+- [Job Service](/deploy/configuration-as-code/services/job-service)
 
 ## Configuration vs Dashboard
 
@@ -171,6 +163,5 @@ For consistent deployments, we recommend:
 ## Next Steps
 
 - [Full Reference](/deploy/configuration-as-code/reference) - Complete documentation of all configuration options
-- [Service Configuration](/deploy/configuration-as-code/services/web-service) - Detailed service type documentation
 - [porter apply Command](/standard/cli/command-reference/porter-apply) - CLI reference for deployments
 - [Using Other CI Tools](/deploy/using-other-ci-tools) - Integrate with GitHub Actions, GitLab CI, etc.
