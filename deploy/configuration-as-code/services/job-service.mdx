@@ -40,7 +40,9 @@ services:
 
 ## `cron`
 
-**Type:** `string` - **Optional**
+`string`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 A cron expression that defines when the job should run. Uses [standard 5-field cron syntax](https://en.wikipedia.org/wiki/Cron).
 
@@ -56,7 +58,9 @@ If no cron expression is provided, the job must be triggered manually using `por
 
 ## `suspendCron`
 
-**Type:** `boolean` - **Optional**
+`boolean`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Temporarily disable the cron schedule without removing it. The job won't run on schedule but can still be triggered manually.
 
@@ -72,7 +76,9 @@ Use this to pause scheduled jobs during maintenance windows or while debugging.
 
 ## `allowConcurrent`
 
-**Type:** `boolean` - **Optional**
+`boolean`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Allow multiple instances of the job to run simultaneously. By default, a new job run won't start if a previous run is still in progress.
 
@@ -88,7 +94,9 @@ Be careful enabling this for jobs that modify shared resources. Concurrent runs 
 
 ## `timeoutSeconds`
 
-**Type:** `integer` - **Optional**
+`integer`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Maximum number of seconds the job is allowed to run before being terminated.
 
@@ -104,7 +112,9 @@ If not specified, jobs may run indefinitely. It's recommended to set a reasonabl
 
 ## `connections`
 
-**Type:** `array` - **Optional**
+`array`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Connect to external cloud services. See [Reference](/deploy/configuration-as-code/reference#connections) for full documentation.
 
@@ -136,7 +146,9 @@ connections:
 
 ## `terminationGracePeriodSeconds`
 
-**Type:** `integer` - **Optional**
+`integer`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Seconds to wait for graceful shutdown before forcefully terminating the job.
 
@@ -152,7 +164,9 @@ Use this to ensure jobs can clean up resources or checkpoint progress before ter
 
 ## `gpuCoresNvidia`
 
-**Type:** `integer` - **Optional**
+`integer`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Allocate NVIDIA GPU cores for ML training, inference, or GPU-accelerated processing.
 
