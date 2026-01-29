@@ -37,15 +37,15 @@ services:
         role: my-app-s3-access
 ```
 
-<Info>
-AWS roles must be configured in the **Connections** tab of your cluster settings before they can be used in `porter.yaml`.
-</Info>
-
 ---
 
 ## Cloud SQL Connection (GCP)
 
 Connect to Google Cloud SQL instances using the Cloud SQL Auth Proxy for secure database access.
+
+<Info>
+Your GCP Service account must be configured in the Connections tab of your cluster settings before it can be used in `porter.yaml`.
+</Info>
 
 ### Field Reference
 
@@ -80,6 +80,10 @@ The connection name follows the format `project-id:region:instance-name`. You ca
 
 Attach persistent storage to your service for data that needs to survive pod restarts.
 
+<Info>
+Your persistent disk must be created in the Add-Ons tab of Porter before it can be used in `porter.yaml`.
+</Info>
+
 ### Field Reference
 
 | Field | Type | Required | Description |
@@ -107,7 +111,7 @@ Persistent disks are tied to specific availability zones. Services using persist
 
 ## Multiple Connections
 
-You can attach multiple connections to a single service:
+You can attach multiple connections to a single service (but only one of each type of connection):
 
 ```yaml
 services:
@@ -116,8 +120,6 @@ services:
     connections:
       - type: awsRole
         role: api-s3-access
-      - type: awsRole
-        role: api-sqs-access
       - type: disk
         config:
           diskName: cache-storage
