@@ -94,6 +94,10 @@ build:
 We recommend defining a Dockerfile over using buildpacks - if you're not sure which to use, default to creating a Dockerfile for your application. For more information about creating a Dockerfile, you can look [here](https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/).
 </Warning>
 
+<Info>
+For available `builder` and `buildpacks` values, see the [Heroku Buildpacks](https://elements.heroku.com/buildpacks) or [Paketo Builders Reference](https://paketo.io/docs/reference/builders-reference/) documentation. Common builders include `heroku/buildpacks:24` and `paketobuildpacks/builder-jammy-full:latest`.
+</Info>
+
 ---
 
 ## `image`
@@ -142,7 +146,7 @@ For sensitive values, use environment groups instead of hardcoding them in `port
 
 <Badge shape="pill" color="gray">Optional</Badge>
 
-Names of environment groups to attach to the application. Environment groups must already exist in your Porter project.
+Names of environment groups to attach to the application. Environment groups must already exist in the Porter cluster where the app will be deployed.
 
 ```yaml
 envGroups:

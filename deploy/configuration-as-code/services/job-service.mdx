@@ -2,41 +2,308 @@
 title: 'Job Services'
 ---
 
-The following is a full reference for all the fields that can be set for a job service in `porter.yaml`.
+Job services are for scheduled or on-demand tasks that run to completion. They're ideal for cron jobs, data processing, and one-time tasks. This is a complete reference for all fields that can be set for a job service in `porter.yaml`.
 
-- [allowConcurrent](#allowConcurrent) \- indicates whether or not runs of the job can be processed concurrently.
-- [cron](#cron) \- a cron expression for the job.
-- [suspendCron](#suspendCron) \- indicates whether or not the cron schedule should be suspended.
-- [timeoutSeconds](#timeoutSeconds) \- the number of seconds to wait before timing out the job.
+## Field Reference
 
-### `allowConcurrent`
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Service identifier (max 31 chars) |
+| `type` | string | Yes | Must be `job` |
+| `run` | string | Yes | Command to execute |
+| `cpuCores` | number | Yes | CPU allocation |
+| `ramMegabytes` | integer | Yes | Memory allocation in MB |
+| `cron` | string | No | Cron schedule expression |
+| `suspendCron` | boolean | No | Temporarily disable cron schedule |
+| `allowConcurrent` | boolean | No | Allow concurrent job runs |
+| `timeoutSeconds` | integer | No | Maximum job duration |
+| `connections` | array | No | External cloud connections |
+| `terminationGracePeriodSeconds` | integer | No | Graceful shutdown timeout |
+| `gpuCoresNvidia` | integer | No | NVIDIA GPU cores |
+| `nodeGroup` | string | No | Node group UUID |
 
-`boolean` - optional
+---
+
+## Basic Example
 
 ```yaml
-allowConcurrent: true
+services:
+  - name: cleanup
+    type: job
+    run: npm run cleanup
+    cpuCores: 0.25
+    ramMegabytes: 256
+    cron: "0 0 * * *"
 ```
 
-### `cron`
+---
 
-`string` - optional
+## `cron`
+
+`string`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+A cron expression that defines when the job should run. Uses [standard 5-field cron syntax](https://en.wikipedia.org/wiki/Cron).
 
 ```yaml
 cron: "0 0 * * *"
 ```
 
-### `suspendCron`
+<Info>
+If no cron expression is provided, the job must be triggered manually using `porter app run --job`.
+</Info>
 
-`boolean` - optional
+---
+
+## `suspendCron`
+
+`boolean`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Temporarily disable the cron schedule without removing it. The job won't run on schedule but can still be triggered manually.
 
 ```yaml
 suspendCron: true
 ```
 
-### `timeoutSeconds`
+<Tip>
+Use this to pause scheduled jobs during maintenance windows or while debugging.
+</Tip>
 
-`integer` - optional
+---
+
+## `allowConcurrent`
+
+`boolean`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Allow multiple instances of the job to run simultaneously. By default, a new job run won't start if a previous run is still in progress.
+
+```yaml
+allowConcurrent: true
+```
+
+<Warning>
+Be careful enabling this for jobs that modify shared resources. Concurrent runs may cause race conditions or data inconsistency.
+</Warning>
+
+---
+
+## `timeoutSeconds`
+
+`integer`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Maximum number of seconds the job is allowed to run before being terminated.
 
 ```yaml
 timeoutSeconds: 3600
 ```
+
+<Info>
+If not specified, jobs may run indefinitely. It's recommended to set a reasonable timeout for all jobs.
+</Info>
+
+---
+
+## `connections`
+
+`array`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Connect to external cloud services. See [Reference](/deploy/configuration-as-code/reference#connections) for full documentation.
+
+<CodeGroup>
+```yaml AWS Role
+connections:
+  - type: awsRole
+    role: my-iam-role
+```
+
+```yaml Cloud SQL (GCP)
+connections:
+  - type: cloudSql
+    config:
+      cloudSqlConnectionName: project:region:instance
+      cloudSqlDatabasePort: 5432
+      cloudSqlServiceAccount: my-service-account
+```
+
+```yaml Persistent Disk
+connections:
+  - type: disk
+    config:
+      diskName: my-disk
+```
+</CodeGroup>
+
+---
+
+## `terminationGracePeriodSeconds`
+
+`integer`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Seconds to wait for graceful shutdown before forcefully terminating the job.
+
+```yaml
+terminationGracePeriodSeconds: 30
+```
+
+<Tip>
+Use this to ensure jobs can clean up resources or checkpoint progress before termination.
+</Tip>
+
+---
+
+## `gpuCoresNvidia`
+
+`integer`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Allocate NVIDIA GPU cores for ML training, inference, or GPU-accelerated processing.
+
+```yaml
+gpuCoresNvidia: 1
+nodeGroup: gpu-node-group-uuid
+```
+
+<Info>
+Requires a node group with GPU-enabled instances.
+</Info>
+
+---
+
+## Triggering Jobs Manually
+
+Jobs can be triggered manually using the Porter CLI:
+
+```bash
+# Trigger a job run
+porter app run my-app --job my-job
+
+# Trigger and wait for completion
+porter app run my-app --job my-job --wait
+
+# Override concurrent restriction
+porter app run my-app --job my-job --allow-concurrent
+```
+
+---
+
+## Complete Example
+
+```yaml
+services:
+  - name: daily-report
+    type: job
+    run: python generate_report.py
+    cpuCores: 1
+    ramMegabytes: 2048
+
+    # Schedule: Daily at 6 AM UTC
+    cron: "0 6 * * *"
+
+    # Allow up to 2 hours
+    timeoutSeconds: 7200
+
+    # Don't allow concurrent runs
+    allowConcurrent: false
+
+    # Cloud connections
+    connections:
+      - type: awsRole
+        role: report-s3-access
+
+    # Graceful shutdown
+    terminationGracePeriodSeconds: 60
+```
+
+---
+
+## Common Use Cases
+
+### Database Cleanup
+
+```yaml
+services:
+  - name: db-cleanup
+    type: job
+    run: npm run cleanup-old-records
+    cpuCores: 0.25
+    ramMegabytes: 256
+    cron: "0 3 * * *"  # 3 AM daily
+    timeoutSeconds: 1800
+    allowConcurrent: false
+```
+
+### Data Export
+
+```yaml
+services:
+  - name: weekly-export
+    type: job
+    run: python export_data.py
+    cpuCores: 0.5
+    ramMegabytes: 1024
+    cron: "0 0 * * 0"  # Sunday at midnight
+    timeoutSeconds: 14400  # 4 hours
+    connections:
+      - type: awsRole
+        role: s3-export-role
+```
+
+### ML Training Job
+
+```yaml
+services:
+  - name: model-training
+    type: job
+    run: python train.py
+    cpuCores: 8
+    ramMegabytes: 32768
+    gpuCoresNvidia: 4
+    nodeGroup: gpu-node-group-uuid
+    timeoutSeconds: 86400  # 24 hours
+    terminationGracePeriodSeconds: 300
+```
+
+### Health Check / Monitoring
+
+```yaml
+services:
+  - name: healthcheck
+    type: job
+    run: ./check_dependencies.sh
+    cpuCores: 0.1
+    ramMegabytes: 128
+    cron: "*/5 * * * *"  # Every 5 minutes
+    timeoutSeconds: 60
+    allowConcurrent: false
+```
+
+### Manual Migration Job
+
+```yaml
+services:
+  - name: data-migration
+    type: job
+    run: python migrate.py
+    cpuCores: 2
+    ramMegabytes: 4096
+    # No cron - triggered manually only
+    timeoutSeconds: 28800  # 8 hours
+    allowConcurrent: false
+    terminationGracePeriodSeconds: 120
+```
+
+<Info>
+Jobs without a `cron` expression must be triggered manually using `porter app run --job`.
+</Info>
