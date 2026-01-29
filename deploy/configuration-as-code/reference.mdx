@@ -95,7 +95,7 @@ We recommend defining a Dockerfile over using buildpacks - if you're not sure wh
 </Warning>
 
 <Info>
-For available `builder` and `buildpacks` values, see the [Heroku Buildpacks](https://elements.heroku.com/buildpacks) or [Paketo Builders Reference](https://paketo.io/docs/reference/builders-reference/) documentation. Common builders include `heroku/buildpacks:24` and `paketobuildpacks/builder-jammy-full:latest`.
+For available `builder` and `buildpacks` values, see the [Cloud Native Buildpacks Registry](https://registry.buildpacks.io/) or [Paketo Builders Reference](https://paketo.io/docs/reference/builders-reference/) documentation. Common builders include `heroku/builder:24` and `paketobuildpacks/builder-jammy-full:latest`.
 </Info>
 
 ---
@@ -308,7 +308,7 @@ services:
 
 <Badge shape="pill" color="gray">Optional</Badge>
 
-Configure connections to external cloud services.
+Configure connections to external cloud services. See [Connections Configuration](/deploy/configuration-as-code/services/connections) for full documentation.
 
 ### AWS Role Connection
 
@@ -514,4 +514,6 @@ services:
 - [Worker Services](/deploy/configuration-as-code/services/worker-service) - Worker service configuration
 - [Job Services](/deploy/configuration-as-code/services/job-service) - Job service configuration
 - [Predeploy Jobs](/deploy/configuration-as-code/services/predeploy) - Pre-deploy job configuration
+- [Autoscaling Configuration](/deploy/configuration-as-code/services/autoscaling) - Autoscaling configuration reference
+- [Connections Configuration](/deploy/configuration-as-code/services/connections) - Cloud connections reference
 - [porter apply](/standard/cli/command-reference/porter-apply) - CLI reference for deployments

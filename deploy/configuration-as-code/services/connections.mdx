@@ -1,0 +1,149 @@
+---
+title: 'Connections Configuration'
+sidebarTitle: 'Connections'
+---
+
+Connect your services to external cloud resources like AWS IAM roles, Google Cloud SQL instances, and persistent disks.
+
+## Connection Types
+
+| Type | Description | Cloud Provider |
+|------|-------------|----------------|
+| `awsRole` | Attach an IAM role for AWS API access | AWS |
+| `cloudSql` | Connect to Google Cloud SQL instances | GCP |
+| `disk` | Attach persistent storage | All |
+
+---
+
+## AWS Role Connection
+
+Attach an IAM role to your service for secure AWS API access without managing credentials.
+
+### Field Reference
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | string | Yes | Must be `awsRole` |
+| `role` | string | Yes | IAM role name |
+
+### Example
+
+```yaml
+services:
+  - name: api
+    type: web
+    run: node server.js
+    port: 8080
+    cpuCores: 0.5
+    ramMegabytes: 512
+    connections:
+      - type: awsRole
+        role: my-app-s3-access
+```
+
+<Info>
+AWS roles must be configured in the **Connections** tab of your cluster settings before they can be used in `porter.yaml`.
+</Info>
+
+---
+
+## Cloud SQL Connection (GCP)
+
+Connect to Google Cloud SQL instances using the Cloud SQL Auth Proxy for secure database access.
+
+### Field Reference
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | string | Yes | Must be `cloudSql` |
+| `config.cloudSqlConnectionName` | string | Yes | Cloud SQL instance connection name |
+| `config.cloudSqlDatabasePort` | integer | Yes | Database port (e.g., 5432 for PostgreSQL) |
+| `config.cloudSqlServiceAccount` | string | Yes | GCP service account name |
+
+### Example
+
+```yaml
+services:
+  - name: api
+    type: web
+    run: node server.js
+    port: 8080
+    cpuCores: 0.5
+    ramMegabytes: 512
+    connections:
+      - type: cloudSql
+        config:
+          cloudSqlConnectionName: my-project-123456:us-east1:my-instance
+          cloudSqlDatabasePort: 5432
+          cloudSqlServiceAccount: my-service-account
+```
+
+<Info>
+The connection name follows the format `project-id:region:instance-name`. You can find this in the Google Cloud Console under your Cloud SQL instance details.
+</Info>
+
+---
+
+## Persistent Disk Connection
+
+Attach persistent storage to your service for data that needs to survive pod restarts.
+
+### Field Reference
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | string | Yes | Must be `disk` |
+| `config.diskName` | string | Yes | Name of the persistent disk |
+
+### Example
+
+```yaml
+services:
+  - name: api
+    type: web
+    run: node server.js
+    port: 8080
+    cpuCores: 0.5
+    ramMegabytes: 512
+    connections:
+      - type: disk
+        config:
+          diskName: my-persistent-data
+```
+
+<Warning>
+Persistent disks are tied to specific availability zones. Services using persistent disks cannot be scheduled across multiple zones.
+</Warning>
+
+---
+
+## Multiple Connections
+
+You can attach multiple connections to a single service:
+
+```yaml
+services:
+  - name: api
+    type: web
+    run: node server.js
+    port: 8080
+    cpuCores: 1
+    ramMegabytes: 1024
+    connections:
+      - type: awsRole
+        role: api-s3-access
+      - type: awsRole
+        role: api-sqs-access
+      - type: disk
+        config:
+          diskName: cache-storage
+```
+
+---
+
+## Related Documentation
+
+- [Web Services](/deploy/configuration-as-code/services/web-service) - Web service configuration
+- [Worker Services](/deploy/configuration-as-code/services/worker-service) - Worker service configuration
+- [Job Services](/deploy/configuration-as-code/services/job-service) - Job service configuration
+- [porter.yaml Reference](/deploy/configuration-as-code/reference) - Complete configuration reference

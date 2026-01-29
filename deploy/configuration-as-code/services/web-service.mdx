@@ -88,7 +88,7 @@ Disabling TLS exposes your service over HTTP. Only use this when you have a spec
 
 <Badge shape="pill" color="gray">Optional</Badge>
 
-Configure horizontal pod autoscaling based on CPU and memory utilization.
+Configure horizontal pod autoscaling based on CPU and memory utilization. See [Autoscaling Configuration](/deploy/configuration-as-code/services/autoscaling) for full documentation.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -108,7 +108,7 @@ autoscaling:
 ```
 
 <Info>
-When autoscaling is enabled, the `instances` field is ignored. See [Autoscaling](/configure/autoscaling) for more details on autoscaling strategies.
+When autoscaling is enabled, the `instances` field is ignored.
 </Info>
 
 ---
@@ -308,7 +308,7 @@ Common use cases include increasing upload limits, configuring timeouts, and ena
 
 <Badge shape="pill" color="gray">Optional</Badge>
 
-Connect to external cloud services. See [Reference](/deploy/configuration-as-code/reference#connections) for full documentation.
+Connect to external cloud services. See [Connections Configuration](/deploy/configuration-as-code/services/connections) for full documentation.
 
 <CodeGroup>
 ```yaml AWS Role
