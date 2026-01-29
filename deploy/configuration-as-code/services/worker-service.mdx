@@ -49,27 +49,6 @@ services:
 
 Configure horizontal pod autoscaling based on CPU and memory utilization. See [Autoscaling Configuration](/deploy/configuration-as-code/services/autoscaling) for full documentation.
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `enabled` | boolean | Enable autoscaling |
-| `minInstances` | integer | Minimum number of replicas |
-| `maxInstances` | integer | Maximum number of replicas |
-| `cpuThresholdPercent` | integer | CPU usage threshold (0-100) |
-| `memoryThresholdPercent` | integer | Memory usage threshold (0-100) |
-
-```yaml
-autoscaling:
-  enabled: true
-  minInstances: 1
-  maxInstances: 10
-  cpuThresholdPercent: 80
-  memoryThresholdPercent: 80
-```
-
-<Info>
-When autoscaling is enabled, the `instances` field is ignored.
-</Info>
-
 ---
 
 ## `healthCheck`
@@ -162,30 +141,6 @@ startupCheck:
 <Badge shape="pill" color="gray">Optional</Badge>
 
 Connect to external cloud services. See [Connections Configuration](/deploy/configuration-as-code/services/connections) for full documentation.
-
-<CodeGroup>
-```yaml AWS Role
-connections:
-  - type: awsRole
-    role: my-iam-role
-```
-
-```yaml Cloud SQL (GCP)
-connections:
-  - type: cloudSql
-    config:
-      cloudSqlConnectionName: project:region:instance
-      cloudSqlDatabasePort: 5432
-      cloudSqlServiceAccount: my-service-account
-```
-
-```yaml Persistent Disk
-connections:
-  - type: disk
-    config:
-      diskName: my-disk
-```
-</CodeGroup>
 
 ---
 
