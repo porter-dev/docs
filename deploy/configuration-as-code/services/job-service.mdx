@@ -116,31 +116,7 @@ If not specified, jobs may run indefinitely. It's recommended to set a reasonabl
 
 <Badge shape="pill" color="gray">Optional</Badge>
 
-Connect to external cloud services. See [Reference](/deploy/configuration-as-code/reference#connections) for full documentation.
-
-<CodeGroup>
-```yaml AWS Role
-connections:
-  - type: awsRole
-    role: my-iam-role
-```
-
-```yaml Cloud SQL (GCP)
-connections:
-  - type: cloudSql
-    config:
-      cloudSqlConnectionName: project:region:instance
-      cloudSqlDatabasePort: 5432
-      cloudSqlServiceAccount: my-service-account
-```
-
-```yaml Persistent Disk
-connections:
-  - type: disk
-    config:
-      diskName: my-disk
-```
-</CodeGroup>
+Connect to external cloud services. See [Connections Configuration](/deploy/configuration-as-code/services/connections) for full documentation.
 
 ---
 

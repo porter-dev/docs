@@ -79,7 +79,9 @@
                         "deploy/configuration-as-code/services/web-service",
                         "deploy/configuration-as-code/services/worker-service",
                         "deploy/configuration-as-code/services/job-service",
-                        "deploy/configuration-as-code/services/predeploy"
+                        "deploy/configuration-as-code/services/predeploy",
+                        "deploy/configuration-as-code/services/autoscaling",
+                        "deploy/configuration-as-code/services/connections"
                       ]
                     }
                   ]
