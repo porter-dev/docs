@@ -20,11 +20,7 @@ Configure horizontal pod autoscaling to automatically adjust the number of repli
 ```yaml
 services:
   - name: api
-    type: web
-    run: node server.js
-    port: 8080
-    cpuCores: 1
-    ramMegabytes: 1024
+    # ...
     autoscaling:
       enabled: true
       minInstances: 2
@@ -63,11 +59,7 @@ Scale based on application-specific metrics like queue length, request latency, 
 ```yaml
 services:
   - name: api
-    type: web
-    run: node server.js
-    port: 8080
-    cpuCores: 1
-    ramMegabytes: 1024
+    # ...
     autoscaling:
       enabled: true
       minInstances: 1
@@ -96,10 +88,7 @@ Scale Temporal workflow workers based on task queue depth. Porter monitors your 
 ```yaml
 services:
   - name: temporal-worker
-    type: worker
-    run: python worker.py
-    cpuCores: 1
-    ramMegabytes: 1024
+    # ...
     autoscaling:
       enabled: true
       minInstances: 2

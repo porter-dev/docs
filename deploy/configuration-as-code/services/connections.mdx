@@ -31,11 +31,7 @@ Attach an IAM role to your service for secure AWS API access without managing cr
 ```yaml
 services:
   - name: api
-    type: web
-    run: node server.js
-    port: 8080
-    cpuCores: 0.5
-    ramMegabytes: 512
+    # ...
     connections:
       - type: awsRole
         role: my-app-s3-access
@@ -65,11 +61,7 @@ Connect to Google Cloud SQL instances using the Cloud SQL Auth Proxy for secure 
 ```yaml
 services:
   - name: api
-    type: web
-    run: node server.js
-    port: 8080
-    cpuCores: 0.5
-    ramMegabytes: 512
+    # ...
     connections:
       - type: cloudSql
         config:
@@ -100,11 +92,7 @@ Attach persistent storage to your service for data that needs to survive pod res
 ```yaml
 services:
   - name: api
-    type: web
-    run: node server.js
-    port: 8080
-    cpuCores: 0.5
-    ramMegabytes: 512
+    # ...
     connections:
       - type: disk
         config:
@@ -124,11 +112,7 @@ You can attach multiple connections to a single service:
 ```yaml
 services:
   - name: api
-    type: web
-    run: node server.js
-    port: 8080
-    cpuCores: 1
-    ramMegabytes: 1024
+    # ...
     connections:
       - type: awsRole
         role: api-s3-access
