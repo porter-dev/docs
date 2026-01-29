@@ -52,7 +52,9 @@ services:
 
 ## `private`
 
-**Type:** `boolean` - **Optional**
+`boolean`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 When `true`, the service is only accessible within the cluster (not publicly exposed).
 
@@ -64,7 +66,9 @@ private: true
 
 ## `disableTLS`
 
-**Type:** `boolean` - **Optional**
+`boolean`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Disable TLS termination at the load balancer. Only use this for services that handle their own TLS or for internal testing.
 
@@ -80,7 +84,9 @@ Disabling TLS exposes your service over HTTP. Only use this when you have a spec
 
 ## `autoscaling`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Configure horizontal pod autoscaling based on CPU and memory utilization.
 
@@ -109,7 +115,9 @@ When autoscaling is enabled, the `instances` field is ignored.
 
 ## `domains`
 
-**Type:** `array` - **Optional**
+`array`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Configure custom domains for your web service.
 
@@ -126,7 +134,9 @@ domains:
 
 ## `healthCheck`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Configure a combined health check that applies to liveness, readiness, and startup probes.
 
@@ -157,7 +167,9 @@ For fine-grained control, configure liveness, readiness, and startup probes sepa
 
 ### `livenessCheck`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Determines if the container should be restarted.
 
@@ -171,7 +183,9 @@ livenessCheck:
 
 ### `readinessCheck`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Determines if the container is ready to receive traffic.
 
@@ -185,7 +199,9 @@ readinessCheck:
 
 ### `startupCheck`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Used for slow-starting containers. Other probes are disabled until this passes.
 
@@ -201,7 +217,9 @@ startupCheck:
 
 ## `pathRouting`
 
-**Type:** `array` - **Optional**
+`array`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Configure path-based routing to direct requests to different ports or services.
 
@@ -235,7 +253,9 @@ A path must be specified for the default port set in `services.port`.
 
 ## `pathRoutingConfig`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Configure path rewriting behavior for path-based routing.
 
@@ -265,7 +285,9 @@ pathRoutingConfig:
 
 ## `ingressAnnotations`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Add custom NGINX ingress annotations for advanced configuration.
 
@@ -282,7 +304,9 @@ Common use cases include increasing upload limits, configuring timeouts, and ena
 
 ## `connections`
 
-**Type:** `array` - **Optional**
+`array`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Connect to external cloud services. See [Reference](/deploy/configuration-as-code/reference#connections) for full documentation.
 
@@ -314,7 +338,9 @@ connections:
 
 ## `serviceMeshEnabled`
 
-**Type:** `boolean` - **Optional**
+`boolean`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Enable service mesh for enhanced inter-service communication with improved performance, reliability, and monitoring.
 
@@ -330,7 +356,9 @@ Recommended for applications with multiple services that communicate with each o
 
 ## `metricsScraping`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Configure Prometheus metrics scraping for custom application metrics.
 
@@ -353,7 +381,9 @@ metricsScraping:
 
 ## `terminationGracePeriodSeconds`
 
-**Type:** `integer` - **Optional**
+`integer`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Seconds to wait for graceful shutdown before forcefully terminating the container.
 
@@ -369,7 +399,9 @@ Increase this value for services that need time to complete in-flight requests o
 
 ## `gpuCoresNvidia`
 
-**Type:** `integer` - **Optional**
+`integer`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Allocate NVIDIA GPU cores for ML inference or GPU-accelerated workloads.
 
