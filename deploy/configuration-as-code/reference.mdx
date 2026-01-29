@@ -19,8 +19,6 @@ This is the complete reference for all fields that can be set in a `porter.yaml`
 | `predeploy` | object | No | Pre-deploy job configuration |
 | `initialDeploy` | object | No | Job to run only on first deployment |
 | `autoRollback` | object | No | Automatic rollback settings |
-| `requiredApps` | array | No | App dependencies that must deploy first |
-| `deploymentStrategy` | object | No | Rolling or blue-green deployment configuration |
 | `efsStorage` | object | No | AWS EFS storage configuration |
 
 <Warning>
@@ -31,7 +29,9 @@ You must specify either `build` or `image`, but not both. Use `build` when Porte
 
 ## `version`
 
-**Type:** `string` - **Required**
+`string`
+
+<Badge shape="pill" color="green">Required</Badge>
 
 The schema version. Must be `v2`.
 
@@ -43,7 +43,9 @@ version: v2
 
 ## `name`
 
-**Type:** `string` - **Required** (unless `PORTER_APP_NAME` is set)
+`string`
+
+<Badge shape="pill" color="green">Required</Badge> (unless `PORTER_APP_NAME` is set)
 
 The application name. Must be 31 characters or less, consist of lowercase alphanumeric characters or `-`, and start and end with an alphanumeric character.
 
@@ -55,7 +57,9 @@ name: my-app
 
 ## `build`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Configuration for building container images. Cannot be used together with `image`.
 
@@ -94,7 +98,9 @@ We recommend defining a Dockerfile over using buildpacks - if you're not sure wh
 
 ## `image`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Configuration for using a pre-built container image. Cannot be used together with `build`.
 
@@ -113,7 +119,9 @@ image:
 
 ## `env`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Environment variables to set for all services. Values must be strings.
 
@@ -130,7 +138,9 @@ For sensitive values, use environment groups instead of hardcoding them in `port
 
 ## `envGroups`
 
-**Type:** `string[]` - **Optional**
+`string[]`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Names of environment groups to attach to the application. Environment groups must already exist in your Porter project.
 
@@ -145,7 +155,9 @@ envGroups:
 
 ## `predeploy`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 A job that runs before deploying services. Commonly used for database migrations.
 
@@ -166,7 +178,9 @@ See [Predeploy Configuration](/deploy/configuration-as-code/services/predeploy) 
 
 ## `initialDeploy`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 A job that runs only on the first deployment of the application. Useful for one-time setup tasks like database seeding.
 
@@ -187,7 +201,9 @@ initialDeploy:
 
 ## `autoRollback`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Configure automatic rollback when deployments fail.
 
@@ -204,58 +220,11 @@ When enabled, Porter automatically rolls back all services to the last successfu
 
 ---
 
-## `requiredApps`
-
-**Type:** `array` - **Optional**
-
-Define dependencies on other applications that must be deployed before this app.
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `name` | string | Yes | Name of the required app |
-| `fromTarget` | string | No | Deployment target of the required app |
-
-```yaml
-requiredApps:
-  - name: database-app
-  - name: auth-service
-    fromTarget: production
-```
-
----
-
-## `deploymentStrategy`
-
-**Type:** `object` - **Optional**
-
-Configure how deployments are rolled out.
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `kind` | string | No | Deployment strategy: `rolling` (default) or `blueGreen` |
-| `blueGreen.group` | string | Conditional | Blue-green group name (required if kind is `blueGreen`) |
-
-### Rolling Deployment (Default)
-
-```yaml
-deploymentStrategy:
-  kind: rolling
-```
-
-### Blue-Green Deployment
-
-```yaml
-deploymentStrategy:
-  kind: blueGreen
-  blueGreen:
-    group: my-blue-green-group
-```
-
----
-
 ## `efsStorage`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Enable AWS EFS (Elastic File System) storage for persistent data. Only available on AWS clusters.
 
@@ -272,7 +241,9 @@ efsStorage:
 
 ## `services`
 
-**Type:** `array` - **Required**
+`array`
+
+<Badge shape="pill" color="green">Required</Badge>
 
 List of service definitions. Each service represents a deployable unit of your application.
 
@@ -329,7 +300,9 @@ services:
 
 ## `connections`
 
-**Type:** `array` - **Optional**
+`array`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Configure connections to external cloud services.
 
@@ -340,12 +313,7 @@ Attach an IAM role to your service for AWS API access.
 ```yaml
 services:
   - name: web
-    type: web
-    run: python app.py
-    instances: 1
-    cpuCores: 1
-    ramMegabytes: 1024
-    port: 8080
+    ...
     connections:
       - type: awsRole
         role: iam-role-name
@@ -362,12 +330,7 @@ Connect to Google Cloud SQL instances.
 ```yaml
 services:
   - name: web
-    type: web
-    run: python app.py
-    instances: 1
-    cpuCores: 1
-    ramMegabytes: 1024
-    port: 8080
+    ...
     connections:
       - type: cloudSql
         config:
@@ -383,12 +346,7 @@ Attach persistent storage to your service.
 ```yaml
 services:
   - name: web
-    type: web
-    run: python app.py
-    instances: 1
-    cpuCores: 1
-    ramMegabytes: 1024
-    port: 8080
+    ...
     connections:
       - type: disk
         config:
@@ -399,7 +357,9 @@ services:
 
 ## `gpu`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Configure GPU resources for machine learning workloads.
 
@@ -410,12 +370,7 @@ Configure GPU resources for machine learning workloads.
 ```yaml
 services:
   - name: web
-    type: web
-    run: python app.py
-    instances: 1
-    cpuCores: 1
-    ramMegabytes: 1024
-    port: 8080
+    ...
     gpuCoresNvidia: 1
     nodeGroup: 123e4567-e89b-12d3-a456-426614174000
 ```
@@ -428,7 +383,9 @@ GPU workloads require a node group with GPU-enabled instances.
 
 ## `metricsScraping`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Configure Prometheus metrics scraping for custom application metrics.
 
@@ -442,12 +399,7 @@ Configure Prometheus metrics scraping for custom application metrics.
 ```yaml
 services:
   - name: web
-    type: web
-    run: python app.py
-    instances: 1
-    cpuCores: 1
-    ramMegabytes: 1024
-    port: 8080
+    ...
     metricsScraping:
       enabled: true
       path: /metrics
@@ -463,35 +415,47 @@ version: v2
 name: my-app
 
 build:
-  method: pack
+  method: docker
   context: .
-  builder: heroku/buildpacks:20
-  buildpacks:
-    - heroku/python
+  dockerfile: ./Dockerfile
 
 env:
-  PORT: 8080
+  PORT: "8080"
+  LOG_LEVEL: "info"
 
 envGroups:
-  - production-env-group
+  - production-secrets
+  - shared-config
 
 predeploy:
-  run: echo "predeploy"
+  run: python manage.py migrate
+  cpuCores: 0.5
+  ramMegabytes: 512
+
+initialDeploy:
+  run: python manage.py seed
+  cpuCores: 0.25
+  ramMegabytes: 256
 
 autoRollback:
   enabled: true
 
+efsStorage:
+  enabled: true
+
 services:
+  # Web service with all options
   - name: web
     type: web
     run: python app.py
-    instances: 1
+    instances: 2
     cpuCores: 1
     ramMegabytes: 1024
     port: 8080
+    terminationGracePeriodSeconds: 30
     autoscaling:
       enabled: true
-      minInstances: 1
+      minInstances: 2
       maxInstances: 10
       cpuThresholdPercent: 80
       memoryThresholdPercent: 80
@@ -499,18 +463,42 @@ services:
       enabled: true
       httpPath: /healthz
     domains:
-      - name: example.com
+      - name: app.example.com
+    metricsScraping:
+      enabled: true
+      path: /metrics
+      port: 9090
+      scrapeIntervalSeconds: 30
+    connections:
+      - type: awsRole
+        role: my-app-role
+
+  # GPU-enabled worker on a custom node group
+  - name: ml-worker
+    type: worker
+    run: python ml_worker.py
+    instances: 1
+    cpuCores: 4
+    ramMegabytes: 16384
+    gpuCoresNvidia: 1
+    nodeGroup: 123e4567-e89b-12d3-a456-426614174000
+    terminationGracePeriodSeconds: 60
+    serviceMeshEnabled: true
+
+  # Background worker
   - name: worker
     type: worker
     run: python worker.py
     instances: 1
-    cpuCores: 1
-    ramMegabytes: 1024
+    cpuCores: 0.5
+    ramMegabytes: 512
+
+  # Scheduled job
   - name: cleanup
     type: job
     run: python cleanup.py
-    cpuCores: 1
-    ramMegabytes: 1024
+    cpuCores: 0.5
+    ramMegabytes: 256
     cron: "0 0 * * *"
 ```
 
