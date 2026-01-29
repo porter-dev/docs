@@ -43,7 +43,9 @@ services:
 
 ## `autoscaling`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Configure horizontal pod autoscaling based on CPU and memory utilization.
 
@@ -72,7 +74,9 @@ When autoscaling is enabled, the `instances` field is ignored.
 
 ## `healthCheck`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Configure a combined health check that applies to liveness, readiness, and startup probes. Worker services use command-based health checks since they don't expose HTTP endpoints.
 
@@ -103,7 +107,9 @@ For fine-grained control, configure liveness, readiness, and startup probes sepa
 
 ### `livenessCheck`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Determines if the container should be restarted.
 
@@ -117,7 +123,9 @@ livenessCheck:
 
 ### `readinessCheck`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Determines if the container is ready to receive work.
 
@@ -131,7 +139,9 @@ readinessCheck:
 
 ### `startupCheck`
 
-**Type:** `object` - **Optional**
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Used for slow-starting containers. Other probes are disabled until this passes.
 
@@ -147,7 +157,9 @@ startupCheck:
 
 ## `connections`
 
-**Type:** `array` - **Optional**
+`array`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Connect to external cloud services. See [Reference](/deploy/configuration-as-code/reference#connections) for full documentation.
 
@@ -179,7 +191,9 @@ connections:
 
 ## `serviceMeshEnabled`
 
-**Type:** `boolean` - **Optional**
+`boolean`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Enable service mesh for enhanced inter-service communication with improved performance, reliability, and monitoring.
 
@@ -195,7 +209,9 @@ Useful for workers that need to communicate with other services in your cluster.
 
 ## `terminationGracePeriodSeconds`
 
-**Type:** `integer` - **Optional**
+`integer`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Seconds to wait for graceful shutdown before forcefully terminating the container.
 
@@ -211,7 +227,9 @@ Set this to a value higher than your longest expected job. This gives workers ti
 
 ## `gpuCoresNvidia`
 
-**Type:** `integer` - **Optional**
+`integer`
+
+<Badge shape="pill" color="gray">Optional</Badge>
 
 Allocate NVIDIA GPU cores for ML workloads or GPU-accelerated processing.
 
