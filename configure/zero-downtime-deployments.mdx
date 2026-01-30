@@ -33,7 +33,7 @@ For example, if you configure `/healthz` as your health check endpoint, no traff
 
 ### Workers
 
-For Worker services, you can set up health checks using custom commands or scripts instead of HTTP endpoints. This is useful for monitoring services like Celery workers that don't expose HTTP endpoints.
+For Worker services, you must set up health checks using custom commands or scripts instead of HTTP endpoints. This is useful for monitoring services like Celery workers that don't expose HTTP endpoints.
 
 To configure command-based health checks, create a health check script that:
 
