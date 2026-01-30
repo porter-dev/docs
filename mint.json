@@ -47,6 +47,7 @@
             "cloud-accounts/creating-a-cluster",
             "cloud-accounts/node-groups",
             "cloud-accounts/cluster-upgrades",
+            "cloud-accounts/advanced-cluster-settings",
             "cloud-accounts/cluster-observability",
             "cloud-accounts/tailscale",
             "cloud-accounts/deleting-a-cluster"
