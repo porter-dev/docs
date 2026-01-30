@@ -90,6 +90,21 @@ With read replicas:
 - Modifications automatically failover the primary and promote the replica
 - This ensures minimum downtime during operations
 
+### Configuration
+
+The following table outlines the configurable fields and behaviors for each datastore type during creation and updates:
+
+| Configuration | In-cluster | Standard RDS | Aurora |
+| :--- | :--- | :--- | :--- |
+| **Connected cluster** | Local (via K8s Service) | External (via VPC Peering) | External (via VPC Peering) |
+| **Region** | Matches connected cluster | Matches connected cluster | Matches connected cluster |
+| **Database name** | - | User-defined | User-defined |
+| **Master username** | - | User-defined | User-defined |
+| **Postgres version** | - | Postgres 12-18 | Postgres 12-18 |
+| **Instance type** | CPU/RAM Limits | All RDS compatible instances | All Aurora compatible classes, excepts serverless |
+| **Allocated storage** | **Fixed** (Cannot be modified) | **Modifiable** (Increase only) | **Managed** (Auto-scales) |
+| **Snapshot restore** | - | From RDS snapshot | From Aurora snapshot |
+| **Cloning** | - | - | Fast Database Cloning |
 ---
 
 ## Redis
@@ -111,6 +126,17 @@ Provisions an Amazon Elasticache replication group with:
 - Primary and reader replica by default
 - Automatic failover if the primary fails
 - Minimal downtime during modifications
+
+---
+
+## Monitoring
+
+You can monitor the performance of your database from the Porter dashboard. Metrics are available in the "Metrics" tab when opening a datastore.
+The metrics that are currently displayed are:
+
+- CPU utilization
+- RAM utilization
+- Storage capacity
 
 ---
 
@@ -163,3 +189,10 @@ If the compliance feature is enabled for your project, Porter automatically conf
 - Storage capacity alarms
 
 These alarms help ensure your databases remain healthy and within operational thresholds.
+
+## Roadmap
+
+The following features are not yet supported natively in Porter, but reach out to the support team for help setting them up.
+
+- Connection pooling
+- External access to datastores
