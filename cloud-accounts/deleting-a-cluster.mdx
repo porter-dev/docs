@@ -1,0 +1,156 @@
+---
+title: "Deleting a Cluster"
+sidebarTitle: "Deleting a Cluster"
+description: "Remove a Porter-provisioned cluster and clean up cloud resources"
+---
+
+<Warning>
+Deleting a cluster removes all applications and data running on it. This action cannot be undone.
+</Warning>
+
+## Before You Delete
+
+Before deleting your cluster:
+
+1. **Back up any data** stored in your applications or persistent volumes
+2. **Export environment variables** and secrets if you need them for future deployments
+3. **Note your configuration** if you plan to recreate the cluster later
+
+---
+
+## Delete the Cluster
+
+<Tabs>
+  <Tab title="AWS">
+    <Warning>
+    Porter needs the IAM role to delete resources. Delete the cluster first, then delete the IAM role. If you've already deleted the IAM role, you'll need to [delete resources directly from the AWS console](/other/deleting-dangling-resources).
+    </Warning>
+
+    <Steps>
+      <Step title="Delete the cluster in Porter">
+        1. Navigate to the **Infrastructure** tab in the Porter dashboard
+        2. Click **Delete Cluster**
+        3. Confirm the deletion
+
+        This process may take up to 30 minutes.
+      </Step>
+      <Step title="Delete the IAM role">
+        After the cluster is deleted:
+
+        1. Navigate to **CloudFormation Stacks** in your AWS console
+        2. Select the stack named `PorterRole`
+        3. Click **Delete**
+
+        This revokes Porter's access to your AWS account.
+      </Step>
+      <Step title="Verify cleanup">
+        Check your AWS console to verify all resources have been removed:
+
+        - **EC2**: No instances, load balancers, or security groups related to the cluster
+        - **EKS**: No clusters remaining
+        - **VPC**: No VPCs created by Porter
+        - **ECR**: Container images may remain (delete manually if not needed)
+      </Step>
+    </Steps>
+
+    <Warning>
+    Deleting resources via Porter may result in dangling resources. See [Deleting Dangling Resources](/other/deleting-dangling-resources) for cleanup guidance.
+    </Warning>
+  </Tab>
+
+  <Tab title="GCP">
+    <Steps>
+      <Step title="Delete the cluster in Porter">
+        1. Navigate to the **Infrastructure** tab in the Porter dashboard
+        2. Click **Additional Settings**
+        3. Click **Delete Cluster**
+        4. Confirm the deletion
+
+        This process may take up to 30 minutes.
+      </Step>
+      <Step title="Verify cleanup">
+        Check your GCP console to verify all resources have been removed:
+
+        - **Compute Engine**: No instances or load balancers related to the cluster
+        - **Kubernetes Engine**: No clusters remaining
+        - **VPC networks**: No networks created by Porter
+        - **Artifact Registry**: Container images may remain (delete manually if not needed)
+      </Step>
+      <Step title="Revoke Porter access (optional)">
+        If you no longer need Porter to access your GCP project:
+
+        1. Navigate to **IAM & Admin** → **Service Accounts**
+        2. Find and delete the Porter service account
+      </Step>
+    </Steps>
+
+    <Warning>
+    Deleting resources via Porter may result in dangling resources. You can remove dangling resources via the GCP console or the gcloud CLI.
+    </Warning>
+  </Tab>
+
+  <Tab title="Azure">
+    <Steps>
+      <Step title="Delete the cluster in Porter">
+        1. Navigate to the **Infrastructure** tab in the Porter dashboard
+        2. Click **Additional Settings**
+        3. Click **Delete Cluster**
+        4. Confirm the deletion
+
+        This process may take up to 30 minutes.
+      </Step>
+      <Step title="Verify cleanup">
+        After deletion, verify in the Azure portal:
+
+        1. Search for **Resource groups**
+        2. A resource group named `<PROJECT_ID>-<AZURE_REGION>` may remain, containing your build images
+        3. Porter does not delete build images by default—delete this resource group manually if needed
+        4. Delete any other remaining resource groups created by Porter
+      </Step>
+      <Step title="Revoke Porter access (optional)">
+        If you no longer need Porter to access your Azure subscription:
+
+        1. Search for **App registrations** in the Azure portal
+        2. Find and delete the Porter service principal
+        3. Optionally, delete the custom `porter-aks-restricted` role definition
+      </Step>
+    </Steps>
+
+    <Warning>
+    Deleting resources via Porter may result in dangling resources. Check your Azure portal to verify all resources have been removed.
+    </Warning>
+  </Tab>
+</Tabs>
+
+---
+
+## Troubleshooting Deletion
+
+<AccordionGroup>
+  <Accordion title="Deletion is stuck or taking too long">
+    If deletion takes more than 45 minutes:
+
+    1. Check your cloud provider's console for any resources in a "deleting" state
+    2. Look for dependencies that may be blocking deletion (e.g., load balancers with active connections)
+    3. Contact us through the dashboard chat bot with your project ID
+  </Accordion>
+  <Accordion title="Resources remain after deletion">
+    If resources remain in your cloud account after Porter reports deletion complete:
+
+    1. Follow the [Deleting Dangling Resources](/other/deleting-dangling-resources) guide
+    2. Check for resources in different regions than expected
+    3. Look for resources with names containing your project ID
+  </Accordion>
+  <Accordion title="Cannot delete because credentials expired">
+    If Porter can't delete because credentials have expired:
+
+    **AWS**: Re-create the CloudFormation stack to restore the IAM role, then delete the cluster
+
+    **GCP**: Upload a new service account JSON key in **Integrations** → **GCP**, then delete the cluster
+
+    **Azure**: Generate a new client secret and update it in **Integrations** → **Azure**, then delete the cluster
+
+    If you can't restore credentials, you'll need to [delete resources manually](/other/deleting-dangling-resources).
+  </Accordion>
+</AccordionGroup>
+

@@ -1,56 +1,110 @@
 ---
-title: "Provisioning Infrastructure"
+title: "Cloud Accounts"
 sidebarTitle: "Overview"
+description: "Connect your cloud provider and provision infrastructure with Porter"
 ---
 
-Porter provisions and manages the underlying infrastructure in your own cloud. During project creation, Porter will prompt you to provision resources in a cloud provider of your choice.
+Porter provisions and manages infrastructure directly in your own cloud account. This gives you full control over your data and resources while Porter handles the complexity of Kubernetes cluster management.
 
-For step by step instructions on how to provision infrastructure in each cloud provider, see the link below.
+## Supported Cloud Providers
 
-<Card
-  title="Provisioning on AWS"
-  icon="aws"
-  href="/cloud-accounts/provisioning-on-aws"
-></Card>
-<Card
-  title="Provisioning on Azure"
-  icon="microsoft"
-  href="/cloud-accounts/provisioning-on-azure"
-></Card>
-<Card
-  title="Provisioning on GCP"
-  icon="google"
-  href="/cloud-accounts/provisioning-on-gcp"
-></Card>
+<CardGroup cols={3}>
+  <Card title="AWS" icon="aws" href="/cloud-accounts/connecting-a-cloud-account#create-the-iam-role">
+    Amazon Web Services
+  </Card>
+  <Card title="Google Cloud" icon="google" href="/cloud-accounts/connecting-a-cloud-account#enable-required-apis">
+    Google Cloud Platform
+  </Card>
+  <Card title="Azure" icon="microsoft" href="/cloud-accounts/connecting-a-cloud-account#enable-resource-providers">
+    Microsoft Azure
+  </Card>
+</CardGroup>
 
-## FAQ[](#faq "Direct link to heading")
+## Getting Started
 
-### How much does the underlying infrastructure cost?[](#how-much-does-the-underlying-infrastructure-cost "Direct link to heading")
+Setting up Porter with your cloud account involves three steps:
 
-The cost of your infrastructure varies entirely on the amount of resources you use. By default, clusters provisioned by Porter cost around $200 per month. **All of the underlying infrastructure cost can be covered with your cloud credits from AWS, Google Cloud, and Azure.**
+<Steps>
+  <Step title="Connect your cloud account">
+    Provide Porter with credentials to access your cloud provider. Porter uses secure methods like IAM role assumption (AWS), service principals (Azure), or service accounts (GCP) to manage resources without storing static credentials.
 
-### What does Porter-provisioned infrastructure consist of?
+    [Connect a cloud account →](/cloud-accounts/connecting-a-cloud-account)
+  </Step>
+  <Step title="Create a cluster">
+    Porter provisions a Kubernetes cluster with sensible defaults including networking, load balancers, and node groups. Provisioning takes approximately 30-45 minutes.
 
-Infrastructure provisioned by Porter on AWS includes a VPC, a Network Load Balancer, and an EKS cluster. On GCP and Azure, the architecture is identical with equivalent components on each cloud provider (VPC/VNet, Load Balancer, and managed Kubernetes cluster).
+    [Create a cluster →](/cloud-accounts/creating-a-cluster)
+  </Step>
+  <Step title="Deploy your application">
+    Once your cluster is ready, deploy applications from GitHub or a container registry.
 
-#### Default Node Group Configuration
+    [Deploy your first app →](/getting-started/quickstart#step-4-create-your-first-application)
+  </Step>
+</Steps>
 
-By default, Porter provisions three node groups in your cluster:
+---
 
-| Node Group | Purpose | AWS Default | Azure Default | GCP Default |
-|------------|---------|-------------|---------------|-------------|
-| **System** | Kubernetes system workloads | 2x t3.medium | 2x Standard_B2s | 2x e2-medium |
-| **Monitoring** | Observability stack (metrics, logs) | 1x t3.large | 1x Standard_B2ms | 1x e2-standard-2 |
-| **Application** | Your application workloads | 1x t3.medium (autoscales) | 1x Standard_B2s (autoscales) | 1x e2-medium (autoscales) |
+## What Porter Provisions
 
-**Application node group details:**
-- **Initial size:** 1 node
-- **Autoscaling:** Enabled by default
-- **Maximum nodes:** Scales based on workload demand and configured limits
-- **Minimum nodes:** 1 node to ensure availability
+Infrastructure provisioned by Porter includes:
 
-**Disk size:** Each node includes 50GB of disk storage by default across all cloud providers.
+| Component | AWS | Azure | GCP |
+|-----------|-----|-------|-----|
+| **Virtual Network** | VPC | VNet | VPC |
+| **Load Balancer** | Network Load Balancer | Azure Load Balancer | Cloud Load Balancer |
+| **Kubernetes Cluster** | EKS | AKS | GKE |
+| **Container Registry** | ECR | ACR | Artifact Registry |
+
+### Default Node Groups
+
+Porter provisions three node groups by default:
+
+| Node Group | Purpose | AWS | Azure | GCP |
+|------------|---------|-----|-------|-----|
+| **System** | Kubernetes system workloads | 2× t3.medium | 2× Standard_B2s | 2× e2-medium |
+| **Monitoring** | Observability stack | 1× t3.large | 1× Standard_B2ms | 1× e2-standard-2 |
+| **Application** | Your workloads | 1× t3.medium (autoscales) | 1× Standard_B2s (autoscales) | 1× e2-medium (autoscales) |
 
 <Info>
-  You can customize machine types, node counts, and disk sizes after initial provisioning through the Infrastructure tab in the Porter dashboard.
+On AWS, the application node group uses [cost optimization](/cloud-accounts/node-groups#creating-a-custom-node-group) by default, which automatically selects the most cost-effective instance types for your workloads.
 </Info>
+
+The application node group autoscales based on workload demand. All nodes include 50GB of disk storage by default.
+
+<Info>
+You can customize machine types, node counts, and disk sizes after initial provisioning through the [Node Groups](/cloud-accounts/node-groups) settings.
+</Info>
+
+---
+
+## FAQ
+
+### How much does the underlying infrastructure cost?
+
+The cost varies based on resource usage. By default, clusters provisioned by Porter cost approximately:
+
+| Provider | Estimated Monthly Cost |
+|----------|----------------------|
+| AWS | ~$225/month |
+| GCP | ~$253/month |
+| Azure | ~$165/month |
+
+These estimates are for the default cluster configuration. Actual costs vary based on usage, region, and customizations. **All infrastructure costs can be covered with cloud credits from AWS, Google Cloud, or Azure.**
+
+### Can I use my existing cloud credits?
+
+Yes. Porter provisions infrastructure directly in your cloud account, so any credits you have with AWS, GCP, or Azure apply to the resources Porter creates.
+
+### What permissions does Porter need?
+
+Porter requires permissions to create and manage Kubernetes clusters, networking resources, and container registries. The setup process varies by provider:
+
+- **AWS**: Automatic setup — Porter guides you through creating a CloudFormation stack that provisions the required IAM role with one click
+- **Azure**: Manual setup required — you'll need to create a service principal using our setup script or the Azure CLI
+- **GCP**: Manual setup required — you'll need to create a service account and download a JSON key file
+
+For detailed permission requirements and setup instructions, see [Connecting a Cloud Account](/cloud-accounts/connecting-a-cloud-account).
+
+### Can I revoke Porter's access?
+
+Yes. You can revoke Porter's access at any time by deleting the IAM role (AWS), service principal (Azure), or service account (GCP). Note that Porter will no longer be able to manage or delete resources after access is revoked.

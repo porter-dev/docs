@@ -43,12 +43,13 @@
           "group": "Cloud Accounts",
           "pages": [
             "cloud-accounts/overview",
-            "cloud-accounts/provisioning-on-aws",
-            "cloud-accounts/provisioning-on-azure",
-            "cloud-accounts/provisioning-on-gcp",
-            "cloud-accounts/changing-instance-types",
+            "cloud-accounts/connecting-a-cloud-account",
+            "cloud-accounts/creating-a-cluster",
+            "cloud-accounts/node-groups",
             "cloud-accounts/cluster-upgrades",
-            "cloud-accounts/node-groups"
+            "cloud-accounts/cluster-observability",
+            "cloud-accounts/tailscale",
+            "cloud-accounts/deleting-a-cluster"
           ]
         },
         {
@@ -163,8 +164,7 @@
             "other/deleting-dangling-resources",
             "other/aws-vpc-peering",
             "other/kubernetes-101",
-            "other/migrate-from-heroku",
-            "other/tailscale"
+            "other/migrate-from-heroku"
           ]
         },
         {
