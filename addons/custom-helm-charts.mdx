@@ -1,0 +1,134 @@
+---
+title: "Custom Helm Charts"
+sidebarTitle: "Custom Helm Charts"
+description: "Deploy external Helm charts for components not managed by Porter"
+---
+
+Sometimes you need to install external charts that are not managed by Porter. You can deploy custom Helm charts either through the Porter dashboard or directly via the Helm CLI.
+
+---
+
+## Deploying via Porter
+
+Deploy Helm charts through the Porter dashboard for a managed experience with visibility into your deployments.
+
+<Steps>
+  <Step title="Select Helm Chart addon">
+    Navigate to **Add-ons** in your Porter dashboard and select **Helm Chart**.
+  </Step>
+  <Step title="Configure the chart">
+    Enter the Helm repository URL and select the chart you want to deploy.
+  </Step>
+  <Step title="Select version">
+    Choose the chart version you want to install.
+  </Step>
+  <Step title="Customize values (optional)">
+    Modify any values from the chart's default configuration as needed.
+  </Step>
+  <Step title="Deploy">
+    Click **Deploy** to install the chart to your cluster.
+  </Step>
+</Steps>
+
+<Info>
+Since custom Helm charts install external components into your cluster, they fall outside of Porter's standard support. However, we'll do our best to help you troubleshoot issues.
+</Info>
+
+### Managing deployed charts
+
+Once deployed, you can:
+- View the chart status in the Add-ons tab
+- Update values and redeploy
+- Upgrade to newer chart versions
+- Delete the chart when no longer needed
+
+---
+
+## Deploying via Helm CLI
+
+For more control or CI/CD integration, you can deploy Helm charts directly using the Helm CLI.
+
+### Prerequisites
+
+1. Install the [Helm CLI](https://helm.sh/docs/intro/install/)
+2. Configure kubectl to connect to your Porter cluster:
+   ```bash
+   porter cluster namespace
+   ```
+
+### Deploying a chart
+
+```bash
+# Add the Helm repository
+helm repo add <repo-name> <repo-url>
+helm repo update
+
+# Install the chart
+helm install <release-name> <repo-name>/<chart-name> \
+  --namespace <namespace> \
+  --values values.yaml
+```
+
+### Example: Installing NGINX Ingress
+
+```bash
+# Add the ingress-nginx repository
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+# Install the chart
+helm install my-ingress ingress-nginx/ingress-nginx \
+  --namespace ingress \
+  --create-namespace
+```
+
+### Upgrading a release
+
+```bash
+helm upgrade <release-name> <repo-name>/<chart-name> \
+  --namespace <namespace> \
+  --values values.yaml
+```
+
+### Listing releases
+
+```bash
+helm list --all-namespaces
+```
+
+### Uninstalling a release
+
+```bash
+helm uninstall <release-name> --namespace <namespace>
+```
+
+
+---
+
+## Best Practices
+
+### Use version pinning
+
+Always specify a chart version to ensure reproducible deployments:
+
+```bash
+helm install my-release repo/chart --version 1.2.3
+```
+
+### Store values in version control
+
+Keep your custom values files in version control alongside your application code:
+
+```yaml
+# values.yaml
+replicaCount: 3
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+```
+
+### Test in non-production first
+
+Before deploying to production, test custom charts in a development or staging cluster to verify compatibility with your Porter environment.
+

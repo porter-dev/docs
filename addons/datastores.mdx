@@ -1,0 +1,126 @@
+---
+title: "Datastores"
+sidebarTitle: "Datastores"
+description: "Provision managed databases with automatic networking and security"
+---
+
+Porter simplifies database provisioning by automatically setting up all networking components between your cluster and Porter-provisioned databases.
+
+<Info>
+Datastores are currently supported on **AWS only**. GCP and Azure datastore support is on the roadmap.
+</Info>
+
+## Architecture
+
+Datastores are provisioned in a separate VPC from your cluster VPC. Porter automatically:
+
+- Peers the datastore VPC to your cluster VPC
+- Configures subnets, routing tables, and security groups
+- Ensures traffic travels exclusively through private subnets
+
+This architecture keeps your database secure and accessible only from applications running in your cluster.
+
+---
+
+## Setup
+
+<Steps>
+  <Step title="Create a datastore">
+    Navigate to **Add-ons** in your Porter dashboard and select the datastore type you want to create (Postgres or Redis).
+  </Step>
+  <Step title="Configure settings">
+    Configure your datastore settings including instance size, storage, and high availability options.
+  </Step>
+  <Step title="Connect to your application">
+    Porter creates an environment group with the connection details. Inject this environment group into your applications.
+  </Step>
+  <Step title="Deploy">
+    Deploy your application. It can now connect to the database using the injected environment variables.
+  </Step>
+</Steps>
+
+### Connecting from your laptop
+
+To connect to a datastore from your local machine, use the Porter CLI:
+
+```bash
+porter datastore connect my-datastore
+psql -h localhost -p <port> -U <username> -l
+```
+
+<Info>
+This requires [Tailscale VPN](/cloud-accounts/tailscale) to be configured for your cluster.
+</Info>
+
+---
+
+## Postgres
+
+Postgres datastores can be deployed in different configurations depending on your needs:
+
+| Configuration | Use Case | Recommended For |
+|--------------|----------|-----------------|
+| **In-cluster** | Quick setup for development | Dev/staging environments |
+| **Single RDS instance (Multi-AZ)** | Standard managed database | Production workloads |
+| **Aurora cluster** | Auto-scaling storage with enhanced HA | High-availability production |
+
+### In-cluster Postgres
+
+Deploys Postgres as a container within your cluster. This is the fastest way to get started but is **not recommended for production data**.
+
+### RDS Instance
+
+Provisions a standard Amazon RDS instance with Multi-AZ deployment for automatic failover. This is the recommended option for most production workloads.
+
+### Aurora Cluster
+
+Aurora provides:
+- Automatic storage autoscaling
+- Enhanced failover capabilities
+- High availability settings
+
+You can create an Aurora datastore with a single instance or with an additional read replica.
+
+#### Read Replicas
+
+To enable a read replica, select the **HA toggle** when creating the datastore.
+
+With read replicas:
+- The dashboard displays connection details for both primary and replica
+- Modifications automatically failover the primary and promote the replica
+- This ensures minimum downtime during operations
+
+---
+
+## Redis
+
+Redis datastores can be provisioned in different configurations:
+
+| Configuration | Use Case | Recommended For |
+|--------------|----------|-----------------|
+| **In-cluster** | Quick setup for development | Dev/staging environments |
+| **Elasticache replication group** | Managed cache with automatic failover | Production workloads |
+
+### In-cluster Redis
+
+Deploys Redis as a container within your cluster. This is the fastest way to get started but is **not recommended for production data**.
+
+### Elasticache Replication Group
+
+Provisions an Amazon Elasticache replication group with:
+- Primary and reader replica by default
+- Automatic failover if the primary fails
+- Minimal downtime during modifications
+
+---
+
+## Compliance
+
+If the compliance feature is enabled for your project, Porter automatically configures monitoring alarms for RDS and Aurora datastores:
+
+- CPU utilization alarms
+- Memory utilization alarms
+- Storage capacity alarms
+
+These alarms help ensure your databases remain healthy and within operational thresholds.
+
