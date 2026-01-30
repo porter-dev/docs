@@ -1,0 +1,122 @@
+---
+title: "Advanced Cluster Settings"
+description: "Configure advanced security, compliance, and networking settings for your Porter cluster"
+---
+
+Porter offers advanced cluster configuration options for customers with specific compliance, security, or networking requirements. These settings are available for **AWS** and **GCP** clusters upon request and can be enabled by our support team.
+
+<Info>
+  If you're interested in enabling any of these advanced settings, please contact support via the chat widget to discuss your requirements.
+</Info>
+
+<Tabs>
+  <Tab title="AWS">
+
+## Compliance
+
+### ECR Scanning
+
+Enable Amazon ECR image scanning to automatically scan container images for software vulnerabilities.
+
+| Setting | Description |
+|---------|-------------|
+| **ECR scanning enabled** | When enabled, images pushed to ECR are automatically scanned for vulnerabilities |
+
+### AWS GuardDuty
+
+AWS GuardDuty provides intelligent threat detection for your EKS cluster, monitoring for malicious activity and unauthorized behavior.
+
+<Warning>
+  When enabling GuardDuty, you must also configure the following in your AWS Console:
+
+  1. Enable EKS Protection in the EKS Protection tab of the GuardDuty console
+  2. Enable Runtime Monitoring
+  
+  For automated agent configuration, enable both:
+  - EKS agent auto-configuration
+  - EC2 agent auto-configuration
+</Warning>
+
+| Setting | Description |
+|---------|-------------|
+| **AWS GuardDuty agent installed on cluster** | Installs the GuardDuty security agent on your cluster nodes |
+
+### KMS Encryption
+
+Enable AWS Key Management Service (KMS) encryption for Kubernetes secrets stored in etcd.
+
+| Setting | Description |
+|---------|-------------|
+| **KMS encryption enabled** | Encrypts Kubernetes secrets at rest using a customer-managed KMS key |
+
+## AWS CloudWatch Logging
+
+Configure which EKS cluster control plane log types are sent to AWS CloudWatch. These logs help with debugging, auditing, and monitoring your cluster's control plane components.
+
+| Log Type | Description |
+|----------|-------------|
+| **API Server logs** | Logs from the Kubernetes API server, useful for debugging API requests |
+| **Audit logs** | Records of individual users, administrators, or system components that have affected the cluster |
+| **Authenticator logs** | Logs from the AWS IAM authenticator, useful for debugging authentication issues |
+| **Controller manager logs** | Logs from the controller manager, which manages core control loops |
+| **Scheduler logs** | Logs from the scheduler, useful for debugging pod scheduling decisions |
+
+### CloudWatch Observability Agent
+
+You may also enable the CloudWatch Observability agent as an EKS add-on for enhanced cluster monitoring.
+
+| Setting | Description |
+|---------|-------------|
+| **AWS CloudWatch Observability agent installed on cluster** | Enables the CloudWatch Observability add-on for metrics and logs collection |
+
+## Load Balancer
+
+Configure the type of load balancer used for your cluster's ingress.
+
+| Type | Description |
+|------|-------------|
+| **NLB** | Network Load Balancer - operates at Layer 4, provides ultra-low latency and high throughput |
+| **ALB** | Application Load Balancer - operates at Layer 7, supports advanced routing features |
+
+## Control Plane Access
+
+### Private Cluster
+
+Enable private cluster mode to restrict access to your Kubernetes API server.
+
+| Setting | Description |
+|---------|-------------|
+| **Private cluster** | When enabled, the Kubernetes API server endpoint is only accessible from within your VPC |
+
+<Warning>
+  Enabling private cluster mode restricts API server access to your VPC. Ensure you have appropriate network connectivity (e.g., VPN, Direct Connect) before enabling this setting.
+</Warning>
+
+  </Tab>
+  <Tab title="GCP">
+
+## Advanced Networking Config
+
+<Warning>
+  Modifying these advanced network settings can impact cluster connectivity and performance. Ensure you understand the implications before making changes.
+</Warning>
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| **Egress NAT IPs Count** | Number of egress NAT IPs. Cannot be decreased once set. | 1 |
+| **Min Ports per VM** | Configures the minimum number of ports allocated per VM for GKE | 64 |
+| **Enable Endpoint Independent Mapping** | Recommended for most use cases. Affects Cloud NAT behavior. | Enabled |
+| **Enable Dynamic Port Allocation** | Allows GKE to dynamically allocate more ports to VMs that need them | Disabled |
+
+## Observability Settings
+
+Configure observability features for the GKE cluster control plane.
+
+| Setting | Description |
+|---------|-------------|
+| **Enable Control Plane Logging** | Enable the collection of logs from the Kubernetes control plane components (e.g., API server, scheduler) |
+| **Enable Control Plane Metrics** | Enable the collection of metrics from the Kubernetes control plane components |
+
+  </Tab>
+</Tabs>
+
