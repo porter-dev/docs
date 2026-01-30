@@ -104,6 +104,15 @@ porter helm -- list --all-namespaces
 porter helm -- uninstall <release-name> --namespace <namespace>
 ```
 
+---
+
+## Observability
+
+There is limited observability offered for third-party helm chart installations, consisting of logs available in the dashboard.
+
+For more complex scenarios, you can deploy a **Grafana** addon, which is already configured with the existing observability
+stack deployed in the cluster. Grafana makes it possible to explore, query and build dashboard to monitor any charts or
+workloads deployed in your cluster.
 
 ---
 
