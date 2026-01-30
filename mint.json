@@ -97,7 +97,6 @@
                 "configure/environment-groups",
                 "configure/autoscaling",
                 "configure/custom-domains",
-                "configure/health-checks",
                 "configure/zero-downtime-deployments",
                 "configure/advanced-networking"
               ]

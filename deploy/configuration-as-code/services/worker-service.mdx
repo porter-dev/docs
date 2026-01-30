@@ -78,6 +78,10 @@ healthCheck:
 Cannot be used together with `livenessCheck`, `readinessCheck`, or `startupCheck`. Use either the combined `healthCheck` or the individual checks.
 </Warning>
 
+<Tip>
+For best practices on combining command-based health checks with graceful shutdown (SIGTERM handling, shutdown markers), see [Zero-Downtime Deployments: Workers](/configure/zero-downtime-deployments#workers).
+</Tip>
+
 ---
 
 ## Advanced Health Checks

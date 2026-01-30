@@ -139,6 +139,8 @@ The **initial delay** gives your application time to start up before health chec
 
 The **timeout** determines how long Porter waits for a response before considering the check failed.
 
+For best practices on combining health checks with graceful shutdown, see [Zero-Downtime Deployments](/configure/zero-downtime-deployments).
+
 ### Metrics scraping
 
 If your application exposes Prometheus metrics, Porter can scrape and forward them to your monitoring infrastructure. Enable metrics scraping and specify the port and path where your application serves metrics (commonly `/metrics` on the application port or a dedicated metrics port). See [Custom Metrics Autoscaling](/observability/custom-metrics-and-autoscaling) for details on using these metrics for autoscaling.
