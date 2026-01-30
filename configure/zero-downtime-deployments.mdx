@@ -2,16 +2,16 @@
 title: "Zero-Downtime Deployments"
 ---
 
-Every time an application is redeployed on Porter (through a Github action, configuration change, etc), a new set of application instances will replace the old application instances. While the update process will attempt to prevent downtime, there are some additional configuration settings that can be set to prevent any downtime while re-deploying:
+Every time an application is redeployed on Porter (through a GitHub action, configuration change, etc), a new set of application instances will replace the old ones. While the update process attempts to prevent downtime, there are additional configuration settings to ensure zero downtime during re-deployment:
 
-- [Health Checks](#health-checks)
-- [Graceful Shutdown](#graceful-shutdown)
+- [Health Checks](#health-checks) - Ensure new instances are ready before receiving traffic
+- [Graceful Shutdown](#graceful-shutdown) - Allow old instances to finish processing before termination
 
 ## Health Checks
 
-Health checks are endpoints that indicate if an application is healthy and ready to receive traffic. When health checks are enabled, traffic won't switch from the old application instance until the health check indicates that the application is ready. On health check endpoints, the application should return `200` status when the application should receive traffic, and a `500`-level error otherwise. Health checks can be configured in the **Advanced** tab.
+Health checks indicate whether an application is healthy and ready to receive traffic. When enabled, traffic won't switch from the old application instance until the health check confirms the new instance is ready.
 
-For example, in the screenshot above, no traffic will be routed to the web service until the `/healthz` endpoint returns a `200` status code.
+Health checks can be configured in the **Advanced** tab of your service settings.
 
 <Info>
   Readiness probes should be used in conjunction with graceful shutdown behavior
@@ -19,17 +19,66 @@ For example, in the screenshot above, no traffic will be routed to the web servi
   shutdown](#graceful-shutdown) section for more information.
 </Info>
 
+### Web Services
+
+For Web services, configure HTTP-based health checks where your application returns:
+- `200` status code when ready to receive traffic
+- `500`-level error code when not ready
+
+For example, if you configure `/healthz` as your health check endpoint, no traffic will be routed to the web service until that endpoint returns a `200` status code.
+
+See [Health Checks](/configure/health-checks) for detailed configuration options.
+
+### Workers
+
+For Worker services, you can set up health checks using custom commands or scripts instead of HTTP endpoints. This is useful for monitoring services like Celery workers that don't expose HTTP endpoints.
+
+To configure command-based health checks, create a health check script that:
+
+1. Executes the necessary commands to check your worker's health
+2. Returns exit code `0` if the worker is healthy
+3. Returns a non-zero exit code if the worker is unhealthy
+
+Then specify the path to your health check script in the **Advanced** tab of your service settings.
+
+<Note>
+  Command-based health checks are only supported for Worker services. For Web services, use HTTP health checks instead.
+</Note>
+
 ## Graceful Shutdown
 
-While applications are being re-deployed, the old application instances will receive a termination signal in the form of `SIGTERM`. The applications are then given a **Termination Grace Period**, which is the number of seconds after `SIGTERM` is sent before the application will be forcefully killed. In this time, the application should stop receiving traffic, close any existing connections, and exit gracefully. The termination grace period can also be configured from the **Advanced** tab.
+When applications are being re-deployed, old instances receive a `SIGTERM` termination signal. They are then given a **Termination Grace Period**—the number of seconds before the application is forcefully killed.
 
-Note that the application will continue to receive traffic until it exits, unless you have configured the readiness probe to fail before this time. Thus, the recommended graceful shutdown sequence is:
+During this period, your application should:
+1. Stop accepting new work
+2. Complete or close existing connections
+3. Exit gracefully
 
-1. As soon as `SIGTERM` is received, return a `500`-level response code on the readiness probe endpoint ([see above](#health-checks) for more information).
-2. Since the `SIGTERM` has been issued to your app, the termination grace period is in effect - this is when your app needs to close the server to prevent additional connections, and drain all existing connections before the grace period ends. Exit gracefully after connections are drained.
+The termination grace period can be configured in the **Advanced** tab.
 
-# High Availability Applications
+### Web Services
 
-Alongside the above, to ensure that your applications are fault tolerant and resilient against failures, please ensure that your applications have at least 3 instances available. This can be configured from the Resources tab, as seen in the screenshot below.
+Web services will continue to receive traffic until they exit, unless you configure the readiness probe to fail. The recommended graceful shutdown sequence is:
 
-Please note that if you are using autoscaling, this is a minimum of 3 instances.
+1. When `SIGTERM` is received, immediately return a `500`-level response on your health check endpoint to stop receiving new traffic.
+2. Close the server to prevent additional connections.
+3. Drain all existing connections before the grace period ends.
+4. Exit gracefully after connections are drained.
+
+### Workers
+
+For Worker services, implement graceful shutdown using signal handling and file-based coordination:
+
+1. **Trap the SIGTERM signal** in your worker process or an init script for the service.
+2. **Write a shutdown marker** to a file when the signal is received, indicating the worker should stop.
+3. **Adapt your health check script** to check for this shutdown marker:
+   - If the marker indicates shutdown is in progress, the script should return a non-zero exit code.
+   - This signals to Porter that the worker is no longer healthy and should not receive new work.
+
+## High Availability
+
+To ensure your applications are fault tolerant and resilient against failures, configure at least **3 instances** for production workloads. This can be set in the **Resources** tab.
+
+<Note>
+  If you are using autoscaling, set the minimum replicas to at least 3.
+</Note>
