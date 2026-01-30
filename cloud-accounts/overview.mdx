@@ -65,6 +65,10 @@ Porter provisions three node groups by default:
 | **Monitoring** | Observability stack | 1× t3.large | 1× Standard_B2ms | 1× e2-standard-2 |
 | **Application** | Your workloads | 1× t3.medium (autoscales) | 1× Standard_B2s (autoscales) | 1× e2-medium (autoscales) |
 
+<Info>
+On AWS, the application node group uses [cost optimization](/cloud-accounts/node-groups#creating-a-custom-node-group) by default, which automatically selects the most cost-effective instance types for your workloads.
+</Info>
+
 The application node group autoscales based on workload demand. All nodes include 50GB of disk storage by default.
 
 <Info>
@@ -93,13 +97,13 @@ Yes. Porter provisions infrastructure directly in your cloud account, so any cre
 
 ### What permissions does Porter need?
 
-Porter requires permissions to create and manage Kubernetes clusters, networking resources, and container registries. The exact permissions vary by provider:
+Porter requires permissions to create and manage Kubernetes clusters, networking resources, and container registries. The setup process varies by provider:
 
-- **AWS**: Porter assumes an IAM role you create via CloudFormation
-- **Azure**: A service principal with the custom `porter-aks-restricted` role
-- **GCP**: A service account with Storage Admin, Compute Admin, Kubernetes Engine Admin, and related permissions
+- **AWS**: Automatic setup — Porter guides you through creating a CloudFormation stack that provisions the required IAM role with one click
+- **Azure**: Manual setup required — you'll need to create a service principal using our setup script or the Azure CLI
+- **GCP**: Manual setup required — you'll need to create a service account and download a JSON key file
 
-For detailed permission requirements, see [Connecting a Cloud Account](/cloud-accounts/connecting-a-cloud-account).
+For detailed permission requirements and setup instructions, see [Connecting a Cloud Account](/cloud-accounts/connecting-a-cloud-account).
 
 ### Can I revoke Porter's access?
 
