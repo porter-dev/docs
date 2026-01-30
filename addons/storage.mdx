@@ -54,10 +54,10 @@ All services with the persistent disk enabled will have read and write access to
 
 ### Example
 
-If you have two services (`api` and `worker`) both mounting the same persistent disk:
+If you have two services (`api` and `worker`) both mounting the same persistent disk 'my-disk':
 
-- `api` writes a file to `/data/efs/api/uploads/image.png`
-- `worker` can read the file from `/data/efs/api/uploads/image.png`
+- `api` writes a file to `/data/api/my-disk/uploads/image.png`
+- `worker` can read the same file from `/data/worker/my-disk/image.png`
 
 ---
 
