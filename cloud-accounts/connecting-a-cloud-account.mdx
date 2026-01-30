@@ -1,0 +1,297 @@
+---
+title: "Connecting a Cloud Account"
+sidebarTitle: "Connecting a Cloud Account"
+description: "Grant Porter access to provision infrastructure in your cloud provider"
+---
+
+Before Porter can create a cluster, you need to grant it access to your cloud account. Porter uses secure credential methods that don't require storing static API keys.
+
+<Tabs>
+  <Tab title="AWS">
+    Porter uses AWS IAM role assumption via the `AssumeRole` [operation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html) to access your account. You create a role in your AWS account and declare that you trust Porter to assume it. This eliminates static credentials and makes access easy to revoke.
+
+    ## Create the IAM Role
+
+    <Steps>
+      <Step title="Enter your AWS Account ID">
+        After selecting AWS as your cloud provider, log into your [AWS Console](https://console.aws.amazon.com) and find your 12-digit Account ID in the top-right corner.
+
+        Enter this ID in Porter and click **Grant Permissions**.
+      </Step>
+      <Step title="Create the CloudFormation stack">
+        Porter opens the AWS CloudFormation console in a new tab to create a stack that provisions the `porter-manager` IAM role.
+
+        <Warning>
+        If the popup is blocked, check your browser settings and allow popups from Porter.
+        </Warning>
+
+        Scroll to the bottom of the CloudFormation page, check the **I acknowledge that AWS CloudFormation might create IAM resources** box, and click **Create Stack**.
+
+        Wait for the stack creation to complete (this takes a few minutes).
+      </Step>
+    </Steps>
+
+    <Info>
+    The IAM role must remain in your AWS account for Porter to manage your infrastructure. Deleting it will prevent Porter from making changes.
+    </Info>
+
+    ## Permissions Granted
+
+    The CloudFormation stack creates an IAM role with permissions to:
+
+    - Create and manage EKS clusters
+    - Create and manage VPCs, subnets, and security groups
+    - Create and manage ECR repositories
+    - Create and manage IAM roles for cluster operations
+    - Request service quota increases
+
+    <Info>
+    If you need Porter to operate with more restricted permissions, contact us through the support widget to inquire about Porter Enterprise.
+    </Info>
+
+    ## Revoking Access
+
+    To revoke Porter's access:
+
+    1. First, delete any clusters through the Porter dashboard
+    2. Navigate to **CloudFormation Stacks** in your AWS console
+    3. Select the stack named `PorterRole` and click **Delete**
+
+    This removes the IAM role and prevents Porter from accessing your account.
+  </Tab>
+
+  <Tab title="GCP">
+    Porter connects to GCP using a service account with permissions to manage your infrastructure.
+
+    ## Prerequisites
+
+    <AccordionGroup>
+      <Accordion title="Enable required GCP APIs" icon="toggle-on">
+        Before creating the service account, enable the following APIs in your [GCP Console](https://console.cloud.google.com):
+
+        1. Navigate to **APIs & Services**
+        2. Click **Enable APIs and Services**
+        3. Search for and enable each of these APIs:
+           - Compute Engine API
+           - Kubernetes Engine API
+           - Cloud Resource Manager API
+           - Container Registry API
+           - Artifact Registry API
+
+        Each API may take a few minutes to enable. Confirm all five are enabled before proceeding.
+      </Accordion>
+    </AccordionGroup>
+
+    ## Create the Service Account
+
+    <Steps>
+      <Step title="Navigate to Service Accounts">
+        In the [GCP Console](https://console.cloud.google.com), go to **IAM & Admin** → **Service Accounts**.
+      </Step>
+      <Step title="Create the account">
+        Click **Create Service Account** and enter a name (e.g., `porter-service-account`).
+      </Step>
+      <Step title="Grant permissions">
+        Grant the service account these five roles:
+
+        - **Cloud Storage > Storage Admin**
+        - **Compute Engine > Compute Admin**
+        - **Kubernetes Engine > Kubernetes Engine Admin**
+        - **Service Accounts > Service Account User**
+        - **Artifact Registry > Artifact Registry Administrator**
+
+        Click **Done** to create the account.
+      </Step>
+      <Step title="Create a key">
+        1. Find your new service account in the list
+        2. Under **Actions**, select **Manage keys**
+        3. Click **Add Key** → **Create new key**
+        4. Select **JSON** as the key type
+        5. The JSON key file downloads automatically—keep it safe
+      </Step>
+      <Step title="Upload to Porter">
+        In Porter, click **Drop a GCP Service Account JSON here, or click to browse** and upload the JSON key file.
+
+        Porter verifies the credentials and permissions (this takes about a minute).
+      </Step>
+    </Steps>
+
+    ## Revoking Access
+
+    To revoke Porter's access:
+
+    1. First, delete any clusters through the Porter dashboard
+    2. Navigate to **IAM & Admin** → **Service Accounts** in GCP Console
+    3. Find the Porter service account and delete it
+
+    This removes the service account and prevents Porter from accessing your account.
+  </Tab>
+
+  <Tab title="Azure">
+    Porter connects to Azure using a service principal with permissions to manage your infrastructure.
+
+    ## Create the Service Principal
+
+    You can create the service principal using our automated script (recommended) or manually.
+
+    <AccordionGroup>
+      <Accordion title="Option 1: Automated setup (recommended)">
+        If you have the Azure CLI installed and authenticated (`az login`), run our setup script:
+
+        ```bash
+        # Download the setup script
+        curl -O https://raw.githubusercontent.com/porter-dev/docs/main/scripts/setup-azure-porter.sh
+
+        # Make it executable
+        chmod +x setup-azure-porter.sh
+
+        # Run the script (optionally provide subscription ID)
+        ./setup-azure-porter.sh [your-subscription-id]
+        ```
+
+        The script:
+        - Enables all required Azure resource providers
+        - Creates the custom `porter-aks-restricted` role
+        - Creates the service principal with proper permissions
+        - Adds Microsoft Graph API permissions
+        - Grants admin consent (if you have permissions)
+        - Displays the credentials needed for Porter
+
+        <Info>
+        If the script fails to grant admin consent automatically, grant it manually in the Azure Portal: **App registrations** > **azure-porter-restricted-sp** > **API permissions** > **Grant admin consent for Default Directory**.
+        </Info>
+      </Accordion>
+
+      <Accordion title="Option 2: Manual setup">
+        ### Enable Resource Providers
+
+        Before creating the service principal, enable the required resource providers:
+
+        1. In the Azure portal, search for **Subscriptions**
+        2. Select your subscription and click **Resource providers**
+        3. Enable the following providers by selecting them and clicking **Register**:
+           - Microsoft.Capacity
+           - Microsoft.Compute
+           - Microsoft.ContainerRegistry
+           - Microsoft.ContainerService
+           - Microsoft.ManagedIdentity
+           - Microsoft.Network
+           - Microsoft.OperationalInsights
+           - Microsoft.OperationsManagement
+           - Microsoft.ResourceGraph
+           - Microsoft.Resources
+           - Microsoft.Storage
+
+        Registration may take a few minutes per provider. Confirm all providers are enabled before proceeding.
+
+        ### Create the Custom Role
+
+        Run the following commands in the Azure Cloud Shell (Bash) or your local terminal with the Azure CLI:
+
+        ```bash
+        # Set your subscription ID
+        PORTER_AZURE_SUBSCRIPTION_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+        # Create the role
+        envsubst << EOF | az role definition create --role-definition @-
+        {
+            "assignableScopes": ["/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"],
+            "description": "Grants Porter access to manage resources for an AKS cluster.",
+            "id": "/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}/providers/Microsoft.Authorization/roleDefinitions/porter-aks-restricted",
+            "isCustom": true,
+            "name": "porter-aks-restricted",
+            "permissions": [
+                {
+                    "actions": ["*"],
+                    "dataActions": [],
+                    "notActions": [
+                        "Microsoft.Authorization/elevateAccess/Action",
+                        "Microsoft.Blueprint/blueprintAssignments/write",
+                        "Microsoft.Blueprint/blueprintAssignments/delete",
+                        "Microsoft.Compute/galleries/share/action"
+                    ],
+                    "notDataActions": []
+                }
+            ],
+            "roleName": "Contributor",
+            "roleType": "BuiltInRole",
+            "type": "Microsoft.Authorization/roleDefinitions"
+        }
+        EOF
+        ```
+
+        ### Create the Service Principal
+
+        ```bash
+        az ad sp create-for-rbac \
+          --name="azure-porter-restricted-sp" \
+          --role="porter-aks-restricted" \
+          --scopes="/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"
+        ```
+
+        Save the output—you'll need these values:
+
+        ```json
+        {
+          "appId": "00000000-0000-0000-0000-000000000000",
+          "displayName": "azure-porter-restricted-sp",
+          "password": "0000-0000-0000-0000-000000000000",
+          "tenant": "00000000-0000-0000-0000-000000000000"
+        }
+        ```
+
+        ### Grant API Permissions
+
+        1. In the Azure portal, search for **App registrations**
+        2. Under **All applications**, select your new service principal
+        3. Navigate to **API Permissions**
+        4. Click **Add a permission** → **Microsoft Graph** → **Application permissions**
+        5. Select these permissions:
+           - Application.ReadWrite.All
+           - Directory.ReadWrite.All
+           - Domain.Read.All
+           - Group.Create
+           - Group.ReadWrite.All
+           - RoleManagement.ReadWrite.Directory
+           - User.ReadWrite.All
+        6. Click **Add permissions**
+        7. Click **Grant admin consent for Default Directory**
+      </Accordion>
+    </AccordionGroup>
+
+    ## Enter Credentials in Porter
+
+    In Porter, enter the following values from your service principal:
+
+    | Field | Value |
+    |-------|-------|
+    | **Subscription ID** | Your Azure subscription ID |
+    | **Application (Client) ID** | The `appId` from your service principal |
+    | **Client Secret** | The `password` from your service principal |
+    | **Tenant ID** | The `tenant` from your service principal |
+
+    ## Rotating Credentials
+
+    Azure requires client secrets to expire every 365 days. When a secret expires, Porter can't manage infrastructure or deploy updates (existing workloads continue running).
+
+    To refresh your client secret:
+
+    1. Visit [https://aka.ms/NewClientSecret](https://aka.ms/NewClientSecret)
+    2. Select the app ID for your Porter service principal
+    3. Generate a new client secret and copy the value
+    4. In Porter, navigate to **Integrations** → **Azure**
+    5. Update the **Password** field with the new value
+
+    ## Revoking Access
+
+    To revoke Porter's access:
+
+    1. First, delete any clusters through the Porter dashboard
+    2. In the Azure portal, search for **App registrations**
+    3. Find and delete the Porter service principal
+    4. Optionally, delete the custom role definition
+
+    This removes the service principal and prevents Porter from accessing your account.
+  </Tab>
+</Tabs>
+

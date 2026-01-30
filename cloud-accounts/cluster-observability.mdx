@@ -1,0 +1,82 @@
+---
+title: "Cluster Observability"
+sidebarTitle: "Cluster Observability"
+description: "Monitor cluster health, resource usage, and infrastructure metrics"
+---
+
+Porter provides built-in observability for your cluster infrastructure through the **Infrastructure** dashboard. Access it by clicking **Infrastructure** in the left sidebar.
+
+---
+
+## Pods
+
+The **Pods** tab provides a real-time view of all pods running in your cluster.
+
+- **Search**: Filter pods by name
+- **Filters**: Filter by status or namespace
+
+Each pod displays:
+
+| Column | Description |
+|--------|-------------|
+| **Pod name** | The name of the pod |
+| **Namespace** | Kubernetes namespace (e.g., `kube-system`, `default`) |
+| **Status** | Current state (Running, Pending, Failed, etc.) |
+| **Ready** | Container readiness (e.g., `1/1`) |
+| **Restarts** | Number of container restarts |
+| **CPU** | CPU usage |
+| **Memory** | Memory usage |
+| **Memory %** | Percentage of memory limit used |
+| **Age** | Time since pod creation |
+
+---
+
+## Nodes
+
+The **Nodes** tab shows your cluster's node groups and individual nodes.
+
+### Node Groups View
+
+The default view displays all node groups:
+
+| Column | Description |
+|--------|-------------|
+| **Node group** | Name of the node group (e.g., default, monitoring, system) |
+| **Instance type** | The machine type for nodes in this group |
+| **Utilization** | Visual indicator of resource usage |
+| **Actions** | Link to view detailed metrics |
+
+### Individual Nodes View
+
+Click on a node group to see individual nodes:
+
+- **Node name**: The cloud provider's node identifier
+- **Node group**: Which node group this node belongs to
+- **Instance type**: The machine type
+- **CPU**: CPU utilization shown as utilized (yellow) vs reserved (blue)
+- **Memory**: Memory utilization shown as utilized (yellow) vs reserved (blue)
+- **Status**: Node health status (Ready, NotReady)
+
+Click **Metrics >** on any node group to view historical instance counts over time.
+
+---
+
+## Integrating External Monitoring
+
+For application-level monitoring and alerting, integrate with external observability platforms:
+
+<CardGroup cols={3}>
+  <Card title="Datadog" icon="dog" href="/observability/integrations">
+    Full-stack monitoring with APM, logs, and infrastructure metrics
+  </Card>
+  <Card title="New Relic" icon="chart-line" href="/observability/integrations">
+    Application performance monitoring and alerting
+  </Card>
+  <Card title="Grafana" icon="chart-area" href="/observability/integrations">
+    Dashboards and visualization for metrics and logs
+  </Card>
+</CardGroup>
+
+See [Third party observability](/addons/third-party-observability) or reach out to support for more information.
+
+

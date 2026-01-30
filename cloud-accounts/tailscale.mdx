@@ -1,0 +1,120 @@
+---
+title: "Tailscale VPN"
+sidebarTitle: "Tailscale VPN"
+description: "Configure VPN access for your cluster using Tailscale"
+---
+
+Tailscale is a VPN that creates a secure network between your servers, computers, and cloud instances. Porter integrates with Tailscale to provide secure access to your cluster resources over a private network (Tailnet).
+
+To learn more about how Tailscale works under the hood, check out this [overview on their official blog](https://tailscale.com/blog/how-tailscale-works/).
+
+## Setting up Tailscale
+
+### Step 1: Create an OAuth Client in Tailscale
+
+<Steps>
+  <Step title="Add tag owners to your policy">
+    In the Tailscale admin dashboard, navigate to the **Access controls** tab and add the following to your policy file:
+
+    ```json
+    "tagOwners": {
+      "tag:k8s-operator": [],
+      "tag:k8s":          ["tag:k8s-operator"],
+    },
+    ```
+
+    ![Tailscale Policy File](/images/other/tailscale-policy-file.png)
+
+    Click **Save** to save the changes.
+  </Step>
+  <Step title="Generate OAuth credentials">
+    1. Navigate to **Settings** → **OAuth clients** → **Generate OAuth client...**
+    2. Select the **Core** and **Auth keys** scopes with write permissions
+    3. Click **Add tags** and select the `k8s-operator` tag
+
+    ![Tailscale OAuth Scopes](/images/other/tailscale-oauth-scopes.png)
+
+    4. Click **Generate client**
+
+    <Warning>
+    Save the credentials securely—you will need them in the next steps and cannot retrieve them later.
+    </Warning>
+  </Step>
+</Steps>
+
+### Step 2: Enable VPN on Your Cluster
+
+<Steps>
+  <Step title="Navigate to VPN settings">
+    In the Porter dashboard, go to **Infrastructure** → **VPN** tab.
+
+  </Step>
+  <Step title="Enter OAuth credentials">
+    Input your Tailscale OAuth Client ID and OAuth Secret.
+
+    Click **Save OAuth Credentials**.
+  </Step>
+  <Step title="Enable VPN">
+    Check **Enable VPN for this cluster** and update your cluster.
+
+    The cluster will update, and once finished, you should see the cluster and Tailscale operator in your Tailnet.
+  </Step>
+</Steps>
+
+### Step 3: Approve Routes in Tailscale
+
+By default, Porter ensures that all Porter-managed applications and datastores are accessible over the Tailnet. Each route must be approved by an admin in the Tailscale Admin Panel.
+
+<Steps>
+  <Step title="Open the Tailscale Admin Panel">
+    Visit your [Tailscale Admin Panel](https://login.tailscale.com/admin/machines) and click **Machines**.
+  </Step>
+  <Step title="Find your cluster">
+    Locate the machine named `cluster-ABC`, where `ABC` is the name of your Porter cluster.
+  </Step>
+  <Step title="Approve routes">
+    1. Click the three dots on the right side of the cluster machine
+    2. Click **Edit Route settings...**
+    3. Click **Approve All** to approve all routes
+  </Step>
+  <Step title="Enable exit node (optional)">
+    If you intend to use `porter app run` or `porter datastore connect` commands, also check **Use as Exit Node**.
+  </Step>
+</Steps>
+
+Your Tailscale subnet router is now online. All Porter applications and datastores should be accessible over the Tailnet.
+
+---
+
+## Subnet Routes
+
+By default, the subnet routes for your cluster and all connected datastores are routed through Tailscale.
+
+To add additional subnet routes:
+
+1. Navigate to **Infrastructure** → **VPN**
+2. Click **+ Add subnet route**
+3. Enter the subnet CIDR you want to route through Tailscale
+4. Update your cluster
+
+---
+
+## Troubleshooting
+
+### VPN not connecting
+
+If your VPN connection isn't working:
+
+1. Verify the OAuth credentials are correct in Porter
+2. Check that the `k8s-operator` tag is properly configured in your Tailscale ACL
+3. Ensure routes are approved in the Tailscale Admin Panel
+
+### Cannot access cluster resources
+
+If you can't reach cluster resources over Tailscale:
+
+1. Verify Tailscale is running on your local machine
+2. Check that routes are approved in the Tailscale Admin Panel
+3. Ensure your Tailscale client is connected to the same Tailnet
+4. Try disconnecting and reconnecting your Tailscale client
+

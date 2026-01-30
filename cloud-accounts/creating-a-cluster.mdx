@@ -1,0 +1,264 @@
+---
+title: "Creating a Cluster"
+sidebarTitle: "Creating a Cluster"
+description: "Provision a cluster in your cloud account"
+---
+
+After [connecting your cloud account](/cloud-accounts/connecting-a-cloud-account), you can create a cluster. Porter handles all the complexity of cluster provisioning, including networking, load balancers, and node groups.
+
+## Provisioning Your Cluster
+
+<Tabs>
+  <Tab title="AWS">
+    <Steps>
+      <Step title="Review costs">
+        Porter displays estimated monthly costs for your infrastructure (~$225/month for AWS).
+
+        These estimates are for the default cluster configuration. Actual costs vary based on usage, region, and customizations.
+
+        Review the cost breakdown and click **Accept** to continue.
+      </Step>
+      <Step title="Configure your cluster">
+        Porter pre-configures your cluster with sensible defaults:
+
+        - **Cluster name**: Auto-generated based on your project
+        - **Region**: Defaults to `us-east-1`
+        - **Node groups**: EKS clusters are initialially provisioning with cost-optimal node groups. You can edit your node group configuration after provisioning is complete
+
+        <Info>
+        For guidance on choosing a region: if you have an external database, choose a region close to it. Otherwise, choose a region near your primary customer base.
+        </Info>
+
+        You can customize these settings or accept the defaults.
+      </Step>
+      <Step title="Handle quota limits (if needed)">
+        If AWS is limiting your account's resource quota, Porter displays a warning and offers to auto-request quota increases on your behalf.
+
+        **Allow Porter to auto-request AWS quota** is enabled by default. This is the recommended approach.
+
+        Alternatively, you can manually request quota increases through the [AWS Service Quotas console](https://console.aws.amazon.com/servicequotas/). If you go the manual route, you won't be able to provision until the quota increase requests are approved.
+      </Step>
+      <Step title="Provision">
+        Click **Provision** to start creating your infrastructure.
+
+        <Warning>
+        Provisioning takes approximately 30-45 minutes. You can close the browser and return later—Porter continues working in the background.
+        </Warning>
+      </Step>
+    </Steps>
+
+    ### Troubleshooting
+
+    <AccordionGroup>
+      <Accordion title="Provisioning takes longer than 45 minutes">
+        If your cluster has been provisioning for more than 45 minutes, there may be an issue:
+
+        - Verify that the IAM role still exists in your AWS account
+        - Check your AWS Service Quotas to ensure they were approved
+        - Verify that the selected region supports the requested instance types
+
+        If issues persist, contact us through the dashboard chat bot with your project ID.
+      </Accordion>
+      <Accordion title="Permission errors during provisioning">
+        If you encounter permission errors:
+
+        - Verify the CloudFormation stack created successfully and the role exists
+        - Ensure the role has not been modified after creation
+        - Check that your AWS account has not applied SCPs (Service Control Policies) that restrict Porter's actions
+      </Accordion>
+      <Accordion title="Quota increase requests not approved">
+        AWS typically approves quota increases automatically, but some may require manual review:
+
+        - Check the status of quota requests in the [AWS Service Quotas console](https://console.aws.amazon.com/servicequotas/)
+        - Requests under manual review typically take 24-48 hours
+        - If urgent, contact AWS support to expedite the review
+      </Accordion>
+      <Accordion title="CloudFormation stack creation fails">
+        If the CloudFormation stack fails to create:
+
+        - Ensure you have sufficient permissions in your AWS account to create IAM roles
+        - Check that you're logged into the correct AWS account (the account ID should match)
+        - Verify your account is in good standing and billing is enabled
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="GCP">
+    <Steps>
+      <Step title="Review costs">
+        Porter displays estimated monthly costs for your infrastructure (~$253/month for GCP).
+
+        These estimates are for the default cluster configuration. Actual costs vary based on usage, region, and customizations.
+
+        Review the cost breakdown and click **Accept** to continue.
+      </Step>
+      <Step title="Pass provision checks">
+        Before provisioning, Porter verifies your GCP project is properly configured. If any checks fail, troubleshooting steps are shown on the dashboard.
+
+        Common checks include:
+        - Required APIs are enabled
+        - Service account has necessary permissions
+        - Project has billing enabled
+      </Step>
+      <Step title="Configure your cluster">
+        Porter pre-configures your cluster with sensible defaults:
+
+        - **Cluster name**: Auto-generated based on your project
+        - **Region**: Defaults to `us-east1`
+        - **Node groups**: Pre-configured with appropriate instance types
+
+        <Info>
+        For guidance on choosing a region: if you have an external database, choose a region close to it. Otherwise, choose a region near your primary customer base.
+        </Info>
+
+        You can customize these settings or accept the defaults.
+      </Step>
+      <Step title="Provision">
+        Click **Provision** to start creating your infrastructure.
+
+        <Warning>
+        Provisioning takes approximately 30-45 minutes. You can close the browser and return later—Porter continues working in the background.
+        </Warning>
+      </Step>
+    </Steps>
+
+    ### Troubleshooting
+
+    <AccordionGroup>
+      <Accordion title="Provisioning takes longer than 45 minutes">
+        If your cluster has been provisioning for more than 45 minutes:
+
+        - Verify the service account still exists and has the required permissions
+        - Check that all required APIs are still enabled
+        - Verify the GCP project has billing enabled
+
+        If issues persist, contact us through the dashboard chat bot with your project ID.
+      </Accordion>
+      <Accordion title="API not enabled errors">
+        If you see errors about APIs not being enabled:
+
+        1. Navigate to **APIs & Services** in the GCP Console
+        2. Verify all five required APIs are enabled:
+           - Compute Engine API
+           - Kubernetes Engine API
+           - Cloud Resource Manager API
+           - Container Registry API
+           - Artifact Registry API
+        3. Return to Porter and retry provisioning
+      </Accordion>
+      <Accordion title="Permission denied errors">
+        If you encounter permission errors:
+
+        - Verify the service account has all five required roles
+        - Check that the JSON key file matches the service account
+        - Ensure the service account hasn't been modified since creation
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Azure">
+    <Steps>
+      <Step title="Review costs">
+        Porter displays estimated monthly costs for your infrastructure (~$165/month for Azure).
+
+        These estimates are for the default cluster configuration. Actual costs vary based on usage, region, and customizations.
+
+        Review the cost breakdown and click **Accept** to continue.
+      </Step>
+      <Step title="Request compute quotas">
+        By default, Azure limits the types of resources you can provision. Before provisioning, you may need to request quota increases.
+
+        In the Azure portal:
+        1. Navigate to your subscription
+        2. Select **Usage + quotas**
+        3. Set the resource filter to **Compute** and region to your desired region
+
+        Request increases for:
+
+        | Resource Family | Recommended Quota |
+        |-----------------|-------------------|
+        | Total Regional vCPUs | 40 |
+        | Standard Basv2 Family vCPUs | 40 |
+
+        Click **Request quota increase** for each resource. Requests are typically approved automatically within a few minutes. If not, fill out the support ticket as prompted.
+      </Step>
+      <Step title="Configure your cluster">
+        Porter pre-configures your cluster with sensible defaults:
+
+        - **Cluster name**: Auto-generated based on your project
+        - **Region**: Defaults to `eastus`
+        - **Azure tier**: Free tier for non-production, Standard tier for production
+        - **Node groups**: Pre-configured with appropriate instance types
+
+        <Info>
+        For guidance on choosing a region: if you have an external database, choose a region close to it. Otherwise, choose a region near your primary customer base.
+        </Info>
+
+        You can customize these settings or accept the defaults. The Azure tier can be changed after cluster creation.
+      </Step>
+      <Step title="Provision">
+        Click **Provision** to start creating your infrastructure.
+
+        <Warning>
+        Provisioning takes approximately 30-45 minutes. You can close the browser and return later—Porter continues working in the background.
+        </Warning>
+      </Step>
+    </Steps>
+
+    ### Troubleshooting
+
+    <AccordionGroup>
+      <Accordion title="Provisioning takes longer than 45 minutes">
+        If your cluster has been provisioning for more than 45 minutes:
+
+        - Verify the service principal still exists and has the required permissions
+        - Check that all resource providers are registered
+        - Verify your compute quota requests were approved
+
+        If issues persist, contact us through the dashboard chat bot with your project ID.
+      </Accordion>
+      <Accordion title="Quota errors">
+        If you see errors about insufficient quota:
+
+        1. Navigate to **Usage + quotas** in your Azure subscription
+        2. Check the status of your quota requests
+        3. If pending, wait for approval or contact Azure support
+        4. Once approved, retry provisioning in Porter
+      </Accordion>
+      <Accordion title="Resource provider not registered">
+        If you see errors about resource providers:
+
+        1. Navigate to your subscription's **Resource providers** page
+        2. Find the mentioned provider and click **Register**
+        3. Wait for registration to complete
+        4. Retry provisioning in Porter
+      </Accordion>
+      <Accordion title="Permission errors">
+        If you encounter permission errors:
+
+        - Verify the service principal has the `porter-aks-restricted` role
+        - Check that admin consent was granted for Microsoft Graph permissions
+        - Ensure the client secret hasn't expired
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## After Provisioning
+
+Once your cluster is ready, you'll see the Porter dashboard. From here you can:
+
+<CardGroup cols={3}>
+  <Card title="Deploy your first app" icon="rocket" href="/deploy/overview">
+    Deploy an application from GitHub or a container registry.
+  </Card>
+  <Card title="Configure node groups" icon="server" href="/cloud-accounts/node-groups">
+    Customize instance types and scaling settings.
+  </Card>
+  <Card title="Cluster observability" icon="chart-mixed" href="/cloud-accounts/cluster-observability">
+    Monitor cluster health and resource usage.
+  </Card>
+</CardGroup>
+
