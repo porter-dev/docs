@@ -25,9 +25,11 @@ For Web services, configure HTTP-based health checks where your application retu
 - `200` status code when ready to receive traffic
 - `500`-level error code when not ready
 
-For example, if you configure `/healthz` as your health check endpoint, no traffic will be routed to the web service until that endpoint returns a `200` status code.
+Health checks can be configured in the **Advanced** tab:
 
-See [Health Checks](/configure/health-checks) for detailed configuration options.
+![Health Check Configuration](/images/configure/health-checks.png)
+
+For example, if you configure `/healthz` as your health check endpoint, no traffic will be routed to the web service until that endpoint returns a `200` status code.
 
 ### Workers
 
