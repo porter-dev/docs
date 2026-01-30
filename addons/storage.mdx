@@ -1,0 +1,97 @@
+---
+title: "Storage"
+sidebarTitle: "Storage"
+description: "Add persistent storage with shared disks for your applications"
+---
+
+Porter makes it easy to provision persistent storage that can be shared across multiple services. This is useful for read-intensive applications and workloads with low-latency read requirements.
+
+<Info>
+Persistent storage is currently supported on **AWS only** (EFS). GCP and Azure storage support is on the roadmap.
+</Info>
+
+---
+
+## Persistent Disk (EFS)
+
+Amazon Elastic File System (EFS) provides a shared filesystem that multiple services can mount simultaneously. Any services mounting the disk can read and write to the same files.
+
+### Use Cases
+
+- **Shared file storage**: Multiple services need access to the same files
+- **Read-intensive workloads**: Cache frequently accessed data on disk
+- **Media processing**: Store uploaded files for processing by multiple workers
+- **Machine learning**: Share model files across inference services
+
+### Setup
+
+<Steps>
+  <Step title="Create the persistent disk">
+    Navigate to **Add-ons** in your Porter dashboard and create a **Persistent Disk** add-on.
+  </Step>
+  <Step title="Enable persistent disk on your service">
+    Go to your application's **Services** tab, select the service, and navigate to **Advanced Settings**.
+
+    Enable **Persistent disk**.
+  </Step>
+  <Step title="Configure the disk name">
+    Enter the name of the persistent disk add-on you created.
+  </Step>
+  <Step title="Redeploy your application">
+    Deploy your application. The disk will be mounted automatically.
+  </Step>
+</Steps>
+
+### Accessing the Disk
+
+Once configured, your service can access the shared disk at:
+
+```
+/data/efs/<service_name>
+```
+
+All services with the persistent disk enabled will have read and write access to this directory.
+
+### Example
+
+If you have two services (`api` and `worker`) both mounting the same persistent disk 'my-disk':
+
+- `api` writes a file to `/data/api/my-disk/uploads/image.png`
+- `worker` can read the same file from `/data/worker/my-disk/image.png`
+
+---
+
+## Best Practices
+
+### Use for appropriate workloads
+
+EFS is optimized for throughput rather than IOPS. It's best suited for:
+- Large file reads and writes
+- Shared access patterns
+- Workloads that can tolerate slightly higher latency than local disk
+
+For high-IOPS workloads like databases, use [Datastores](/addons/datastores) instead.
+
+### Monitor storage usage
+
+Keep track of storage usage to avoid unexpected costs. EFS charges based on the amount of data stored.
+
+### Plan for data migration
+
+If you need to move data off EFS, plan your migration strategy before deleting the add-on.
+
+---
+
+## Deleting a Persistent Disk
+
+<Warning>
+Deleting the persistent disk add-on will remove all mounts to the disk. Any applications will lose access to the files stored on the disk.
+</Warning>
+
+Before deleting:
+
+1. Migrate any important data to another storage location
+2. Update your services to remove the persistent disk configuration
+3. Redeploy affected services
+4. Delete the persistent disk add-on
+

@@ -119,6 +119,16 @@
           ]
         },
         {
+          "group": "Add-ons",
+          "pages": [
+            "addons/overview",
+            "addons/datastores",
+            "addons/custom-helm-charts",
+            "addons/third-party-observability",
+            "addons/storage"
+          ]
+        },
+        {
           "group": "Command Line Interface (CLI)",
           "pages": [
             "cli/installation",
