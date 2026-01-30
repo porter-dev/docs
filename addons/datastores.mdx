@@ -10,13 +10,13 @@ Porter simplifies database provisioning by automatically setting up all networki
 Datastores are currently supported on **AWS only**. GCP and Azure datastore support is on the roadmap.
 </Info>
 
-## Architecture
+## AWS Architecture
 
-Datastores are provisioned in a separate VPC from your cluster VPC. Porter automatically:
+Datastores are provisioned in a VPC that is separate from the VPC of your clusters. Porter automatically:
 
 - Peers the datastore VPC to your cluster VPC
 - Configures subnets, routing tables, and security groups
-- Ensures traffic travels exclusively through private subnets
+- Ensures traffic flows exclusively through private subnets
 
 This architecture keeps your database secure and accessible only from applications running in your cluster.
 
@@ -49,7 +49,7 @@ psql -h localhost -p <port> -U <username> -l
 ```
 
 <Info>
-This requires [Tailscale VPN](/cloud-accounts/tailscale) to be configured for your cluster.
+If your cluster control plane access is set to private, using this command requires [Tailscale VPN](/cloud-accounts/tailscale) to be configured for your cluster.
 </Info>
 
 ---
@@ -62,7 +62,7 @@ Postgres datastores can be deployed in different configurations depending on you
 |--------------|----------|-----------------|
 | **In-cluster** | Quick setup for development | Dev/staging environments |
 | **Single RDS instance (Multi-AZ)** | Standard managed database | Production workloads |
-| **Aurora cluster** | Auto-scaling storage with enhanced HA | High-availability production |
+| **Aurora cluster (Multi-AZ)** | Auto-scaling storage and enhanced failover | Production workloads with stringent high-availability requirements |
 
 ### In-cluster Postgres
 
@@ -114,6 +114,46 @@ Provisions an Amazon Elasticache replication group with:
 
 ---
 
+## Disaster Recovery
+
+Porter supports some options for disaster recovery of RDS datastores.
+
+### Restoring from a snapshot
+
+You can restore a snapshot to a new datastore, and the datastore will be accessible from the applications running in your cluster. This can significantly
+reduce the time to recovery during an emergency.
+
+<Steps>
+  <Step title="Enable">
+  Create a new datastore in the dashboard. In the creation form, click on **"Enable snapshot restore"**
+  </Step>
+  <Step title="Confirm">
+    Select one of the available snapshots to restore or enter the id manually. Only snapshots in the same region as the database are listed.
+  </Step>
+  <Step title="Create">
+    Create the datastore. This will start the process of restoring the snapshot.
+  </Step>
+</Steps>
+
+### Cloning an Aurora cluster
+
+Aurora clusters support cloning an existing cluster using fast-cloning. This process is faster than restoring from a snapshot, and can be used
+to recover from an emergency, or to quickly create copies of your database for experiments.
+
+<Steps>
+  <Step title="Enable">
+  Create a new datastore in the dashboard. In the creation form, click on **"Enable database cloning"**
+  </Step>
+  <Step title="Confirm">
+    Select one of the existing Aurora clusters or enter the identifier manually. Only clusters in the same region as the selected one are listed.
+  </Step>
+  <Step title="Create">
+    Create the datastore. This will start the process of cloning the cluster.
+  </Step>
+</Steps>
+
+---
+
 ## Compliance
 
 If the compliance feature is enabled for your project, Porter automatically configures monitoring alarms for RDS and Aurora datastores:
@@ -123,4 +163,3 @@ If the compliance feature is enabled for your project, Porter automatically conf
 - Storage capacity alarms
 
 These alarms help ensure your databases remain healthy and within operational thresholds.
-
