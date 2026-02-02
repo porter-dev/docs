@@ -1,0 +1,109 @@
+---
+title: "Deploy from a GitHub repository"
+---
+
+Porter connects to your GitHub repositories to build and deploy your applications. When you connect a repository, Porter detects your app's framework, identifies services, and configures sensible defaults.
+
+This guide covers deploying applications from GitHub. If you're deploying from a container registry instead, see [Deploy from a Docker registry](/applications/deploy/deploy-from-docker-registry).
+
+---
+
+## Quick deploy
+
+For most applications, Porter's automatic detection handles the heavy lifting. Here's how to get your application running:
+
+### Connect your repository
+
+From the Porter dashboard, navigate to your project and click Create Application. Porter attempts to deploy from a GitHub repository by default.
+
+![Source selection screen](/images/deploy/v2/github-source-selection.webp)
+
+If this is your first time deploying from GitHub, you'll need to connect your GitHub account. Click Connect repositories to link GitHub, then authorize access to proceed. You can choose to grant access to all repositories or select specific ones. Porter only needs read access to detect your code, and write access to set up automated deployments.
+
+![GitHub repository and branch selector](/images/deploy/v2/github-repo-branch-selector.webp)
+
+Once connected, select the repository containing your application code. Porter auto-selects the repository's default branch (usually `main` or `master`) so you can start deploying immediately. If you need a different target for non‑production, use the Branch selector to switch to `dev`, `staging`, or any other branch.
+
+### Review detected applications
+
+After you select a repository and branch, Porter scans your code. It identifies frameworks and languages, locates Dockerfiles, and determines the required services.
+
+![Detection in progress](/images/deploy/v2/detection-loading.webp)
+
+Within a few seconds, you'll see a list of detected applications. Each card shows the app name (from your repo or directory), the detected framework or build method, and the path in your repository. If the detected build method isn't right for your application, click the configure button (gear icon) on the card to change it.
+
+![Detected applications list](/images/deploy/v2/detected-apps-list.webp)
+
+For a simple repository with a single application, you'll typically see one card. For monorepos containing multiple services, Porter detects each application separately. For example, a Node.js API in `/api`, a React frontend in `/web`, and a Python worker in `/jobs` each appear as distinct applications you can configure independently.
+
+If Porter didn't detect an application you expected, or if you want to add another manually, click Add Application. To edit a detected application, click the configure button (gear icon) on the card to make updates.
+
+![Settings button on application card](/images/deploy/v2/app-card-settings-button.webp)
+
+### Deploy
+
+Once applications are detected, you can review each app's start command and port, and open each app's configuration page to see other pre‑configured values. When ready, deploy using the "Deploy X applications" button.
+
+Porter creates a GitHub Actions workflow in your repository that handles building and deploying your application on every push to your selected branch. Your first deployment starts as soon as you merge Porter's GitHub Actions pull request.
+
+That's it for a basic deployment. Porter has configured your application with production-ready defaults: appropriate resource allocation, a web service listening on the detected port, and automatic builds on every commit.
+
+The sections below cover customizing these defaults when you need more control.
+
+---
+
+## Customizing your deployment
+
+Porter's defaults work well for many applications, but you have full control over every aspect of your deployment. The following sections explain each configuration area in detail.
+
+### Build configuration
+
+Porter needs to know how to turn your source code into a runnable container. There are two approaches: Docker (via Dockerfiles) and buildpacks.
+
+#### Docker builds
+
+If your repository contains a Dockerfile, Porter can use it to build your application. This gives you complete control over the build process and is the right choice when you have custom system dependencies, need a specific base image, or have an application that buildpacks don't support.
+
+When you select Docker as your build method, you'll need to specify the path to your Dockerfile relative to the repository root. If your Dockerfile is at the root level, this is simply `Dockerfile`. For monorepos, it might be `./api/Dockerfile` or `./frontend/Dockerfile`.
+
+![Dockerfile path selector](/images/deploy/v2/dockerfile-path-selector.webp)
+
+#### Buildpacks
+
+Buildpacks automatically detect your application's language and dependencies, then build an optimized container image without requiring you to write a Dockerfile. Porter supports buildpacks for Node.js (including Next.js), Python (Flask, FastAPI, Django), Ruby (Rails), and Go.
+
+When Porter detects a supported framework, it selects the appropriate buildpack automatically. You'll see the detected framework displayed on the application card. If the detection isn't quite right, you can override it by selecting a different framework from the dropdown in an application's configuration page.
+
+![Build method selector](/images/deploy/v2/build-method-selector.webp)
+
+Buildpacks work well when your application follows standard conventions for its framework. They handle dependency installation, asset compilation, and runtime configuration automatically.
+
+#### Build path
+
+The build path determines which directory Porter uses as the root for your build. For most repositories, this is `./` (the repository root). In a monorepo, you'll typically set this to the directory containing the specific application, like `./api` or `./frontend`.
+
+The build path affects where Porter looks for your Dockerfile (if using Docker builds) and which files are available during the build process.
+
+![Build path selector](/images/deploy/v2/build-path-selector.webp)
+
+---
+
+### Configuring services
+
+A Porter application consists of one or more **services**—web services for HTTP traffic, workers for background processing, and jobs for scheduled tasks. By default, Porter configures a single web service for detected applications.
+
+For a complete guide to service types, resource allocation, networking, environment variables, health checks, and more, see [Services](/applications/deploy/v2/services).
+
+---
+
+## What happens when you deploy
+
+When you click Deploy, Porter initiates several processes:
+
+First, Porter creates a GitHub Actions workflow file in your repository at `.github/workflows/porter.yml`. This workflow triggers on pushes to your selected branch, building your application and deploying it to Porter. You'll see a pull request created with this workflow file, and merging this PR enables automated deployments.
+
+The initial deployment builds your application image using the configured build method and starts your services with the specified configuration. You can monitor deployment progress from the application dashboard, which shows build logs, deployment status, and any errors that occur.
+
+Once deployed, subsequent pushes to your branch trigger automatic rebuilds and deployments. Each deployment creates new container instances, runs health checks (if configured), and shifts traffic only after the new instances are ready.
+
+From your application dashboard, you can view logs, monitor resource usage, check deployment history, and make configuration changes. Configuration changes from the dashboard trigger new deployments but do not rebuild your application; rebuilds only happen when triggered from GitHub.

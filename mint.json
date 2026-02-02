@@ -59,33 +59,33 @@
             {
               "group": "Deploy",
               "pages": [
-                "deploy/overview",
-                "deploy/types-of-services",
-                "deploy/deploy-from-github-repo",
-                "deploy/deploy-from-docker-registry",
-                "deploy/configuring-application-services",
-                "deploy/builds",
-                "deploy/multiple-deploys-from-same-build",
-                "deploy/pre-deploy-jobs",
-                "deploy/rollbacks",
-                "deploy/using-other-ci-tools",
+                "applications/deploy/overview",
+                "applications/deploy/types-of-services",
+                "applications/deploy/deploy-from-github-repo",
+                "applications/deploy/deploy-from-docker-registry",
+                "applications/deploy/configuring-application-services",
+                "applications/deploy/builds",
+                "applications/deploy/multiple-deploys-from-same-build",
+                "applications/deploy/pre-deploy-jobs",
+                "applications/deploy/rollbacks",
+                "applications/deploy/using-other-ci-tools"
+              ]
+            },
+            {
+              "group": "Configuration as Code",
+              "pages": [
+                "applications/configuration-as-code/overview",
+                "applications/configuration-as-code/reference",
+                "applications/configuration-as-code/addons-porter-yaml",
                 {
-                  "group": "Configuration as Code",
+                  "group": "Service Configuration",
                   "pages": [
-                    "deploy/configuration-as-code/overview",
-                    "deploy/configuration-as-code/reference",
-                    "deploy/configuration-as-code/addons-porter-yaml",
-                    {
-                      "group": "Service Configuration",
-                      "pages": [
-                        "deploy/configuration-as-code/services/web-service",
-                        "deploy/configuration-as-code/services/worker-service",
-                        "deploy/configuration-as-code/services/job-service",
-                        "deploy/configuration-as-code/services/predeploy",
-                        "deploy/configuration-as-code/services/autoscaling",
-                        "deploy/configuration-as-code/services/connections"
-                      ]
-                    }
+                    "applications/configuration-as-code/services/web-service",
+                    "applications/configuration-as-code/services/worker-service",
+                    "applications/configuration-as-code/services/job-service",
+                    "applications/configuration-as-code/services/predeploy",
+                    "applications/configuration-as-code/services/autoscaling",
+                    "applications/configuration-as-code/services/connections"
                   ]
                 }
               ]
@@ -93,27 +93,27 @@
             {
               "group": "Configure",
               "pages": [
-                "configure/basic-configuration",
-                "configure/environment-groups",
-                "configure/autoscaling",
-                "configure/custom-domains",
-                "configure/zero-downtime-deployments",
-                "configure/advanced-networking"
+                "applications/configure/basic-configuration",
+                "applications/configure/environment-groups",
+                "applications/configure/autoscaling",
+                "applications/configure/custom-domains",
+                "applications/configure/zero-downtime-deployments",
+                "applications/configure/advanced-networking"
               ]
             },
             {
               "group": "Observability",
               "pages": [
-                "observability/monitoring",
-                "observability/logging",
-                "observability/alerts",
-                "observability/app-metadata",
-                "observability/custom-metrics-and-autoscaling"
+                "applications/observability/monitoring",
+                "applications/observability/logging",
+                "applications/observability/alerts",
+                "applications/observability/app-metadata",
+                "applications/observability/custom-metrics-and-autoscaling"
               ]
             },
             {
               "group": "Debug",
-              "pages": ["debug/common-errors"]
+              "pages": ["applications/debug/common-errors"]
             }
           ]
         },

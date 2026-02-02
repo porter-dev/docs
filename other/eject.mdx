@@ -20,10 +20,10 @@ Click on that button, and copy/paste the content of the `porter.yaml` file into 
 Once the `porter.yaml` file is ready and is present in the root folder of your repository, head back to the [dashboard](https://dashboard.porter.run) and deploy a new application from your github repository. 
 Porter will detect your `porter.yaml` file and replicate your application.
 
-For a step by step guide on how to do this, [please follow this guide](/deploy/deploy-from-github-repo).
+For a step by step guide on how to do this, [please follow this guide](/applications/deploy/deploy-from-github-repo).
 
 # Step 4: Switch over DNS
 
 The final step is to switch over your production traffic by changing your DNS records. Navigate to your DNS provider and edit the CNAME or A record that is pointing at your original application on Porter Cloud to point at the new IP address.
-You can find the Load Balancer's IP address to point at in the **Networking** tab of your application. Refer to [this guide](/configure/custom-domains) for more details. This switchover may incur downtime. In most cases, it should not incur more than
+You can find the Load Balancer's IP address to point at in the **Networking** tab of your application. Refer to [this guide](/applications/configure/custom-domains) for more details. This switchover may incur downtime. In most cases, it should not incur more than
 5 minutes of downtime especially if you keep the original application running on the Porter Cloud; however, we recommend switching over during your low-traffic hours.

@@ -17,7 +17,7 @@ the required infrastructure in your AWS account.
 
 <Info> Estimated time of completion: 5 minutes </Info>
 
-Once your infrastructure has been provisioned, you will be able to [launch applications](/deploy/overview#launch-your-application) from the dashboard.
+Once your infrastructure has been provisioned, you will be able to [launch applications](/applications/deploy/overview#launch-your-application) from the dashboard.
 You can deploy your application on Porter using a `porter.yaml` file. While this is an optional step, `porter.yaml` allows you to declare your
 application in a similar way as you can on Heroku using a `Procfile`. 
 
@@ -41,7 +41,7 @@ apps:
     run: "bundle exec rake db:migrate"
 ```
 
-It is possible to configure more than just start commands on `porter.yaml`. For a full guide on how to write a `porter.yaml` file, [take a look here](/deploy/configuration-as-code/overview).
+It is possible to configure more than just start commands on `porter.yaml`. For a full guide on how to write a `porter.yaml` file, [take a look here](/applications/configuration-as-code/overview).
 
 # Step 3: Launch Applications
 
@@ -65,7 +65,7 @@ and are using any of the following custom buildpacks, we maintain a fork of thes
 If you'd like to request a custom buildpack that you are using, please email us at contact [at] porter.run with the subject "Buildpack Request".
 We will review the requested buildpack and let you know if we can support it. While we maintain these buildpacks, we still recommend you to write a `Dockerfile` instead if possible.
 
-For a step by step guide on how to do this, [please follow this guide](/deploy/overview).
+For a step by step guide on how to do this, [please follow this guide](/applications/deploy/overview).
 
 # Step 4: Copy over Environment Variables
 
@@ -85,7 +85,7 @@ cause the build process to fail. With this copied set of environment variables, 
 
 # Step 5: Debugging your build process on GitHub Actions
 
-Porter uses [GitHub Actions to build your applications](/deploy/builds). To debug your application builds, take a look at your build logs from the **Actions** tab
+Porter uses [GitHub Actions to build your applications](/applications/deploy/builds). To debug your application builds, take a look at your build logs from the **Actions** tab
 of your repository. To change your build settings or environment variables, simply edit it from the Porter dashboard. If you navigate to **Build Settings**, you'll see a checkbox
 that says **Re-run build and deploy on save**. With that setting enabled, click on **Save Build Settings** to re-run the build. 
 
@@ -104,7 +104,7 @@ Here's the resource allocation that corresponds to each dyno type:
 
 # Step 7: Switch over DNS
 
-The final step is to switch over your production traffic by changing your DNS records. [Follow this guide](/configure/custom-domains) to add your custom domain to the 
+The final step is to switch over your production traffic by changing your DNS records. [Follow this guide](/applications/configure/custom-domains) to add your custom domain to the 
 application and create a `CNAME` record in your DNS provider that points to the Load Balancer's IP address as specified in the aforementioned docs. This switchover may incur downtime. In most cases, this switchover does not incur more than
 5 minutes of downtime. We recommend doing this during your low-traffic hours.
 
