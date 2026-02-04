@@ -12,17 +12,17 @@ We've endeavoured to build a world-class cluster management system which is able
 
 ### Customers' responsibilities
 
-1. Ensuring all production workloads are running with [a minimum of 3 replicas](/configure/zero-downtime-deployments#high-availability-applications).
+1. Ensuring all production workloads are running with [a minimum of 3 replicas](/applications/configure/zero-downtime-deployments#high-availability-applications).
 
-2. Adding [functional healthchecks](/configure/zero-downtime-deployments#health-checks) to all production workloads.
+2. Adding [functional healthchecks](/applications/configure/zero-downtime-deployments#health-checks) to all production workloads.
 
-3. Adding [support for graceful shutdowns](/configure/zero-downtime-deployments#graceful-shutdown) to all production workloads.
+3. Adding [support for graceful shutdowns](/applications/configure/zero-downtime-deployments#graceful-shutdown) to all production workloads.
 
 <Warning>
   If your app doesn't have a minimum of three replicas / doesn't use healthchecks or graceful shutdowns, then an upgrade can cause significant disruption. During an upgrade, your cluster's nodes are refreshed and workloads are gradually rescheduled and the absence of these prerequisites will lead to a scenario where your cluster may not have ready replicas to serve production traffic.
 </Warning>
 
-More documentation around zero-downtime deployments may be found [here](/configure/zero-downtime-deployments).
+More documentation around zero-downtime deployments may be found [here](/applications/configure/zero-downtime-deployments).
 
 ### Porter's responsibilities
 

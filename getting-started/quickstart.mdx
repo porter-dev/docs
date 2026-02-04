@@ -195,7 +195,7 @@ Porter provisions a Kubernetes cluster in your cloud account. The setup process 
             The script creates the required role, service principal, and grants necessary permissions. Copy the output credentials for the next step.
           </Accordion>
           <Accordion title="Option 2: Manual setup">
-            For manual setup, follow the detailed instructions in our [Azure provisioning guide](/provision/provisioning-on-azure#option-2-manual-setup). You'll need to:
+            For manual setup, follow the detailed instructions in our [Azure provisioning guide](/cloud-accounts/connecting-a-cloud-account#option-2-manual-setup). You'll need to:
 
             1. Enable required Azure resource providers
             2. Create a custom IAM role
@@ -428,7 +428,7 @@ Once your cluster is ready, you'll see the Porter dashboard. Click **Create Appl
             ramMegabytes: 512
         ```
 
-        This is the simplest initial configuration. See the [porter.yaml reference](/deploy/configuration-as-code/reference) for all available options.
+        This is the simplest initial configuration. See the [porter.yaml reference](/applications/configuration-as-code/reference) for all available options.
       </Step>
       <Step title="Deploy your application">
         Run `porter apply` to build and deploy:
@@ -474,16 +474,16 @@ Congratulations! Your application is now live and will automatically redeploy wh
 Now that your application is running, explore these guides to customize your deployment:
 
 <CardGroup cols={2}>
-  <Card title="Custom domains" icon="globe" href="/configure/custom-domains">
+  <Card title="Custom domains" icon="globe" href="/applications/configure/custom-domains">
     Connect your own domain name to your application.
   </Card>
-  <Card title="Environment groups" icon="key" href="/configure/environment-groups">
+  <Card title="Environment groups" icon="key" href="/applications/configure/environment-groups">
     Configure secrets and environment variables for your app.
   </Card>
-  <Card title="Autoscaling" icon="chart-line" href="/configure/autoscaling">
+  <Card title="Autoscaling" icon="chart-line" href="/applications/configure/autoscaling">
     Scale your application automatically based on traffic.
   </Card>
-  <Card title="Types of services" icon="cubes" href="/deploy/types-of-services">
+  <Card title="Types of services" icon="cubes" href="/applications/deploy/types-of-services">
     Add workers, jobs, and configure service settings.
   </Card>
 </CardGroup>
