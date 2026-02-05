@@ -23,17 +23,19 @@ porter app run [application] -- COMMAND [args...] [flags]
 
 **Options:**
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--existing_pod` | `-e` | Connect to an existing pod instead of spinning up a new one (default: false) |
-| `--container` | `-c` | Name of the container inside pod to run the command in |
-| `--interactive` | | Run in interactive mode (default: false) |
-| `--job` | | Name of the job to run (runs the job as defined and returns the job run ID without waiting) |
-| `--wait` | | Wait for the command to complete before exiting for non-interactive mode (default: false) |
-| `--allow-concurrent` | | Allow concurrent job runs when using `--job` (overrides job config if concurrency is disabled) |
-| `--cpu` | | CPU allocation in millicores (1000 millicores = 1 vCPU) |
-| `--ram` | | RAM allocation in Mi (1024 Mi = 1 GB) |
-| `--verbose` | `-v` | Print verbose output |
+| Flag | Description |
+|-------|-------------|
+| `-e` | Connect to an existing replica instead of spinning up a new one (default: false). This will launch an interactive selector if there is more than one replica of your application running |
+| `--job` | Name of the job to run (runs the job as defined and returns the job run ID without waiting) |
+| `--wait` | Wait for the command to complete before exiting for non-interactive mode (default: false) |
+| `--allow-concurrent` | Allow concurrent job runs when using `--job` (overrides job config if concurrency is disabled) |
+| `--cpu` | CPU allocation in millicores (1000 millicores = 1 vCPU) |
+| `--ram` | RAM allocation in Mi (1024 Mi = 1 GB) |
+|`-v` | Print verbose output |
+
+<Warning>
+The `--cpu` and `--ram` flags aren't applicable when used with the `-e` flag as they require spinning up an ephemeral replica of your application.
+</Warning>
 
 <CodeGroup>
 ```bash Interactive Shell
@@ -66,14 +68,14 @@ porter app run my-app --cpu 500 --ram 512 -- python heavy_script.py
 </CodeGroup>
 
 <Info>
-If `bash` isn't available in your container, try `sh` for a similar interactive experience.
+In these examples, we use `bash` and `python`, but those commands need to actually be present within the container to run. With very lightweight containers, you may find that none of these are available. If you run into trouble here, feel free to reach out to the support team.
 </Info>
 
 ---
 
 ## `porter app run cleanup`
 
-Delete any lingering ephemeral pods that were created with `porter app run`.
+Delete any lingering ephemeral replicas that were created with `porter app run`.
 
 **Usage:**
 ```bash
