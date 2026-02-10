@@ -51,7 +51,7 @@ cron: "0 0 * * *"
 ```
 
 <Info>
-If no cron expression is provided, the job will run every 5 minutes.
+If no cron expression is provided, the job will default to run every 5 minutes.
 </Info>
 
 ---
@@ -62,14 +62,14 @@ If no cron expression is provided, the job will run every 5 minutes.
 
 <Badge shape="pill" color="gray">Optional</Badge>
 
-Temporarily disable the cron schedule without removing it. The job won't run on schedule but can still be triggered manually.
+Disable the cron schedule without removing it. The job won't run on schedule but can still be triggered manually.
 
 ```yaml
 suspendCron: true
 ```
 
 <Tip>
-Use this to pause scheduled jobs during maintenance windows or while debugging.
+Use this to pause scheduled jobs during maintenance windows or while debugging, or to create one-off jobs.
 </Tip>
 
 ---
@@ -274,13 +274,13 @@ services:
     run: python migrate.py
     cpuCores: 2
     ramMegabytes: 4096
-    # No cron - triggered manually only
+    suspendCron: true  # otherwise, the job will run every 5 minutes by default
     timeoutSeconds: 28800  # 8 hours
     allowConcurrent: false
     terminationGracePeriodSeconds: 120
 ```
 
 <Info>
-Jobs without a `cron` expression must be triggered manually using `porter app run --job`.
+Jobs `suspendCront: true` must be triggered manually using `porter app run --job`.
 </Info>
 
