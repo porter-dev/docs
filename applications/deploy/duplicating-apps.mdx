@@ -1,0 +1,36 @@
+---
+title: 'Clone an Application'
+description: 'Duplicate an existing application to the same cluster or a new one.'
+hidden: true
+---
+
+Cloning an application allows you to quickly replicate your application configuration. This is ideal for setting up staging/development environments or migrating workloads between clusters.
+
+<Note>
+  This feature creates a new application with a unique name while copying the original's resource settings and build configuration.
+</Note>
+
+## How to Clone
+
+<Steps>
+  <Step title="Navigate to App Settings">
+    Navigate to the **Settings** tab of the application you wish to duplicate and click the **Clone** button in the top right.
+  </Step>
+  <Step title="Choose Target Cluster">
+    Select the target cluster from the dropdown menu. You can clone an app into the same cluster or any other cluster in your project.
+  </Step>
+  <Step title="Configure and Deploy">
+    Review the app configuration and modify as needed. Once this is done, click **Deploy application**.
+  </Step>
+</Steps>
+
+## Important Considerations
+
+Before cloning, please be aware of how Porter handles specific configuration items to prevent deployment failures and conflicts between environments:
+
+<Warning>
+**The following configurations are reset during cloning:**
+* **Environment Variables:** All inline environment variables are removed.
+* **Environment Groups:** All synced environment groups are removed.
+* **Networking:** External domains are removed to prevent DNS conflicts with the original app.
+</Warning>
