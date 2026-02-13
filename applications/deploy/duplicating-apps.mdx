@@ -5,6 +5,7 @@ hidden: true
 ---
 
 Cloning an application allows you to quickly replicate your application configuration. This is ideal for setting up staging/development environments or migrating workloads between clusters.
+In addition, this can be used to change the name of an application without having to recreate it.
 
 <Note>
   This feature creates a new application with a unique name while copying the original's resource settings and build configuration.
@@ -14,23 +15,45 @@ Cloning an application allows you to quickly replicate your application configur
 
 <Steps>
   <Step title="Navigate to App Settings">
-    Navigate to the **Settings** tab of the application you wish to duplicate and click the **Clone** button in the top right.
+    Navigate to the **Settings** tab of the application you wish to duplicate and click the **Clone** button .
+    ![clone application button](/images/deploy/v2/clone-button.webp)
   </Step>
   <Step title="Choose Target Cluster">
     Select the target cluster from the dropdown menu. You can clone an app into the same cluster or any other cluster in your project.
+    ![clone application cluster selection](/images/deploy/v2/clone-cluster-select.webp)
   </Step>
   <Step title="Configure and Deploy">
     Review the app configuration and modify as needed. Once this is done, click **Deploy application**.
+    ![clone application settings](/images/deploy/v2/clone-settings.webp)
   </Step>
 </Steps>
 
 ## Important Considerations
 
-Before cloning, please be aware of how Porter handles specific configuration items to prevent deployment failures and conflicts between environments:
+Before cloning an app, please be aware of how specific configuration items are handled to prevent deployment failures and conflicts between environments:
 
 <Warning>
 **The following configurations are reset during cloning:**
 * **Environment Variables:** All inline environment variables are removed.
 * **Environment Groups:** All synced environment groups are removed.
 * **Networking:** External domains are removed to prevent DNS conflicts with the original app.
+</Warning>
+
+## Common Workflows
+
+### Renaming an Application
+Application names cannot be changed once created, but cloning can be used as an alternative to achieve this:
+1. Clone the application and give it the **new name**.
+2. Update the environment variables and secrets on the new app.
+3. Once the new app is verified and healthy, delete the original application.
+
+### Migrating Traffic to a Different Environment
+Because external domains are removed during cloning to prevent downtime on the source app, follow these steps to switch traffic:
+1. Clone the application and verify it is running correctly.
+2. **On the original app:** Remove the custom domain in the **Networking** tab.
+3. **On the cloned app:** Add the custom domain and redeploy.
+
+<Warning>
+  Moving a domain between applications may cause disruption in service while the load balancer updates and DNS changes propagate.
+  Ensure you have tested the cloned application thoroughly and understand the implications of the change.
 </Warning>
