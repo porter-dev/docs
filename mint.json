@@ -68,7 +68,8 @@
                 "applications/deploy/multiple-deploys-from-same-build",
                 "applications/deploy/pre-deploy-jobs",
                 "applications/deploy/rollbacks",
-                "applications/deploy/using-other-ci-tools"
+                "applications/deploy/using-other-ci-tools",
+                "applications/deploy/duplicating-apps"
               ]
             },
             {
