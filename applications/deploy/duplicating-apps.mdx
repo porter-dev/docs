@@ -50,10 +50,10 @@ Application names cannot be changed once created, but cloning can be used as an 
 ### Migrating Traffic to a Different Environment
 Because external domains are removed during cloning to prevent downtime on the source app, follow these steps to switch traffic:
 1. Clone the application and verify it is running correctly.
-2. **On the original app:** Remove the custom domain in the **Networking** tab.
-3. **On the cloned app:** Add the custom domain and redeploy.
+2. **On the cloned app:** Add the custom domain and redeploy.
+3. **On the original app:** Remove the custom domain in the **Networking** tab.
 
 <Warning>
-  Moving a domain between applications may cause disruption in service while the load balancer updates and DNS changes propagate.
-  Ensure you have tested the cloned application thoroughly and understand the implications of the change.
+  Migrating a domain may cause disruption in service while DNS changes propagate. If you have additional
+  questions reach out to Porter support.
 </Warning>
