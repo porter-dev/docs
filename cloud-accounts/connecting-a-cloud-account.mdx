@@ -77,8 +77,9 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
            - Cloud Resource Manager API
            - Container Registry API
            - Artifact Registry API
+           - Secret Manager API
 
-        Each API may take a few minutes to enable. Confirm all five are enabled before proceeding.
+        Each API may take a few minutes to enable. Confirm all six are enabled before proceeding.
       </Accordion>
     </AccordionGroup>
 
@@ -99,6 +100,7 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
         - **Kubernetes Engine > Kubernetes Engine Admin**
         - **Service Accounts > Service Account User**
         - **Artifact Registry > Artifact Registry Administrator**
+        - **Secret Manager > Secret Manager Admin**
 
         Click **Done** to create the account.
       </Step>
@@ -174,6 +176,7 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
            - Microsoft.Compute
            - Microsoft.ContainerRegistry
            - Microsoft.ContainerService
+           - Microsoft.KeyVault
            - Microsoft.ManagedIdentity
            - Microsoft.Network
            - Microsoft.OperationalInsights
