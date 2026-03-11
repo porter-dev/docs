@@ -2,69 +2,168 @@
 title: "Environment Groups"
 ---
 
-An environment group (or env group for short) is a set of environment variables that are meant to be reused across multiple applications. For example, if all web services require a shared set of API and database keys, this could form a web-service environment group with all of those keys as a shared configuration. In this guide, we will explain how to create and use environment groups.
+An environment group is a set of environment variables and secrets that can be shared across multiple applications. Environment groups are **project-wide** — they can be used across all clusters and cloud accounts within your project. For example, if all of your web services need a shared set of API keys and database credentials, you can create an environment group containing those values and sync it to each service.
 
 <Info>
-  Environment groups are stored in your own cluster as a Kubernetes Config Map
-  or a Kubernetes Secret. The data will be visible to any users or services with
-  access to your cluster, such as Porter.
+Environment variables configured directly on an application always take precedence over values from an environment group. This override applies on a per-variable basis — if an app sets `API_KEY=xyz` and a synced environment group has `API_KEY=abc`, the app-level value (`xyz`) is used.
 </Info>
 
-## Creating Environment Groups
+## How Secrets Are Stored
 
-You can create a new environment group in the “Env Groups” tab on the dashboard.
+Environment group secrets are automatically synced to the secret manager of every cloud account linked to your project that has a running cluster:
 
-![image](/images/other/env-group-tab.png)
+- **AWS** — AWS Secrets Manager
+- **GCP** — GCP Secret Manager
+- **Azure** — Azure Key Vault
 
-Clicking the “New Env Group” button will open a modal where you can enter the name of the environment group and the environment variables that should be included in the group.
-You can add your environment variables by clicking the **Add Row** button or batch upload them via a .env file using the **Copy from File** button.
+No secret data is stored on Porter's infrastructure. Secrets only exist in memory on Porter's servers momentarily during creation and updates.
 
-![create-env-group](/images/other/env-group-create.png)
+## Creating an Environment Group
 
-## 🔒 Creating Secret Environment Variables
+You can create a new environment group from the **Env Groups** tab on the Porter dashboard. Click **New Env Group**, enter a name, and add your variables and secrets.
 
-Porter supports creating secret environment variables that will not be exposed after creation. At the moment, you must create an environment group in order to create secret environment variables. To create a secret environment variable, click on the lock icon next to the environment variable during creation of the environment variable:
+You can also create environment groups from the CLI:
 
-![create-env-group](/images/other/env-group-secrets.png)
+<CodeGroup>
+```bash Interactive
+porter env create
+```
 
-## How Secrets are Stored[](#how-secrets-are-stored "Direct link to heading")
+```bash Non-Interactive
+porter env create --name production-secrets
+```
 
-All env group variables are stored **in your own cluster**, and not on Porter's infrastructure. The entire env group is stored as a Kubernetes [Config Map](https://kubernetes.io/docs/concepts/configuration/configmap/), which is meant for non-sensitive, unstructured data. When you create a secret environment variable, the ConfigMap will contain a reference to a Kubernetes [Secret](https://kubernetes.io/docs/concepts/configuration/secret), which contains the secret data. This secret will be [injected into your container](https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/) as it is mounted, and will not be exposed on the Porter dashboard after creation. To summarize:
+```bash With Variables and Secrets
+porter env create --name production-secrets \
+  -v NODE_ENV=production,LOG_LEVEL=info \
+  -s DB_PASSWORD=secret,API_KEY=sk-123
+```
+</CodeGroup>
 
-- No env group data is stored on Porter's servers: it is all stored on your own cluster.
-- **Non-sensitive data** in an env group will be read into memory on Porter's servers during deployment, and added directly to the deployment.
-- **Sensitive data** in an env group will **not** be read into memory on Porter's servers during deployment, and are referenced as a secret during deployment. This sensitive data only exists in memory on Porter's infrastructure during creation/updating of the env group (**not** the deployment).
+## Variables and Secrets
 
-## Syncing Environment Groups to Applications[](#syncing-environment-groups-to-applications "Direct link to heading")
+Environment groups support two types of values:
 
-Environment groups have the capability to sync with applications, so when the environment variables are updated the synced applications are automatically restarted.
-To sync a env group to an application either add it during creation of the app:
+| Type | Description | Visibility |
+|------|-------------|------------|
+| **Variables** | Non-sensitive configuration values | Visible in the dashboard and CLI after creation |
+| **Secrets** | Sensitive values (API keys, passwords, tokens) | Hidden after creation; stored in your cloud provider's secret manager |
 
-![sync-env-group](/images/other/env-group-sync.png)
+When creating or updating an environment group, use the lock icon in the dashboard (or the `-s` flag in the CLI) to mark a value as a secret.
 
-You can also navigate to the application and add the env group from the **Env Groups** tab and hit **Update app**:
+<Warning>
+Individual variable values and files cannot exceed 25 KB in size.
+</Warning>
 
-![sync-env-group-tab](/images/other/env-group-sync-tab.png)
+## Files
 
-<Info>
-  **Note:** Only a limit of 3 environment groups can be synced to an
-  application. If your use case requires syncing more than 3 please contact us.
-</Info>
+Environment groups can also contain files for sensitive data such as certificates or configuration files. Files are managed through the Porter dashboard and are injected into your application's container at the path:
 
-When you subsequently update those env group variables from the **Env groups** tab, the applications will be restarted with the new variables.
+```
+/etc/secrets/<env-group-name>
+```
 
-## Updating and Deleting Environment Groups[](#updating-and-deleting-environment-groups "Direct link to heading")
+## Syncing Environment Groups to Applications
 
-To update your environment group, navigate back to the **Env Groups** tab, and click on the existing environment group to update. You can make changes to the env group here, and select the **Update** button when finished:
+Environment groups can be synced to applications so that when the group is updated, all synced applications are automatically redeployed with the new values.
 
-![update-env-group](/images/other/env-group-update.png)
+### From the Dashboard
 
-To delete the environment group, navigate to the **Settings** tab, and press the **Delete** button,:
+You can sync an environment group to an application during app creation or by navigating to the application's **Env Groups** tab and adding the group. Click **Update app** to apply.
 
-<Info>
-  **Note:** You will not be able to delete an environment group if it is synced
-  to an application. Ensure you unsync the env group from all attached
-  applications in order to delete it.
-</Info>
+### From porter.yaml
 
-![delete-env-group](/images/other/env-group-delete.png)
+Add the `envGroups` field to your `porter.yaml`:
+
+```yaml
+version: v2
+name: my-app
+
+envGroups:
+  - production-secrets
+  - shared-config
+
+services:
+  - name: web
+    type: web
+    run: npm start
+    port: 3000
+    cpuCores: 0.5
+    ramMegabytes: 512
+```
+
+Environment groups listed in `envGroups` must already exist in the project before deploying.
+
+## Updating an Environment Group
+
+When you update an environment group, all applications synced to it are automatically redeployed with the new values.
+
+### From the Dashboard
+
+Navigate to the **Env Groups** tab, click the environment group you want to update, make your changes, and click **Update**.
+
+### From the CLI
+
+Use `porter env set` to add or update variables, and `porter env unset` to remove them:
+
+<CodeGroup>
+```bash Set Variables
+porter env set production-secrets -v LOG_LEVEL=debug,FEATURE_FLAG=true
+```
+
+```bash Set Secrets
+porter env set production-secrets -s DB_PASSWORD=new-password
+```
+
+```bash Remove Variables
+porter env unset production-secrets -v OLD_VAR,UNUSED_VAR
+```
+
+```bash Remove Secrets
+porter env unset production-secrets -s ROTATED_KEY
+```
+</CodeGroup>
+
+## Pulling Environment Variables Locally
+
+You can pull the contents of an environment group to your local machine for development:
+
+<CodeGroup>
+```bash Print to stdout
+porter env pull production-secrets
+```
+
+```bash Write to File
+porter env pull production-secrets -f .env.local
+```
+
+```bash Variables Only
+porter env pull production-secrets -v
+```
+
+```bash Secrets Only
+porter env pull production-secrets -s
+```
+</CodeGroup>
+
+## Listing Environment Groups
+
+To see all environment groups in your project:
+
+```bash
+porter env list
+```
+
+This displays a table with each group's name, current version, and last updated time.
+
+## Deleting an Environment Group
+
+Environment groups can be deleted from the **Settings** tab on the environment group's page in the dashboard.
+
+<Warning>
+You cannot delete an environment group that is synced to an application. Unsync the environment group from all applications before deleting it.
+</Warning>
+
+## CLI Reference
+
+For the full list of flags and options, see the [porter env](/standard/cli/command-reference/porter-env) CLI reference.
