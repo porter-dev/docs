@@ -35,8 +35,8 @@ porter env create --name production-secrets
 
 ```bash With Variables and Secrets
 porter env create --name production-secrets \
-  -v NODE_ENV=production,LOG_LEVEL=info \
-  -s DB_PASSWORD=secret,API_KEY=sk-123
+  -v NODE_ENV=production -v LOG_LEVEL=info \
+  -s DB_PASSWORD=secret -s API_KEY=sk-123
 ```
 </CodeGroup>
 
@@ -108,19 +108,19 @@ Use `porter env set` to add or update variables, and `porter env unset` to remov
 
 <CodeGroup>
 ```bash Set Variables
-porter env set production-secrets -v LOG_LEVEL=debug,FEATURE_FLAG=true
+porter env set --group production-secrets -v LOG_LEVEL=debug -v FEATURE_FLAG=true
 ```
 
 ```bash Set Secrets
-porter env set production-secrets -s DB_PASSWORD=new-password
+porter env set --group production-secrets -s DB_PASSWORD=new-password
 ```
 
 ```bash Remove Variables
-porter env unset production-secrets -v OLD_VAR,UNUSED_VAR
+porter env unset --group production-secrets -v OLD_VAR -v UNUSED_VAR
 ```
 
 ```bash Remove Secrets
-porter env unset production-secrets -s ROTATED_KEY
+porter env unset --group production-secrets -s ROTATED_KEY
 ```
 </CodeGroup>
 
@@ -130,21 +130,25 @@ You can pull the contents of an environment group to your local machine for deve
 
 <CodeGroup>
 ```bash Print to stdout
-porter env pull production-secrets
+porter env pull --group production-secrets
 ```
 
 ```bash Write to File
-porter env pull production-secrets -f .env.local
+porter env pull --group production-secrets --file .env.local
 ```
 
 ```bash Variables Only
-porter env pull production-secrets -v
+porter env pull --group production-secrets -v
 ```
 
 ```bash Secrets Only
-porter env pull production-secrets -s
+porter env pull --group production-secrets -s
 ```
 </CodeGroup>
+
+<Info>
+The `--variables` (`-v`) and `--secrets` (`-s`) flags are mutually exclusive. If neither is specified, both variables and secrets are included in the output.
+</Info>
 
 ## Listing Environment Groups
 
