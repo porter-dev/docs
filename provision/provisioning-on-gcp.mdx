@@ -20,15 +20,16 @@ To use Porter on GCP, you must first enable some APIs on your project.
 
 ![APIs and services](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/75c924c8-88d4-40a7-5a35-5e29261f4d00/large "Screen Shot 2021-05-06 at 6.23.07 PM.png")
 
-2. Click on the **Enable APIs and Services** button at the top. This will bring up a catalog of APIs that you can enable on GCP. Enable the following five APIs:
+2. Click on the **Enable APIs and Services** button at the top. This will bring up a catalog of APIs that you can enable on GCP. Enable the following APIs:
 
 - Compute Engine API
 - Kubernetes Engine API
 - Cloud Resource Manager API
 - Container Registry API
 - Artifact Registry API
+- Secret Manager API
 
-It might take a few minutes for each of these APIs to be enabled. Once you can confirm that all five APIs are enabled from the **APIs & Services** tab, proceed to the next section.
+It might take a few minutes for each of these APIs to be enabled. Once you can confirm that all APIs are enabled from the **APIs & Services** tab, proceed to the next section.
 
 ### Creating a Service Account[](#creating-service-account "Direct link to heading")
 
@@ -40,13 +41,17 @@ It might take a few minutes for each of these APIs to be enabled. Once you can c
 
 ![Create service account](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/a625aa4d-08d9-4a47-885a-d470fd1a3100/large "Screen Shot 2021-04-15 at 6.45.42 PM.png")
 
-3. After naming your service account, grant the service account these five permissions:
+3. After naming your service account, grant the service account the following permissions:
 
 - **Cloud Storage > Storage Admin**
 - **Compute Engine > Compute Admin**
 - **Kubernetes Engine > Kubernetes Engine Admin**
+- **Service Accounts > Service Account Admin**
 - **Service Accounts > Service Account User**
 - **Artifact Registry > Artifact Registry Administrator**
+- **Secret Manager > Secret Manager Admin**
+- **Resource Manager > Project IAM Admin**
+- **Service Usage > Service Usage Admin**
 
 Select **Done** to create the service account.
 
