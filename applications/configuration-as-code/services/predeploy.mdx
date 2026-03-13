@@ -1,0 +1,12 @@
+---
+title: 'Predeploy'
+---
+
+Predeploy is run following a new build, but before the build is deployed to the cluster. This is a good place to run migrations, or to generate any files that are needed for the deploy.
+For more information on pre-deploy jobs in Porter, see [Pre-deploy Jobs](/applications/deploy/pre-deploy-jobs).
+
+```yaml
+predeploy:
+  run: 'npm run migrate'
+```
+

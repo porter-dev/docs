@@ -22,15 +22,15 @@ We will be deploying a Tailscale "subnet router" which will allow any services d
 	},
 ```
 
-![Tailscale Policy File](/images/other/tailscale-policy-file.png)
+![Tailscale Policy File](/images/other/tailscale-policy-file.webp)
 
 3. Click `Save` button to save the changes.
 
-4. Navigate to `Settings -> OAuth clients -> "Generate Oauth client..."`
+4. Navigate to `Settings -> Trust credentials -> Add credential -> OAuth`
 
 5. Select the `Core` and `Auth keys` scopes with write permissions. Click on "Add tags" and ensure that the `k8s-operator` tag is selected.
 
-![Tailscale Oauth Scopes](/images/other/tailscale-oauth-scopes.png)
+![Tailscale Oauth Scopes](/images/other/tailscale-oauth-scopes.webp)
 
 6. Click `Generate client` and **save the credentials securely - you will need them in the next steps and cannot retrieve them later.**
 
@@ -56,10 +56,8 @@ As each route is added, it must be approved by an admin in the Tailscale Admin P
 1. Visit your [Tailscale Admin Panel](https://login.tailscale.com/admin/machines?ref=blog.porter.run).
 2. Click on `Machines`.
 3. Find the `cluster-ABC` machine, where `cluster-ABC` is the name of the Porter cluster where the VPN integration was enabled.
-4. Click on the 3 dots on the right side of the `cluster-ABC`, and click `Edit Route settings...`
-   ![Tailscale Machines](/images/other/tailscale-machines.png)
+4. Click on the 3 dots on the right side of the `cluster-ABC`, and click `Edit Route settings`
 5. Click `Approve All` to approve all routes.
-   ![Tailscale API Key](/images/other/tailscale-approve-routes.png)
 6. If you intend to use `porter app run` or `porter datastore connect` commands, also check `Use as Exit Node`.
 
 Your Tailscale Subnet Router should now be online. All of your Porter applications and Datastores should be accessible over the Tailnet.

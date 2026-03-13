@@ -1,0 +1,442 @@
+---
+title: 'Web Services'
+---
+
+Web services are HTTP-based services that can be exposed publicly or kept private within your cluster. This is a complete reference for all fields that can be set for a web service in `porter.yaml`.
+
+## Field Reference
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Service identifier (max 31 chars) |
+| `type` | string | Yes | Must be `web` |
+| `run` | string | Yes | Command to execute |
+| `port` | integer | Yes | Port the service listens on |
+| `cpuCores` | number | Yes | CPU allocation |
+| `ramMegabytes` | integer | Yes | Memory allocation in MB |
+| `instances` | integer | No | Number of replicas (default: 1) |
+| `private` | boolean | No | Make service private (default: false) |
+| `disableTLS` | boolean | No | Disable TLS termination |
+| `autoscaling` | object | No | Autoscaling configuration |
+| `domains` | array | No | Custom domain configuration |
+| `healthCheck` | object | No | Combined health check config |
+| `livenessCheck` | object | No | Liveness probe config |
+| `readinessCheck` | object | No | Readiness probe config |
+| `startupCheck` | object | No | Startup probe config |
+| `pathRouting` | array | No | Path-based routing rules |
+| `pathRoutingConfig` | object | No | Path routing options |
+| `ingressAnnotations` | object | No | Custom ingress annotations |
+| `connections` | array | No | External cloud connections |
+| `serviceMeshEnabled` | boolean | No | Enable service mesh |
+| `metricsScraping` | object | No | Prometheus metrics config |
+| `terminationGracePeriodSeconds` | integer | No | Graceful shutdown timeout |
+| `gpuCoresNvidia` | integer | No | NVIDIA GPU cores |
+| `nodeGroup` | string | No | Node group UUID |
+
+---
+
+## Basic Example
+
+```yaml
+services:
+  - name: api
+    type: web
+    run: node server.js
+    port: 8080
+    cpuCores: 0.5
+    ramMegabytes: 512
+    instances: 2
+```
+
+---
+
+## `private`
+
+`boolean`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+When `true`, the service is only accessible within the cluster (not publicly exposed).
+
+```yaml
+private: true
+```
+
+---
+
+## `disableTLS`
+
+`boolean`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Disable TLS termination at the load balancer. Only use this for services that handle their own TLS or for internal testing.
+
+```yaml
+disableTLS: true
+```
+
+<Warning>
+Disabling TLS exposes your service over HTTP. Only use this when you have a specific requirement.
+</Warning>
+
+---
+
+## `autoscaling`
+
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Configure horizontal pod autoscaling based on CPU and memory utilization. See [Autoscaling Configuration](/applications/configuration-as-code/services/autoscaling) for full documentation.
+
+---
+
+## `domains`
+
+`array`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Configure custom domains for your web service.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Domain name |
+
+```yaml
+domains:
+  - name: example.com
+```
+
+---
+
+## `healthCheck`
+
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Configure a combined health check that applies to liveness, readiness, and startup probes.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `enabled` | boolean | Enable health checks |
+| `httpPath` | string | HTTP endpoint to check |
+| `timeoutSeconds` | integer | Request timeout (min: 1) |
+| `initialDelaySeconds` | integer | Initial delay before checking (min: 0) |
+
+```yaml
+healthCheck:
+  enabled: true
+  httpPath: /healthz
+  timeoutSeconds: 1
+  initialDelaySeconds: 15
+```
+
+<Warning>
+Cannot be used together with `livenessCheck`, `readinessCheck`, or `startupCheck`. Use either the combined `healthCheck` or the individual checks.
+</Warning>
+
+<Tip>
+For best practices on combining health checks with graceful shutdown for zero-downtime deployments, see [Zero-Downtime Deployments](/applications/configure/zero-downtime-deployments).
+</Tip>
+
+---
+
+## Advanced Health Checks
+
+For fine-grained control, configure liveness, readiness, and startup probes separately.
+
+### `livenessCheck`
+
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Determines if the container should be restarted.
+
+```yaml
+livenessCheck:
+  enabled: true
+  httpPath: /livez
+  timeoutSeconds: 1
+  initialDelaySeconds: 15
+```
+
+### `readinessCheck`
+
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Determines if the container is ready to receive traffic.
+
+```yaml
+readinessCheck:
+  enabled: true
+  httpPath: /readyz
+  timeoutSeconds: 1
+  initialDelaySeconds: 15
+```
+
+### `startupCheck`
+
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Used for slow-starting containers. Other probes are disabled until this passes.
+
+```yaml
+startupCheck:
+  enabled: true
+  httpPath: /startupz
+  timeoutSeconds: 1
+  initialDelaySeconds: 15
+```
+
+---
+
+## `pathRouting`
+
+`array`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Configure path-based routing to direct requests to different ports or services.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `path` | string | Yes | URL path prefix |
+| `port` | integer | Yes | Port to route to |
+| `serviceName` | string | No | Service to route to (defaults to current) |
+| `appName` | string | No | Application to route to (requires `serviceName`) |
+
+```yaml
+pathRouting:
+  - path: /api/v1/
+    port: 8080
+  - path: /api/v2/
+    port: 8081
+  - path: /admin/
+    port: 9000
+    serviceName: admin-service
+  - path: /auth/
+    port: 8080
+    appName: auth-app
+    serviceName: auth-service
+```
+
+<Info>
+A path must be specified for the default port set in `services.port`.
+</Info>
+
+---
+
+## `pathRoutingConfig`
+
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Configure path rewriting behavior for path-based routing.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `rewriteMode` | string | Path rewrite mode |
+
+**Rewrite Modes:**
+
+| Mode | Description | Example: `/api/v1/users` |
+|------|-------------|--------------------------|
+| `rewrite-all` | Rewrite entire path to root (default) | `/` |
+| `rewrite-prefix` | Remove the matched prefix only | `/users` |
+| `rewrite-off` | No rewriting, keep original path | `/api/v1/users` |
+
+```yaml
+pathRouting:
+  - path: /api/v1/
+    port: 8080
+  - path: /api/v2/
+    port: 8081
+pathRoutingConfig:
+  rewriteMode: rewrite-prefix
+```
+
+---
+
+## `ingressAnnotations`
+
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Add custom NGINX ingress annotations for advanced configuration.
+
+```yaml
+ingressAnnotations:
+  nginx.ingress.kubernetes.io/proxy-connect-timeout: "18000"
+```
+
+<Tip>
+Common use cases include increasing upload limits, configuring timeouts, and enabling WebSocket support.
+</Tip>
+
+---
+
+## `connections`
+
+`array`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Connect to external cloud services. See [Connections Configuration](/applications/configuration-as-code/services/connections) for full documentation.
+
+---
+
+## `serviceMeshEnabled`
+
+`boolean`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Enable service mesh for enhanced inter-service communication with improved performance, reliability, and monitoring.
+
+```yaml
+serviceMeshEnabled: true
+```
+
+<Info>
+Recommended for applications with multiple services that communicate with each other, especially those using gRPC or WebSockets.
+</Info>
+
+---
+
+## `metricsScraping`
+
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Configure Prometheus metrics scraping for custom application metrics.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `enabled` | boolean | Enable metrics scraping |
+| `path` | string | HTTP path to scrape (default: `/metrics`) |
+| `port` | integer | Port to scrape metrics from |
+| `scrapeIntervalSeconds` | integer | Scrape interval in seconds (default: 60) |
+
+```yaml
+metricsScraping:
+  enabled: true
+  path: /metrics
+  port: 9090
+  scrapeIntervalSeconds: 60
+```
+
+---
+
+## `terminationGracePeriodSeconds`
+
+`integer`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Seconds to wait for graceful shutdown before forcefully terminating the container.
+
+```yaml
+terminationGracePeriodSeconds: 60
+```
+
+<Tip>
+Increase this value for services that need time to complete in-flight requests or cleanup tasks.
+</Tip>
+
+---
+
+## `gpuCoresNvidia`
+
+`integer`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Allocate NVIDIA GPU cores for ML inference or GPU-accelerated workloads.
+
+```yaml
+gpuCoresNvidia: 1
+nodeGroup: gpu-node-group-uuid
+```
+
+<Info>
+Requires a node group with GPU-enabled instances.
+</Info>
+
+---
+
+## Complete Example
+
+```yaml
+services:
+  - name: api
+    type: web
+    run: npm start
+    port: 8080
+    cpuCores: 1
+    ramMegabytes: 1024
+
+    # Autoscaling
+    autoscaling:
+      enabled: true
+      minInstances: 1
+      maxInstances: 10
+      cpuThresholdPercent: 80
+      memoryThresholdPercent: 80
+
+    # Custom domains
+    domains:
+      - name: example.com
+
+    # Health checks
+    livenessCheck:
+      enabled: true
+      httpPath: /livez
+      timeoutSeconds: 1
+      initialDelaySeconds: 15
+    readinessCheck:
+      enabled: true
+      httpPath: /readyz
+      timeoutSeconds: 1
+      initialDelaySeconds: 15
+
+    # Path routing
+    pathRouting:
+      - path: /api/v1/
+        port: 8080
+      - path: /api/v2/
+        port: 8081
+    pathRoutingConfig:
+      rewriteMode: rewrite-prefix
+
+    # Ingress configuration
+    ingressAnnotations:
+      nginx.ingress.kubernetes.io/proxy-connect-timeout: "18000"
+
+    # Service mesh and metrics
+    serviceMeshEnabled: true
+    metricsScraping:
+      enabled: true
+      path: /metrics
+      port: 9090
+      scrapeIntervalSeconds: 60
+
+    # Cloud connections
+    connections:
+      - type: awsRole
+        role: api-s3-access
+
+    # Graceful shutdown
+    terminationGracePeriodSeconds: 30
+```
+

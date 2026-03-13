@@ -1,0 +1,157 @@
+---
+title: "Node Groups"
+sidebarTitle: "Node Groups"
+description: "Configure node groups, instance types, and optimize compute costs"
+---
+
+Node groups are collections of compute instances that run your workloads. Porter provides flexible options for managing compute resources, including custom node groups for specialized workloads and cost optimization features.
+
+## Default Node Groups
+
+Porter provisions three node groups by default:
+
+| Node Group | Purpose | Autoscaling |
+|------------|---------|-------------|
+| **System** | Kubernetes system workloads | Fixed |
+| **Monitoring** | Observability stack (metrics, logs) | Fixed |
+| **Application** | Your application workloads | Enabled (1 node minimum) |
+
+The application node group autoscales based on demand. You can customize instance types, node counts, and scaling limits for all node groups.
+
+---
+
+## Changing Instance Types
+
+You can modify the instance type for any node group from the Infrastructure settings.
+
+<Steps>
+  <Step title="Navigate to Infrastructure">
+    From your Porter dashboard, click on the **Infrastructure** tab in the left sidebar.
+  </Step>
+  <Step title="Select your cluster">
+    Click on **Overview** to view your cluster configuration and node groups.
+  </Step>
+  <Step title="Configure the node group">
+    Expand the node group dropdown (e.g., **Default node group**) to see the following settings:
+
+    | Setting | Description |
+    |---------|-------------|
+    | **Machine type** | The underlying instance for nodes. Options vary by cloud provider. |
+    | **Maximum nodes** | Upper limit for autoscaling under high load |
+    | **Minimum nodes** | Lower limit for autoscaling under low load |
+    | **Disk size** | Storage capacity for each node (default: 50GB) |
+  </Step>
+  <Step title="Update">
+    Select the appropriate **Machine type** from the dropdown, then scroll to the bottom and click **Update**.
+  </Step>
+</Steps>
+
+### Instance Type Pricing
+
+<CardGroup cols={3}>
+  <Card title="AWS Instance Types" icon="aws" href="https://aws.amazon.com/ec2/pricing/on-demand" />
+  <Card title="Azure Instance Types" icon="microsoft" href="https://azure.microsoft.com/en-us/pricing/details/virtual-machines/linux/#pricing" />
+  <Card title="GCP Instance Types" icon="google" href="https://cloud.google.com/compute/all-pricing#general_purpose" />
+</CardGroup>
+
+### Why is my instance type not available?
+
+Instance types may not be available if:
+
+- The instance is not available in your cluster's region (cloud providers release new instances on a phased, region-by-region basis)
+- The instance type hasn't been validated by Porter for compatibility
+
+If you need a specific instance type that isn't listed, contact us through the dashboard chat bot.
+
+---
+
+## Creating a Custom Node Group
+
+Create custom node groups for specialized workloads like GPU processing, high-memory applications, or isolated environments.
+
+<Steps>
+  <Step title="Navigate to Infrastructure">
+    From your Porter dashboard, click on the **Infrastructure** tab in the left sidebar.
+  </Step>
+  <Step title="Select your cluster">
+    Click on **Cluster** to view your cluster configuration and node groups.
+  </Step>
+  <Step title="Add a node group">
+    Click **Add an additional node group** to open the configuration panel.
+  </Step>
+  <Step title="Configure the node group">
+    Choose between two configuration approaches:
+
+    <Tabs>
+      <Tab title="Cost Optimization">
+        Cost optimization automatically selects the most cost-effective instance types for your workloads. Any cluster provisioned in AWS will default to cost optimized node groups.
+
+        Set your **maximum CPU cores limit** to prevent unexpected scaling. This caps infrastructure costs while allowing flexibility in instance selection.
+
+        ### Limitations
+
+        The following configurations should use fixed instance types instead:
+
+        - GPU instances (e.g., instances with NVIDIA GPUs)
+        - Spot instances
+        - Instances in public subnets
+        - Instances with specialized hardware requirements
+      </Tab>
+      <Tab title="Fixed Instance Type">
+        Fixed node groups use a specific instance type. Applications scheduled on this group run only on the exact instance type you specify.
+
+        This gives you precise control but may result in over-provisioning if configured incorrectly.
+
+        Configure:
+
+        | Setting | Description |
+        |---------|-------------|
+        | **Instance type** | The machine type for nodes in this group |
+        | **Minimum nodes** | Minimum number of nodes (set to 0 for scale-to-zero) |
+        | **Maximum nodes** | Upper limit for autoscaling |
+
+        <Info>
+        For GPU workloads, select instances with GPU support:
+        - **AWS**: `g4dn.xlarge`, `p3.2xlarge`
+        - **Azure**: `Standard_NC4as_T4_v3`
+        - **GCP**: `g2-standard-4`
+        </Info>
+      </Tab>
+    </Tabs>
+
+    <Info>
+    **Health Checks Required**: For production applications on cost-optimized node groups, configure proper [health checks](/applications/configure/zero-downtime-deployments#health-checks). This ensures applications can be safely rescheduled as nodes are reshuffled.
+    </Info>
+  </Step>
+  <Step title="Save and apply">
+    Click **Save** to create the node group. Porter provisions the new nodes, which may take a few minutes.
+  </Step>
+</Steps>
+
+---
+
+## Assigning Workloads to Node Groups
+
+Once your custom node group is created, assign applications to run on it:
+
+1. Navigate to your application in the Porter dashboard
+2. Go to the **Services** tab
+3. Click the service you want to assign
+4. Under **General**, find the **Node group** selector
+5. Select your custom node group from the dropdown
+6. Save and redeploy your application
+
+---
+
+## Deleting a Node Group
+
+<Warning>
+Ensure no workloads are scheduled on the node group before deleting. Workloads will be disrupted if their node group is removed.
+</Warning>
+
+To remove a custom node group:
+
+1. Migrate any workloads running on the node group to another node group
+2. Navigate to **Infrastructure** → **Cluster**
+3. Find the node group you want to delete
+4. Click the delete icon and confirm

@@ -1,0 +1,53 @@
+---
+title: "Third-party Observability"
+sidebarTitle: "Third-party Observability"
+description: "Integrate external monitoring and observability platforms"
+---
+
+Porter integrates with popular observability platforms to provide application-level monitoring, logging, and alerting beyond the built-in cluster observability features.
+
+## Supported Platforms
+
+<CardGroup cols={3}>
+  <Card title="Datadog" icon="dog">
+    Full-stack monitoring with APM, logs, and infrastructure metrics
+  </Card>
+  <Card title="New Relic" icon="chart-line">
+    Application performance monitoring and alerting
+  </Card>
+  <Card title="Grafana" icon="chart-area">
+    Dashboards and visualization for metrics and logs
+  </Card>
+  <Card title="Langfuse" icon="robot">
+    Open source LLM engineering platform for tracing and analytics
+  </Card>
+  <Card title="Helicone" icon="bolt">
+    Open source AI gateway for LLM request monitoring
+  </Card>
+</CardGroup>
+
+
+## What You Get
+
+Integrating a third-party observability platform provides:
+
+- **Application Performance Monitoring (APM)**: Trace requests across services
+- **Log aggregation**: Centralized logging with search and filtering
+- **Custom metrics**: Track business and application-specific metrics
+- **Alerting**: Get notified when metrics exceed thresholds
+- **Dashboards**: Visualize system health and performance trends
+
+## Comparison with Built-in Observability
+
+| Feature | Porter Built-in | Third-party Platforms |
+|---------|----------------|----------------------|
+| Pod status and metrics | ✅ | ✅ |
+| Node metrics | ✅ | ✅ |
+| Application logs | Basic | Advanced search and filtering |
+| Distributed tracing | ❌ | ✅ |
+| Custom dashboards | ❌ | ✅ |
+| Alerting | ❌ | ✅ |
+| Long-term retention | Limited | Configurable |
+
+For production workloads, we recommend integrating at least one third-party observability platform to get comprehensive visibility into your applications.
+

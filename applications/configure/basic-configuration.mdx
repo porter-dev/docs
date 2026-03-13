@@ -1,0 +1,23 @@
+---
+title: 'Basic Configuration'
+---
+
+These are basic configuration options that are available on all three services - **Web**, **Worker**, and **Jobs**.
+
+## Setting the Start Command
+
+You can configure your application service to run any start command by simply editing it from the Porter Dashboard. If your application was built using a `Dockerfile`, the start command you put in here will override the
+`CMD` directive that is specified in your `Dockerfile`.
+
+## Assigning resources
+
+From the **General** tab, you can assign the amount of vCPU and RAM for each of your applications. The maximum amount of resources you can assign to a single application is capped by the size of the virtual machines you are using for the underlying cluster.
+
+![CPU and RAM Configuration](/images/deploy/v2/cpu-ram-sliders.webp)
+
+## Sleep Mode
+
+"Sleeping" a service can be enabled from the **Advanced** tab. When a service is put to sleep, it will be stopped and no instances will run. This is useful if you want to keep a service around but don't want to pay for the resources when it's not being used.
+
+Note that Sleep Mode is enabled at the service level, rather than at the app level.
+
