@@ -46,14 +46,10 @@ Environment groups support two types of values:
 
 | Type | Description | Visibility |
 |------|-------------|------------|
-| **Variables** | Non-sensitive configuration values | Visible in the dashboard and CLI after creation |
-| **Secrets** | Sensitive values (API keys, passwords, tokens) | Hidden after creation; stored in your cloud provider's secret manager |
+| **Variables** | Non-sensitive configuration values (max 25 KB per value) | Visible in the dashboard and CLI after creation |
+| **Secrets** | Sensitive values such as API keys, passwords, and tokens (max 25 KB per value) | Hidden after creation; stored in your cloud provider's secret manager |
 
 When creating or updating an environment group, use the lock icon in the dashboard (or the `-s` flag in the CLI) to mark a value as a secret.
-
-<Warning>
-Individual variable values and files cannot exceed 25 KB in size.
-</Warning>
 
 ## Files
 
