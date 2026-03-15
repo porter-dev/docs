@@ -93,14 +93,17 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
         Click **Create Service Account** and enter a name (e.g., `porter-service-account`).
       </Step>
       <Step title="Grant permissions">
-        Grant the service account these five roles:
+        Grant the service account the following roles:
 
         - **Cloud Storage > Storage Admin**
         - **Compute Engine > Compute Admin**
         - **Kubernetes Engine > Kubernetes Engine Admin**
+        - **Service Accounts > Service Account Admin**
         - **Service Accounts > Service Account User**
         - **Artifact Registry > Artifact Registry Administrator**
         - **Secret Manager > Secret Manager Admin**
+        - **Resource Manager > Project IAM Admin**
+        - **Service Usage > Service Usage Admin**
 
         Click **Done** to create the account.
       </Step>
