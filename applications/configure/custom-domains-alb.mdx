@@ -8,7 +8,7 @@ ALB uses AWS Certificate Manager (ACM) to issue SSL certificates for your custom
 
 ### 1. Enable ALB on your cluster
 
-Switch your cluster from NLB to ALB in the **Advanced** tab of your cluster settings. You may need to request access to ALB by contacting Porter support.
+Currently, Porter only supports ALB for clusters deployed on AWS. Switch your cluster from NLB to ALB in the **Advanced** tab of your cluster settings. You may need to request access to ALB by contacting Porter support.
 
 When prompted for a domain, provide your custom domain (e.g. `example.com`). Do not include the wildcard subdomain (`*.`) in the domain name — Porter will automatically create a certificate for your domain with a SAN of `*.example.com`.
 
@@ -27,7 +27,7 @@ Create two `CNAME` records in your DNS provider that point to your ALB DNS name:
 1. **Wildcard record** — Name: `*.example.com`, Value: your ALB DNS name
 2. **Root record** — Name: `example.com`, Value: your ALB DNS name
 
-Both records should point to the same ALB DNS name, which can be found in the **Networking** tab of your Web Service.
+Both records should point to the same ALB DNS name, which can be found in the [AWS EC2 Load Balancers](https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#LoadBalancers:).
 
 ### 4. Deploy your application
 
