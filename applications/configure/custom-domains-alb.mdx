@@ -1,0 +1,36 @@
+---
+title: "Custom Domains with ALB"
+---
+
+## ALB Custom Domain Setup
+
+ALB uses AWS Certificate Manager (ACM) to issue SSL certificates for your custom domains. Follow these steps to set up a custom domain with ALB:
+
+### 1. Enable ALB on your cluster
+
+Switch your cluster from NLB to ALB in the **Advanced** tab of your cluster settings. You may need to request access to ALB by contacting Porter support.
+
+When prompted for a domain, provide your custom domain (e.g. `example.com`). Do not include the wildcard subdomain (`*.`) in the domain name — Porter will automatically create a certificate for your domain with a SAN of `*.example.com`.
+
+To use multiple domains, comma-separate them (e.g. `app.example.com,staging.example.com`).
+
+### 2. Create the certificate validation DNS record
+
+After enabling ALB, find the corresponding certificate in **AWS Certificate Manager**. Click into the certificate to find the **CNAME name** and **CNAME value** required for validation.
+
+Create a `CNAME` record in your DNS provider with the name and value from the certificate. You may need to wait up to 30 minutes for the certificate to be issued successfully.
+
+### 3. Create DNS records pointing to the ALB
+
+Create two `CNAME` records in your DNS provider that point to your ALB DNS name:
+
+1. **Wildcard record** — Name: `*.example.com`, Value: your ALB DNS name
+2. **Root record** — Name: `example.com`, Value: your ALB DNS name
+
+Both records should point to the same ALB DNS name, which can be found in the **Networking** tab of your Web Service.
+
+### 4. Deploy your application
+
+Once DNS has propagated, attach the custom domain to your application. Click on **Add Custom Domain**, input your custom domain, then hit deploy. In a few minutes, your application will be available on the custom domain, secured with an SSL certificate.
+
+<Info>After you complete the previous steps, it might take up to 30 minutes for DNS records to fully propagate. Please wait before deploying your applications until the DNS propagation is complete. You can check this using tools like [dnschecker.org](https://dnschecker.org) or running `nslookup <your-domain>`.</Info>
