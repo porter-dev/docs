@@ -2,39 +2,75 @@
 title: 'porter env'
 ---
 
-`porter env` contains commands for managing environment variables and secrets.
+`porter env` contains commands for managing environment groups — project-wide sets of environment variables and secrets that can be shared across applications.
 
 ## Prerequisites
 
 - You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
 - You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
-- You're connected to the correct cluster by running [porter config set-cluster](/standard/cli/command-reference/porter-config)
 
 ---
 
-## Global Flags
+## `porter env list`
 
-These flags are available on all `porter env` subcommands:
+List all environment groups in the current project.
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--app` | `-a` | Target application |
-| `--group` | `-g` | Target environment group |
-| `--target` | `-x` | Deployment target name |
+**Usage:**
+```bash
+porter env list
+```
+
+Displays a table with each group's name, current version, and last updated time.
+
+---
+
+## `porter env create`
+
+Create a new environment group.
+
+**Usage:**
+```bash
+porter env create [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--name` | Environment group name (prompted interactively if omitted) |
+| `--variables`, `-v` | Variables to set as key=value pairs |
+| `--secrets`, `-s` | Secrets to set as key=value pairs |
+| `--no-input` | Disable interactive prompts |
+
+<CodeGroup>
+```bash Interactive
+porter env create
+```
+
+```bash Non-Interactive
+porter env create --name production-secrets
+```
+
+```bash With Variables and Secrets
+porter env create --name production-secrets \
+  -v NODE_ENV=production,LOG_LEVEL=info \
+  -s DB_PASSWORD=secret,API_KEY=sk-123
+```
+</CodeGroup>
 
 <Info>
-You must specify either `--app` or `--group`, but not both.
+If an environment group with the same name already exists, the command will fail. Use `porter env set` to update an existing group.
 </Info>
 
 ---
 
 ## `porter env pull`
 
-Pull environment variables from an application or environment group to your local machine.
+Pull environment variables from an environment group to your local machine.
 
 **Usage:**
 ```bash
-porter env pull [flags]
+porter env pull <env-group-name> [flags]
 ```
 
 **Options:**
@@ -46,24 +82,20 @@ porter env pull [flags]
 | `--secrets` | `-s` | Output only secrets (excludes variables) |
 
 <CodeGroup>
-```bash From Application
-porter env pull -a my-app
+```bash Print to stdout
+porter env pull production-secrets
 ```
 
-```bash From Environment Group
-porter env pull -g production-secrets
-```
-
-```bash To File
-porter env pull -a my-app -f .env.local
+```bash Write to File
+porter env pull production-secrets -f .env.local
 ```
 
 ```bash Variables Only
-porter env pull -a my-app -v
+porter env pull production-secrets -v
 ```
 
 ```bash Secrets Only
-porter env pull -g my-env-group -s -f secrets.env
+porter env pull production-secrets -s
 ```
 </CodeGroup>
 
@@ -75,11 +107,11 @@ By default, both variables and secrets are output together. Use `-v` or `-s` to 
 
 ## `porter env set`
 
-Set environment variables and secrets for an application or environment group.
+Add or update variables and secrets in an environment group.
 
 **Usage:**
 ```bash
-porter env set [flags]
+porter env set <env-group-name> [flags]
 ```
 
 **Options:**
@@ -88,49 +120,40 @@ porter env set [flags]
 |------|-------|-------------|
 | `--variables` | `-v` | Variables to set as key=value pairs |
 | `--secrets` | `-s` | Secrets to set as key=value pairs |
-| `--skip-redeploys` | | Skip re-deploying apps linked to the environment group |
 
 <CodeGroup>
-```bash Set App Variables
-porter env set -a my-app -v KEY1=value1,KEY2=value2
-```
-
-```bash Set Group Variables
-porter env set -g my-env-group -v KEY1=value1
+```bash Set Variables
+porter env set production-secrets -v LOG_LEVEL=debug,FEATURE_FLAG=true
 ```
 
 ```bash Set Secrets
-porter env set -g my-env-group -s API_KEY=secret123,DB_PASSWORD=pass456
+porter env set production-secrets -s API_KEY=sk-new-key
 ```
 
 ```bash Set Both
-porter env set -g my-env-group \
+porter env set production-secrets \
   -v NODE_ENV=production,LOG_LEVEL=info \
   -s DATABASE_URL=postgres://...
-```
-
-```bash Skip Redeploys
-porter env set -g my-env-group -v KEY=value --skip-redeploys
 ```
 </CodeGroup>
 
 <Warning>
-Use `-s/--secrets` for sensitive values like API keys and passwords. These are encrypted and not visible in logs.
+Use `-s/--secrets` for sensitive values like API keys and passwords. Secrets are stored in your cloud provider's secret manager and are not visible after creation.
 </Warning>
 
 <Info>
-When updating an environment group, all apps linked to the group will be re-deployed unless you use `--skip-redeploys`.
+When you update an environment group, all applications synced to it are automatically redeployed with the new values.
 </Info>
 
 ---
 
 ## `porter env unset`
 
-Remove environment variables or secrets from an application or environment group.
+Remove variables or secrets from an environment group.
 
 **Usage:**
 ```bash
-porter env unset [flags]
+porter env unset <env-group-name> [flags]
 ```
 
 **Options:**
@@ -139,37 +162,75 @@ porter env unset [flags]
 |------|-------|-------------|
 | `--variables` | `-v` | Comma-separated list of variable names to remove |
 | `--secrets` | `-s` | Comma-separated list of secret names to remove |
-| `--skip-redeploys` | | Skip re-deploying apps linked to the environment group |
 
 <CodeGroup>
-```bash Unset Variables from App
-porter env unset -a my-app -v KEY1,KEY2
+```bash Remove Variables
+porter env unset production-secrets -v OLD_KEY,UNUSED_VAR
 ```
 
-```bash Unset Secrets from App
-porter env unset -a my-app -s API_KEY,DB_PASSWORD
+```bash Remove Secrets
+porter env unset production-secrets -s ROTATED_KEY,OLD_SECRET
 ```
 
-```bash Unset from Group
-porter env unset -g my-env-group -v OLD_KEY,UNUSED_VAR
-```
-
-```bash Unset Both Variables and Secrets
-porter env unset -g my-env-group -v VAR1 -s SECRET1
-```
-
-```bash Skip Redeploys
-porter env unset -g my-env-group -v KEY --skip-redeploys
+```bash Remove Both
+porter env unset production-secrets -v VAR1 -s SECRET1
 ```
 </CodeGroup>
 
 <Info>
-When updating an environment group, all apps linked to the group will be re-deployed unless you use `--skip-redeploys`.
+When you update an environment group, all applications synced to it are automatically redeployed with the new values.
 </Info>
 
 ---
 
-## Related Commands
+## Legacy Commands
 
-- [porter app update](/standard/cli/command-reference/porter-app#porter-update) - Update app configuration
-- [porter apply](/standard/cli/command-reference/porter-apply) - Deploy with environment variables in porter.yaml
+The following flag-based syntax is supported for managing app-level and cluster-level environment variables. These are legacy commands — for environment groups, use the positional argument syntax above.
+
+### Legacy Flags
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--app` | `-a` | Target application |
+| `--group` | `-g` | Target cluster environment group |
+| `--target` | `-x` | Deployment target name |
+| `--skip-redeploys` | | Skip re-deploying apps linked to the cluster environment group |
+
+<Info>
+You must specify either `--app` or `--group`, but not both.
+</Info>
+
+<CodeGroup>
+```bash Pull from App
+porter env pull --app my-app
+```
+
+```bash Pull from Cluster Env Group
+porter env pull --group staging-config
+```
+
+```bash Set App Variables
+porter env set --app my-app -v KEY1=value1,KEY2=value2
+```
+
+```bash Set Cluster Group Variables
+porter env set --group my-env-group -v KEY1=value1
+```
+
+```bash Unset App Variables
+porter env unset --app my-app -v KEY1,KEY2
+```
+
+```bash Skip Redeploys
+porter env set --group my-env-group -v KEY=value --skip-redeploys
+```
+</CodeGroup>
+
+---
+
+## Related
+
+- [Environment Groups](/applications/configure/environment-groups) — Overview of environment groups
+- [porter.yaml Reference](/applications/configuration-as-code/reference) — `envGroups` field in porter.yaml
+- [porter app](/standard/cli/command-reference/porter-app) — Application management commands
+- [porter apply](/standard/cli/command-reference/porter-apply) — Deploy with porter.yaml

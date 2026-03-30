@@ -92,10 +92,15 @@
               ]
             },
             {
+              "group": "Environment Groups",
+              "pages": [
+                "applications/configure/environment-groups"
+              ]
+            },
+            {
               "group": "Configure",
               "pages": [
                 "applications/configure/basic-configuration",
-                "applications/configure/environment-groups",
                 "applications/configure/autoscaling",
                 "applications/configure/custom-domains",
                 "applications/configure/zero-downtime-deployments",
