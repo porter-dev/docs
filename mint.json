@@ -10,11 +10,11 @@
     "dark": "/logo/dark.png",
     "href": "https://porter.run"
   },
-  "favicon": "/favicon.png",
+  "favicon": "/favicon.ico",
   "colors": {
-    "primary": "#5D5DFF",
-    "light": "#9494FF",
-    "dark": "#5D5DFF",
+    "primary": "#5B63B2",
+    "light": "#AAB6FF",
+    "dark": "#3C4189",
     "anchors": {
       "from": "#5D5DFF",
       "to": "#9494FF"
