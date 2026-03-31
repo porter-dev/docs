@@ -11,20 +11,42 @@ Some third-party platforms may find it necessary to whitelist connections made f
 After ensuring you have the AWS CLI installed and configured to access the account which contains your Porter cluster, run the following command:
 
 ```bash
-aws ec2 describe-nat-gateways --filter "Name=tag-key,Values=kubernetes.io/cluster/<CLUSTER_NAME>" --query "NatGateways[*].NatGatewayAddresses[0].PublicIp"
+aws --region <REGION> ec2 describe-nat-gateways --filter "Name=tag-key,Values=*/cluster/<CLUSTER_NAME>" --query "NatGateways[*].NatGatewayAddresses[0].PublicIp"
 ```
 
-You'll need to replace `<CLUSTER_NAME>` with the name of your cluster. This command will return the egress IP which you can use to whitelist your workloads with third party platforms. In case your cluster has multiple gateways, there will be multiple egress IPs.
+You'll need to replace `<CLUSTER_NAME>` and `<REGION>` with the name, and region of your cluster.
+This command will return the egress IP which you can use to whitelist your workloads with third party platforms. In case your cluster has multiple gateways, there will be multiple egress IPs.
 
 ### AWS VPC Console
 
-1. Log into the AWS account containing your Porter cluster, and navigate to the `VPC` console.
+1. Log into the AWS account containing your Porter cluster, and navigate to the `VPC` console in the appropriate region for your cluster.
 
-2. In the left pane, select `NAT gateways`, and you'll be able to see your cluster's NAT gateways; they'll be named after your cluster. Alternatively, you can use `kubernetes.io/cluster/<CLUSTER_NAME>: shared` to pull up the cluster's NAT gateways, where `CLUSTER_NAME` corresponds to your Porter cluster name.
+2. In the left pane, select `NAT gateways`, and you'll be able to see your cluster's NAT gateways; they'll be named after your cluster, and have a tag `porter.run/managed: true`
 
 3. Copy the contents of `Primary public IP` - this serves as the egress IP which you can use to whitelist your workloads with third party platforms. In case your cluster has multiple gateways, there will be multiple egress IPs.
 
-![aws-egress-ip](/images/other/54ab5315-310d-438d-9360-41812623b004.png)
+## Azure
+
+### Azure CLI
+
+After ensuring you have the Azure CLI installed and configured to access the account which contains your Porter cluster, run the following command:
+
+```bash
+az aks show -g <resource-name> -n <cluster-name> --query 'networkProfile.loadBalancerProfile.effectiveOutboundIPs[].id'
+```
+
+You need to replace `<resource-name>` with the name of the resource group your cluster is deployed into and `<cluster-name>` with the name of your cluster.
+This command should return an array with only one ID.
+
+After that, you should run
+
+```bash
+az network public-ip show --ids <id> --query ipAddress -o tsv
+```
+
+where `<id>` is the ID you got from the previous command (preferably between quotes). Note that the ID is the full path displayed by the previous command, and not just the UUID at the end.
+
+From the last command, you should see your static egress IP as its output.
 
 ## Google Cloud Platform (GCP)
 
@@ -46,7 +68,5 @@ In case your cluster has multiple gateways, there will be multiple egress IPs.
 1. Log into the GCP console, and navigate to [Cloud NAT](https://console.cloud.google.com/net-services/nat/list)
 
 2. Search for your cluster name in the search bar, and click on the 'Gateway Name'
-   ![cloud-routers](https://github.com/porter-dev/porter/assets/10238219/6f1793ea-eb8b-451c-9cf2-11c543e16a6e)
 
 3. Your clusters IP address will be listed under "Cloud NAT Rules" as "Cloud NAT IPs"
-   ![cloud-nat-ip](https://github.com/porter-dev/porter/assets/10238219/099a5f24-a426-421f-bd01-26d2e1a0c1a4)

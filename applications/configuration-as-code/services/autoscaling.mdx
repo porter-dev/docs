@@ -1,0 +1,137 @@
+---
+title: 'Autoscaling Configuration'
+sidebarTitle: 'Autoscaling'
+---
+
+Configure horizontal pod autoscaling to automatically adjust the number of replicas based on resource utilization.
+
+## Field Reference
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `enabled` | boolean | Enable autoscaling |
+| `minInstances` | integer | Minimum number of replicas |
+| `maxInstances` | integer | Maximum number of replicas |
+| `cpuThresholdPercent` | integer | CPU usage threshold (0-100) |
+| `memoryThresholdPercent` | integer | Memory usage threshold (0-100) |
+
+## Basic Configuration
+
+```yaml
+services:
+  - name: api
+    # ...
+    autoscaling:
+      enabled: true
+      minInstances: 2
+      maxInstances: 10
+      cpuThresholdPercent: 80
+      memoryThresholdPercent: 80
+```
+
+<Info>
+When autoscaling is enabled, the `instances` field is ignored. The autoscaler manages replica count automatically.
+</Info>
+
+<Tip>
+For high availability, set `minInstances` to at least 3. See [High Availability Applications](/applications/configure/zero-downtime-deployments#high-availability-applications) for more details.
+</Tip>
+
+## How It Works
+
+When either CPU or memory usage exceeds your configured threshold, Porter automatically adds replicas. When usage drops, replicas are removed (down to your minimum).
+
+### Example: Autoscaling in Action
+
+Consider an API service with this configuration:
+
+```yaml
+autoscaling:
+  enabled: true
+  minInstances: 2
+  maxInstances: 10
+  cpuThresholdPercent: 60
+  memoryThresholdPercent: 80
+```
+
+Here's how the autoscaler responds to changing load:
+
+| Time | Avg CPU | Avg Memory | Replicas | What Happens |
+|------|---------|------------|----------|--------------|
+| t=0 | 30% | 40% | 2 | Baseline: both metrics below thresholds |
+| t=1 | 75% | 50% | 4 | CPU (75%) exceeds 60% threshold → scale up |
+| t=2 | 90% | 60% | 6 | CPU still high → continue scaling up |
+| t=3 | 55% | 85% | 8 | CPU stabilized, but memory (85%) exceeds 80% → scale up |
+| t=4 | 45% | 70% | 8 | Both metrics below thresholds → no change (cooldown period) |
+| t=5 | 40% | 50% | 5 | Sustained low usage → scale down |
+| t=6 | 35% | 45% | 2 | Continue scaling down to minimum |
+
+Key behaviors:
+- **Either metric triggers scaling**: If CPU *or* memory exceeds its threshold, replicas are added
+- **Both must be low to scale down**: Replicas are only removed when both CPU and memory are below their thresholds
+- **Respects bounds**: Replicas never drop below `minInstances` (2) or exceed `maxInstances` (10)
+- **Gradual changes**: The autoscaler adjusts incrementally, not all at once, to avoid oscillation
+
+## Custom Metrics Autoscaling (Prometheus)
+
+Scale based on application-specific metrics like queue length, request latency, or custom business metrics.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `customAutoscaling.prometheusMetricCustomAutoscaling.metricName` | string | Prometheus metric name |
+| `customAutoscaling.prometheusMetricCustomAutoscaling.threshold` | number | Threshold value to trigger scaling |
+| `customAutoscaling.prometheusMetricCustomAutoscaling.query` | string | Custom PromQL query (optional, defaults to metric name) |
+
+```yaml
+services:
+  - name: api
+    # ...
+    autoscaling:
+      enabled: true
+      minInstances: 1
+      maxInstances: 10
+      customAutoscaling:
+        prometheusMetricCustomAutoscaling:
+          metricName: "http_requests_per_second"
+          threshold: 100
+          query: "rate(http_requests_total[5m])"
+```
+
+<Info>
+Custom metrics autoscaling requires Prometheus to be accessible in your cluster. See [Custom Metrics and Autoscaling](/applications/observability/custom-metrics-and-autoscaling) for setup details.
+</Info>
+
+## Temporal Autoscaling
+
+Scale Temporal workflow workers based on task queue depth. Porter monitors your Temporal task queues and automatically adjusts worker count.
+
+<Info>
+Temporal autoscaling requires a Temporal integration to be configured. See [Temporal Autoscaling](/applications/configure/temporal-autoscaling) for setup details.
+</Info>
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `temporalAutoscaling.temporalIntegrationId` | string | UUID of the Temporal integration |
+| `temporalAutoscaling.taskQueue` | string | Name of the Temporal task queue to monitor |
+| `temporalAutoscaling.targetQueueSize` | integer | How many queued tasks each replica should handle (e.g., set to 10 with 100 tasks queued → 10 replicas) |
+
+```yaml
+services:
+  - name: temporal-worker
+    # ...
+    autoscaling:
+      enabled: true
+      minInstances: 2
+      maxInstances: 50
+      temporalAutoscaling:
+        temporalIntegrationId: "550e8400-e29b-41d4-a716-446655440000"
+        taskQueue: "my-task-queue"
+        targetQueueSize: 10
+```
+
+## Related Documentation
+
+- [Autoscaling Overview](/applications/configure/autoscaling) - UI-based configuration and concepts
+- [Web Services](/applications/configuration-as-code/services/web-service) - Web service configuration
+- [Worker Services](/applications/configuration-as-code/services/worker-service) - Worker service configuration
+

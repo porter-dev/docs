@@ -1,0 +1,114 @@
+---
+title: "Deployment Strategies"
+---
+
+
+> **Enterprise Feature**
+> 
+> Deployment Strategies and Deployment Target Rollouts are only available on Porter Enterprise Tier. Please reach out to support@porter.run to enable these on your account.
+
+
+On Porter, you can support deploying your applications across one, or many clusters (deployment targets) in incremental rollout phases. 
+
+Porter supports 3 deployment strategies within a single cluster:
+
+1. Rolling 
+2. Blue-Green
+3. Canary 
+
+Each of these strategies control how a given application (or group of applications) are released within a single cluster. Whilst these deployment strategies are frequently used by themselves, they are often used alongside “Deployment Target Rollouts,” which allow you to control the rollout of your new application across many different clusters.
+
+## Deployment Strategy (Single Cluster)
+
+### Rolling Update
+The default update type, which replaces running instances of your application one by one as soon as the newest instance’s health checks pass.
+
+### Blue-Green
+Blue-Green groups multiple applications together for simultaneous deployment. A new release (blue release) spins up the next version of your application and waits for all instances to pass their health checks. When that is done, all traffic is switched over from your existing release (green release) to the new release (blue release) in what is called a “Blue-Green cutover.” This is commonly used for NextJS applications which have a tightly coupled client-server requirement.
+
+### Canary
+Canary releases work similar to rolling updates wherein they incrementally replace releases of your running application. The main difference here is that a canary release can have various release gates which run after the application health checks. 
+
+Out of the box, Porter has built-in support for the following Canary gates:
+
+1. HTTP Response Codes - Define a HTTP response code,  Decremental Percentage, and Time Period. If the new version of your application has an increase in the given HTTP response code by the Decremental Percentage in the give Time Period, the deployment fails, and the previous version is left running.
+    1. Example: I would like to roll back my deployment if the new code causes a 5% increase in 503 errors in a given 15 minute period.
+2. Average CPU/Memory Usage - Define the Metric, Incremental Percentage and a Time Period. If the new version of your application causes a spike in average CPU or Memory usage in the given time period, the deployment is cancelled.
+    1. Example: I would like to roll back my deployment if the new code causes a 10% spike in the average CPU usage in a 5 minute period.
+3. HTTP Headers - Define a HTTP Header, Continue/Stop, and Time Period. All traffic with this header will be directed at the new code. After the Time Period, the rollout will continue or stop unless manual intervention occurs.
+    1. Example: I would like to direct all traffic with the header `X-Porter-New-Feature` to my new code for one hour. Continue the rollout unless I manually stop it
+
+## Deployment Target Rollout (Multi-Cluster DTR)
+
+For globally-deployed applications, it is common to want to have a phased rollout. This often involves only allowing customers in certain regions to have access to new features, or to slowly rollout the features on an incremental basis, cluster by cluster. Out of the box, Porter supports a Pilot-based DTR across Porter-managed clusters. Depending on your cloud and DNS provider, Porter can also support a geographic rollout.
+
+1. Pilot - A Deployment Target contains an ordered list of your selected clusters. For each cluster, define a Continue/Stop, and Time Period to wait before proceeding to rollout the application in the next cluster.
+    1. Example: I would like to rollout to Cluster A first. If I have not manually stopped the rollout, continue to rollout to Cluster B
+2. GeoProximity Rollout - If your DNS provider supports geoproximity routing, define a Region for each cluster in your DTR, as well as a Continue/Stop, and a Time Period.  
+    1. Example: I would like customers in Europe to get the updates 1 hour before the East Coast US. Continue rolling out the changes unless I manually stop the rollout
+
+Each DTR relies on the underlying Deployment Strategies on a per-cluster basis as Success criteria. A common usecase would be to use a HTTP Response Code Canary, within each cluster of your DTR’s Pilot.
+
+Example:  I would like to rollout to Cluster A first. If I have not manually stopped the rollout, continue to rollout to Cluster B, unless the Pilot Strategy in Cluster A Fails
+
+## Defining your strategies
+
+For the following examples, assume that we have 2 clusters (clusterA, clusterB), each with 3 applications (frontend, backend, middleware). 
+Within a given application’s porter.yaml, you can define a deployment strategy. This gets applied when you run `porter apply -f porter.yaml` 
+
+Deployment Strategies are defined within your Porter App definition.
+
+### Blue Green
+
+N.B. `middleware` is not included in the blue-green rollout, as it is not a partner app. This means that it will rolled out separately.
+
+```jsx
+name: frontend
+deploymentStrategy:
+  kind: blueGreen
+  blueGreen:
+    partnerApps:
+    - frontend
+    - backend
+```
+
+### Canary
+
+```jsx
+name: frontend
+deploymentStrategy:
+  kind: canary
+  canary:
+    gates:
+    - kind: httpResponseCode
+      decrementalPercentage: 10
+      httpResponseCode: 503
+      timePeriodMinutes: 60
+    - kind: httpHeader
+      header: x-porter-feature
+      continueOrStop: continue
+      timePeriodMinutes: 60
+    - kind: metric
+      metric: memory
+      incrementalPercentage: 15
+      timePeriodMinutes: 60
+
+```
+
+### Deployment Target Rollouts
+
+Deployment Target Rollouts are defined within a cloud’s definition. This denotes the usecase where clusterA required the frontend to be rolled out successfully before proceeding to rollout the backend.
+
+```jsx
+deploymentTargetRollouts:
+	kind: pilot
+	pilot:
+	- deploymentTarget: clusterA
+	  continueOrStop: continue
+      timePeriodMinutes: 120
+      requiredDeploymentStrategies:
+      - frontend 
+	- deploymentTarget: clusterB
+	  continueOrStop: stop
+      timePeriodMinutes: 120
+```

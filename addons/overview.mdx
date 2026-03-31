@@ -1,0 +1,86 @@
+---
+title: "Add-ons"
+sidebarTitle: "Overview"
+description: "Extend your Porter cluster with datastores, monitoring, and more"
+---
+
+Add-ons extend your Porter cluster with additional infrastructure components like databases, monitoring tools, persistent storage, and custom Helm charts.
+
+## Available Add-ons
+
+### Databases
+
+| Add-on | Description |
+|--------|-------------|
+| **Postgres** | An object-relational database system |
+| **Redis** | An in-memory key-value database |
+
+[Learn more about Datastores →](/addons/datastores)
+
+### Monitoring
+
+| Add-on | Description |
+|--------|-------------|
+| **Datadog** | Pipe logs, metrics, and APM data from your workloads |
+| **New Relic** | Monitor your applications and infrastructure |
+| **Grafana** | An open source analytics and monitoring tool |
+| **Langfuse** | An open source LLM engineering platform |
+| **Helicone AI Gateway** | An open source AI gateway for LLM requests |
+
+[Learn more about Third-party Observability →](/addons/third-party-observability)
+
+### Logging
+
+| Add-on | Description |
+|--------|-------------|
+| **Mezmo** | A popular logging management system |
+
+### Analytics
+
+| Add-on | Description |
+|--------|-------------|
+| **Metabase** | An open source business intelligence tool |
+| **Quivr** | Your second brain, empowered by generative AI |
+| **n8n** | An open source workflow engine |
+
+### Storage
+
+| Add-on | Description |
+|--------|-------------|
+| **Persistent Disk** | A persistent disk that can be attached to apps for data storage |
+
+[Learn more about Storage →](/addons/storage)
+
+### Custom
+
+| Add-on | Description |
+|--------|-------------|
+| **Helm Chart** | Install any Helm chart from a public repository |
+
+[Learn more about Custom Helm Charts →](/addons/custom-helm-charts)
+
+---
+
+## Cloud Provider Support
+
+| Add-on | AWS | GCP | Azure |
+|--------|-----|-----|-------|
+| **Datastores (Postgres, Redis)** | ✅ | Coming soon | Coming soon |
+| **Monitoring & Analytics** | ✅ | ✅ | ✅ |
+| **Custom Helm Charts** | ✅ | ✅ | ✅ |
+| **Storage (Persistent Disk)** | ✅ | Coming soon | Coming soon |
+
+---
+
+## Managing Add-ons
+
+Add-ons are managed through the **Add-ons** tab in your Porter dashboard. From there you can:
+
+- Create new add-ons
+- View and modify existing add-on configurations
+- Connect add-ons to your applications via environment groups
+- Delete add-ons when no longer needed
+
+<Warning>
+Deleting an add-on may cause connected applications to lose access to the resource. Ensure you've migrated any data before deleting datastores or storage add-ons.
+</Warning>

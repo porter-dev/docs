@@ -14,12 +14,25 @@ To add a new collaborator to a Porter project, you must be logged in with an **A
 
 If the user does not have a Porter account, they will be asked to register. After registering, if they are not automatically added to the project, the user should **click the invite link again**.
 
+## Just In Time User Provisioning[](#just-in-time-user-provisioning "Direct link to heading")
+
+To set up just in time user provisioning, you must be logged in with an **Admin** role. As an admin, you can find the setup in **Settings** then **Members** in the sidebar then go to the **SSO** tab. Setting up Just In Time User Provisioning requires your organization to have an Single Sign-On provider configured.
+
+1. To set up Single Sign-On, you can click **Request** under **SSO provisioning** to reach out to support. Single Sign-On is configured by linking your identity provider with our auth provider. 
+2. After reaching out to support, set up JIT by going back to the **SSO** tab and click **Set Up** to login with an account. Ensure that you log in with an account connected to your organization.
+
+Once setup, any new users in the same organization will automatically be added to the project without an invite email. By default these users will receive **viewer** role, but you can also configure the default role. You can also click **Update Provider** to set up a different organization.
+
+<Info>
+    Users that have been manually removed from the project will need to be manually re-added.
+</Info>
+
 ## Changing Collaborator Permissions[](#changing-collaborator-permissions "Direct link to heading")
 
-To change an invite or collaborator role, you must be logged in with an **Admin** role. As an admin, you will se a **Settings** tab in the sidebar. Navigate to **Settings** and lookup on the table the invite/collaborator that you want to change it's role, then click the icon with three dots on the row. This will open a pop up that will allow you to select the new role for that invite/collaborator.
+To change an invite or collaborator role, you must be logged in with an **Admin** role. As an admin, you will see a **Settings** tab in the sidebar. Navigate to **Settings** and lookup on the table the invite/collaborator that you want to change it's role, then click the icon with three dots on the row. This will open a pop up that will allow you to select the new role for that invite/collaborator.
 
 You will see that the user that created the project will not be displayed on the table, and you cannot change your own permissions.
 
 ## Removing Collaborators[](#removing-collaborators "Direct link to heading")
 
-To remove an invite or a collaborator, you must be logged in with an **Admin** role. As an admin, you will se a **Settings** tab in the sidebar. Navigate to **Settings** and lookup on the table the invite/collaborator that you want to remove then click the trash icon to remove the user from the project or delete the invite.
+To remove an invite or a collaborator, you must be logged in with an **Admin** role. As an admin, you will see a **Settings** tab in the sidebar. Navigate to **Settings** and lookup on the table the invite/collaborator that you want to remove then click the trash icon to remove the user from the project or delete the invite.

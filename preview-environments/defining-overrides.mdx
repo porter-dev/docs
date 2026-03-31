@@ -15,30 +15,14 @@ After enabling previews, you will be directed to a form where you can define wha
 ![Updating Values](/images/preview-environments/updating-values.png)
 _Any value that you can set when creating or updating an app can be changed specifically for preview environments._
 
-### Using `porter.yaml`
+### Using `porter.yaml` (Optional)
 
-Values set in the `previews` section of `porter.yaml` will be overlayed on top of the base configuration for a particular app. For example, the `api` service defined in the YAML below will use 128MB of RAM in all preview environments. Additionally, the `NODE_ENV` environment variable will be set to `development` in previews. Any values not specifically overriden in the `previews` section will be inherited from the base app.
+You can also define a separate `porter.yaml` file to be used specifically for preview apps. The values in this file will override any values that are set while configuring the preview app template in the dashboard. The format of this file is the same as non-preview `porter.yaml` files (full reference [here](/applications/configuration-as-code/reference)).
 
-```yaml
-version: v2
+When creating the preview app template, you will be prompted to select the path of your preview `porter.yaml` file.
 
-services:
-  - name: api
-    type: web
-    port: 3000
-
-env:
-  NODE_ENV: production
-
-# any values set in this section will override the values above
-previews:
-  services:
-    - name: api
-      ramMegabytes: 128 # use less memory in previews
-
-  env:
-    NODE_ENV: development # change the NODE_ENV variable to development in previews
-```
+![Selecting Preview `porter.yaml` File](/images/preview-environments/choose-preview-porter-yaml.png)
+_Selecting the path of your preview `porter.yaml` file._
 
 ## Setting Environment Variables
 
@@ -47,3 +31,18 @@ Porter will by default use the environment variables from the base app, but stri
 ## Preview App URLs
 
 Preview apps can be made accessible via a unique URL that is generated when the preview is created. Similarly to environment groups, custom domains defined on your base app are also stripped out when creating the preview app in order to prevent collisions. If you want to make a preview web service accessible via a unique URL, make sure that the service is configured to be public.
+
+### Custom Domains
+
+Custom domains can be configured based on the PR branch name and number by using the `{BRANCH}` and `{PR_NUMBER}` placeholders in the custom domain name while configuring the preview app template:
+
+![Custom Domains](/images/preview-environments/custom-domain-with-branch-placeholder.png)
+_Using the `{BRANCH}` or `{PR_NUMBER}` placeholders in the custom domain name will result in a custom domain that is based on the PR branch name or number for each preview._
+
+For example, if you set the custom domain to `{BRANCH}.my-domain.com` and have a branch named `my-feature-branch`, the preview app will be accessible via `my-feature-branch.my-domain.com`.
+If you set the custom domain to `{PR_NUMBER}.my-domain.com` and have a PR number of `123`, the preview app will be accessible via `123.my-domain.com`.
+
+Note that in order to be compatible with this feature, the branch name must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character.
+You will also have to create a wildcard record in your DNS provider for the base domain (e.g. `*.my-domain.com`) that points to the ingress IP for your cluster. The ingress IP can be found in the **Networking** tab of any of your web services.
+![Cluster Ingress IP](/images/preview-environments/cluster-ingress-ip.png)
+_The ingress IP for your cluster can be found in the **Networking** tab of any of your web services._
