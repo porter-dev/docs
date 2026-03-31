@@ -1,0 +1,42 @@
+---
+title: 'DevOps Agent'
+sidebarTitle: 'DevOps Agent'
+---
+
+Porter runs a DevOps agent (internally called Rudder) inside each of your clusters. The agent handles incident detection, log storage, and Kubernetes event tracking so that the Porter dashboard can surface real-time information about your applications without relying on external services.
+
+## What the Agent Does
+
+The agent runs as a background process in your cluster and monitors your Porter-managed applications. It watches Deployments, Rollouts, and Jobs for failures, collects logs through [Loki](https://github.com/grafana/loki), and stores Kubernetes events for historical querying.
+
+When something goes wrong, the agent detects it, generates a human-readable incident summary, and forwards an alert to the Porter server. These are the incidents and alerts you see in the Porter dashboard and receive through integrations like Slack.
+
+## Incident Detection
+
+The agent monitors your applications for critical failures across three types of workloads:
+
+- **Deployments** - Detects pod crashes, failed rollouts, and container errors
+- **Rollouts** - Monitors ArgoCD rollout progress and detects failures during progressive delivery
+- **Jobs** - Tracks job run failures, non-zero exit codes, and timeout conditions
+
+Each incident is tracked with metadata about the affected application, including the release name, namespace, involved pods, and the specific revision that triggered the failure. Incidents are categorized as either critical or normal severity, and the agent deduplicates alerts so you don't get repeated notifications for the same underlying problem.
+
+## Log Collection
+
+Application logs are collected and stored using Loki, which runs inside your cluster. Logs never leave your infrastructure. The agent provides a query interface that the Porter dashboard uses to display logs with search, filtering, and time-range navigation.
+
+You can query logs by pod, revision, or free-text search. The agent also supports log tailing for real-time streaming back to the dashboard.
+
+For more details on how logging works in Porter, see [Logging](/observability/logging).
+
+## Kubernetes Event Tracking
+
+The agent captures and stores Kubernetes events relevant to your Porter applications. These events are filtered by severity and relevance, so you only see what matters. Events are retained in the agent's local database with automatic cleanup of entries older than one hour.
+
+You can query historical events through the Porter dashboard to help diagnose issues that happened in the past.
+
+## How It Runs
+
+The agent is deployed and managed by Porter automatically when you provision a cluster. It runs on port 10001 and exposes health check endpoints (`/livez` and `/readyz`) that Kubernetes uses for liveness and readiness probes. You don't need to configure or maintain the agent yourself.
+
+The agent only watches resources labeled with `porter.run/porter-application=true`, so it won't interfere with any non-Porter workloads running on the same cluster.
