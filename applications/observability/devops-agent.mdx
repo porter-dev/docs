@@ -18,7 +18,7 @@ You'll need to configure a few things:
 1. **Provider** - either Anthropic (direct API) or AWS Bedrock
 2. **Model** - which model to run (Claude Sonnet 4.6, Claude Opus 4.6, or Claude Haiku 4.5)
 3. **API key** - your API key for the selected provider
-4. **Provider URL** (Bedrock only) - your Bedrock runtime endpoint, e.g. `https://bedrock-runtime.us-east-1.amazonaws.com`
+4. **Provider URL** (Bedrock only) - your Bedrock runtime endpoint, formatted as `https://bedrock-runtime.{region}.amazonaws.com` (see [AWS Bedrock endpoints](https://docs.aws.amazon.com/general/latest/gr/bedrock.html) for available regions)
 
 <Warning>AWS Bedrock currently only supports long-term API keys generated from the Bedrock console. Short-term generated credentials are not supported.</Warning>
 
