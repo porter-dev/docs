@@ -9,15 +9,25 @@ The DevOps Agent is an AI-powered debugging assistant built into the Porter dash
 
 ## Setup
 
-To enable the DevOps Agent, open the agent sidebar from any app page and click the settings icon. You'll need to configure three things:
+To enable the DevOps Agent, click **DevOps Agent** in the sidebar or press `⌘+I`. If the agent hasn't been configured yet, you'll see a setup prompt. Click **Configure** to open the settings panel.
+
+![DevOps Agent setup prompt](/images/devops-agent/configure-prompt.png)
+
+You'll need to configure three things:
 
 1. **Provider** - the LLM provider to use (currently Anthropic is supported)
 2. **Model** - which model to run (Claude Sonnet 4, Claude Opus 4, or Claude 3.5 Haiku)
 3. **API key** - your API key for the selected provider
 
-Once you save, Porter deploys the agent to your cluster. It takes a few seconds to become ready. The agent is configured per cluster, so you only need to set it up once per cluster.
+Click **Save changes** to deploy the agent to your cluster.
 
-You can disable the agent at any time from the same settings panel. Disabling removes the agent from your cluster and clears the configuration.
+![DevOps Agent settings panel](/images/devops-agent/settings-panel.png)
+
+It takes a few seconds for the agent to start up. You'll see a loading indicator while it deploys.
+
+![DevOps Agent starting up](/images/devops-agent/starting-up.png)
+
+The agent is configured per cluster, so you only need to set it up once per cluster. You can disable the agent at any time from the same settings panel. Disabling removes the agent from your cluster and clears the configuration.
 
 ## How It Works
 
@@ -33,11 +43,15 @@ The agent is context-aware. It knows which app, add-on, or datastore you're curr
 
 Open the DevOps Agent with `⌘+I` (or `Ctrl+I` on Windows/Linux), or click the agent icon in the sidebar. It's available on any app, add-on, datastore, or cluster page. Ask your question in the input field and the agent will start investigating.
 
-As it works, you can see what it's checking in a collapsible thinking section. Once it has a diagnosis, it presents a concise answer with what went wrong and how to fix it, usually with links to the relevant Porter docs or dashboard settings.
+As it works, you can see what it's checking in a collapsible thinking section.
 
-The agent maintains a session, so you can ask follow-up questions to dig deeper into the same issue.
+![Agent investigating a question](/images/devops-agent/investigating.png)
+
+Once it has a diagnosis, it presents a concise answer with what went wrong and how to fix it, usually with links to the relevant Porter docs or dashboard settings. The agent maintains a session, so you can ask follow-up questions to dig deeper into the same issue.
 
 After the agent responds, you can rate the answer with thumbs up or thumbs down. If the answer wasn't helpful, you'll be prompted to select a reason (inaccurate, not helpful, or too verbose). You can also create a support ticket directly from any agent response by clicking the headset icon, which is useful if the agent's diagnosis points to something that needs human help.
+
+![Response with feedback actions](/images/devops-agent/response-feedback.png)
 
 ## What You Can Ask About
 
