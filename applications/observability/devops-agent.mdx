@@ -64,4 +64,4 @@ The agent itself is free to use on Porter. However, each query uses your own LLM
 
 ### Can the agent affect my production workloads?
 
-No. The agent runs as a small, isolated container on your cluster's system nodes with minimal resource requirements (50m CPU, 128Mi memory). It runs separately from your application workloads and has read-only access to your cluster, so it can't modify or interfere with your services.
+No. The agent runs as a small, isolated container on your cluster with minimal resource requirements (50m CPU request, 128Mi memory request). It has read-only access to your cluster and can't modify or interfere with your services.
