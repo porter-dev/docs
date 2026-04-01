@@ -114,7 +114,8 @@
                 "applications/observability/logging",
                 "applications/observability/alerts",
                 "applications/observability/app-metadata",
-                "applications/observability/custom-metrics-and-autoscaling"
+                "applications/observability/custom-metrics-and-autoscaling",
+                "applications/observability/devops-agent"
               ]
             },
             {
