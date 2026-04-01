@@ -5,6 +5,18 @@ sidebarTitle: 'DevOps Agent'
 
 The DevOps Agent is an AI-powered debugging assistant built into the Porter dashboard. When something goes wrong with your app, you can open the agent sidebar and ask it what's happening in plain English. It investigates your infrastructure in real time, translates what it finds into actionable answers, and links you to the right docs or settings to fix the problem.
 
+## Setup
+
+To enable the DevOps Agent, open the agent sidebar from any app page and click the settings icon. You'll need to configure three things:
+
+1. **Provider** - the LLM provider to use (currently Anthropic is supported)
+2. **Model** - which model to run (Claude Sonnet 4, Claude Opus 4, or Claude 3.5 Haiku)
+3. **API key** - your API key for the selected provider
+
+Once you save, Porter deploys the agent to your cluster. It takes a few seconds to become ready. The agent is configured per cluster, so you only need to set it up once per cluster.
+
+You can disable the agent at any time from the same settings panel. Disabling removes the agent from your cluster and clears the configuration.
+
 ## How It Works
 
 The agent runs inside your cluster and has read-only access to inspect the infrastructure backing your apps, add-ons, and datastores. When you ask a question, it pulls together information from multiple sources to build a diagnosis:
@@ -43,3 +55,13 @@ It can also answer general "how do I..." questions about Porter by searching the
 The agent has read-only access. It can inspect your infrastructure and tell you what's wrong, but it can't make changes on your behalf. Any fixes it recommends will point you to the right place in the dashboard, CLI, or `porter.yaml` to make the change yourself.
 
 The agent is scoped to the resource you're viewing. If you need help with a different app or cluster, navigate to that resource's page and start a new session.
+
+## FAQ
+
+### Does the DevOps Agent cost anything?
+
+The agent itself is free to use on Porter. However, each query uses your own LLM API key, so you'll be billed by your provider (e.g. Anthropic) for the tokens consumed. A typical debugging session uses a moderate number of tokens across the tool calls and response.
+
+### Can the agent affect my production workloads?
+
+No. The agent runs as a small, isolated container on your cluster's system nodes with minimal resource requirements (50m CPU, 128Mi memory). It runs separately from your application workloads and has read-only access to your cluster, so it can't modify or interfere with your services.
