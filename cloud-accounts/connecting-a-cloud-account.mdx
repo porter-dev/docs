@@ -61,53 +61,81 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
   </Tab>
 
   <Tab title="GCP">
-    Porter connects to GCP using a service account with permissions to manage your infrastructure.
+    Porter connects to GCP using a service account with the **Project IAM Admin** role. You only need to grant this one role and enable one API — Porter automatically provisions all other required permissions and APIs.
 
-    ## Prerequisites
+    ## Create the Service Account
+
+    You can create the service account using our automated script (recommended) or manually.
 
     <AccordionGroup>
-      <Accordion title="Enable the Cloud Resource Manager API" icon="toggle-on">
+      <Accordion title="Option 1: Automated setup (recommended)">
+        If you have the [gcloud CLI](https://cloud.google.com/sdk/docs/install) installed and authenticated (`gcloud auth login`), run our setup script:
+
+        ```bash
+        # Download the setup script
+        curl -O https://raw.githubusercontent.com/porter-dev/docs/main/scripts/setup-gcp-porter.sh
+
+        # Make it executable
+        chmod +x setup-gcp-porter.sh
+
+        # Run the script (optionally provide your GCP project ID)
+        ./setup-gcp-porter.sh [your-gcp-project-id]
+        ```
+
+        The script:
+        - Enables the Cloud Resource Manager API
+        - Creates a `porter-manager` service account
+        - Grants the **Project IAM Admin** role
+        - Downloads a JSON key file
+
+        After running the script, upload the generated key file to Porter.
+      </Accordion>
+
+      <Accordion title="Option 2: Manual setup">
+        ### Enable the Cloud Resource Manager API
+
         Before creating the service account, enable the **Cloud Resource Manager API** in your [GCP Console](https://console.cloud.google.com):
 
         1. Navigate to **APIs & Services**
         2. Click **Enable APIs and Services**
         3. Search for **Cloud Resource Manager API** and enable it
 
-        The API may take a few minutes to enable. Porter will automatically enable all other required APIs (Compute Engine, Kubernetes Engine, Artifact Registry, Secret Manager, etc.) after you upload your credentials.
+        The API may take a few minutes to enable.
+
+        ### Create the Service Account
+
+        <Steps>
+          <Step title="Navigate to Service Accounts">
+            In the [GCP Console](https://console.cloud.google.com), go to **IAM & Admin** → **Service Accounts**.
+          </Step>
+          <Step title="Create the account">
+            Click **Create Service Account** and enter a name (e.g., `porter-manager`).
+          </Step>
+          <Step title="Grant permissions">
+            Grant the service account the following role:
+
+            - **Resource Manager > Project IAM Admin**
+
+            This is the only role you need to grant manually. Porter uses this role to automatically provision all other required IAM bindings (Storage Admin, Compute Admin, Kubernetes Engine Admin, etc.).
+
+            Click **Done** to create the account.
+          </Step>
+          <Step title="Create a key">
+            1. Find your new service account in the list
+            2. Under **Actions**, select **Manage keys**
+            3. Click **Add Key** → **Create new key**
+            4. Select **JSON** as the key type
+            5. The JSON key file downloads automatically — keep it safe
+          </Step>
+        </Steps>
       </Accordion>
     </AccordionGroup>
 
-    ## Create the Service Account
+    ## Upload to Porter
 
-    <Steps>
-      <Step title="Navigate to Service Accounts">
-        In the [GCP Console](https://console.cloud.google.com), go to **IAM & Admin** → **Service Accounts**.
-      </Step>
-      <Step title="Create the account">
-        Click **Create Service Account** and enter a name (e.g., `porter-service-account`).
-      </Step>
-      <Step title="Grant permissions">
-        Grant the service account the following role:
+    In Porter, click **Drop a GCP Service Account JSON here, or click to browse** and upload the JSON key file.
 
-        - **Resource Manager > Project IAM Admin**
-
-        This is the only role you need to grant manually. Porter uses this role to automatically provision all other required IAM bindings (Storage Admin, Compute Admin, Kubernetes Engine Admin, etc.).
-
-        Click **Done** to create the account.
-      </Step>
-      <Step title="Create a key">
-        1. Find your new service account in the list
-        2. Under **Actions**, select **Manage keys**
-        3. Click **Add Key** → **Create new key**
-        4. Select **JSON** as the key type
-        5. The JSON key file downloads automatically—keep it safe
-      </Step>
-      <Step title="Upload to Porter">
-        In Porter, click **Drop a GCP Service Account JSON here, or click to browse** and upload the JSON key file.
-
-        Porter verifies the credentials and automatically provisions all required permissions and APIs. This takes about a minute.
-      </Step>
-    </Steps>
+    Porter verifies the credentials and automatically provisions all required permissions and APIs. This takes about a minute.
 
     ## Revoking Access
 
