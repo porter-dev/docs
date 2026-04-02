@@ -93,12 +93,7 @@ After [connecting your cloud account](/cloud-accounts/connecting-a-cloud-account
         Review the cost breakdown and click **Accept** to continue.
       </Step>
       <Step title="Pass provision checks">
-        Before provisioning, Porter verifies your GCP project is properly configured. If any checks fail, troubleshooting steps are shown on the dashboard.
-
-        Common checks include:
-        - Required APIs are enabled
-        - Service account has necessary permissions
-        - Project has billing enabled
+        Before provisioning, Porter verifies that your cloud account credentials are connected and that billing is enabled on your GCP project. If any checks fail, troubleshooting steps are shown on the dashboard.
       </Step>
       <Step title="Configure your cluster">
         Porter pre-configures your cluster with sensible defaults:
@@ -128,28 +123,23 @@ After [connecting your cloud account](/cloud-accounts/connecting-a-cloud-account
       <Accordion title="Provisioning takes longer than 45 minutes">
         If your cluster has been provisioning for more than 45 minutes:
 
-        - Verify the service account still exists and has the required permissions
-        - Check that all required APIs are still enabled
+        - Verify the service account still exists and has the **Project IAM Admin** role
+        - Verify the **Cloud Resource Manager API** is enabled
         - Verify the GCP project has billing enabled
 
         If issues persist, contact us through the dashboard chat bot with your project ID.
       </Accordion>
       <Accordion title="API not enabled errors">
-        If you see errors about APIs not being enabled:
+        Porter automatically enables required APIs during setup. If you still see API errors:
 
-        1. Navigate to **APIs & Services** in the GCP Console
-        2. Verify all five required APIs are enabled:
-           - Compute Engine API
-           - Kubernetes Engine API
-           - Cloud Resource Manager API
-           - Container Registry API
-           - Artifact Registry API
+        1. Verify the service account has the **Project IAM Admin** role (this is required for Porter to enable APIs automatically)
+        2. Navigate to **APIs & Services** in the GCP Console and verify the **Cloud Resource Manager API** is enabled
         3. Return to Porter and retry provisioning
       </Accordion>
       <Accordion title="Permission denied errors">
-        If you encounter permission errors:
+        Porter automatically provisions all required IAM bindings from a single bootstrap role. If you encounter permission errors:
 
-        - Verify the service account has all five required roles
+        - Verify the service account has the **Project IAM Admin** role (`roles/resourcemanager.projectIamAdmin`)
         - Check that the JSON key file matches the service account
         - Ensure the service account hasn't been modified since creation
       </Accordion>

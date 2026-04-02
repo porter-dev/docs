@@ -110,28 +110,19 @@ Porter provisions a Kubernetes cluster in your cloud account. The setup process 
     </Steps>
   </Tab>
   <Tab title="GCP">
-    Porter connects to GCP using a service account with permissions to manage your infrastructure.
+    Porter connects to GCP using a service account. You only need to grant one IAM role and enable one API—Porter automatically provisions everything else.
 
     <Steps>
-      <Step title="Enable required APIs">
-        In your [GCP Console](https://console.cloud.google.com), navigate to **APIs & Services** and enable these five APIs:
+      <Step title="Enable the Cloud Resource Manager API">
+        In your [GCP Console](https://console.cloud.google.com), navigate to **APIs & Services**, click **Enable APIs and Services**, and enable the **Cloud Resource Manager API**.
 
-        - Compute Engine API
-        - Kubernetes Engine API
-        - Cloud Resource Manager API
-        - Container Registry API
-        - Artifact Registry API
+        Porter will automatically enable all other required APIs after you upload your credentials.
       </Step>
       <Step title="Create a service account">
         1. Navigate to **IAM & Admin** > **Service Accounts**
         2. Click **Create Service Account**
         3. Name your service account (e.g., `porter-service-account`)
-        4. Grant these five permissions:
-           - **Cloud Storage > Storage Admin**
-           - **Compute Engine > Compute Admin**
-           - **Kubernetes Engine > Kubernetes Engine Admin**
-           - **Service Accounts > Service Account User**
-           - **Artifact Registry > Artifact Registry Administrator**
+        4. Grant the **Resource Manager > Project IAM Admin** role
         5. Click **Done** to create the account
         6. Under **Actions**, select **Manage keys**
         7. Click **Add Key** > **Create new key** > **JSON**
@@ -142,7 +133,7 @@ Porter provisions a Kubernetes cluster in your cloud account. The setup process 
 
         ![Upload GCP service account key](/images/getting-started/step-3-gcp-upload-json.webp)
 
-        Porter verifies the credentials and permissions. This typically takes about a minute.
+        Porter verifies the credentials and automatically provisions all required permissions and APIs. This takes about a minute.
       </Step>
       <Step title="Review costs">
         Porter displays estimated monthly costs for your infrastructure (~$253/month for GCP).
