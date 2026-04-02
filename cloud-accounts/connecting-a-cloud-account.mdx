@@ -66,20 +66,14 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
     ## Prerequisites
 
     <AccordionGroup>
-      <Accordion title="Enable required GCP APIs" icon="toggle-on">
-        Before creating the service account, enable the following APIs in your [GCP Console](https://console.cloud.google.com):
+      <Accordion title="Enable the Cloud Resource Manager API" icon="toggle-on">
+        Before creating the service account, enable the **Cloud Resource Manager API** in your [GCP Console](https://console.cloud.google.com):
 
         1. Navigate to **APIs & Services**
         2. Click **Enable APIs and Services**
-        3. Search for and enable each of these APIs:
-           - Compute Engine API
-           - Kubernetes Engine API
-           - Cloud Resource Manager API
-           - Container Registry API
-           - Artifact Registry API
-           - Secret Manager API
+        3. Search for **Cloud Resource Manager API** and enable it
 
-        Each API may take a few minutes to enable. Confirm all six are enabled before proceeding.
+        The API may take a few minutes to enable. Porter will automatically enable all other required APIs (Compute Engine, Kubernetes Engine, Artifact Registry, Secret Manager, etc.) after you upload your credentials.
       </Accordion>
     </AccordionGroup>
 
@@ -93,17 +87,11 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
         Click **Create Service Account** and enter a name (e.g., `porter-service-account`).
       </Step>
       <Step title="Grant permissions">
-        Grant the service account the following roles:
+        Grant the service account the following role:
 
-        - **Cloud Storage > Storage Admin**
-        - **Compute Engine > Compute Admin**
-        - **Kubernetes Engine > Kubernetes Engine Admin**
-        - **Service Accounts > Service Account Admin**
-        - **Service Accounts > Service Account User**
-        - **Artifact Registry > Artifact Registry Administrator**
-        - **Secret Manager > Secret Manager Admin**
         - **Resource Manager > Project IAM Admin**
-        - **Service Usage > Service Usage Admin**
+
+        This is the only role you need to grant manually. Porter uses this role to automatically provision all other required IAM bindings (Storage Admin, Compute Admin, Kubernetes Engine Admin, etc.).
 
         Click **Done** to create the account.
       </Step>
@@ -117,7 +105,7 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
       <Step title="Upload to Porter">
         In Porter, click **Drop a GCP Service Account JSON here, or click to browse** and upload the JSON key file.
 
-        Porter verifies the credentials and permissions (this takes about a minute).
+        Porter verifies the credentials and automatically provisions all required permissions and APIs. This takes about a minute.
       </Step>
     </Steps>
 
