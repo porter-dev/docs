@@ -27,12 +27,6 @@
   "modeToggle": {
     "default": "dark"
   },
-  "redirects": [
-    {
-      "source": "/cloud-accounts/tailscale",
-      "destination": "/security-and-compliance/tailscale"
-    }
-  ],
   "navigation": [
     {
       "group": "",
