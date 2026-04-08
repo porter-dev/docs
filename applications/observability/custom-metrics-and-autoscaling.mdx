@@ -11,7 +11,7 @@ For other autoscaling options, see the [Autoscaling overview](/applications/conf
 
 ## Configuring Metrics Scraping
 
-**Note:** The metrics scraping toggle is only available for web services. However, metric-based autoscaling can be configured on any service type (web or worker) as long as the metric is available in Prometheus — for example, via a Helm chart addon that exposes metrics.
+**Note:** Metrics scraping is only available for web services.
 
 You can configure Porter to scrape metrics from your application's `/metrics` endpoint. This is useful for:
 - Collecting application-specific metrics
