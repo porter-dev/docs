@@ -1,0 +1,205 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Porter",
+  "colors": {
+    "primary": "#5D5DFF",
+    "light": "#9494FF",
+    "dark": "#5D5DFF"
+  },
+  "favicon": "/favicon.png",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "pages": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "getting-started/introduction",
+              "getting-started/concepts",
+              "getting-started/quickstart"
+            ]
+          },
+          {
+            "group": "Cloud Accounts",
+            "pages": [
+              "cloud-accounts/overview",
+              "cloud-accounts/connecting-a-cloud-account",
+              "cloud-accounts/creating-a-cluster",
+              "cloud-accounts/node-groups",
+              "cloud-accounts/cluster-upgrades",
+              "cloud-accounts/advanced-cluster-settings",
+              "cloud-accounts/cluster-observability",
+              "cloud-accounts/tailscale",
+              "cloud-accounts/deleting-a-cluster"
+            ]
+          },
+          {
+            "group": "Applications",
+            "pages": [
+              {
+                "group": "Deploy",
+                "pages": [
+                  "applications/deploy/overview",
+                  "applications/deploy/types-of-services",
+                  "applications/deploy/deploy-from-github-repo",
+                  "applications/deploy/deploy-from-docker-registry",
+                  "applications/deploy/configuring-application-services",
+                  "applications/deploy/builds",
+                  "applications/deploy/multiple-deploys-from-same-build",
+                  "applications/deploy/pre-deploy-jobs",
+                  "applications/deploy/rollbacks",
+                  "applications/deploy/using-other-ci-tools",
+                  "applications/deploy/duplicating-apps"
+                ]
+              },
+              {
+                "group": "Configuration as Code",
+                "pages": [
+                  "applications/configuration-as-code/overview",
+                  "applications/configuration-as-code/reference",
+                  "applications/configuration-as-code/addons-porter-yaml",
+                  {
+                    "group": "Service Configuration",
+                    "pages": [
+                      "applications/configuration-as-code/services/web-service",
+                      "applications/configuration-as-code/services/worker-service",
+                      "applications/configuration-as-code/services/job-service",
+                      "applications/configuration-as-code/services/predeploy",
+                      "applications/configuration-as-code/services/autoscaling",
+                      "applications/configuration-as-code/services/connections"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Configure",
+                "pages": [
+                  "applications/configure/basic-configuration",
+                  "applications/configure/environment-groups",
+                  "applications/configure/autoscaling",
+                  "applications/configure/sqs-autoscaling",
+                  "applications/configure/custom-domains",
+                  "applications/configure/zero-downtime-deployments",
+                  "applications/configure/advanced-networking"
+                ]
+              },
+              {
+                "group": "Observability",
+                "pages": [
+                  "applications/observability/monitoring",
+                  "applications/observability/logging",
+                  "applications/observability/alerts",
+                  "applications/observability/app-metadata",
+                  "applications/observability/custom-metrics-and-autoscaling"
+                ]
+              },
+              {
+                "group": "Debug",
+                "pages": [
+                  "applications/debug/common-errors"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Add-ons",
+            "pages": [
+              "addons/overview",
+              "addons/datastores",
+              "addons/custom-helm-charts",
+              "addons/third-party-observability",
+              "addons/storage"
+            ]
+          },
+          {
+            "group": "Command Line Interface (CLI)",
+            "pages": [
+              "cli/installation",
+              "cli/basic-usage",
+              {
+                "group": "Command Reference",
+                "pages": [
+                  "standard/cli/command-reference/porter-apply",
+                  "standard/cli/command-reference/porter-auth",
+                  "standard/cli/command-reference/porter-cluster",
+                  "standard/cli/command-reference/porter-config",
+                  "standard/cli/command-reference/porter-project",
+                  "standard/cli/command-reference/porter-app",
+                  "standard/cli/command-reference/porter-datastore-connect",
+                  "standard/cli/command-reference/porter-env",
+                  "standard/cli/command-reference/porter-target"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Preview Environments",
+            "pages": [
+              "preview-environments/overview",
+              "preview-environments/defining-overrides",
+              "preview-environments/custom-workflows"
+            ]
+          },
+          {
+            "group": "Security and Compliance",
+            "pages": [
+              "security-and-compliance/role-based-access-control",
+              "security-and-compliance/static-egress-ip",
+              "security-and-compliance/configuring-alb",
+              "security-and-compliance/cloudflare-dns",
+              "security-and-compliance/soc2-hipaa",
+              "security-and-compliance/porter-ip-ranges"
+            ]
+          },
+          {
+            "group": "Other Guides",
+            "pages": [
+              "other/gpu-workloads",
+              "other/deleting-dangling-resources",
+              "other/aws-vpc-peering",
+              "other/kubernetes-101",
+              "other/migrate-from-heroku"
+            ]
+          },
+          {
+            "group": "Terms & Privacy",
+            "pages": [
+              "terms-and-privacy/terms-of-service",
+              "terms-and-privacy/privacy-policy"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/logo/light.png",
+    "dark": "/logo/dark.png",
+    "href": "https://porter.run"
+  },
+  "appearance": {
+    "default": "dark"
+  },
+  "navbar": {
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "https://porter.run"
+    }
+  },
+  "footer": {
+    "socials": {
+      "twitter": "https://twitter.com/porterdotrun"
+    }
+  },
+  "integrations": {
+    "gtm": {
+      "tagId": "GTM-P8D92VJ"
+    },
+    "intercom": {
+      "appId": "gq56g49i"
+    }
+  }
+}

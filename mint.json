@@ -101,6 +101,7 @@
               "pages": [
                 "applications/configure/basic-configuration",
                 "applications/configure/autoscaling",
+                "applications/configure/temporal-autoscaling",
                 "applications/configure/custom-domains",
                 "applications/configure/zero-downtime-deployments",
                 "applications/configure/advanced-networking"

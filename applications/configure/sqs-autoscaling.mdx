@@ -1,0 +1,277 @@
+---
+title: "SQS Queue-Depth Autoscaling"
+description: "Scale your workers based on Amazon SQS queue depth using the metric-based autoscaler"
+---
+
+# SQS Queue-Depth Autoscaling
+
+If your application processes messages from Amazon SQS, you can autoscale your worker services based on queue depth. When messages pile up, Porter scales up your workers. When the queue drains, it scales back down.
+
+This guide uses the [CloudWatch Exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-cloudwatch-exporter) to expose SQS metrics to Prometheus, then uses Porter's built-in [metric-based autoscaler](/applications/observability/custom-metrics-and-autoscaling) to scale your workers.
+
+## Prerequisites
+
+- An AWS account with an SQS queue
+- An IAM user or role with permissions to read CloudWatch metrics
+- A worker service on Porter that processes messages from the queue
+
+## Step 1: Create IAM Credentials
+
+The CloudWatch Exporter needs AWS credentials to read SQS metrics from CloudWatch.
+
+### Required IAM Permissions
+
+Create an IAM user (or role) with the following policy:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:GetMetricData",
+        "cloudwatch:GetMetricStatistics",
+        "cloudwatch:ListMetrics"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+This policy grants read-only access to CloudWatch metrics. It does not allow reading, sending, or deleting SQS messages.
+
+### Option A: IAM User (recommended for production)
+
+IAM user credentials are long-lived and don't expire, making them the right choice for production deployments.
+
+1. In the AWS Console, navigate to **IAM** > **Users**
+2. Select your user (or create a new one with the policy above)
+3. Go to **Security credentials** > **Access keys**
+4. Click **Create access key**
+5. Copy the **Access Key ID** and **Secret Access Key** — you'll need these in the next step
+
+### Option B: Temporary credentials (for testing)
+
+If you use AWS SSO or assume-role, you can export temporary credentials from your local AWS profile instead of creating a dedicated IAM user. These credentials expire (typically 1-12 hours depending on your session configuration), so they are only suitable for testing.
+
+Export your credentials with:
+
+```bash
+aws configure export-credentials --profile YOUR_PROFILE
+```
+
+This prints your `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN`. You'll need all three values in the next step. When the credentials expire, you'll need to re-export and update the Helm values.
+
+## Step 2: Deploy the CloudWatch Exporter
+
+Deploy the CloudWatch Exporter as a Helm chart addon on Porter. This service scrapes SQS metrics from CloudWatch and exposes them in Prometheus format.
+
+### Add the Helm Chart
+
+1. Navigate to your application in the Porter dashboard
+2. Go to the **Add-ons** tab
+3. Click **Add New** and select **Helm Chart**
+4. Configure the Helm chart:
+   - **Repository URL**: `https://prometheus-community.github.io/helm-charts`
+   - **Chart Name**: `prometheus-cloudwatch-exporter`
+   - **Version**: Leave empty for latest, or pin a version (e.g., `0.28.1`)
+5. In the **Helm Values** section, paste the following configuration:
+
+```yaml
+aws:
+  region: us-east-1
+  aws_access_key_id: YOUR_ACCESS_KEY_ID
+  aws_secret_access_key: YOUR_SECRET_ACCESS_KEY
+  # Only needed for temporary credentials (Option B). Remove this line for IAM user credentials.
+  # aws_session_token: YOUR_SESSION_TOKEN
+
+config: |
+  region: us-east-1
+  period_seconds: 60
+  metrics:
+    - aws_namespace: AWS/SQS
+      aws_metric_name: ApproximateNumberOfMessagesVisible
+      aws_dimensions:
+        - QueueName
+      aws_statistics:
+        - Average
+      period_seconds: 60
+      range_seconds: 300
+      set_timestamp: false
+
+serviceMonitor:
+  enabled: false
+
+pod:
+  annotations:
+    porter.prometheus/scrape: "true"
+    porter.prometheus/port: "9106"
+    porter.prometheus/path: "/metrics"
+
+service:
+  port: 9106
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+```
+
+<Warning>
+Replace `YOUR_ACCESS_KEY_ID` and `YOUR_SECRET_ACCESS_KEY` with the credentials from Step 1. Replace `us-east-1` with your AWS region. If you're using temporary credentials (Option B), uncomment the `aws_session_token` line and set it to your session token.
+</Warning>
+
+6. Click **Deploy**
+
+### Verify the Exporter is Running
+
+After deployment, the exporter will start scraping SQS metrics from CloudWatch. You can verify it's working by checking the add-on logs — you should see Jetty startup lines like `Started Server` and no `AccessDenied` errors. The exporter scrapes CloudWatch every 60 seconds by default. It may take a minute or two for metrics to appear after deployment.
+
+### Adding More Queues
+
+The configuration above scrapes `ApproximateNumberOfMessagesVisible` for **all SQS queues** in the specified region. If you want to limit to specific queues, add a `aws_dimension_select` filter:
+
+```yaml
+config: |
+  region: us-east-1
+  period_seconds: 60
+  metrics:
+    - aws_namespace: AWS/SQS
+      aws_metric_name: ApproximateNumberOfMessagesVisible
+      aws_dimensions:
+        - QueueName
+      aws_dimension_select:
+        QueueName:
+          - my-queue-name
+          - my-other-queue
+      aws_statistics:
+        - Average
+      period_seconds: 60
+      range_seconds: 300
+      set_timestamp: false
+```
+
+## Step 3: Configure Metric-Based Autoscaling
+
+The CloudWatch Exporter Helm chart automatically exposes metrics on port 9106. Porter's Prometheus will discover and scrape these metrics. It may take 2-3 minutes after deployment for metrics to become available.
+
+Now configure your **worker service** (the one processing SQS messages) to autoscale based on the queue depth metric.
+
+1. Navigate to your application in the Porter dashboard
+2. Go to the **Services** tab and click on your worker service
+3. Under **Autoscaling**, select the **Metric-based** tab
+4. Fill in the following fields:
+   - **Min replicas**: `1` (or `0` for scale-to-zero)
+   - **Max replicas**: `10` (adjust based on your workload)
+   - **Metric name**: type `aws_sqs_approximate_number_of_messages_visible_average` (this may not appear in the dropdown — type it manually)
+   - **Query**: `avg(aws_sqs_approximate_number_of_messages_visible_average{queue_name="YOUR_QUEUE_NAME"})`
+   - **Threshold**: `10` (the target number of messages per worker instance)
+
+<Warning>
+Replace `YOUR_QUEUE_NAME` with the name of your SQS queue (not the full URL — just the queue name, e.g., `order-processing`). The `queue_name` label must match your queue name exactly or autoscaling won't trigger.
+</Warning>
+
+## How the Threshold Works
+
+The threshold determines how Porter scales your workers. Porter calculates the desired number of replicas as:
+
+```
+desired_replicas = ceil(current_queue_depth / threshold)
+```
+
+For example, with a threshold of `10`:
+- 100 messages in the queue → 10 workers
+- 5 messages in the queue → 1 worker
+- 0 messages in the queue → scales to min instances (or 0 if scale-to-zero is enabled)
+
+**Choosing a threshold:**
+- **Lower values** (e.g., 5-10): More aggressive scaling, lower message processing latency
+- **Higher values** (e.g., 50-100): More conservative scaling, better cost efficiency
+
+## Scaling Latency
+
+There is a delay between messages arriving in your SQS queue and your workers scaling up. The pipeline has several steps, each adding latency:
+
+- **SQS → CloudWatch**: ~5 minutes. SQS reports metrics to CloudWatch at 5-minute intervals. This is an AWS limitation and cannot be configured faster.
+- **CloudWatch → Exporter**: ~60 seconds. The exporter scrapes CloudWatch once per minute.
+- **Exporter → Prometheus**: ~30-60 seconds. Prometheus scrapes the exporter pod on its own interval.
+- **Prometheus → KEDA**: ~30 seconds. KEDA polls Prometheus for the metric value.
+
+In practice, expect **6-8 minutes** from when messages arrive to when new pods start. This is suitable for workloads that can tolerate a few minutes of queuing before scaling kicks in (e.g., batch processing, async jobs, non-urgent event processing).
+
+This approach is not suitable for latency-sensitive workloads that need sub-minute scaling response times.
+
+## Scale-to-Zero
+
+Setting min replicas to `0` allows KEDA to shut down all worker pods when the queue is empty. When new messages arrive, KEDA will spin up a pod automatically (this takes 15-30 seconds for the first pod to start).
+
+If you use scale-to-zero, set min replicas to `0` before your workload starts. Avoid changing min replicas while messages are actively being processed, as the redeployment may briefly interrupt autoscaling.
+
+## Standard vs FIFO Queues
+
+This approach works with both standard and FIFO SQS queues. The CloudWatch metric `ApproximateNumberOfMessagesVisible` is available for both queue types.
+
+For FIFO queues, keep in mind that messages within the same message group are processed in order. Scaling up workers may not improve throughput if all messages share a single message group ID. Use distinct message group IDs to enable parallel processing across workers.
+
+## Example: Order Processing Pipeline
+
+Consider an e-commerce system that processes orders asynchronously:
+
+### Order API
+
+A web service that receives orders and sends them to an SQS queue.
+
+```python
+import boto3
+
+sqs = boto3.client('sqs', region_name='us-east-1')
+
+@app.post("/orders")
+def create_order(order: Order):
+    sqs.send_message(
+        QueueUrl='https://sqs.us-east-1.amazonaws.com/123456789/order-processing',
+        MessageBody=json.dumps(order.dict())
+    )
+    return {"status": "queued"}
+```
+
+### Order Processing Worker
+
+A worker service that processes orders from the queue.
+
+```python
+import boto3
+
+sqs = boto3.client('sqs', region_name='us-east-1')
+
+while True:
+    messages = sqs.receive_message(
+        QueueUrl='https://sqs.us-east-1.amazonaws.com/123456789/order-processing',
+        MaxNumberOfMessages=10,
+        WaitTimeSeconds=20
+    )
+    for message in messages.get('Messages', []):
+        process_order(json.loads(message['Body']))
+        sqs.delete_message(
+            QueueUrl='https://sqs.us-east-1.amazonaws.com/123456789/order-processing',
+            ReceiptHandle=message['ReceiptHandle']
+        )
+```
+
+### Autoscaling Configuration
+
+- **Min instances**: `1`
+- **Max instances**: `20`
+- **Metric name**: `aws_sqs_approximate_number_of_messages_visible_average`
+- **Query**: `avg(aws_sqs_approximate_number_of_messages_visible_average{queue_name="order-processing"})`
+- **Threshold**: `10`
+
+With this configuration, Porter will:
+- Keep at least 1 worker running during quiet periods
+- Scale up to 20 workers during order spikes (e.g., flash sales)
+- Scale based on the actual number of messages waiting to be processed
