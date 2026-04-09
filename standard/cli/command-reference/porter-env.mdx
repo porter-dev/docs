@@ -70,14 +70,15 @@ Pull environment variables from an environment group to your local machine.
 
 **Usage:**
 ```bash
-porter env pull <env-group-name> [flags]
+porter env pull [-g] <env-group-name> [flags]
 ```
 
 **Options:**
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--file` | `-f` | Output file path (writes to stdout if not specified) |
+| `--app` | `-a` | Target application |
+| `--group` | `-g` | Target cluster environment group |
 | `--variables` | `-v` | Output only variables (excludes secrets) |
 | `--secrets` | `-s` | Output only secrets (excludes variables) |
 
