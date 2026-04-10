@@ -81,6 +81,7 @@ porter env pull [-g] <env-group-name> [flags]
 | `--group` | `-g` | Target cluster environment group |
 | `--variables` | `-v` | Output only variables (excludes secrets) |
 | `--secrets` | `-s` | Output only secrets (excludes variables) |
+| `--merged` | | Include variables from all linked env groups (only valid with `--app`) |
 
 <CodeGroup>
 ```bash Print to stdout
@@ -97,6 +98,10 @@ porter env pull production-secrets -v
 
 ```bash Secrets Only
 porter env pull production-secrets -s
+```
+
+```bash App with Linked Env Groups
+porter env pull --app my-app --merged
 ```
 </CodeGroup>
 
