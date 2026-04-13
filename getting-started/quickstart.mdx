@@ -113,8 +113,11 @@ Porter provisions a Kubernetes cluster in your cloud account. The setup process 
     Porter connects to GCP using a service account. You only need to grant one IAM role and enable one API—Porter automatically provisions everything else.
 
     <Steps>
-      <Step title="Enable the Cloud Resource Manager API">
-        In your [GCP Console](https://console.cloud.google.com), navigate to **APIs & Services**, click **Enable APIs and Services**, and enable the **Cloud Resource Manager API**.
+      <Step title="Enable required APIs">
+        In your [GCP Console](https://console.cloud.google.com), navigate to **APIs & Services**, click **Enable APIs and Services**, and enable the following APIs:
+
+        - **Cloud Resource Manager API** — required for Porter to manage IAM bindings
+        - **Service Usage API** — required for Porter to enable all other APIs automatically
 
         Porter will automatically enable all other required APIs after you upload your credentials.
       </Step>

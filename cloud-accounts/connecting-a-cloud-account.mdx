@@ -61,7 +61,7 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
   </Tab>
 
   <Tab title="GCP">
-    Porter connects to GCP using a service account with the **Project IAM Admin** role. You only need to grant this one role and enable one API — Porter automatically provisions all other required permissions and APIs.
+    Porter connects to GCP using a service account with the **Project IAM Admin** role. You only need to grant this one role and enable two APIs — Porter automatically provisions all other required permissions and APIs.
 
     ## Create the Service Account
 
@@ -83,7 +83,7 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
         ```
 
         The script:
-        - Enables the Cloud Resource Manager API
+        - Enables the Cloud Resource Manager API and Service Usage API
         - Creates a `porter-manager` service account
         - Grants the **Project IAM Admin** role
         - Downloads a JSON key file
@@ -92,15 +92,21 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
       </Accordion>
 
       <Accordion title="Option 2: Manual setup">
-        ### Enable the Cloud Resource Manager API
+        ### Enable required APIs
 
-        Before creating the service account, enable the **Cloud Resource Manager API** in your [GCP Console](https://console.cloud.google.com):
+        Before creating the service account, enable the following APIs in your [GCP Console](https://console.cloud.google.com):
 
         1. Navigate to **APIs & Services**
         2. Click **Enable APIs and Services**
-        3. Search for **Cloud Resource Manager API** and enable it
+        3. Search for and enable each of these APIs:
+           - **Cloud Resource Manager API** — required for Porter to manage IAM bindings
+           - **Service Usage API** — required for Porter to enable all other APIs automatically
 
-        The API may take a few minutes to enable.
+        Each API may take a few minutes to enable.
+
+        <Warning>
+        The Service Usage API cannot be enabled programmatically if it is not already active — it must be enabled manually through the console or gcloud CLI before Porter can manage other APIs.
+        </Warning>
 
         ### Create the Service Account
 
