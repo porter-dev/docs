@@ -133,8 +133,12 @@ After [connecting your cloud account](/cloud-accounts/connecting-a-cloud-account
         Porter automatically enables required APIs during setup. If you still see API errors:
 
         1. Verify the service account has the **Project IAM Admin** role (this is required for Porter to enable APIs automatically)
-        2. Navigate to **APIs & Services** in the GCP Console and verify the **Cloud Resource Manager API** is enabled
+        2. Navigate to **APIs & Services** in the GCP Console and verify both the **Cloud Resource Manager API** and **Service Usage API** are enabled — Porter cannot enable other APIs unless these two are active
         3. Return to Porter and retry provisioning
+
+        <Info>
+        The Service Usage API is typically enabled by default on new GCP projects. If it has been disabled, it must be re-enabled manually through the console — Porter cannot enable it programmatically.
+        </Info>
       </Accordion>
       <Accordion title="Permission denied errors">
         Porter automatically provisions all required IAM bindings from a single bootstrap role. If you encounter permission errors:

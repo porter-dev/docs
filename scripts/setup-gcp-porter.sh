@@ -2,8 +2,8 @@
 
 # Porter GCP Setup Script
 # Creates a service account with the Project IAM Admin role and enables the
-# Cloud Resource Manager API. Porter automatically provisions all other
-# required permissions and APIs from this bootstrap role.
+# Cloud Resource Manager API and Service Usage API. Porter automatically
+# provisions all other required permissions and APIs from this bootstrap role.
 
 set -e
 
@@ -73,10 +73,14 @@ get_project_id() {
     print_success "Using project: $PROJECT_ID"
 }
 
-enable_cloud_resource_manager_api() {
+enable_required_apis() {
     print_status "Enabling Cloud Resource Manager API..."
     gcloud services enable cloudresourcemanager.googleapis.com --project="$PROJECT_ID"
     print_success "Cloud Resource Manager API enabled"
+
+    print_status "Enabling Service Usage API..."
+    gcloud services enable serviceusage.googleapis.com --project="$PROJECT_ID"
+    print_success "Service Usage API enabled"
 }
 
 create_service_account() {
@@ -150,7 +154,7 @@ main() {
 
     check_prerequisites
     get_project_id "$1"
-    enable_cloud_resource_manager_api
+    enable_required_apis
     create_service_account
     grant_iam_role
     create_key
