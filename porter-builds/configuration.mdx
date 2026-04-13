@@ -1,0 +1,80 @@
+---
+title: "Configuration"
+sidebarTitle: "Configuration"
+---
+
+## Builder Resources
+
+Builds provisions a dedicated BuildKit daemon for your project. You can configure the daemon's resources from the **Builds** tab under **Settings**.
+
+| Setting | Default | Range | Description |
+|---------|---------|-------|-------------|
+| **CPU** | 0.5 cores | 0.5 – 16 | CPU cores allocated to the build daemon |
+| **Memory** | 4 GiB | 1 – 64 | Memory allocated to the build daemon |
+| **Cache size** | 10 GiB | 10 – 2,000 | Size of the persistent NVMe-backed cache volume |
+
+Use the **Metrics** section in the Builds tab to monitor resource utilization and right-size your configuration. If you see builds running close to the CPU or memory limits, increase the allocation. If your cache is filling up, increase the cache size to avoid evicting useful layers.
+
+## Multi-Architecture Builds
+
+Builds supports building for multiple architectures natively:
+
+- **`linux/amd64`** — Standard x86_64 builds
+- **`linux/arm64`** — ARM64 builds on Graviton hardware
+
+ARM64 builds run on native Graviton instances, not QEMU emulation. This means ARM builds are as fast as AMD64 builds, and you can deploy to Graviton-based clusters for significant cost savings.
+
+For multi-arch builds, Porter runs both architectures **in parallel** and produces a single OCI manifest list. Each architecture gets its own build daemon and cache volume, since ARM64 and AMD64 layers are not interchangeable.
+
+## Build-Time Environment Variables
+
+Any environment variable added to your application on Porter is automatically available during the build process. You do not need to manually pass them to the build.
+
+Supplementary environment variables added to the GitHub Actions file are also available, as long as they are prefixed with `PORTER_`.
+
+<Warning>`Secrets` (as defined in [Environment Groups](/applications/configure/environment-groups)) are not available during the build process.</Warning>
+
+### Dockerfile builds
+
+To use environment variables in a Dockerfile, declare them with the `ARG` keyword and reference them with `${VAR_NAME}`:
+
+```dockerfile
+ARG NODE_ENV
+ARG PORTER_API_URL
+
+RUN echo "Building for environment: ${NODE_ENV}"
+```
+
+### Buildpack builds
+
+Build-time environment variables are automatically available to buildpack builds without any additional configuration. However, note that Builds only supports Dockerfile-based builds — buildpack builds continue to use the existing GitHub Actions flow.
+
+## CLI Usage
+
+<Info>The `porter build` CLI command is coming soon and will be available at general release.</Info>
+
+The `porter build` command lets you trigger builds directly from the command line, with live log streaming in your terminal.
+
+```bash
+porter build
+```
+
+The CLI streams your build context to Porter's remote build infrastructure over an encrypted WebSocket connection and displays real-time build progress. The resulting image is pushed to your registry by the server — no local Docker daemon or registry credentials required.
+
+## Dockerfile Best Practices
+
+Builds doesn't change how you write Dockerfiles, but the persistent cache makes layer ordering more impactful. A few tips for maximizing cache hit rates:
+
+- **Copy dependency manifests before source code** — Copy `package.json`/`go.mod`/`requirements.txt` and install dependencies in a separate layer before copying the rest of your source. This way, dependency layers are cached unless the manifest changes.
+
+```dockerfile
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+```
+
+- **Use multi-stage builds** — Build artifacts in one stage and copy only what's needed into the final image. This keeps images small and caches build tooling layers independently.
+
+- **Add a `.dockerignore`** — Exclude files that aren't needed for the build (e.g., `.git`, `node_modules`, test fixtures). This reduces the build context size and speeds up the initial context upload.

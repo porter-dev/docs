@@ -1,0 +1,84 @@
+---
+title: "Getting Started"
+sidebarTitle: "Getting Started"
+---
+
+<Info>Builds is currently in beta and is bundled with your existing Porter plan at no additional cost.</Info>
+
+This guide walks you through enabling Builds, configuring your builder, and running your first build.
+
+## Prerequisites
+
+- A Porter project with a connected cloud account and provisioned cluster
+- A GitHub repository connected to Porter via the [Porter GitHub App](/applications/deploy/overview#installing-the-porter-github-app)
+- At least one application deployed from a **Dockerfile** (Builds does not support buildpack-based builds)
+
+## Enable Builds
+
+<Steps>
+  <Step title="Open the Builds tab">
+    Navigate to the **Builds** tab in the Porter dashboard sidebar. If this is your first time, you'll see an empty state with the option to enable Builds.
+  </Step>
+  <Step title="Select build contexts">
+    Click **Edit build contexts**. You'll see a list of all your application build templates. Each row represents a unique combination of repository, branch, and Dockerfile.
+
+    Build templates that use a Dockerfile will have a checkbox — select the ones you want to enable Builds for. Templates using buildpacks will be marked as **Incompatible**.
+  </Step>
+  <Step title="Enable Builds">
+    With your build contexts selected, click **Enable Builds**. A confirmation dialog will show the affected build templates. Confirm to enable.
+  </Step>
+  <Step title="Configure builder resources (optional)">
+    Once Builds is enabled on at least one build context, a **Settings** button appears. Click it to configure the builder daemon resources:
+
+    | Setting | Default | Range | Description |
+    |---------|---------|-------|-------------|
+    | **CPU** | 0.5 cores | 0.5 – 16 | CPU allocated to the build daemon |
+    | **Memory** | 4 GiB | 1 – 64 | Memory allocated to the build daemon |
+    | **Cache size** | 10 GiB | 10 – 2,000 | Persistent cache volume size |
+
+    The defaults work for most projects. If your builds are resource-intensive (e.g., compiling large Go or Rust projects), increase CPU and memory. If your project produces many large layers, increase the cache size.
+
+    Click **Save** to apply changes.
+  </Step>
+</Steps>
+
+## Running a Build
+
+Once Builds is enabled for a build context, builds are triggered the same way as before:
+
+- **Push to GitHub**: Any push to the configured branch triggers a build automatically via the GitHub Actions workflow
+- **CLI** (coming soon): Run `porter build` from the command line to trigger a build directly
+
+The difference is that the build now runs on Porter's remote build infrastructure with persistent caching, rather than on a GitHub Actions runner.
+
+## Viewing Build Status
+
+### From the Builds tab
+
+The **Builds** tab shows all your build contexts with their current status, latest commit, last updated time, and average build time. Click on a build context to see its full build history.
+
+The build context detail page shows:
+
+- **Build history** with commit, status, trigger time, and duration for each build
+- **Success rate** and **build count** for the current month
+- **Average build time** with a sparkline chart of recent builds
+
+### From the application activity feed
+
+You can also access build details from the **Activity** tab on any application that uses Builds. Click **View build** on any deployment event to jump to the build detail page.
+
+### Build statuses
+
+| Status | Description |
+|--------|-------------|
+| **Succeeded** | Build completed and image was pushed to your registry |
+| **Failed** | Build encountered an error — check the build logs for details |
+| **Building** | Build is actively running |
+| **Provisioning** | BuildKit daemon is starting up (typically 30–60 seconds on first build after idle) |
+| **Pending** | Build is queued and waiting to start |
+| **Cancelled** | Build was cancelled before completion |
+
+## Next Steps
+
+- [Configuration](/porter-builds/configuration) — Multi-arch builds, build-time environment variables, CLI usage, and resource tuning
+- [Troubleshooting](/porter-builds/troubleshooting) — Common issues and how to resolve them

@@ -125,6 +125,15 @@
           ]
         },
         {
+          "group": "Builds",
+          "pages": [
+            "porter-builds/overview",
+            "porter-builds/getting-started",
+            "porter-builds/configuration",
+            "porter-builds/troubleshooting"
+          ]
+        },
+        {
           "group": "Add-ons",
           "pages": [
             "addons/overview",
