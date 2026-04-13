@@ -52,6 +52,12 @@ As it works, you can see what it's checking in a collapsible thinking section.
 
 Once it has a diagnosis, it presents a concise answer with what went wrong and how to fix it, usually with links to the relevant Porter docs or dashboard settings. The agent maintains a session, so you can ask follow-up questions to dig deeper into the same issue.
 
+### Stopping a response
+
+If you want to stop the agent while it's responding, click the **stop** button that appears in place of the send button, or press `Escape` while the input field is focused. The agent will stop its current response and keep everything it has generated so far, including any thinking steps. Your session stays active, so you can send a new message or follow-up question right away without starting over.
+
+If you send a message while the agent is still responding, it gets queued and will be delivered automatically after the current response finishes or is stopped.
+
 After the agent responds, you can rate the answer with thumbs up or thumbs down. If the answer wasn't helpful, you'll be prompted to select a reason (inaccurate, not helpful, or too verbose). You can also create a support ticket directly from any agent response by clicking the headset icon, which is useful if the agent's diagnosis points to something that needs human help.
 
 ![Response with feedback actions](/images/devops-agent/response-feedback.png)
