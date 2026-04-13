@@ -1,0 +1,57 @@
+---
+title: "Builds"
+sidebarTitle: "Overview"
+description: "Fast, cached Docker builds on Porter-managed infrastructure"
+---
+
+<Info>Builds is currently in beta. Features and behavior may change as we iterate on feedback.</Info>
+
+Builds is a remote build service that runs Docker builds on Porter-managed infrastructure. Instead of building images on GitHub Actions runners or local machines, your builds run on dedicated build daemons backed by high-performance NVMe storage — so layer caching is local and fast.
+
+## Why Builds
+
+Standard CI-based Docker builds (GitHub Actions, etc.) start cold every time. Even with registry caching, each build round-trips cache layers over the network, adding 10–60 seconds of overhead. For large applications, cold builds can take 20–40 minutes.
+
+Builds eliminates this by giving each project a **dedicated BuildKit daemon** with **persistent local cache** on NVMe storage. Once layers are cached, subsequent builds complete in seconds — not minutes.
+
+| | GitHub Actions | Builds |
+|---|---|---|
+| **Layer cache** | Registry cache (network round-trip every build) | Persistent NVMe cache (local disk reads) |
+| **Warm build time** | Minutes | Seconds |
+| **ARM64 builds** | QEMU emulation (slow) | Native Graviton execution |
+| **Multi-arch** | Manual QEMU setup | Native parallel builds |
+| **Configuration** | Fixed runner specs | Per-project CPU, memory, and cache sizing |
+
+## How It Works
+
+Builds uses [BuildKit](https://github.com/moby/buildkit), the same engine behind `docker build`, running as a dedicated daemon per project in Porter's infrastructure cluster.
+
+1. **You push code** to GitHub or trigger a build from the CLI via `porter build`
+2. **Porter provisions a BuildKit daemon** for your project (if one isn't already running), with a persistent cache volume attached
+3. **Your source code is streamed** to the daemon over an encrypted WebSocket connection — it's never stored permanently on Porter's infrastructure
+4. **BuildKit resolves cached layers** from local NVMe storage (sub-millisecond latency) and only rebuilds what changed
+5. **The resulting image is pushed** directly to your cloud provider's container registry (ECR, GAR, or ACR) using server-managed credentials
+6. **Build status, logs, and metrics** are available in the Porter dashboard
+
+When no builds are running, the daemon scales to zero to save compute. The cache volume persists across restarts, so your next build still gets a warm cache.
+
+## Multi-Architecture Support
+
+Builds supports native ARM64 (Graviton) and AMD64 builds. Multi-arch builds run both architectures **in parallel** on native hardware — no QEMU emulation — and produce a single OCI manifest list. This is significantly faster and more reliable than emulated cross-platform builds.
+
+## Security Model
+
+Builds runs in **Porter's infrastructure cluster**, not in your cloud account. This is a deliberate architectural choice that enables shared high-performance storage across projects at a fraction of the cost of per-customer infrastructure.
+
+**What this means for your source code:**
+
+- Build context (your source code) is **streamed** to the build daemon over an encrypted connection and exists only in an ephemeral workspace during the build — it is not stored on Porter's infrastructure after the build completes
+- All network traffic is encrypted in transit (TLS for external connections, WireGuard for in-cluster communication)
+- Each project gets its own **isolated BuildKit daemon, cache volume, and credentials** — there is no shared state between projects
+- Registry push credentials are scoped per-customer and use short-lived tokens
+
+<Info>The existing GitHub Actions build flow remains available. You can use Builds for some applications and GitHub Actions for others within the same project. See [Building your Application](/applications/deploy/builds) for the GitHub Actions workflow documentation.</Info>
+
+## Getting Started
+
+To enable Builds for your project, see [Getting Started](/porter-builds/getting-started).
