@@ -1,0 +1,95 @@
+---
+title: "SQS Queue-Depth Autoscaling"
+description: "Scale your workers based on Amazon SQS queue depth using the SQS Exporter addon"
+---
+
+# SQS Queue-Depth Autoscaling
+
+If your application processes messages from Amazon SQS, Porter can automatically scale your worker services based on queue depth. When messages pile up, Porter scales up your workers. When the queue drains, it scales back down.
+
+This guide uses the [SQS Exporter](https://github.com/porter-dev/sqs-exporter) Porter addon — a lightweight Prometheus exporter that polls SQS queue depth and feeds it to Porter's built-in [metric-based autoscaler](/applications/observability/custom-metrics-and-autoscaling) via KEDA.
+
+## Prerequisites
+
+- An AWS account with an SQS queue
+- An IAM user or role with permissions to read SQS queue attributes
+- A worker service on Porter that processes messages from the queue
+
+## Step 1: Create IAM Credentials
+
+Create an IAM user and attach the **`AmazonSQSReadOnlyAccess`** managed policy — it includes `sqs:GetQueueAttributes`, which is all the exporter needs. Generate an access key for the user and keep the credentials handy for Step 2.
+
+{/* TODO: (Cathy) update when irsa is supported */}
+{/* **Note:** If your cluster uses IAM Roles for Service Accounts (IRSA), you can attach the policy to your node role instead and omit explicit credentials from the Helm values. */}
+
+## Step 2: Deploy the SQS Exporter
+
+1. Navigate to your application in the Porter dashboard
+2. Go to the **Add-ons** tab
+3. Click **Add New** and select **Helm Chart**
+4. Configure the Helm chart:
+   - **Repository URL**: `oci://ghcr.io/porter-dev`
+   - **Chart Name**: `sqs-exporter`
+5. In the **Helm Values** section, paste the following configuration:
+
+```yaml
+sqsQueueUrls: "https://sqs.us-east-1.amazonaws.com/123456789/your-queue-name"
+
+aws:
+  region: "us-east-1"
+  accessKeyId: "YOUR_ACCESS_KEY_ID"
+  secretAccessKey: "YOUR_SECRET_ACCESS_KEY"
+  sessionToken: ""  # optional, only for temporary credentials
+
+pollIntervalSeconds: 10
+```
+
+<Warning>
+Replace `sqsQueueUrls` with your full SQS queue URL, and replace `YOUR_ACCESS_KEY_ID` and `YOUR_SECRET_ACCESS_KEY` with the credentials from Step 1. To monitor multiple queues, provide a comma-separated list of URLs.
+</Warning>
+
+6. Click **Deploy**
+
+Verify the exporter is running by checking the add-on logs — you should see the exporter polling your queue with no `AccessDenied` errors.
+
+## Step 3: Configure Metric-Based Autoscaling
+
+1. Navigate to your application in the Porter dashboard
+2. Go to the **Services** tab and click on your worker service
+3. Under **Autoscaling**, select the **Metric-based** tab
+4. Fill in the following fields:
+   - **Min instances**: `1` (or `0` for scale-to-zero)
+   - **Max instances**: `10` (adjust based on your workload)
+   - **Metric name**: `sqs_messages_visible`
+   - **Query**: `avg(sqs_messages_visible{queue_name="your-queue-name"})`
+   - **Threshold**: `10` (target number of messages per worker instance)
+
+<Warning>
+Replace `your-queue-name` with the name portion of your SQS queue URL (e.g., for `https://sqs.us-east-1.amazonaws.com/123456789/order-processing`, use `order-processing`). The `queue_name` label must match exactly or autoscaling won't trigger.
+</Warning>
+
+## Scaling Latency
+
+End-to-end scale-up latency depends on the metrics pipeline:
+
+| Step | Default |
+|------|---------|
+| SQS poll | 10s |
+| Prometheus scrape | 15s |
+| KEDA poll | 30s |
+| HPA scale-up stabilization | 60s |
+
+The HPA scale-up stabilization window (60s) is the dominant factor. For queue-based workloads where fast scale-up matters, you can drop it to `0` via your worker service's **Settings** tab → **Helm overrides**:
+
+```yaml
+keda:
+  hpa:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policy:
+        type: Percent
+        value: 100
+        periodSeconds: 15
+```
+
+Node provisioning is often the remaining bottleneck once the autoscaling pipeline is tuned.
