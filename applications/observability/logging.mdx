@@ -1,11 +1,54 @@
 ---
 title: 'Logging'
+description: 'Search, filter, and navigate application logs with custom time ranges.'
 ---
 
-Porter retains your logs up to 7 days by default. 
+Porter retains your logs for up to 7 days by default. You can search across your logs, filter by service or revision, and navigate to specific time periods.
 
-You can perform basic search across your logs and navigate across different time periods.
+All logs are stored exclusively inside your own infrastructure using [Loki](https://github.com/grafana/loki) and are not stored anywhere on Porter's systems. Porter is responsible for the reliability of the Loki instance running on your cluster.
+
+## Viewing logs
+
+To view logs for an application, navigate to the **Logs** tab on the application detail page. By default, logs stream in real time as your application produces output.
 
 ![Logging Tab](/images/observability/logging.png)
 
-All logs are stored exclusively inside your own infrastructure using [Loki](https://github.com/grafana/loki) and does not get stored anywhere on Porter's system. Porter is responsible for the reliability of the Loki instance running on your cluster.
+## Filtering logs
+
+The log viewer toolbar provides several filtering options:
+
+- **Search** — filter logs by keyword using the search input
+- **Service** — narrow logs to a specific service (e.g., `web`, `worker`)
+- **Revision** — view logs from a specific deployment revision
+
+## Filtering by time range
+
+You can filter logs to a specific time window using the time range selector next to the search bar. Click the time range button to open the filter, which includes preset options and custom date-time controls.
+
+### Presets
+
+Select a preset to quickly jump to a recent time window:
+
+- **Last 1h** — logs from the past hour
+- **Last 1d** — logs from the past day
+- **Last 7d** — logs from the past 7 days
+
+Selecting a preset sets the start time and enables live mode, which streams new logs as they arrive.
+
+### Custom time range
+
+To filter logs to an exact time window, set a custom start and end time. Each row includes a date picker and a time input where you can type a precise time down to the minute.
+
+For example, to view logs from a specific 15-minute window:
+
+1. Click the time range selector to open the filter.
+2. Set the **start date** and **start time** to the beginning of the window (e.g., `2:15 PM`).
+3. Set the **end date** and **end time** to the end of the window (e.g., `2:30 PM`).
+
+<Note>
+You cannot select future dates or times. When the start and end dates are the same day, the end time must be after the start time.
+</Note>
+
+### Live mode
+
+Toggle **Live** mode to stream logs in real time. When live mode is enabled, the end time is cleared and new log entries appear as they are produced. Disable live mode to freeze the view at a specific end time.
