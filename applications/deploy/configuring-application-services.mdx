@@ -125,6 +125,14 @@ For applications with many environment variables, you can upload an existing `.e
 
 ![.env file upload modal](/images/deploy/v2/env-file-upload.webp)
 
+### Copying variables as .env
+
+You can export your application's environment variables in `.env` format by clicking **Copy as .env** in the environment variables section. This opens a modal displaying all variables formatted as `KEY=VALUE` pairs, ready to copy to your clipboard.
+
+Secret variables with hidden values appear as commented lines at the bottom of the output (e.g., `# SECRET_KEY=<SECRET-HIDDEN>`). A banner displays the count of hidden secrets so you know which values are excluded. To include secret values in the export, you must first reveal them in the environment variables editor.
+
+This is useful when you need to replicate an application's configuration locally, share it with a teammate, or use it as a starting point for a new application.
+
 ---
 
 ## Health checks
