@@ -15,12 +15,63 @@ This guide uses the [SQS Exporter](https://github.com/porter-dev/sqs-exporter) P
 - An IAM user or role with permissions to read SQS queue attributes
 - A worker service on Porter that processes messages from the queue
 
-## Step 1: Create IAM Credentials
+## Step 1: Set Up AWS Credentials
+
+Choose one of the following authentication methods. IRSA is recommended — it uses short-lived tokens tied to your cluster's OIDC provider, so there are no long-lived keys to rotate or store.
+
+### Option A: IRSA (recommended)
+
+IRSA (IAM Roles for Service Accounts) attaches an IAM role directly to the exporter's Kubernetes service account. EKS injects a short-lived OIDC token into the pod automatically.
+
+**1. Find your OIDC provider URL.**
+
+In the AWS Console, go to **EKS → your cluster → Overview tab → OpenID Connect provider URL**. Copy the URL and strip the `https://` prefix — this is your `OIDC_PROVIDER`.
+
+**2. Create an IAM role with a custom trust policy.**
+
+Go to **IAM → Roles → Create role → Custom trust policy** and paste the following, substituting your values:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Federated": "arn:aws:iam::{ACCOUNT_ID}:oidc-provider/{OIDC_PROVIDER}"
+    },
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {
+      "StringEquals": {
+        "{OIDC_PROVIDER}:sub": "system:serviceaccount:{NAMESPACE}:helmchart-sqs-exporter",
+        "{OIDC_PROVIDER}:aud": "sts.amazonaws.com"
+      }
+    }
+  }]
+}
+```
+
+- `ACCOUNT_ID`: your AWS account ID
+- `OIDC_PROVIDER`: the value from step 1 (without `https://`)
+- `NAMESPACE`: the namespace of your Porter deployment target (typically `default`)
+
+**3. Attach a permissions policy** to the role. Create an inline policy:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": "sqs:GetQueueAttributes",
+    "Resource": "arn:aws:sqs:{REGION}:{ACCOUNT_ID}:{QUEUE_NAME}"
+  }]
+}
+```
+
+Keep the role ARN handy — you'll use it in Step 2.
+
+### Option B: Static credentials (fallback)
 
 Create an IAM user and attach the **`AmazonSQSReadOnlyAccess`** managed policy — it includes `sqs:GetQueueAttributes`, which is all the exporter needs. Generate an access key for the user and keep the credentials handy for Step 2.
-
-{/* TODO: (Cathy) update when irsa is supported */}
-{/* **Note:** If your cluster uses IAM Roles for Service Accounts (IRSA), you can attach the policy to your node role instead and omit explicit credentials from the Helm values. */}
 
 ## Step 2: Deploy the SQS Exporter
 
@@ -30,7 +81,24 @@ Create an IAM user and attach the **`AmazonSQSReadOnlyAccess`** managed policy �
 4. Configure the Helm chart:
    - **Repository URL**: `oci://ghcr.io/porter-dev`
    - **Chart Name**: `sqs-exporter`
-5. In the **Helm Values** section, paste the following configuration:
+   - **Chart Version**: `0.1.1`
+5. In the **Helm Values** section, paste the configuration for your chosen auth method:
+
+**Option A: IRSA**
+
+```yaml
+sqsQueueUrls: "https://sqs.us-east-1.amazonaws.com/123456789/your-queue-name"
+
+serviceAccount:
+  roleArn: "arn:aws:iam::{ACCOUNT_ID}:role/{ROLE_NAME}"
+
+aws:
+  region: "us-east-1"
+
+pollIntervalSeconds: 10
+```
+
+**Option B: Static credentials**
 
 ```yaml
 sqsQueueUrls: "https://sqs.us-east-1.amazonaws.com/123456789/your-queue-name"
@@ -45,12 +113,12 @@ pollIntervalSeconds: 10
 ```
 
 <Warning>
-Replace `sqsQueueUrls` with your full SQS queue URL, and replace `YOUR_ACCESS_KEY_ID` and `YOUR_SECRET_ACCESS_KEY` with the credentials from Step 1. To monitor multiple queues, provide a comma-separated list of URLs.
+Replace `sqsQueueUrls` with your full SQS queue URL. To monitor multiple queues, provide a comma-separated list of URLs.
 </Warning>
 
 6. Click **Deploy**
 
-Verify the exporter is running by checking the add-on logs — you should see the exporter polling your queue with no `AccessDenied` errors.
+Verify the exporter is running by checking the add-on logs — you should see either `using static AWS credentials` or `using ambient AWS credential chain`, followed by the exporter polling your queue with no `AccessDenied` errors.
 
 ## Step 3: Configure Metric-Based Autoscaling
 
@@ -58,8 +126,8 @@ Verify the exporter is running by checking the add-on logs — you should see th
 2. Go to the **Services** tab and click on your worker service
 3. Under **Autoscaling**, select the **Metric-based** tab
 4. Fill in the following fields:
-   - **Min instances**: `1` (or `0` for scale-to-zero)
-   - **Max instances**: `10` (adjust based on your workload)
+   - **Min replicas**: `0` (scale to zero when queue is empty) or `1` (always keep one worker warm)
+   - **Max replicas**: `10` (adjust based on your workload)
    - **Metric name**: `sqs_messages_visible`
    - **Query**: `avg(sqs_messages_visible{queue_name="your-queue-name"})`
    - **Threshold**: `10` (target number of messages per worker instance)
@@ -67,6 +135,32 @@ Verify the exporter is running by checking the add-on logs — you should see th
 <Warning>
 Replace `your-queue-name` with the name portion of your SQS queue URL (e.g., for `https://sqs.us-east-1.amazonaws.com/123456789/order-processing`, use `order-processing`). The `queue_name` label must match exactly or autoscaling won't trigger.
 </Warning>
+
+### Worker AWS credentials
+
+The worker pod also needs AWS credentials to consume from SQS.
+
+**Option A: IRSA (recommended)**
+
+Attach an IAM role to the worker's service account. The role needs `sqs:ReceiveMessage`, `sqs:DeleteMessage`, and `sqs:GetQueueAttributes` on your queue. Use Porter's connections feature to bind the role, or annotate the service account directly with `eks.amazonaws.com/role-arn`.
+
+Then set these as environment variables under the worker service's **Environment** tab:
+
+```
+SQS_QUEUE_URL={QUEUE_URL}
+AWS_REGION={AWS_REGION}
+```
+
+**Option B: Static credentials (fallback)**
+
+Set the following environment variables under the worker service's **Environment** tab (use Porter's secret config for the key and secret):
+
+```
+AWS_REGION={AWS_REGION}
+AWS_ACCESS_KEY_ID={ACCESS_KEY_ID}
+AWS_SECRET_ACCESS_KEY={SECRET_ACCESS_KEY}
+SQS_QUEUE_URL={QUEUE_URL}
+```
 
 ## Scaling Latency
 
