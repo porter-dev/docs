@@ -36,6 +36,20 @@ Within a few seconds, you'll see a list of detected applications. Each card show
 
 For a simple repository with a single application, you'll typically see one card. For monorepos containing multiple services, Porter detects each application separately. For example, a Node.js API in `/api`, a React frontend in `/web`, and a Python worker in `/jobs` each appear as distinct applications you can configure independently.
 
+#### Previously deployed apps in monorepos
+
+When you deploy from a monorepo that already has some services running on your cluster, Porter automatically identifies which detected applications are already deployed and hides them from the main list. This keeps the view focused on new applications you haven't deployed yet.
+
+A banner at the top summarizes what was detected. For example, if Porter finds 5 applications but 3 are already deployed, the banner indicates that 2 new applications were configured and 3 are already deployed.
+
+To view the already-deployed applications, expand the **Show N previously deployed app(s)** section below the application list. Each previously deployed app card shows its name, build path, and the name of the existing deployment it matches.
+
+If you want to re-create an already-deployed application (for example, to deploy a second instance with different configuration), click **Add** on its card. A confirmation dialog appears letting you know the build context is already deployed, and you can click **Create anyway** to add it to your new application list.
+
+<Info>
+Porter matches detected applications to existing deployments using the build path and build method. If you change the build path of an existing application, Porter may not recognize it as already deployed.
+</Info>
+
 If Porter didn't detect an application you expected, or if you want to add another manually, click Add Application. To edit a detected application, click the configure button (gear icon) on the card to make updates.
 
 ![Settings button on application card](/images/deploy/v2/app-card-settings-button.webp)
