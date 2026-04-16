@@ -82,15 +82,17 @@ Configure the type of load balancer used for your cluster's ingress.
 
 ### Private Cluster
 
-Enable private cluster mode to restrict access to your Kubernetes API server.
+When **Private cluster** is enabled, Porter provisions the EKS cluster with **both public and private** API server endpoint access, and restricts the public endpoint to an IP allowlist containing Porter's [control-plane IPs](/security-and-compliance/porter-ip-ranges) plus any customer CIDRs you add. This configuration is SOC2 / HIPAA compliant.
 
 | Setting | Description |
 |---------|-------------|
-| **Private cluster** | When enabled, the Kubernetes API server endpoint is only accessible from within your VPC |
+| **Private cluster** | Restricts the EKS API server's public endpoint to an IP allowlist (Porter's IPs plus any customer-supplied CIDRs). The private endpoint inside your VPC remains reachable from VPC-attached resources. |
 
-<Warning>
-  Enabling private cluster mode restricts API server access to your VPC. Ensure you have appropriate network connectivity (e.g., VPN, Direct Connect) before enabling this setting.
-</Warning>
+<Info>
+  Porter intentionally does **not** enable EKS "private-only" endpoint mode. Private-only forces every control-plane call — including Porter's — through a VPN or VPC-peered path, which adds operational complexity and has historically caused outages for customers. Public + private with a tight IP allowlist meets the same compliance requirements and is significantly more reliable.
+</Info>
+
+The [Tailscale integration](/security-and-compliance/tailscale) is a separate layer that carries traffic for `porter kubectl` and `porter helm` commands; it does not control how the EKS API server endpoint itself is exposed.
 
   </Tab>
   <Tab title="GCP">

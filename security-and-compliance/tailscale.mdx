@@ -8,6 +8,16 @@ Tailscale is a VPN that creates a secure network between your servers, computers
 
 To learn more about how Tailscale works under the hood, check out this [overview on their official blog](https://tailscale.com/blog/how-tailscale-works/).
 
+## Scope
+
+The Tailscale integration applies to the following Porter flows:
+
+- `porter kubectl` and `porter helm` — CLI commands that tunnel through the Tailnet to reach the Kubernetes API server and in-cluster Helm releases.
+- `porter app run` and `porter datastore connect` — when the Tailscale machine is marked as an exit node (see [Step 3](#step-3-approve-routes-in-tailscale) below).
+- Direct access to Porter-managed applications and datastores over the approved subnet routes.
+
+Tailscale does **not** change how the EKS API server endpoint itself is exposed. API server endpoint access is controlled by Porter's [Private Cluster setting](/cloud-accounts/advanced-cluster-settings#private-cluster), which locks the public endpoint to an IP allowlist independently of Tailscale.
+
 ## Setting up Tailscale
 
 ### Step 1: Create an OAuth Client in Tailscale
