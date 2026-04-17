@@ -11,10 +11,6 @@ This guide uses the [SQS Exporter](https://github.com/porter-dev/sqs-exporter) P
 
 This guide assumes you're running on EKS and uses [IRSA](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) (IAM Roles for Service Accounts) so the exporter and worker pick up short-lived, auto-rotated credentials from a pod-scoped IAM role — no long-lived keys to store or rotate.
 
-<Note>
-Not on EKS, or need static credentials? See the [appendix](#appendix-static-credentials) at the end of this guide.
-</Note>
-
 ## Prerequisites
 
 - An AWS account with an SQS queue
@@ -186,16 +182,9 @@ Replace `your-queue-name` with the name portion of your SQS queue URL (e.g., for
 
 ## Scaling Latency
 
-End-to-end scale-up latency depends on the metrics pipeline:
+Scale-up isn't instant — expect on the order of a minute or two between messages arriving in your queue and new worker pods becoming ready. This latency comes from a combination of SQS polling, metrics scraping, and the stabilization period before the autoscaler commits to a scale-up.
 
-| Step | Default |
-|------|---------|
-| SQS poll | 10s |
-| Prometheus scrape | 15s |
-| KEDA poll | 30s |
-| HPA scale-up stabilization | 60s |
-
-The HPA scale-up stabilization window (60s) is the dominant factor. For queue-based workloads where fast scale-up matters, you can drop it to `0` via your worker service's **Settings** tab → **Helm overrides**:
+For queue-based workloads where faster scale-up matters, you can shorten the stabilization window via your worker service's **Settings** tab → **Helm overrides**:
 
 ```yaml
 keda:
@@ -209,40 +198,3 @@ keda:
 ```
 
 Node provisioning is often the remaining bottleneck once the autoscaling pipeline is tuned.
-
-## Appendix: Static credentials
-
-Use this path if you're running on self-managed Kubernetes, need cross-account access where setting up an OIDC trust policy isn't feasible, or just want to run the exporter locally for development. On EKS, prefer IRSA — it avoids long-lived keys entirely.
-
-### Exporter addon
-
-Create an IAM user and attach the **`AmazonSQSReadOnlyAccess`** managed policy — it includes `sqs:GetQueueAttributes`, which is all the exporter needs. Generate an access key for the user.
-
-Follow [Step 2](#step-2-deploy-the-sqs-exporter) to add the addon in Porter, skipping the IAM role setup. Use these Helm values instead:
-
-```yaml
-sqsQueueUrls: "https://sqs.us-east-1.amazonaws.com/123456789/your-queue-name"
-
-aws:
-  region: "us-east-1"
-  accessKeyId: "YOUR_ACCESS_KEY_ID"
-  secretAccessKey: "YOUR_SECRET_ACCESS_KEY"
-  sessionToken: ""  # optional, only for temporary credentials
-
-pollIntervalSeconds: 10
-```
-
-With static credentials configured, you should see `using static AWS credentials` in the add-on logs.
-
-### Worker
-
-Skip the IAM role setup in [Step 3](#step-3-grant-the-worker-aws-access) and instead create an IAM user with `sqs:ReceiveMessage`, `sqs:DeleteMessage`, and `sqs:GetQueueAttributes` on your queue. Generate an access key. Then follow [Step 4](#step-4-configure-metric-based-autoscaling) to set up autoscaling.
-
-Set these environment variables under the worker service's **Environment** tab (use Porter's secret config for the key and secret):
-
-```
-AWS_REGION={AWS_REGION}
-AWS_ACCESS_KEY_ID={ACCESS_KEY_ID}
-AWS_SECRET_ACCESS_KEY={SECRET_ACCESS_KEY}
-SQS_QUEUE_URL={QUEUE_URL}
-```
