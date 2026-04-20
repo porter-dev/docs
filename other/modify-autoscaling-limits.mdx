@@ -1,5 +1,6 @@
 ---
-title: "Modify Autoscaling Limits"
+title: "Modify autoscaling limits"
+description: "Adjust the minimum and maximum instance counts for AWS EC2 Auto Scaling Groups used by your Porter cluster to handle burstable workload capacity"
 ---
 
 Porter clusters work in conjunction with autoscaling systems exposed by public clouds, to allow your cluster to provision more nodes, if your existing workloads run out of resources. But sometimes, you might want to adjust the limits placed on these autoscaling groups, in order to provision more nodes for situations where you might want burstable performance. This doc will guide you through the process for adjusting autoscaling limits for clusters provisioned by Porter on AWS.

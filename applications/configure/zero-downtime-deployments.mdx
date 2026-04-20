@@ -1,5 +1,6 @@
 ---
-title: "Zero-Downtime Deployments"
+title: "Zero-downtime deployments"
+description: "Prevent downtime during redeployments by configuring health checks, readiness probes, and graceful shutdown behavior for your services"
 ---
 
 Every time an application is redeployed on Porter (through a GitHub action, configuration change, etc), a new set of application instances will replace the old ones. While the update process attempts to prevent downtime, there are additional configuration settings to ensure zero downtime during re-deployment:
