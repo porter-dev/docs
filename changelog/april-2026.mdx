@@ -1,0 +1,42 @@
+---
+title: "April 2026"
+description: "New features and improvements shipped in April 2026"
+---
+
+<Update label="2026-04-18" description="Week of April 14" tags={["Feature", "Update"]}>
+## New features
+
+**Copy environment variables as .env** — You can now export your application's environment variables in `.env` format directly from the dashboard. Click **Copy as .env** in the environment variables section to get all variables as `KEY=VALUE` pairs, ready to paste into your local setup. Secret values are excluded by default and shown as commented lines. [Learn more](/applications/deploy/configuring-application-services#copying-variables-as-env)
+
+**Monorepo deployed app filtering** — When deploying from a monorepo that already has services running, Porter now automatically hides already-deployed applications from the detection list. This keeps the view focused on new services you haven't deployed yet. You can still expand a section to see previously deployed apps and re-deploy them if needed. [Learn more](/applications/deploy/deploy-from-github-repo#previously-deployed-apps-in-monorepos)
+
+## Updates
+
+**Private cluster and Tailscale scope clarification** — Porter provisions EKS clusters with public and private API server endpoint access, restricting the public endpoint to an IP allowlist that includes Porter's control-plane IPs and any CIDRs you add. This configuration is SOC 2 and HIPAA compliant. The Tailscale integration is a separate layer for `porter kubectl`, `porter helm`, and exit-node commands — it does not control how the EKS API server endpoint is exposed. [Learn more](/cloud-accounts/advanced-cluster-settings#private-cluster)
+</Update>
+
+<Update label="2026-04-11" description="Week of April 7" tags={["Feature", "Update"]}>
+## New features
+
+**Temporal autoscaling** — You can now autoscale worker services based on Temporal task queue depth. Connect your Temporal Cloud account as an integration in Porter, then configure any worker service to scale up when there's a backlog of tasks and scale down when queues are empty. [Learn more](/applications/configure/temporal-autoscaling)
+
+**`porter env pull --merged` flag** — The `porter env pull` command now supports a `--merged` flag that includes variables from all linked environment groups when used with `--app`. This makes it easier to pull the full set of environment variables your application sees at runtime. [Learn more](/standard/cli/command-reference/porter-env)
+
+## Updates
+
+**DevOps Agent stop/interrupt** — You can now stop the DevOps Agent mid-response by clicking the stop button or pressing `Escape`. The agent keeps everything it has generated so far, and your session stays active for follow-up questions. [Learn more](/applications/observability/devops-agent#stopping-a-response)
+</Update>
+
+<Update label="2026-04-04" description="Week of March 31" tags={["Feature", "Update"]}>
+## New features
+
+**DevOps Agent** — Porter now includes an AI-powered debugging assistant built into the dashboard. Open it with `⌘+I` and ask questions in plain English about why a deployment failed, why a service is restarting, or how to configure autoscaling. The agent has read-only access to your cluster and translates what it finds into actionable answers with links to the right docs or settings. It runs on your own LLM API key (Anthropic or AWS Bedrock). [Learn more](/applications/observability/devops-agent)
+
+**AWS Bedrock support for DevOps Agent** — When configuring the DevOps Agent, you can now choose AWS Bedrock as a provider in addition to Anthropic. This lets you route LLM traffic through your existing AWS infrastructure. [Learn more](/applications/observability/devops-agent#setup)
+
+**`porter config --show-token` flag** — The `porter config` command now supports a `--show-token` flag to display your current authentication token. [Learn more](/standard/cli/command-reference/porter-config)
+
+## Updates
+
+**Simplified GCP permissions** — Connecting a GCP cloud account now requires a single role and API enablement, reducing the setup steps for new clusters.
+</Update>
