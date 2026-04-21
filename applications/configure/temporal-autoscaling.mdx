@@ -78,6 +78,28 @@ Once created, your Temporal integration will appear in the integrations list and
 ![Temporal Integration List](/images/configure/temporal-integration-list.png)
 *Temporal integrations in the Integrations page*
 
+### Update an API key
+
+If your Temporal API key expires or needs to be rotated, you can update it without removing and recreating the integration.
+
+1. Navigate to **Integrations** → **Temporal**
+2. Expand the integration you want to update
+3. Click **Update API key**
+4. Enter the new API key and click **Update**
+
+### Delete an integration
+
+You can remove a Temporal integration that is no longer needed.
+
+1. Navigate to **Integrations** → **Temporal**
+2. Expand the integration you want to delete
+3. Click **Delete**
+4. Confirm the deletion in the dialog
+
+<Note>
+  Deletion is blocked if any application still references the integration for autoscaling. Remove the Temporal autoscaling configuration from all services that use the integration before deleting it.
+</Note>
+
 ## Step 3: Configure Temporal Autoscaling for Your Service
 
 With your Temporal integration set up, you can now configure autoscaling for your worker services.
