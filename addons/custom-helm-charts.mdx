@@ -37,10 +37,26 @@ Since custom Helm charts install external components into your cluster, they fal
 ### Managing deployed charts
 
 Once deployed, you can:
-- View the chart status in the Add-ons tab
+- View the chart status and deployment history in the Add-ons tab
 - Update values and redeploy
 - Upgrade to newer chart versions
+- Compare changes between revisions
 - Delete the chart when no longer needed
+
+### Viewing deployment history
+
+Each custom Helm chart add-on includes a **Deployments** tab that displays a full history of every revision deployed. For each deployment, you can see:
+
+- **Revision number** — the sequential deployment version
+- **Date** — when the deployment occurred
+- **Repository URL** — the Helm repository the chart was pulled from
+- **Chart name** and **version** — exactly which chart was installed
+
+To compare what changed between two deployments, click the **Changes** icon on any row. This opens a diff view showing the differences in chart name, repository URL, version, and values between that revision and the previous one.
+
+<Info>
+The add-on header also displays the chart name and version as metadata tags, so you can quickly identify which chart and version is currently deployed without opening the Deployments tab.
+</Info>
 
 ---
 
@@ -108,7 +124,7 @@ porter helm -- uninstall <release-name> --namespace <namespace>
 
 ## Observability
 
-There is limited observability offered for third-party helm chart installations, consisting of logs available in the dashboard.
+Custom Helm chart add-ons provide logs and deployment history directly in the dashboard.
 
 For more complex scenarios, you can deploy a **Grafana** addon, which is already configured with the existing observability
 stack deployed in the cluster. Grafana makes it possible to explore, query and build dashboard to monitor any charts or
