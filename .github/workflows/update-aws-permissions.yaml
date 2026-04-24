@@ -11,10 +11,19 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Generate token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.PORTER_CI_APP_ID }}
+          private-key: ${{ secrets.PORTER_CI_APP_PRIVATE_KEY }}
+          owner: porter-dev
+          repositories: docs
+
       - name: Checkout docs
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PORTERSUPPORT_GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
       - name: Grab docs
         run: |
           mkdir -p docs/snippets
