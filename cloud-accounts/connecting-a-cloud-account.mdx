@@ -63,6 +63,10 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
   <Tab title="GCP">
     Porter connects to GCP using a service account with the **Project IAM Admin** role. You only need to grant this one role and enable two APIs — Porter automatically provisions all other required permissions and APIs.
 
+    ## Prerequisites
+
+    Before connecting your GCP project to Porter, ensure that a [billing account](https://console.cloud.google.com/billing) is attached to the project. Porter cannot provision infrastructure in a project without an active billing account.
+
     ## Create the Service Account
 
     You can create the service account using our automated script (recommended) or manually.
