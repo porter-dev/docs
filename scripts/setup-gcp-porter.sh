@@ -94,6 +94,8 @@ create_service_account() {
         gcloud iam service-accounts create "$SERVICE_ACCOUNT_NAME" \
             --display-name="Porter Service Account" \
             --project="$PROJECT_ID"
+        # Wait for IAM propagation before subsequent calls reference the new SA
+        sleep 15
         print_success "Service account created: $sa_email"
     fi
 
