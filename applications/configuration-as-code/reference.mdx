@@ -324,6 +324,20 @@ services:
         role: iam-role-name
 ```
 
+### Azure Managed Identity Connection
+
+Bind a User Assigned Managed Identity to your service for Azure API access via Azure Workload Identity.
+
+```yaml
+services:
+  - name: web
+    ...
+    connections:
+      - type: azureManagedIdentity
+        identityName: my-managed-identity
+        resourceGroup: my-resource-group
+```
+
 ### Cloud SQL Connection (GCP)
 
 Connect to Google Cloud SQL instances.
