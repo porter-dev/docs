@@ -1,0 +1,73 @@
+---
+title: "Infrastructure pricing"
+sidebarTitle: "Pricing"
+description: "Estimated monthly cost of the default Porter cluster on AWS, GCP, and Azure, broken down by component"
+---
+
+Porter provisions infrastructure directly in your own cloud account, so all infrastructure costs are billed by your cloud provider — not by Porter. The estimates below are for the [default cluster configuration](/cloud-accounts/overview#default-node-groups). Actual costs vary based on usage, region, and customizations.
+
+<Info>
+All infrastructure costs can be covered with cloud credits from AWS, Google Cloud, or Azure.
+</Info>
+
+## Estimated monthly cost
+
+| Provider | Estimated Monthly Cost |
+|----------|-----------------------|
+| AWS | $201.22/mo |
+| GCP | $253.00/mo |
+| Azure | $164.69/mo |
+
+---
+
+## AWS
+
+**Total: $201.22/mo**
+
+| Component | Cost |
+|-----------|------|
+| Amazon Elastic Kubernetes Service (EKS) | $73.00/mo |
+| Amazon EC2 — System workloads: t4g.medium (2) | $49.06/mo |
+| Amazon EC2 — Monitoring workloads: t4g.large (1) | $49.06/mo |
+| Amazon EC2 — Application workloads: t3.medium (1) | $30.10/mo |
+
+---
+
+## GCP
+
+**Total: $253.00/mo**
+
+| Component | Cost |
+|-----------|------|
+| Google Kubernetes Engine Management (GKE) | $73.00/mo |
+| GKE Compute — System workloads (2) | $90.00/mo |
+| GKE Compute — Monitoring workloads (1) | $45.00/mo |
+| GKE Compute — Application workloads (1) | $45.00/mo |
+
+<Note>
+The GKE cluster management fee is charged by Google for each cluster, independent of node compute usage.
+</Note>
+
+---
+
+## Azure
+
+**Total: $164.69/mo**
+
+| Component | Cost |
+|-----------|------|
+| Azure virtual machines — System workloads: Standard_B2als_v2 (3) | $82.34/mo |
+| Azure virtual machines — Monitoring workloads: Standard_B2as_v2 (1) | $54.90/mo |
+| Azure virtual machines — Application workloads: Standard_B2als_v2 (1) | $27.45/mo |
+
+---
+
+## Reducing costs
+
+You can reduce infrastructure costs by adjusting node group instance types, sizes, or counts after initial provisioning. See [Node Groups](/cloud-accounts/node-groups) for details on cost optimization and customizing compute capacity.
+
+<CardGroup cols={3}>
+  <Card title="AWS Pricing" icon="aws" href="https://aws.amazon.com/ec2/pricing/on-demand" />
+  <Card title="Azure Pricing" icon="microsoft" href="https://azure.microsoft.com/en-us/pricing/details/virtual-machines/linux/#pricing" />
+  <Card title="GCP Pricing" icon="google" href="https://cloud.google.com/compute/all-pricing#general_purpose" />
+</CardGroup>
