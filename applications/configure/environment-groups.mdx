@@ -19,6 +19,27 @@ Environment group secrets are automatically synced to the secret manager of ever
 
 No secret data is stored on Porter's infrastructure. Secrets only exist in memory on Porter's servers momentarily during creation and updates.
 
+## Sync Target Clusters
+
+By default, an environment group's secrets are synced to the secret manager of every cluster in your project, including any clusters added later. If you want to scope a group to a subset of clusters — for example, to keep production secrets out of a staging cluster — you can pick specific sync targets from the dashboard.
+
+<Info>
+This feature is gated behind a project-level flag. If you don't see the **Sync target clusters** section in the create form or settings tab, contact Porter support to enable it for your project.
+</Info>
+
+### Selecting Sync Targets
+
+When creating or editing an environment group, the **Sync target clusters** section shows:
+
+- A **Sync to all clusters in this project** toggle — enabled by default
+- A row for each cluster in your project, with its cloud provider icon
+
+To restrict the group to specific clusters, turn off **Sync to all clusters in this project** and check the clusters you want to sync to. Leaving the toggle on means the group will sync to every current cluster in the project, as well as any clusters added in the future.
+
+### Updating Sync Targets
+
+You can change a group's sync targets at any time from the **Settings** tab on the environment group's page. Use the **Save** button in the **Sync target clusters** pane to apply changes. Porter diffs the new list against the existing targets and adds or removes clusters as needed — secret values are left untouched.
+
 ## Creating an Environment Group
 
 You can create a new environment group from the **Env Groups** tab on the Porter dashboard. Click **New Env Group**, enter a name, and add your variables and secrets.
