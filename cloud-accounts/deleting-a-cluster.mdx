@@ -49,6 +49,7 @@ Before deleting your cluster:
         - **EC2**: No instances, load balancers, or security groups related to the cluster
         - **EKS**: No clusters remaining
         - **VPC**: No VPCs created by Porter
+        - **EFS**: Porter-managed EFS file systems in the cluster VPC are deleted automatically during teardown
         - **ECR**: Container images may remain (delete manually if not needed)
       </Step>
     </Steps>

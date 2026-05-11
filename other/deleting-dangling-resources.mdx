@@ -30,6 +30,10 @@ First, navigate to the **VPC** section in your AWS console to see the VPC's that
 
 Deleting the EKS cluster and associated auto scaling groups and launch configurations will ensure your EC2 nodes are also terminated; you can navigate to the **Instances** section on the EC2 dashboard to confirm.
 
+### Removing EFS File Systems[](#removing-efs-file-systems "Direct link to heading")
+
+Porter-managed EFS file systems associated with the cluster's VPC are deleted automatically during cluster teardown. If any EFS file systems remain (for example, because cluster deletion was interrupted), navigate to the **EFS** section in your AWS console, locate any file systems tagged with your cluster's VPC ID, and delete them along with their mount targets before removing VPC resources.
+
 ### Removing VPC Resources[](#removing-vpc-resources "Direct link to heading")
 
 Navigate to the **VPC** section in your AWS console to see the VPC's that are currently in use. Select the VPC that belongs to the cluster you've provisioned, and copy the VPC ID.
