@@ -147,6 +147,57 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
 
     Porter verifies the credentials and automatically provisions all required permissions and APIs. This takes about a minute.
 
+    ## Permissions Porter grants
+
+    After you upload the service account key, Porter binds a set of IAM roles to the Porter service account on your project. The exact role set depends on whether minimal custom-role mode is enabled for your project.
+
+    ### Default mode
+
+    By default, Porter binds the following predefined roles to the Porter service account:
+
+    | Role | Purpose |
+    | --- | --- |
+    | `roles/resourcemanager.projectIamAdmin` | Bootstrap role granted by you; lets Porter bind the roles below |
+    | `roles/serviceusage.serviceUsageAdmin` | Enable required APIs on the project |
+    | `roles/storage.admin` | Manage object storage |
+    | `roles/compute.admin` | Manage VPCs, subnets, firewalls, load balancers, and other compute resources |
+    | `roles/container.admin` | Manage GKE clusters and node pools |
+    | `roles/iam.serviceAccountAdmin` | Create and manage workload service accounts |
+    | `roles/iam.serviceAccountUser` | Allow GKE nodes to act as the workload service account |
+    | `roles/artifactregistry.admin` | Manage container image repositories |
+    | `roles/secretmanager.admin` | Manage application secrets |
+    | `roles/dns.admin` | Manage DNS records for custom domains |
+    | `roles/cloudkms.admin` | Manage encryption keys |
+
+    ### Minimal custom-role mode
+
+    Porter can optionally replace the broad predefined roles above with a project-scoped IAM custom role that grants only the permissions Porter actually uses. When this mode is enabled for your project, Porter:
+
+    1. Creates a project-scoped custom role named `porterManager` (visible at **IAM & Admin** → **Roles** in your GCP console)
+    2. Binds `porterManager` to the Porter service account in place of `roles/storage.admin`, `roles/compute.admin`, `roles/container.admin`, `roles/iam.serviceAccountAdmin`, `roles/iam.serviceAccountUser`, `roles/artifactregistry.admin`, `roles/secretmanager.admin`, `roles/dns.admin`, and `roles/cloudkms.admin`
+    3. Replaces `roles/container.admin` for GKE node service accounts with `roles/container.defaultNodeServiceAccount`
+
+    The bootstrap roles (`roles/resourcemanager.projectIamAdmin`, `roles/serviceusage.serviceUsageAdmin`, `roles/iam.roleAdmin`) remain bound as predefined roles, since they are required to manage the custom role itself.
+
+    Porter keeps the `porterManager` role definition in sync on every credential reconcile — if Porter needs new permissions for a feature, the role is patched automatically. You don't need to modify the role manually.
+
+    <Info>
+    Minimal custom-role mode is rolled out per project. If you'd like it enabled for your project, contact Porter support at `support@porter.run`.
+    </Info>
+
+    ### APIs Porter enables
+
+    In both modes, Porter enables the following APIs on your project using the bootstrap roles:
+
+    - `compute.googleapis.com`
+    - `container.googleapis.com`
+    - `artifactregistry.googleapis.com`
+    - `containerregistry.googleapis.com`
+    - `cloudresourcemanager.googleapis.com`
+    - `dns.googleapis.com`
+    - `cloudkms.googleapis.com`
+    - `secretmanager.googleapis.com`
+
     ## Revoking Access
 
     To revoke Porter's access:
@@ -154,6 +205,7 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
     1. First, delete any clusters through the Porter dashboard
     2. Navigate to **IAM & Admin** → **Service Accounts** in GCP Console
     3. Find the Porter service account and delete it
+    4. If minimal custom-role mode was enabled, also delete the `porterManager` custom role from **IAM & Admin** → **Roles**
 
     This removes the service account and prevents Porter from accessing your account.
   </Tab>
