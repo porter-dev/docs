@@ -165,6 +165,16 @@ Environment groups can be deleted from the **Settings** tab on the environment g
 You cannot delete an environment group that is synced to an application. Unsync the environment group from all applications before deleting it.
 </Warning>
 
+## Managing Sync Targets
+
+An environment group can be synced to one or more clusters in your project. The list of clusters an environment group is available on is called its **sync targets**. You can update the sync target list from the environment group's **Settings** tab on the dashboard.
+
+<Warning>
+You cannot remove a cluster from an environment group's sync targets while applications on that cluster are still linked to the group. Unsync the environment group from any applications running on the cluster before removing it from the sync target list.
+</Warning>
+
+If you attempt to remove a sync target that still has linked applications, the update is rejected and no changes are applied — the environment group remains available on all of its current sync targets.
+
 ## CLI Reference
 
 For the full list of flags and options, see the [porter env](/standard/cli/command-reference/porter-env) CLI reference.
