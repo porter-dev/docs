@@ -49,13 +49,27 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
     If you need Porter to operate with more restricted permissions, contact us through the support widget to inquire about Porter Enterprise.
     </Info>
 
+    ## Removing a Cloud Account
+
+    To disconnect an AWS account from a Porter project:
+
+    1. In the Porter dashboard, navigate to **Integrations** → **AWS**
+    2. Select the account you want to remove and click **Remove**
+
+    Porter only removes accounts that have no remaining dependents. If any clusters, object storage buckets, or environment groups still reference the account, the dashboard lists them and the removal is blocked until you delete those resources first.
+
+    <Info>
+    Removing a cloud account in Porter does not delete resources in your AWS account. It only disconnects Porter from the account. To fully revoke access, also delete the IAM role below.
+    </Info>
+
     ## Revoking Access
 
     To revoke Porter's access:
 
     1. First, delete any clusters through the Porter dashboard
-    2. Navigate to **CloudFormation Stacks** in your AWS console
-    3. Select the stack named `PorterRole` and click **Delete**
+    2. Remove the cloud account from Porter (see above)
+    3. Navigate to **CloudFormation Stacks** in your AWS console
+    4. Select the stack named `PorterRole` and click **Delete**
 
     This removes the IAM role and prevents Porter from accessing your account.
   </Tab>
@@ -147,13 +161,27 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
 
     Porter verifies the credentials and automatically provisions all required permissions and APIs. This takes about a minute.
 
+    ## Removing a Cloud Account
+
+    To disconnect a GCP project from a Porter project:
+
+    1. In the Porter dashboard, navigate to **Integrations** → **GCP**
+    2. Select the account you want to remove and click **Remove**
+
+    Porter only removes accounts that have no remaining dependents. If any clusters, object storage buckets, or environment groups still reference the account, the dashboard lists them and the removal is blocked until you delete those resources first.
+
+    <Info>
+    Removing a cloud account in Porter does not delete resources in your GCP project. It only disconnects Porter from the project. To fully revoke access, also delete the service account below.
+    </Info>
+
     ## Revoking Access
 
     To revoke Porter's access:
 
     1. First, delete any clusters through the Porter dashboard
-    2. Navigate to **IAM & Admin** → **Service Accounts** in GCP Console
-    3. Find the Porter service account and delete it
+    2. Remove the cloud account from Porter (see above)
+    3. Navigate to **IAM & Admin** → **Service Accounts** in GCP Console
+    4. Find the Porter service account and delete it
 
     This removes the service account and prevents Porter from accessing your account.
   </Tab>
@@ -314,14 +342,28 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
     4. In Porter, navigate to **Integrations** → **Azure**
     5. Update the **Password** field with the new value
 
+    ## Removing a Cloud Account
+
+    To disconnect an Azure subscription from a Porter project:
+
+    1. In the Porter dashboard, navigate to **Integrations** → **Azure**
+    2. Select the account you want to remove and click **Remove**
+
+    Porter only removes accounts that have no remaining dependents. If any clusters, object storage buckets, or environment groups still reference the account, the dashboard lists them and the removal is blocked until you delete those resources first.
+
+    <Info>
+    Removing a cloud account in Porter does not delete resources in your Azure subscription. It only disconnects Porter from the subscription. To fully revoke access, also delete the service principal below.
+    </Info>
+
     ## Revoking Access
 
     To revoke Porter's access:
 
     1. First, delete any clusters through the Porter dashboard
-    2. In the Azure portal, search for **App registrations**
-    3. Find and delete the Porter service principal
-    4. Optionally, delete the custom role definition
+    2. Remove the cloud account from Porter (see above)
+    3. In the Azure portal, search for **App registrations**
+    4. Find and delete the Porter service principal
+    5. Optionally, delete the custom role definition
 
     This removes the service principal and prevents Porter from accessing your account.
   </Tab>
