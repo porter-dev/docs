@@ -107,6 +107,12 @@ After [connecting your cloud account](/cloud-accounts/connecting-a-cloud-account
         </Info>
 
         You can customize these settings or accept the defaults.
+
+        <Warning>
+        **GKE cluster name restrictions**: If you customize the cluster name, it must start with a letter, end with a letter or number, and contain only lowercase letters, numbers, and hyphens. It must also **not contain** any of the following substrings: `google`, `g00gle`, `goog`, or `g00g`.
+
+        These substrings are reserved by Google Cloud Storage (GCS) and are blocked in bucket names. Because Porter derives bucket names for cluster-internal storage (for example, Loki logs) from the cluster name, using a reserved substring will cause provisioning to fail. Porter rejects these names up front so you fail fast at cluster creation rather than mid-install.
+        </Warning>
       </Step>
       <Step title="Provision">
         Click **Provision** to start creating your infrastructure.
@@ -120,6 +126,18 @@ After [connecting your cloud account](/cloud-accounts/connecting-a-cloud-account
     ### Troubleshooting
 
     <AccordionGroup>
+      <Accordion title="Cluster name validation failed">
+        GKE cluster names must follow these rules:
+
+        - Start with a lowercase letter
+        - End with a lowercase letter or number
+        - Contain only lowercase letters, numbers, and hyphens
+        - Must **not** contain `google`, `g00gle`, `goog`, or `g00g` (reserved by Google Cloud Storage)
+
+        For example, `prod-cluster` and `rajeev-gke` are valid, but `rajeev-google` or `goog-cluster` are rejected.
+
+        Rename the cluster to something that satisfies the rules above and retry provisioning.
+      </Accordion>
       <Accordion title="Provisioning takes longer than 45 minutes">
         If your cluster has been provisioning for more than 45 minutes:
 
