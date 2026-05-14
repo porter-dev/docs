@@ -1,0 +1,221 @@
+---
+title: 'porter builds'
+sidebarTitle: 'porter builds'
+description: "Manage build templates, trigger build runs, view build logs and metrics, and configure the Narvi builder from the Porter CLI"
+---
+
+`porter builds` contains commands for managing build templates and the build runs that produce container images for your applications. Use these commands to list templates, trigger and inspect builds, update build configuration, and tune the Narvi remote builder.
+
+## Prerequisites
+
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
+
+---
+
+## `porter builds list`
+
+Lists all build templates for the current project. Each template represents a repository and branch that Porter can build container images from.
+
+**Usage:**
+```bash
+porter builds list
+```
+
+The output includes the template ID, repository, branch, build method, and which build tools are enabled (such as Narvi).
+
+---
+
+## `porter builds runs`
+
+Lists the build runs for a specific build template, most recent first.
+
+**Usage:**
+```bash
+porter builds runs <template-id> [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--page` | Page number (1-based) for paginating through results |
+
+Use the template ID returned by `porter builds list`. Each row shows the build ID, status, commit SHA, and timestamps. Use the build ID with `porter builds logs` to inspect a specific run.
+
+```bash
+porter builds runs 7c3a8e7d-1f2b-4d0d-9d8e-1234567890ab --page 2
+```
+
+---
+
+## `porter builds logs`
+
+Streams the logs for a specific build run.
+
+**Usage:**
+```bash
+porter builds logs <template-id> <build-id>
+```
+
+If no logs are available yet (for example, the build hasn't started), the command prints a notice and exits without error.
+
+```bash
+porter builds logs 7c3a8e7d-1f2b-4d0d-9d8e-1234567890ab 9b1c2d3e-4f5a-6b7c-8d9e-0a1b2c3d4e5f
+```
+
+---
+
+## `porter builds trigger`
+
+Triggers a new build run for a build template. By default, the build uses the template's configured branch tip; pass `--commit-sha` to build a specific commit.
+
+**Usage:**
+```bash
+porter builds trigger <template-id> [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--commit-sha` | Git commit SHA to build |
+| `--commit-message` | Git commit message to associate with the build |
+
+The command prints the new build ID and its initial status. Follow the build with `porter builds runs` and `porter builds logs`.
+
+```bash
+porter builds trigger 7c3a8e7d-1f2b-4d0d-9d8e-1234567890ab \
+  --commit-sha 1a2b3c4d \
+  --commit-message "Fix login regression"
+```
+
+---
+
+## `porter builds update`
+
+Updates a build template's configuration. Only the flags you provide are changed; everything else is preserved.
+
+**Usage:**
+```bash
+porter builds update <template-id> [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--repo` | Repository in `org/repo` format |
+| `--branch` | Git branch to build from |
+| `--build-method` | Build method: `dockerfile` or `buildpack` |
+| `--build-path` | Build context path within the repository |
+| `--dockerfile` | Path to the Dockerfile (for `dockerfile` builds) |
+| `--narvi-enabled` | Enable Narvi builds for this template |
+| `--narvi-disabled` | Disable Narvi builds for this template |
+
+<Info>
+When you enable Narvi on a template that has never used it before, Porter automatically provisions a Narvi builder for your project with sensible defaults. You can resize that builder later with `porter builds config set`.
+</Info>
+
+```bash
+# Switch a template to Dockerfile-based builds on a new branch
+porter builds update 7c3a8e7d-1f2b-4d0d-9d8e-1234567890ab \
+  --branch main \
+  --build-method dockerfile \
+  --dockerfile ./Dockerfile
+
+# Enable the Narvi remote builder
+porter builds update 7c3a8e7d-1f2b-4d0d-9d8e-1234567890ab --narvi-enabled
+```
+
+---
+
+## `porter builds metrics`
+
+Shows builder resource metrics (CPU, memory, cache usage) for a build template. Useful for deciding whether to resize the Narvi builder backing the template.
+
+**Usage:**
+```bash
+porter builds metrics <template-id>
+```
+
+---
+
+## `porter builds config`
+
+Manages the project-wide Narvi builder configuration. Narvi is Porter's remote builder; a single Narvi builder config per project backs all templates that have Narvi enabled.
+
+### `porter builds config get`
+
+Prints the current Narvi builder configuration, including CPU cores, memory, and cache size.
+
+**Usage:**
+```bash
+porter builds config get
+```
+
+If the project does not yet have a Narvi builder, the command reports that Narvi is not configured.
+
+### `porter builds config set`
+
+Updates the Narvi builder configuration. At least one of `--cpu`, `--memory`, or `--cache` is required.
+
+**Usage:**
+```bash
+porter builds config set [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--cpu` | CPU cores allocated to the builder |
+| `--memory` | Memory in GiB allocated to the builder |
+| `--cache` | Cache size in GiB allocated to the builder |
+
+```bash
+# Resize the Narvi builder
+porter builds config set --cpu 8 --memory 32 --cache 128
+```
+
+<Info>
+When a build template first enables Narvi, Porter provisions a builder with default resources (4 CPU cores, 16 GiB memory, 64 GiB cache). Use `porter builds config set` if your builds need more headroom.
+</Info>
+
+---
+
+## Common Workflows
+
+### Trigger a build and follow its logs
+
+```bash
+# List templates to find the one you want
+porter builds list
+
+# Trigger a build for the latest commit on the configured branch
+porter builds trigger 7c3a8e7d-1f2b-4d0d-9d8e-1234567890ab
+
+# List recent runs to grab the new build ID
+porter builds runs 7c3a8e7d-1f2b-4d0d-9d8e-1234567890ab
+
+# Stream the build logs
+porter builds logs 7c3a8e7d-1f2b-4d0d-9d8e-1234567890ab <build-id>
+```
+
+### Move a template to the Narvi remote builder
+
+```bash
+# Enable Narvi on the template (provisions a builder if needed)
+porter builds update 7c3a8e7d-1f2b-4d0d-9d8e-1234567890ab --narvi-enabled
+
+# Inspect the provisioned builder
+porter builds config get
+
+# Resize if your builds need more resources
+porter builds config set --cpu 8 --memory 32
+```
+
+## Related Commands
+
+- [porter apply](/standard/cli/command-reference/porter-apply) - Deploy an application using `porter.yaml`
+- [porter app](/standard/cli/command-reference/porter-app) - Manage Porter applications
