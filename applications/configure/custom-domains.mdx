@@ -7,7 +7,15 @@ Porter secures all Web services with SSL certificates issued by [Let's Encrypt](
 
 ## Porter Domains
 
-Porter generates placeholder domains for all Web services. These placeholder domains follow the format of `*.onporter.run`. While these domains can be used in production, we highly recommend attaching a custom domain to your production web services.
+Porter generates placeholder domains for all Web services. These placeholder domains follow the format of `*.onporter.run` (or `*.withporter.run` on some clusters). While these domains can be used in production, we highly recommend attaching a custom domain to your production web services.
+
+### Finding your Porter domain
+
+The auto-generated Porter domain for a service is displayed in the **External networking** card under the **Networking** tab of your Web service, labeled **Porter domain**. Use the copy button on the code block to copy the full hostname.
+
+If external networking was just enabled and the service has not yet been deployed, this field shows `Will be generated on next deploy.` — the domain becomes available after the next successful deploy.
+
+<Info>Each service has at most one Porter domain. When external networking is disabled, the field stays visible but is dimmed.</Info>
 
 ## Custom Domains
 
