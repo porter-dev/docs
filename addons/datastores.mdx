@@ -137,6 +137,9 @@ The metrics that are currently displayed are:
 - CPU utilization
 - RAM utilization
 - Storage capacity
+- Connections
+
+The connections metric reports the number of active client connections to the datastore over time, with average, minimum, and maximum values for each interval. For RDS and Aurora instances, this is sourced from the CloudWatch `DatabaseConnections` metric. For Elasticache replication groups, it is sourced from `CurrConnections`. Use it to detect connection-pool exhaustion, spot clients that are leaking connections, and size your application's pool against the datastore's capacity.
 
 ---
 
