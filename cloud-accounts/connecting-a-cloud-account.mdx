@@ -147,6 +147,35 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
 
     Porter verifies the credentials and automatically provisions all required permissions and APIs. This takes about a minute.
 
+    ## Migrating to Workload Identity Federation
+
+    If your project has Workload Identity Federation (WIF) enabled, you can migrate an existing service-account JSON connection to WIF without redeploying your clusters. WIF replaces long-lived service-account keys with short-lived federated tokens.
+
+    <Info>
+    Workload Identity Federation for GCP is currently rolled out per project. If you don't see the **Migrate to Workload Identity Federation** button described below, reach out through the support widget to have it enabled.
+    </Info>
+
+    To migrate:
+
+    <Steps>
+      <Step title="Open the cloud account">
+        In Porter, navigate to **Integrations** → **GCP** and open the cloud account you want to migrate.
+      </Step>
+      <Step title="Start the migration">
+        Click **Migrate to Workload Identity Federation**. Porter generates a one-time setup command and a Cloud Shell deeplink.
+      </Step>
+      <Step title="Run the bootstrap in Cloud Shell">
+        Click the Cloud Shell link, paste the setup command, and run it. The command provisions the Workload Identity Pool, provider, and service account binding in your GCP project via Terraform.
+
+        Your existing service-account JSON credential keeps authenticating your clusters throughout this step — there is no downtime during migration.
+      </Step>
+      <Step title="Wait for verification">
+        Porter waits for the bootstrap callback and then cuts the cloud account over to the federated identity. The dialog closes automatically once verification succeeds.
+      </Step>
+    </Steps>
+
+    After migration, you can safely delete the original service-account key from your GCP project.
+
     ## Revoking Access
 
     To revoke Porter's access:
