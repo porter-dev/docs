@@ -26,6 +26,10 @@ The DNS records that need to be created for your Web service vary slightly depen
 
 Copy this address, as you will need it to create the DNS record.
 
+<Info>
+Public and private (internal) web services use different load-balancer hostnames. The address shown in the **Networking** tab always reflects the load balancer that backs the service's current mode, so copy it from the same service you're attaching the domain to. If you switch a service between public and internal, the hostname changes and you must update your DNS record to match.
+</Info>
+
 ### Google Cloud and Azure
 
 On Google Cloud and Azure, the load balancer that sits in front of your infrastructure has a static IP address.
