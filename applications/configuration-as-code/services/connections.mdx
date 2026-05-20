@@ -46,7 +46,7 @@ services:
 Bind a User Assigned Managed Identity (UAMI) to your service for secure Azure API access without managing credentials. Porter uses [Azure Workload Identity](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview) to federate the service's Kubernetes service account with the UAMI, so your application can authenticate to Azure resources using `DefaultAzureCredential` (or any credential type that supports workload identity).
 
 <Info>
-This feature is only available on AKS clusters created through Porter and must be enabled at the project level. Reach out to Porter support if you don't see it available on your project.
+This connection is available on any project with an AKS cluster created through Porter.
 </Info>
 
 ### Prerequisites
