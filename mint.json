@@ -135,6 +135,13 @@
           ]
         },
         {
+          "group": "Integrations",
+          "pages": [
+            "integrations/doppler",
+            "integrations/infisical"
+          ]
+        },
+        {
           "group": "Command Line Interface (CLI)",
           "pages": [
             "cli/installation",
