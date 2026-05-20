@@ -104,7 +104,8 @@
                 "applications/configure/temporal-autoscaling",
                 "applications/configure/custom-domains",
                 "applications/configure/zero-downtime-deployments",
-                "applications/configure/advanced-networking"
+                "applications/configure/advanced-networking",
+                "applications/configure/secure-cloud-access"
               ]
             },
             {
