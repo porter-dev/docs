@@ -1,16 +1,17 @@
 ---
 title: 'Connections in porter.yaml'
 sidebarTitle: 'Connections'
-description: "Connect services to external cloud resources like AWS IAM roles, Google Cloud SQL instances, and persistent disks using porter.yaml connections"
+description: "Connect services to external cloud resources like AWS IAM roles, Azure managed identities, Google Cloud SQL instances, and persistent disks using porter.yaml connections"
 ---
 
-Connect your services to external cloud resources like AWS IAM roles, Google Cloud SQL instances, and persistent disks.
+Connect your services to external cloud resources like AWS IAM roles, Azure managed identities, Google Cloud SQL instances, and persistent disks.
 
 ## Connection Types
 
 | Type | Description | Cloud Provider |
 |------|-------------|----------------|
 | `awsRole` | Attach an IAM role for AWS API access | AWS |
+| `azureManagedIdentity` | Bind a User Assigned Managed Identity for Azure API access | Azure |
 | `cloudSql` | Connect to Google Cloud SQL instances | GCP |
 | `disk` | Attach persistent storage | All |
 
@@ -37,6 +38,53 @@ services:
       - type: awsRole
         role: my-app-s3-access
 ```
+
+---
+
+## Azure Managed Identity Connection
+
+Bind a User Assigned Managed Identity (UAMI) to your service for secure Azure API access without managing credentials. Porter uses [Azure Workload Identity](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview) to federate the service's Kubernetes service account with the UAMI, so your application can authenticate to Azure resources using `DefaultAzureCredential` (or any credential type that supports workload identity).
+
+<Info>
+This feature is only available on AKS clusters created through Porter and must be enabled at the project level. Reach out to Porter support if you don't see it available on your project.
+</Info>
+
+### Prerequisites
+
+Before adding this connection to your service, you must:
+
+1. Have a User Assigned Managed Identity provisioned in your Azure subscription. Porter does **not** create the UAMI for you — provision it via the Azure Portal, Terraform, or the Azure CLI.
+2. Grant the UAMI the Azure RBAC role assignments it needs to access the resources your service will call (e.g. `Storage Blob Data Reader` on a storage account).
+
+When your service deploys, Porter creates a [federated identity credential](https://learn.microsoft.com/en-us/azure/active-directory/develop/workload-identity-federation) on the UAMI that maps your service's Kubernetes service account to the identity. At runtime, the pod receives a projected OIDC token that Azure exchanges for an access token scoped to the UAMI.
+
+### Field Reference
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | string | Yes | Must be `azureManagedIdentity` |
+| `identityName` | string | Yes | Name of the User Assigned Managed Identity |
+| `resourceGroup` | string | Yes | Azure resource group containing the managed identity |
+
+### Example
+
+```yaml
+services:
+  - name: api
+    # ...
+    connections:
+      - type: azureManagedIdentity
+        identityName: my-app-identity
+        resourceGroup: my-resource-group
+```
+
+<Warning>
+This connection grants your service every permission assigned to the UAMI in Azure. Scope role assignments narrowly — a UAMI with subscription-level Owner is rarely what you want.
+</Warning>
+
+<Info>
+Only one `azureManagedIdentity` connection is permitted per service. If you need to access resources across multiple identities, consolidate role assignments onto a single UAMI.
+</Info>
 
 ---
 
