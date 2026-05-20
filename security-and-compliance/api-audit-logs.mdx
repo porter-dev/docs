@@ -1,0 +1,53 @@
+---
+title: "API audit logs"
+description: "Review and filter API activity in your Porter project, including who took an action, against which resource, and when"
+---
+
+API audit logs record every authenticated request made against your Porter project's API. Use them to investigate user activity, satisfy compliance reviews, and trace changes back to a specific actor, resource, or time window.
+
+You can access API audit logs from the **Security** section of the Porter dashboard.
+
+## Filtering audit logs
+
+The filter bar above the audit log table lets you narrow results by combining one or more of the following:
+
+* **Date range** — defaults to the last 7 days; presets and a custom range picker are available.
+* **Actor** — the user, service account, or token that made the request.
+* **Method** — the HTTP method (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`).
+* **Action** — the high-level operation performed.
+* **Resource type** — the kind of Porter resource the request targeted.
+* **IP address** — the source IP of the request.
+* **Status code** — the HTTP response status returned.
+
+All filters are reflected in the page URL, so you can share or bookmark a filtered view.
+
+## Filtering by resource type
+
+Use the **Resource type** picker to scope audit log results to one or more kinds of resources. This is useful when you want to see, for example, every change made to applications during an incident window, or all activity against environment groups in the past day.
+
+The picker supports multi-select. Selecting multiple values returns logs that match **any** of the selected resource types.
+
+Available resource types:
+
+| Resource type      | Description                                                                |
+| ------------------ | -------------------------------------------------------------------------- |
+| Application        | Application deployments and their configuration.                           |
+| Datastore          | Managed databases and caches provisioned through Porter.                   |
+| Addon              | Addons installed into a cluster.                                           |
+| Environment group  | Shared environment variable groups linked to applications.                 |
+| Cluster            | Cluster-level configuration and lifecycle actions.                         |
+| Project            | Project-level settings, members, and integrations.                         |
+
+### Sharing a filtered view
+
+Each selected resource type is added to the URL as a repeated `resource_type` query parameter. For example, the following URL filters the audit log to application and environment group activity:
+
+```text
+https://dashboard.porter.run/security/audit-logs?resource_type=application&resource_type=environment_group
+```
+
+You can construct these URLs directly to link teammates to a pre-filtered view, or to embed in runbooks and incident templates.
+
+### Clearing the filter
+
+To remove the resource type filter, open the **Resource type** picker and clear all selections, or remove the `resource_type` parameters from the URL. With no resource types selected, audit logs for every resource type are returned.
