@@ -1,0 +1,198 @@
+---
+title: "Secure cloud access"
+description: "Grant Porter services access to your cloud provider APIs using AWS IAM roles or Azure managed identities, without managing static credentials"
+---
+
+Porter services can authenticate to your cloud provider's APIs without you having to embed static access keys or service-principal secrets in environment variables. Instead, each pod assumes a cloud identity at runtime via your cloud provider's native workload-identity mechanism.
+
+This page covers how to configure these identities for AWS and Azure, and how to scope their permissions to follow the principle of least privilege.
+
+<Info>
+The mechanics of declaring a cloud connection on a service are documented in [Connections in porter.yaml](/applications/configuration-as-code/services/connections). This page focuses on the cloud-side setup that has to happen *before* you reference an identity from a service.
+</Info>
+
+---
+
+## AWS
+
+Porter uses [EKS Pod Identity](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html) to associate an IAM role with a service's pod. Your application code can then use the default AWS SDK credential chain (e.g. `DefaultAWSCredentialsProviderChain` in Java, `aws.config.LoadDefaultConfig` in Go, `boto3.Session()` in Python) and credentials will be resolved automatically — no access keys, no `sts:AssumeRole` calls in application code.
+
+### How it works
+
+When a service declares an `awsRole` connection in `porter.yaml`, Porter creates an [EKS Pod Identity Association](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html) on your cluster that maps the service's Kubernetes service account to the IAM role you specify. At runtime, the EKS Pod Identity agent injects short-lived credentials for that role into the pod.
+
+You are responsible for creating the IAM role and granting it the permissions it needs. Porter does not create the role or modify its permissions.
+
+### Step 1 — Create the IAM role
+
+In the AWS console (or via Terraform / the AWS CLI), create a new IAM role with the following trust policy:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "pods.eks.amazonaws.com"
+      },
+      "Action": [
+        "sts:AssumeRole",
+        "sts:TagSession"
+      ]
+    }
+  ]
+}
+```
+
+For defense in depth, you can scope the trust policy to your own account:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "pods.eks.amazonaws.com"
+      },
+      "Action": [
+        "sts:AssumeRole",
+        "sts:TagSession"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:SourceAccount": "123456789012"
+        }
+      }
+    }
+  ]
+}
+```
+
+### Step 2 — Attach a permissions policy
+
+Attach a permissions policy that grants **only** the AWS API actions your service actually needs, on **only** the specific resources it will touch. A few rules of thumb:
+
+- **Avoid wildcard actions.** Prefer `s3:GetObject` and `s3:PutObject` over `s3:*`. If you do need broad access (e.g. all S3 read actions), reach for AWS-managed policies like `AmazonS3ReadOnlyAccess` before reaching for `*`.
+- **Scope resources by ARN.** Replace `"Resource": "*"` with explicit ARNs (`arn:aws:s3:::my-bucket/*`, `arn:aws:secretsmanager:us-east-1:123456789012:secret:prod/api-key-*`). This prevents the role from being used to read or modify resources that belong to other services.
+- **Use `Condition` blocks where applicable.** For example, restrict `s3:GetObject` to a specific prefix with `s3:prefix`, or restrict KMS decrypt to keys tagged for a particular environment.
+- **One role per service.** A role used by both your `api` and `worker` services has to be the union of both services' permissions, which violates least privilege. Create a dedicated role for each service.
+
+Example minimal policy for a service that reads a single S3 bucket and decrypts secrets from one KMS key:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:ListBucket"],
+      "Resource": [
+        "arn:aws:s3:::my-app-uploads",
+        "arn:aws:s3:::my-app-uploads/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": "kms:Decrypt",
+      "Resource": "arn:aws:kms:us-east-1:123456789012:key/abcd1234-ef56-7890-abcd-ef1234567890"
+    }
+  ]
+}
+```
+
+### Step 3 — Reference the role from your service
+
+In `porter.yaml`, add an `awsRole` connection to the service:
+
+```yaml
+services:
+  - name: api
+    # ...
+    connections:
+      - type: awsRole
+        role: my-app-api-role
+```
+
+You can use either the role name (`my-app-api-role`) or the full ARN. On the next deploy, Porter creates the Pod Identity Association and your pods can use the role immediately — no application restart logic required.
+
+<Info>
+The Kubernetes service account Porter binds the role to is named `<app>-<service>` in the deployment target namespace. You generally don't need to know this — the Pod Identity Association handles the mapping — but it's useful to know if you're auditing AWS-side resources.
+</Info>
+
+---
+
+## Azure
+
+Porter uses [Azure Workload Identity](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview) to federate a service's Kubernetes service account with a User Assigned Managed Identity (UAMI) in your Azure subscription. Your application code can then use `DefaultAzureCredential` (or any credential type that supports workload identity) and Azure will issue tokens for the UAMI on the pod's behalf.
+
+<Info>
+Azure managed identity support must be enabled at the project level. If you don't see the option on your service configuration, reach out to Porter support.
+</Info>
+
+### How it works
+
+When a service declares an `azureManagedIdentity` connection, Porter creates a [federated identity credential](https://learn.microsoft.com/en-us/azure/active-directory/develop/workload-identity-federation) on the UAMI you specify. The credential trusts the AKS cluster's OIDC issuer to vouch for a specific Kubernetes service account. At runtime, the pod presents a projected OIDC token and Azure exchanges it for an access token scoped to the UAMI.
+
+You are responsible for creating the UAMI and granting it role assignments. Porter does not create the UAMI or modify its permissions.
+
+### Step 1 — Create a User Assigned Managed Identity
+
+Create a UAMI in the same Azure subscription as your AKS cluster, via the Azure Portal, Terraform, or the Azure CLI:
+
+```bash
+az identity create \
+  --name my-app-api-identity \
+  --resource-group my-resource-group \
+  --location eastus
+```
+
+You don't need to add any federated credentials manually — Porter will add the one that maps your service's Kubernetes service account to this identity on the next deploy.
+
+### Step 2 — Assign least-privilege Azure roles
+
+Grant the UAMI the Azure RBAC roles it needs to access the specific resources your service will call. A few rules of thumb:
+
+- **Scope role assignments to the smallest resource possible.** Assign `Storage Blob Data Reader` on a single storage account, not on the resource group or subscription.
+- **Prefer built-in data-plane roles over control-plane roles.** `Storage Blob Data Reader` lets you read blob contents; `Reader` lets you list every resource in the scope. They are not the same thing — pick the data-plane role unless your service genuinely needs to read Azure resource metadata.
+- **Avoid `Contributor` and `Owner`.** These grant write access to everything in the scope, including the ability to grant further permissions. They are almost never the right choice for an application identity.
+- **One UAMI per service.** Each service should have its own UAMI so role assignments stay scoped to what that service needs. Porter enforces one `azureManagedIdentity` connection per service for exactly this reason.
+
+Example: granting a UAMI read-only access to a single storage account:
+
+```bash
+az role assignment create \
+  --assignee-object-id $(az identity show -n my-app-api-identity -g my-resource-group --query principalId -o tsv) \
+  --assignee-principal-type ServicePrincipal \
+  --role "Storage Blob Data Reader" \
+  --scope /subscriptions/<sub-id>/resourceGroups/my-resource-group/providers/Microsoft.Storage/storageAccounts/myappuploads
+```
+
+### Step 3 — Reference the identity from your service
+
+In `porter.yaml`, add an `azureManagedIdentity` connection to the service:
+
+```yaml
+services:
+  - name: api
+    # ...
+    connections:
+      - type: azureManagedIdentity
+        identityName: my-app-api-identity
+        resourceGroup: my-resource-group
+```
+
+On the next deploy, Porter creates the federated identity credential on the UAMI. From your application code, use `DefaultAzureCredential` from the Azure SDK and Azure will resolve credentials automatically — no client secrets, no certificates.
+
+<Warning>
+The federated credential binds the UAMI to a specific Kubernetes service account in your AKS cluster. If you remove the connection from `porter.yaml`, Porter removes the binding from its tracking but does **not** delete the credential on Azure. To fully revoke access, delete the federated credential from the UAMI in the Azure Portal or via `az identity federated-credential delete`.
+</Warning>
+
+---
+
+## Related documentation
+
+- [Connections in porter.yaml](/applications/configuration-as-code/services/connections) — Reference for all connection types, including the YAML schema
+- [AWS EKS Pod Identity](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html) — AWS documentation
+- [Azure Workload Identity](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview) — Azure documentation
