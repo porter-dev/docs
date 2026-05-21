@@ -61,13 +61,55 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
   </Tab>
 
   <Tab title="GCP">
-    Porter connects to GCP using a service account with the **Project IAM Admin** role. You only need to grant this one role and enable two APIs — Porter automatically provisions all other required permissions and APIs.
+    Porter supports two methods for connecting a GCP project:
+
+    - **Workload Identity Federation (WIF)** — the recommended method. Porter assumes a short-lived identity in your project without storing any long-lived credentials. Setup runs from Google Cloud Shell with a single command.
+    - **Service account JSON key** — the legacy method. You create a service account with the **Project IAM Admin** role and upload its JSON key file to Porter.
+
+    With both methods, you only need to grant a single role — Porter automatically provisions all other required permissions and enables the APIs it needs.
 
     ## Prerequisites
 
     Before connecting your GCP project to Porter, ensure that a [billing account](https://console.cloud.google.com/billing) is attached to the project. Porter cannot provision infrastructure in a project without an active billing account.
 
-    ## Create the Service Account
+    ## Connect via Workload Identity Federation
+
+    If your project has WIF onboarding enabled, the GCP step of the onboarding flow asks for your project ID and walks you through a Cloud Shell bootstrap. No JSON key is created or stored.
+
+    <Info>
+    WIF onboarding is rolling out gradually. If you don't see the WIF flow when connecting GCP, use the [service account JSON key](#connect-via-service-account-json-key) method below, or contact Porter support to enable WIF for your project.
+    </Info>
+
+    <Steps>
+      <Step title="Enter your GCP Project ID">
+        In Porter, enter the [GCP Project ID](https://console.cloud.google.com) you want to connect (for example, `my-prod-project`) and click **Connect**.
+
+        Porter generates a one-time bootstrap command scoped to your project.
+      </Step>
+      <Step title="Run the bootstrap command in Cloud Shell">
+        Click **Open Cloud Shell** to launch [Google Cloud Shell](https://cloud.google.com/shell) in a new tab, then paste and run the command Porter generated.
+
+        The command:
+
+        - Enables the Cloud Resource Manager, Service Usage, and IAM Credentials APIs
+        - Creates a Workload Identity Pool and provider that trusts Porter
+        - Creates a `porter-manager` service account and grants it the **Project IAM Admin** role
+        - Binds the pool to the service account so Porter can impersonate it
+      </Step>
+      <Step title="Wait for verification">
+        Once the command finishes, Porter automatically detects the new federation binding and verifies the connection. The onboarding step advances when the cloud account is fully provisioned — no action needed in the Porter UI.
+      </Step>
+    </Steps>
+
+    <Info>
+    The Workload Identity Pool, provider, and `porter-manager` service account must remain in your GCP project for Porter to manage your infrastructure. Deleting any of them will prevent Porter from accessing your account.
+    </Info>
+
+    ### Migrating an existing GCP account to WIF
+
+    If you previously connected GCP with a JSON key, you can migrate that cloud account to Workload Identity Federation with no downtime. Open the cloud account in Porter and select **Migrate to Workload Identity Federation**, then run the generated Cloud Shell command. Porter cuts over to the impersonated identity once verification succeeds and the JSON key can then be safely revoked from GCP.
+
+    ## Connect via service account JSON key
 
     You can create the service account using our automated script (recommended) or manually.
 
@@ -152,10 +194,10 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
     To revoke Porter's access:
 
     1. First, delete any clusters through the Porter dashboard
-    2. Navigate to **IAM & Admin** → **Service Accounts** in GCP Console
-    3. Find the Porter service account and delete it
+    2. Navigate to **IAM & Admin** → **Service Accounts** in GCP Console and delete the `porter-manager` service account
+    3. If you connected via Workload Identity Federation, also navigate to **IAM & Admin** → **Workload Identity Federation** and delete the Porter pool and provider
 
-    This removes the service account and prevents Porter from accessing your account.
+    This removes the credentials and prevents Porter from accessing your account.
   </Tab>
 
   <Tab title="Azure">
