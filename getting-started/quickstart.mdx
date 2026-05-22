@@ -110,33 +110,21 @@ Porter provisions a Kubernetes cluster in your cloud account. The setup process 
     </Steps>
   </Tab>
   <Tab title="GCP">
-    Porter connects to GCP using a service account. You only need to grant one IAM role and enable one API—Porter automatically provisions everything else.
+    Porter connects to GCP using [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation). Porter's AWS identity exchanges short-lived (≤1 hour) tokens with your GCP project on demand — no service account keys to download, store, or rotate.
 
     <Steps>
-      <Step title="Enable required APIs">
-        In your [GCP Console](https://console.cloud.google.com), navigate to **APIs & Services**, click **Enable APIs and Services**, and enable the following APIs:
-
-        - **Cloud Resource Manager API** — required for Porter to manage IAM bindings
-        - **Service Usage API** — required for Porter to enable all other APIs automatically
-
-        Porter will automatically enable all other required APIs after you upload your credentials.
+      <Step title="Enter your GCP Project ID">
+        In Porter, select GCP. Enter your [GCP project ID](https://console.cloud.google.com) (you can find this at the top of any page in the GCP Console) and click **Connect**.
       </Step>
-      <Step title="Create a service account">
-        1. Navigate to **IAM & Admin** > **Service Accounts**
-        2. Click **Create Service Account**
-        3. Name your service account (e.g., `porter-manager`)
-        4. Grant the **Resource Manager > Project IAM Admin** role
-        5. Click **Done** to create the account
-        6. Under **Actions**, select **Manage keys**
-        7. Click **Add Key** > **Create new key** > **JSON**
-        8. The JSON key file downloads automatically. Keep it safe
+      <Step title="Run the setup in Cloud Shell">
+        Porter generates a one-line setup command tied to this integration. Copy it, click **Open Cloud Shell**, and paste it into the shell that opens.
+
+        The script runs Terraform inside your project and creates a service account, a Workload Identity Pool with a trust policy scoped to your tenant, and enables the five APIs Porter needs to bootstrap federation. Setup takes about 30 seconds.
       </Step>
-      <Step title="Upload the service account key">
-        In Porter, click **Drop a GCP Service Account JSON here, or click to browse** and upload the JSON key file you downloaded.
+      <Step title="Wait for verification">
+        The Porter dashboard polls automatically. Once the bootstrap completes, Porter finishes enabling the remaining APIs, grants the heavier IAM roles to the service account, and marks the cloud account connected. The status banner turns green and the Continue button enables.
 
-        ![Upload GCP service account key](/images/getting-started/step-3-gcp-upload-json.webp)
-
-        Porter verifies the credentials and automatically provisions all required permissions and APIs. This takes about a minute.
+        For the full mechanism (trust boundary, permissions granted, troubleshooting), see [Connecting a Cloud Account → GCP](/cloud-accounts/connecting-a-cloud-account).
       </Step>
       <Step title="Review costs">
         Porter displays estimated monthly costs for your infrastructure (~$253/month for GCP).

@@ -103,10 +103,10 @@ Porter requires permissions to create and manage Kubernetes clusters, networking
 
 - **AWS**: Automatic setup — Porter guides you through creating a CloudFormation stack that provisions the required IAM role with one click
 - **Azure**: Manual setup required — you'll need to create a service principal using our setup script or the Azure CLI
-- **GCP**: Manual setup required — you'll need to create a service account and download a JSON key file
+- **GCP**: One-line Cloud Shell setup via Workload Identity Federation — no service account keys to download or rotate
 
 For detailed permission requirements and setup instructions, see [Connecting a Cloud Account](/cloud-accounts/connecting-a-cloud-account).
 
 ### Can I revoke Porter's access?
 
-Yes. You can revoke Porter's access at any time by deleting the IAM role (AWS), service principal (Azure), or service account (GCP). Note that Porter will no longer be able to manage or delete resources after access is revoked.
+Yes. You can revoke Porter's access at any time by deleting the IAM role (AWS), service principal (Azure), or Workload Identity Pool (GCP). Note that Porter will no longer be able to manage or delete resources after access is revoked.
