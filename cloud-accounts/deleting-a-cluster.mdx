@@ -146,7 +146,7 @@ Before deleting your cluster:
 
     **AWS**: Re-create the CloudFormation stack to restore the IAM role, then delete the cluster.
 
-    **GCP**: Workload Identity Federation tokens don't expire — they're minted on demand. If Porter can't authenticate, either the `porter-pool-*` Workload Identity Pool or the `porter-manager-*` service account was deleted. Re-run the connect flow in **Integrations** → **GCP** to recreate them, then delete the cluster.
+    **GCP**: Workload Identity Federation tokens are minted on demand and do not expire. If Porter can't authenticate, either the `porter-pool-*` Workload Identity Pool or the `porter-manager-*` service account was deleted. Re-run the connect flow in **Integrations** → **GCP** to recreate them, then delete the cluster.
 
     **Azure**: Generate a new client secret and update it in **Integrations** → **Azure**, then delete the cluster.
 

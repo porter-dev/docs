@@ -110,7 +110,7 @@ Porter provisions a Kubernetes cluster in your cloud account. The setup process 
     </Steps>
   </Tab>
   <Tab title="GCP">
-    Porter connects to GCP using [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation). Porter's AWS identity exchanges short-lived (≤1 hour) tokens with your GCP project on demand — no service account keys to download, store, or rotate.
+    Porter connects to GCP using [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation). Workload Identity Federation offers a mechanism for Porter to connect with your GCP project without requiring any static keys.
 
     <Steps>
       <Step title="Enter your GCP Project ID">
