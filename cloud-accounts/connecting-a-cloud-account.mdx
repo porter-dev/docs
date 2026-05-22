@@ -1,7 +1,7 @@
 ---
 title: "Connecting a cloud account"
 sidebarTitle: "Connecting a Cloud Account"
-description: "Grant Porter access to your AWS, GCP, or Azure account using IAM roles, service accounts, or service principals to provision infrastructure"
+description: "Grant Porter access to your AWS, GCP, or Azure account using IAM roles, Workload Identity Federation, or service principals to provision infrastructure"
 ---
 
 Before Porter can create a cluster, you need to grant it access to your cloud account. Porter uses secure credential methods that don't require storing static API keys.
@@ -61,143 +61,75 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
   </Tab>
 
   <Tab title="GCP">
-    Porter supports two methods for connecting a GCP project:
-
-    - **Workload Identity Federation (WIF)** — the recommended method. Porter assumes a short-lived identity in your project without storing any long-lived credentials. Setup runs from Google Cloud Shell with a single command.
-    - **Service account JSON key** — the legacy method. You create a service account with the **Project IAM Admin** role and upload its JSON key file to Porter.
-
-    With both methods, you only need to grant a single role — Porter automatically provisions all other required permissions and enables the APIs it needs.
+    Porter connects to GCP using [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation) (WIF). Porter's AWS identity exchanges short-lived (≤1 hour) tokens with your GCP project on demand — no service account keys to download, store, or rotate. Setup runs in [Google Cloud Shell](https://cloud.google.com/shell) with a single command Porter generates for your project.
 
     ## Prerequisites
 
-    Before connecting your GCP project to Porter, ensure that a [billing account](https://console.cloud.google.com/billing) is attached to the project. Porter cannot provision infrastructure in a project without an active billing account.
+    Your GCP project needs an active [billing account](https://console.cloud.google.com/billing) attached. Porter cannot provision infrastructure without one.
 
-    ## Connect via Workload Identity Federation
+    The Google account running the setup must have these project-level roles (or `roles/owner`, which covers all of them):
 
-    If your project has WIF onboarding enabled, the GCP step of the onboarding flow asks for your project ID and walks you through a Cloud Shell bootstrap. No JSON key is created or stored.
+    - `roles/serviceusage.serviceUsageAdmin`
+    - `roles/iam.serviceAccountAdmin`
+    - `roles/resourcemanager.projectIamAdmin`
+    - `roles/iam.workloadIdentityPoolAdmin`
+    - `roles/storage.admin` (first run only — for the Terraform state bucket)
 
-    <Info>
-    WIF onboarding is rolling out gradually. If you don't see the WIF flow when connecting GCP, use the [service account JSON key](#connect-via-service-account-json-key) method below, or contact Porter support to enable WIF for your project.
-    </Info>
+    ## Connect Your GCP Project
 
     <Steps>
       <Step title="Enter your GCP Project ID">
-        In Porter, enter the [GCP Project ID](https://console.cloud.google.com) you want to connect (for example, `my-prod-project`) and click **Connect**.
-
-        Porter generates a one-time bootstrap command scoped to your project.
+        In Porter, select GCP. Enter your [GCP project ID](https://console.cloud.google.com) (visible at the top of any page in the GCP Console) and click **Connect**. Porter generates a one-time setup command scoped to this integration.
       </Step>
-      <Step title="Run the bootstrap command in Cloud Shell">
-        Click **Open Cloud Shell** to launch [Google Cloud Shell](https://cloud.google.com/shell) in a new tab, then paste and run the command Porter generated.
+      <Step title="Run the setup in Cloud Shell">
+        Click **Open Cloud Shell** to launch a new tab with the [porter-dev/gcp-onboarding](https://github.com/porter-dev/gcp-onboarding) repository pre-loaded. Paste the command into the shell and press Enter.
 
-        The command:
+        The script runs Terraform in your project and creates:
 
-        - Enables the Cloud Resource Manager, Service Usage, and IAM Credentials APIs
-        - Creates a Workload Identity Pool and provider that trusts Porter
-        - Creates a `porter-manager` service account and grants it the **Project IAM Admin** role
-        - Binds the pool to the service account so Porter can impersonate it
+        - A `porter-manager-*` service account that Porter impersonates
+        - A `porter-pool-*` Workload Identity Pool with a trust policy scoped to Porter's AWS identity and your tenant ID
+        - Five Google APIs enabled: Cloud Resource Manager, IAM, IAM Credentials, STS, and Service Usage
+
+        Setup takes about 30 seconds.
       </Step>
       <Step title="Wait for verification">
-        Once the command finishes, Porter automatically detects the new federation binding and verifies the connection. The onboarding step advances when the cloud account is fully provisioned — no action needed in the Porter UI.
+        Porter's dashboard polls the connection automatically. Once the bootstrap completes, Porter finishes enabling the remaining APIs, grants the heavier IAM roles to the service account, and marks the cloud account connected. The status banner turns green when you're done.
       </Step>
     </Steps>
 
     <Info>
-    The Workload Identity Pool, provider, and `porter-manager` service account must remain in your GCP project for Porter to manage your infrastructure. Deleting any of them will prevent Porter from accessing your account.
+    The setup is idempotent. If anything fails partway through, just re-run the command — Terraform state lives in a GCS bucket inside your project (`porter-tfstate-<project-id>`) and re-runs pick up where they left off.
     </Info>
 
-    ### Migrating an existing GCP account to WIF
+    ## Migrating from a Service Account JSON
 
-    If you previously connected GCP with a JSON key, you can migrate that cloud account to Workload Identity Federation with no downtime. Open the cloud account in Porter and select **Migrate to Workload Identity Federation**, then run the generated Cloud Shell command. Porter cuts over to the impersonated identity once verification succeeds and the JSON key can then be safely revoked from GCP.
+    If you previously connected GCP using a service account JSON key, you can switch to Workload Identity Federation with no downtime:
 
-    ## Connect via service account JSON key
+    1. In Porter, navigate to **Integrations** → **Cloud accounts** and select your GCP account.
+    2. Click **Migrate to WIF** in the banner at the top of the page.
+    3. Follow the same Cloud Shell flow above.
 
-    You can create the service account using our automated script (recommended) or manually.
+    Your existing clusters keep authenticating with the JSON key while the new federation is being verified. Once verified, Porter swaps the credential atomically — there is no service interruption. You can then safely delete the JSON key from GCP.
 
-    <AccordionGroup>
-      <Accordion title="Option 1: Automated setup (recommended)">
-        If you have the [gcloud CLI](https://cloud.google.com/sdk/docs/install) installed and authenticated (`gcloud auth login`), run our setup script:
+    ## Permissions Granted
 
-        ```bash
-        # Download the setup script
-        curl -O https://raw.githubusercontent.com/porter-dev/docs/main/scripts/setup-gcp-porter.sh
+    The bootstrap initially grants three roles to the `porter-manager` service account — just enough for Porter to enable the remaining APIs and grant itself the heavier per-service roles:
 
-        # Make it executable
-        chmod +x setup-gcp-porter.sh
+    - `roles/serviceusage.serviceUsageAdmin`
+    - `roles/resourcemanager.projectIamAdmin`
+    - `roles/iam.serviceAccountAdmin`
 
-        # Run the script (optionally provide your GCP project ID)
-        ./setup-gcp-porter.sh [your-gcp-project-id]
-        ```
-
-        The script:
-        - Enables the Cloud Resource Manager API and Service Usage API
-        - Creates a `porter-manager` service account
-        - Grants the **Project IAM Admin** role
-        - Downloads a JSON key file
-
-        After running the script, upload the generated key file to Porter.
-      </Accordion>
-
-      <Accordion title="Option 2: Manual setup">
-        ### Enable required APIs
-
-        Before creating the service account, enable the following APIs in your [GCP Console](https://console.cloud.google.com):
-
-        1. Navigate to **APIs & Services**
-        2. Click **Enable APIs and Services**
-        3. Search for and enable each of these APIs:
-           - **Cloud Resource Manager API** — required for Porter to manage IAM bindings
-           - **Service Usage API** — required for Porter to enable all other APIs automatically
-
-        Each API may take a few minutes to enable.
-
-        <Warning>
-        The Service Usage API cannot be enabled programmatically if it is not already active — it must be enabled manually through the console or gcloud CLI before Porter can manage other APIs.
-        </Warning>
-
-        ### Create the Service Account
-
-        <Steps>
-          <Step title="Navigate to Service Accounts">
-            In the [GCP Console](https://console.cloud.google.com), go to **IAM & Admin** → **Service Accounts**.
-          </Step>
-          <Step title="Create the account">
-            Click **Create Service Account** and enter a name (e.g., `porter-manager`).
-          </Step>
-          <Step title="Grant permissions">
-            Grant the service account the following role:
-
-            - **Resource Manager > Project IAM Admin**
-
-            This is the only role you need to grant manually. Porter uses this role to automatically provision all other required IAM bindings (Storage Admin, Compute Admin, Kubernetes Engine Admin, etc.).
-
-            Click **Done** to create the account.
-          </Step>
-          <Step title="Create a key">
-            1. Find your new service account in the list
-            2. Under **Actions**, select **Manage keys**
-            3. Click **Add Key** → **Create new key**
-            4. Select **JSON** as the key type
-            5. The JSON key file downloads automatically — keep it safe
-          </Step>
-        </Steps>
-      </Accordion>
-    </AccordionGroup>
-
-    ## Upload to Porter
-
-    In Porter, click **Drop a GCP Service Account JSON here, or click to browse** and upload the JSON key file.
-
-    Porter verifies the credentials and automatically provisions all required permissions and APIs. This takes about a minute.
+    Once federation is verified, Porter automatically grants the rest (Compute Admin, Kubernetes Engine Admin, Artifact Registry Admin, Secret Manager Admin, etc.). The full Terraform module is open source: [porter-dev/gcp-onboarding](https://github.com/porter-dev/gcp-onboarding).
 
     ## Revoking Access
 
-    To revoke Porter's access:
+    To disconnect Porter from your GCP project:
 
-    1. First, delete any clusters through the Porter dashboard
-    2. Navigate to **IAM & Admin** → **Service Accounts** in GCP Console and delete the `porter-manager` service account
-    3. If you connected via Workload Identity Federation, also navigate to **IAM & Admin** → **Workload Identity Federation** and delete the Porter pool and provider
+    1. First, delete any clusters through the Porter dashboard.
+    2. In the [GCP Console](https://console.cloud.google.com), navigate to **IAM & Admin** → **Workload Identity Federation** and delete the `porter-pool-*` Workload Identity Pool. This immediately invalidates all federated tokens.
+    3. In Porter, navigate to **Integrations** → **Cloud accounts** and delete the GCP cloud account.
 
-    This removes the credentials and prevents Porter from accessing your account.
+    Optionally, also delete the `porter-manager-*` service account under **IAM & Admin** → **Service Accounts** for full cleanup.
   </Tab>
 
   <Tab title="Azure">

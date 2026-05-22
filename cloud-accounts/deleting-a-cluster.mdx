@@ -141,14 +141,14 @@ Before deleting your cluster:
     2. Check for resources in different regions than expected
     3. Look for resources with names containing your project ID
   </Accordion>
-  <Accordion title="Cannot delete because credentials expired">
-    If Porter can't delete because credentials have expired:
+  <Accordion title="Cannot delete because credentials are missing or expired">
+    If Porter can't delete because it can no longer authenticate to your cloud:
 
-    **AWS**: Re-create the CloudFormation stack to restore the IAM role, then delete the cluster
+    **AWS**: Re-create the CloudFormation stack to restore the IAM role, then delete the cluster.
 
-    **GCP**: Upload a new service account JSON key in **Integrations** → **GCP**, then delete the cluster
+    **GCP**: Workload Identity Federation tokens don't expire — they're minted on demand. If Porter can't authenticate, either the `porter-pool-*` Workload Identity Pool or the `porter-manager-*` service account was deleted. Re-run the connect flow in **Integrations** → **GCP** to recreate them, then delete the cluster.
 
-    **Azure**: Generate a new client secret and update it in **Integrations** → **Azure**, then delete the cluster
+    **Azure**: Generate a new client secret and update it in **Integrations** → **Azure**, then delete the cluster.
 
     If you can't restore credentials, you'll need to [delete resources manually](/other/deleting-dangling-resources).
   </Accordion>

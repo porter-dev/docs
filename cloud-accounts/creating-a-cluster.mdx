@@ -132,20 +132,20 @@ After [connecting your cloud account](/cloud-accounts/connecting-a-cloud-account
       <Accordion title="API not enabled errors">
         Porter automatically enables required APIs during setup. If you still see API errors:
 
-        1. Verify the service account has the **Project IAM Admin** role (this is required for Porter to enable APIs automatically)
-        2. Navigate to **APIs & Services** in the GCP Console and verify both the **Cloud Resource Manager API** and **Service Usage API** are enabled — Porter cannot enable other APIs unless these two are active
+        1. Verify the `porter-manager-*` service account still has its bootstrap roles (`roles/serviceusage.serviceUsageAdmin`, `roles/resourcemanager.projectIamAdmin`, `roles/iam.serviceAccountAdmin`) — Porter needs these to enable additional APIs and grant itself the heavier roles
+        2. Navigate to **APIs & Services** in the GCP Console and verify the five bootstrap APIs are enabled: **Cloud Resource Manager**, **IAM**, **IAM Credentials**, **STS**, and **Service Usage**
         3. Return to Porter and retry provisioning
 
         <Info>
-        The Service Usage API is typically enabled by default on new GCP projects. If it has been disabled, it must be re-enabled manually through the console — Porter cannot enable it programmatically.
+        If any of the bootstrap APIs were disabled after onboarding, re-enable them in the GCP Console — Porter cannot enable Service Usage programmatically if it has been turned off.
         </Info>
       </Accordion>
       <Accordion title="Permission denied errors">
-        Porter automatically provisions all required IAM bindings from a single bootstrap role. If you encounter permission errors:
+        Porter automatically provisions all required IAM bindings from the bootstrap roles. If you encounter permission errors:
 
-        - Verify the service account has the **Project IAM Admin** role (`roles/resourcemanager.projectIamAdmin`)
-        - Check that the JSON key file matches the service account
-        - Ensure the service account hasn't been modified since creation
+        - Verify the `porter-manager-*` service account still has its bootstrap roles (`serviceusage.serviceUsageAdmin`, `resourcemanager.projectIamAdmin`, `iam.serviceAccountAdmin`)
+        - Verify the `porter-pool-*` Workload Identity Pool exists and its AWS provider is still bound to the service account
+        - Ensure neither the service account nor the pool has been deleted since onboarding — Porter cannot authenticate without them
         - Ensure a billing account is attached to the project
       </Accordion>
     </AccordionGroup>
