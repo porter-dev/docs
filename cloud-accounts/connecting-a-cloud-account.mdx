@@ -61,7 +61,7 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
   </Tab>
 
   <Tab title="GCP">
-    Porter connects to GCP using [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation) (WIF). Porter's AWS identity exchanges short-lived (≤1 hour) tokens with your GCP project on demand — no service account keys to download, store, or rotate. Setup runs in [Google Cloud Shell](https://cloud.google.com/shell) with a single command Porter generates for your project.
+    Porter connects to GCP using [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation) — a secure connection that does not require any static keys. Setup runs in [Google Cloud Shell](https://cloud.google.com/shell) with a single command Porter generates for your project.
 
     ## Prerequisites
 
@@ -73,7 +73,7 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
     - `roles/iam.serviceAccountAdmin`
     - `roles/resourcemanager.projectIamAdmin`
     - `roles/iam.workloadIdentityPoolAdmin`
-    - `roles/storage.admin` (first run only — for the Terraform state bucket)
+    - `roles/storage.admin`
 
     ## Connect Your GCP Project
 
@@ -87,7 +87,7 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
         The script runs Terraform in your project and creates:
 
         - A `porter-manager-*` service account that Porter impersonates
-        - A `porter-pool-*` Workload Identity Pool with a trust policy scoped to Porter's AWS identity and your tenant ID
+        - A `porter-pool-*` Workload Identity Pool with a trust policy scoped to your project
         - Five Google APIs enabled: Cloud Resource Manager, IAM, IAM Credentials, STS, and Service Usage
 
         Setup takes about 30 seconds.
@@ -96,20 +96,6 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
         Porter's dashboard polls the connection automatically. Once the bootstrap completes, Porter finishes enabling the remaining APIs, grants the heavier IAM roles to the service account, and marks the cloud account connected. The status banner turns green when you're done.
       </Step>
     </Steps>
-
-    <Info>
-    The setup is idempotent. If anything fails partway through, just re-run the command — Terraform state lives in a GCS bucket inside your project (`porter-tfstate-<project-id>`) and re-runs pick up where they left off.
-    </Info>
-
-    ## Migrating from a Service Account JSON
-
-    If you previously connected GCP using a service account JSON key, you can switch to Workload Identity Federation with no downtime:
-
-    1. In Porter, navigate to **Integrations** → **Cloud accounts** and select your GCP account.
-    2. Click **Migrate to WIF** in the banner at the top of the page.
-    3. Follow the same Cloud Shell flow above.
-
-    Your existing clusters keep authenticating with the JSON key while the new federation is being verified. Once verified, Porter swaps the credential atomically — there is no service interruption. You can then safely delete the JSON key from GCP.
 
     ## Permissions Granted
 
@@ -121,13 +107,22 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
 
     Once federation is verified, Porter automatically grants the rest (Compute Admin, Kubernetes Engine Admin, Artifact Registry Admin, Secret Manager Admin, etc.). The full Terraform module is open source: [porter-dev/gcp-onboarding](https://github.com/porter-dev/gcp-onboarding).
 
+    ## Migrating from a Service Account JSON
+
+    If you previously connected GCP using a service account JSON key, you can switch to Workload Identity Federation with no downtime:
+
+    1. In Porter, navigate to **Integrations** → **Cloud accounts** and select your GCP account.
+    2. Click **Migrate to Workload Identity Federation** in the banner at the top of the page.
+    3. Follow the same Cloud Shell flow above.
+
+    Your existing clusters keep authenticating with the JSON key while the new federation is being verified. Once verified, Porter swaps the credential atomically — there is no service interruption. You can then safely delete the JSON key from GCP.
+
     ## Revoking Access
 
     To disconnect Porter from your GCP project:
 
     1. First, delete any clusters through the Porter dashboard.
     2. In the [GCP Console](https://console.cloud.google.com), navigate to **IAM & Admin** → **Workload Identity Federation** and delete the `porter-pool-*` Workload Identity Pool. This immediately invalidates all federated tokens.
-    3. In Porter, navigate to **Integrations** → **Cloud accounts** and delete the GCP cloud account.
 
     Optionally, also delete the `porter-manager-*` service account under **IAM & Admin** → **Service Accounts** for full cleanup.
   </Tab>
