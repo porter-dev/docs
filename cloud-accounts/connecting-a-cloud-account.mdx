@@ -61,18 +61,82 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
   </Tab>
 
   <Tab title="GCP">
-    Porter connects to GCP using a service account with the **Project IAM Admin** role. You only need to grant this one role and enable two APIs — Porter automatically provisions all other required permissions and APIs.
+    Porter supports two methods for connecting your GCP project:
+
+    - **Workload Identity Federation (recommended)** — keyless, short-lived credentials issued via federation from Porter's AWS account to your GCP project. No JSON key file to store, rotate, or leak.
+    - **Service account JSON key** — long-lived JSON key uploaded directly to Porter. Use this if your organization restricts Workload Identity Federation or you need a fully manual setup.
 
     ## Prerequisites
 
     Before connecting your GCP project to Porter, ensure that a [billing account](https://console.cloud.google.com/billing) is attached to the project. Porter cannot provision infrastructure in a project without an active billing account.
 
-    ## Create the Service Account
-
-    You can create the service account using our automated script (recommended) or manually.
-
     <AccordionGroup>
-      <Accordion title="Option 1: Automated setup (recommended)">
+      <Accordion title="Option 1: Workload Identity Federation (recommended)">
+        Porter runs a guided Cloud Shell flow that provisions a Workload Identity Pool, Provider, and service account in your GCP project using Terraform, then calls back to Porter to finalize the integration. Porter impersonates the service account using short-lived federated credentials — no JSON key is ever created or transmitted.
+
+        <Steps>
+          <Step title="Enter your GCP project ID">
+            After selecting GCP as your cloud provider and choosing **Workload Identity Federation**, enter your GCP project ID (for example, `my-prod-project` — not the numeric project number).
+
+            Click **Continue**. Porter returns a Cloud Shell deeplink and a one-line setup command.
+          </Step>
+          <Step title="Open Cloud Shell">
+            Click **Open Cloud Shell**. Google Cloud Shell launches in a new tab with the public [porter-dev/gcp-onboarding](https://github.com/porter-dev/gcp-onboarding) repo cloned into the session.
+
+            <Info>
+            The setup command is single-use and embeds a verification token tied to your Porter project. The token expires after a short window — if it expires before you finish, return to Porter and restart the flow to issue a new one.
+            </Info>
+          </Step>
+          <Step title="Run the bootstrap script">
+            Copy the setup command from Porter and paste it into the Cloud Shell terminal. The command looks like:
+
+            ```bash
+            PORTER_API_URL="https://api.porter.run" \
+              PORTER_CLOUD_ACCOUNT_ID="4741dca9-ae17-417b-949e-1a18f91b77d9" \
+              PORTER_VERIFICATION_TOKEN="eyJhbGciOi..." \
+              ./bootstrap.sh
+            ```
+
+            `bootstrap.sh` runs `terraform apply` to:
+
+            - Enable the required GCP APIs
+            - Create a Workload Identity Pool and AWS-backed Provider scoped to Porter's AWS account
+            - Create a `porter-manager` service account with the **Project IAM Admin** role
+            - Configure the Provider's attribute condition so only Porter's tenant-scoped sessions can impersonate the service account
+
+            When Terraform finishes, the script calls Porter back with the project number, service account email, and provider resource name. Porter verifies it can federate into the project and marks the integration as connected.
+          </Step>
+          <Step title="Confirm in Porter">
+            Return to the Porter tab. The cloud account status updates to **Connected** once the callback completes. You can now provision clusters in the project.
+          </Step>
+        </Steps>
+
+        ### How federation works
+
+        Porter's Cluster Control Plane runs in an AWS account. The Terraform module configures your Workload Identity Provider to trust assumed-role sessions originating from that account, with an attribute condition pinned to your tenant's external ID. When Porter needs to act on your GCP project, it:
+
+        1. Self-assumes its IAM role with a session name containing your tenant external ID.
+        2. Exchanges the resulting AWS STS token at Google's STS endpoint via the Workload Identity Provider.
+        3. Impersonates the `porter-manager` service account using the federated token.
+
+        The federated credentials are short-lived and scoped to a single tenant. No static keys exist on either side.
+
+        ### Re-running onboarding
+
+        If the Cloud Shell session times out or Terraform fails partway through, return to Porter and start the flow again for the same project. Porter rotates the verification token but keeps the tenant external ID stable, so the Terraform state path is unchanged and `terraform apply` resumes cleanly.
+
+        ### Revoking access
+
+        To revoke Porter's access:
+
+        1. First, delete any clusters through the Porter dashboard.
+        2. In the GCP Console, go to **IAM & Admin** → **Workload Identity Federation** and delete the `porter-pool-*` pool.
+        3. Delete the `porter-manager` service account from **IAM & Admin** → **Service Accounts**.
+
+        Alternatively, run `terraform destroy` against the module from the same Cloud Shell session.
+      </Accordion>
+
+      <Accordion title="Option 2: Service account JSON key (automated script)">
         If you have the [gcloud CLI](https://cloud.google.com/sdk/docs/install) installed and authenticated (`gcloud auth login`), run our setup script:
 
         ```bash
@@ -95,7 +159,7 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
         After running the script, upload the generated key file to Porter.
       </Accordion>
 
-      <Accordion title="Option 2: Manual setup">
+      <Accordion title="Option 3: Service account JSON key (manual setup)">
         ### Enable required APIs
 
         Before creating the service account, enable the following APIs in your [GCP Console](https://console.cloud.google.com):
@@ -138,22 +202,22 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
             5. The JSON key file downloads automatically — keep it safe
           </Step>
         </Steps>
+
+        ### Upload to Porter
+
+        In Porter, click **Drop a GCP Service Account JSON here, or click to browse** and upload the JSON key file.
+
+        Porter verifies the credentials and automatically provisions all required permissions and APIs. This takes about a minute.
       </Accordion>
     </AccordionGroup>
 
-    ## Upload to Porter
+    ## Revoking JSON key access
 
-    In Porter, click **Drop a GCP Service Account JSON here, or click to browse** and upload the JSON key file.
+    If you onboarded with a service account JSON key, revoke access by:
 
-    Porter verifies the credentials and automatically provisions all required permissions and APIs. This takes about a minute.
-
-    ## Revoking Access
-
-    To revoke Porter's access:
-
-    1. First, delete any clusters through the Porter dashboard
-    2. Navigate to **IAM & Admin** → **Service Accounts** in GCP Console
-    3. Find the Porter service account and delete it
+    1. First, deleting any clusters through the Porter dashboard.
+    2. Navigating to **IAM & Admin** → **Service Accounts** in GCP Console.
+    3. Finding the Porter service account and deleting it.
 
     This removes the service account and prevents Porter from accessing your account.
   </Tab>
