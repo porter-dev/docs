@@ -199,6 +199,13 @@
             "terms-and-privacy/terms-of-service",
             "terms-and-privacy/privacy-policy"
           ]
+        },
+        {
+          "group": "Changelog",
+          "pages": [
+            "changelog/overview",
+            "changelog/2026-05-25"
+          ]
         }
       ]
     }
