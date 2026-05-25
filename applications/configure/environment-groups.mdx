@@ -93,6 +93,16 @@ services:
 
 Environment groups listed in `envGroups` must already exist in the project before deploying.
 
+## Viewing Synced Applications
+
+Open an environment group and select the **Synced Apps** tab to see every application currently consuming it, along with the clusters those applications run in.
+
+Apps running in [preview environments](/preview-environments/overview) that reference the environment group are listed alongside regular applications and are tagged with a **Preview** badge so you can tell them apart from their base app (which often shares the same name). Selecting a preview card opens the app inside the preview environment it belongs to.
+
+<Info>
+A cluster cannot be removed as a sync target while any application synced to the environment group — including preview environment apps — is still running on it. Tear down the preview environment (or remove the env group from its `porter.yaml`) before removing the cluster as a sync target.
+</Info>
+
 ## Updating an Environment Group
 
 When you update an environment group, all applications synced to it are automatically redeployed with the new values.
