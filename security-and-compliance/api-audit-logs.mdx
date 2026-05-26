@@ -1,0 +1,83 @@
+---
+title: "API audit logs"
+sidebarTitle: "API audit logs"
+description: "Review and export a CSV of API activity in your Porter project for compliance, security review, and incident response."
+---
+
+Porter records an audit log entry for every authenticated API call made against your project — including dashboard actions, CLI commands, and direct API requests. The **API Audit Logs** tab lets you filter that history in the UI and export the filtered result set as CSV for compliance review, SIEM ingest, or offline analysis.
+
+## When to use this
+
+- Producing evidence for SOC 2, HIPAA, or internal access-review controls.
+- Investigating who made a specific change (e.g. "who redeployed the API last Friday at 2pm?").
+- Feeding Porter API activity into an external SIEM or data warehouse on a recurring cadence.
+- Sharing a scoped slice of activity with auditors without granting them dashboard access.
+
+## Viewing audit logs
+
+Navigate to **Settings → API Audit Logs** in your project. Each row records:
+
+- **Started at** — UTC timestamp the request arrived.
+- **Actor** — the user, service account, or CLI bearer token that made the call.
+- **Method / Path / Action** — HTTP method, route, and the high-level operation (for example, `UpdateApp`).
+- **Resource** — the resource type, ID, and human-readable name the call targeted.
+- **Cluster** and **Preview environment** — populated when the request was scoped to one.
+- **Remote IP** and **User agent** — request origin.
+- **Status code** — the response code returned to the caller.
+
+Use the filter bar at the top of the tab to narrow by date range, actor, method, action, status code, IP, resource type, application, or cluster. Each filter supports an exclude mode for "everything except these values."
+
+## Exporting to CSV
+
+Once you've narrowed the view to the rows you care about, click **Export CSV** next to the view-mode toggle. The button submits the current filter set to the export endpoint and streams the matching rows back as a CSV file, which your browser downloads automatically.
+
+The file is named `api-audit-logs-project-<project_id>-<start>-to-<end>.csv` and uses a stable column order so it can be parsed by spreadsheet tools or scripts:
+
+```text
+started_at, method, path, action, actor_type, actor_id, actor_name,
+remote_ip, user_agent, resource_type, resource_id, resource_name,
+cluster_id, cluster_name, preview_environment_id, preview_environment_name,
+status_code
+```
+
+Timestamps are RFC 3339 in UTC. Empty cells indicate the field did not apply to that request (for example, `cluster_id` is empty on project-scoped calls).
+
+<Info>
+  The export respects every filter currently applied in the UI. To dump the full project history for a window, clear all filters except the date range before clicking **Export CSV**.
+</Info>
+
+### Behavior and limits
+
+- **Streaming response.** The CSV streams as it is generated, so large exports begin downloading immediately rather than waiting for the entire result set to be assembled. Keep the browser tab open until the download completes.
+- **Self-audited.** Each export is itself recorded as an audit row (`action = ExportApiAuditLogs`) so you have a trail of who exported what.
+- **Truncation marker.** If the stream fails after the file has started downloading, Porter appends a final row containing the single value `__porter_export_failed__`. Treat any file ending in that sentinel as incomplete and retry with a narrower filter or date range.
+- **Date range required.** The export endpoint validates the request before streaming begins, so invalid date ranges return a `400` error rather than a partial CSV.
+
+## Exporting via the API
+
+The dashboard button calls `POST /api/v2/projects/{project_id}/api-audit-logs/export`. You can call the same endpoint directly to script recurring exports.
+
+The request body mirrors the filter contract used by the audit logs query API. `start_date` and `end_date` are required; all other fields are optional.
+
+```bash
+curl -X POST \
+  "https://dashboard.porter.run/api/v2/projects/$PROJECT_ID/api-audit-logs/export" \
+  -H "Authorization: Bearer $PORTER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "start_date": "2026-05-01T00:00:00Z",
+    "end_date":   "2026-05-26T23:59:59Z",
+    "methods":    ["POST", "DELETE"],
+    "status_codes_exclude": [200, 201, 204]
+  }' \
+  --output audit-logs.csv
+```
+
+Each filter field also has an `_exclude` counterpart (`actors_exclude`, `methods_exclude`, `actions_exclude`, `status_codes_exclude`, `ips_exclude`, `resource_types_exclude`, `application_ids_exclude`, `cluster_ids_exclude`) for negative matches.
+
+A successful response is a `200` with `Content-Type: text/csv; charset=utf-8` and a `Content-Disposition` header carrying the filename. Errors before the stream starts are returned as JSON with the standard error envelope.
+
+## Related
+
+- [Role-based access control](/security-and-compliance/role-based-access-control) — limit who can see the **API Audit Logs** tab.
+- [SOC 2 and HIPAA compliance](/security-and-compliance/soc2-hipaa) — broader compliance posture for Porter-managed infrastructure.
