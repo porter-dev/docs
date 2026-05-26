@@ -12,6 +12,7 @@ Connect your services to external cloud resources like AWS IAM roles, Azure mana
 |------|-------------|----------------|
 | `awsRole` | Attach an IAM role for AWS API access | AWS |
 | `azureManagedIdentity` | Bind a User Assigned Managed Identity for Azure API access | Azure |
+| `gcpServiceAccount` | Bind a GCP IAM service account for GCP API access | GCP |
 | `cloudSql` | Connect to Google Cloud SQL instances | GCP |
 | `disk` | Attach persistent storage | All |
 
@@ -84,6 +85,47 @@ This connection grants your service every permission assigned to the UAMI in Azu
 
 <Info>
 Only one `azureManagedIdentity` connection is permitted per service. If you need to access resources across multiple identities, consolidate role assignments onto a single UAMI.
+</Info>
+
+---
+
+## GCP Service Account Connection
+
+Bind a GCP IAM service account to your service for secure GCP API access without managing service account key files. Porter uses [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity) to map the service's Kubernetes service account to the IAM service account, so your application can authenticate to GCP resources using [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials).
+
+### Prerequisites
+
+Before adding this connection to your service, you must:
+
+1. Have a GCP IAM service account provisioned in the same GCP project as your GKE cluster. Porter does **not** create the IAM service account for you — provision it via the Google Cloud Console, Terraform, or the `gcloud` CLI.
+2. Grant the IAM service account the GCP IAM roles it needs to access the resources your service will call (e.g. `roles/storage.objectViewer` on a storage bucket).
+
+When your service deploys, Porter adds an IAM policy binding on the IAM service account granting `roles/iam.workloadIdentityUser` to the Kubernetes service account Porter creates for your service. At runtime, the pod receives a projected OIDC token that GCP exchanges for an access token scoped to the IAM service account.
+
+### Field Reference
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | string | Yes | Must be `gcpServiceAccount` |
+| `serviceAccountEmail` | string | Yes | Fully-qualified email of the GCP IAM service account to impersonate |
+
+### Example
+
+```yaml
+services:
+  - name: api
+    # ...
+    connections:
+      - type: gcpServiceAccount
+        serviceAccountEmail: my-app@my-project.iam.gserviceaccount.com
+```
+
+<Warning>
+This connection grants your service every permission assigned to the IAM service account in GCP. Scope IAM role bindings narrowly — a service account with project-level `roles/owner` is rarely what you want.
+</Warning>
+
+<Info>
+Only one `gcpServiceAccount` connection is permitted per service. If you need to access resources across multiple service accounts, consolidate IAM role bindings onto a single service account.
 </Info>
 
 ---

@@ -113,9 +113,46 @@ See [Connections in porter.yaml](/applications/configuration-as-code/services/co
 
 ## GCP
 
-Workload identity support for GCP is **in development**. The equivalent flow on GKE — binding a Porter service to a Google service account via [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation) — is not yet generally available.
+Porter uses [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity) to bind a service's Kubernetes service account to a GCP IAM service account in your project. Your application code can then use [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials) (e.g. `google.auth.default()` in Python, `google.NewClient` in Go, `GoogleCredentials.getApplicationDefault()` in Java) and GCP will issue tokens for the bound IAM service account on the pod's behalf.
 
-If you'd like this enabled for your project, reach out to Porter support and we'll work with you to get early access.
+### How it works
+
+When you attach a GCP IAM service account to a service, Porter adds an IAM policy binding on the service account granting `roles/iam.workloadIdentityUser` to the Kubernetes service account Porter creates for your service. At runtime, the pod presents a projected OIDC token via the GKE metadata server and GCP exchanges it for an access token scoped to the IAM service account.
+
+You are responsible for creating the IAM service account and granting it the IAM roles it needs. Porter does not create the service account or modify its project-level permissions.
+
+### Step 1 — Create a GCP IAM service account
+
+In the same GCP project as your GKE cluster, create an IAM service account and grant it only the IAM roles needed to access the specific resources your service will call.
+
+We strongly recommend following the principle of least privilege: prefer narrow predefined roles (e.g. `roles/storage.objectViewer` on a single bucket) over broad roles like `roles/editor`, scope role bindings to individual resources rather than the project, and create a dedicated service account per Porter service.
+
+You don't need to add the `roles/iam.workloadIdentityUser` binding yourself — Porter adds it on the next deploy.
+
+### Step 2 — Attach the service account to your service
+
+In the Porter dashboard, open the service you want to grant access to and scroll to the **GCP Service Account Connection** section. Toggle the connection on and enter the fully-qualified service account email:
+
+```
+my-app@my-project.iam.gserviceaccount.com
+```
+
+On the next deploy, Porter adds the workload identity binding on the IAM service account. From your application code, use the standard Google Cloud client libraries and credentials will be resolved automatically — no service account key files, no `GOOGLE_APPLICATION_CREDENTIALS` env var.
+
+<Accordion title="Configure as code (porter.yaml)">
+If you manage your app config as code, you can declare the same connection in [`porter.yaml`](/applications/configuration-as-code/overview):
+
+```yaml
+services:
+  - name: api
+    # ...
+    connections:
+      - type: gcpServiceAccount
+        serviceAccountEmail: my-app@my-project.iam.gserviceaccount.com
+```
+
+See [Connections in porter.yaml](/applications/configuration-as-code/services/connections#gcp-service-account-connection) for the full schema.
+</Accordion>
 
 ---
 
@@ -125,3 +162,4 @@ If you'd like this enabled for your project, reach out to Porter support and we'
 - [Connections in porter.yaml](/applications/configuration-as-code/services/connections) — Reference for all connection types, including the YAML schema
 - [AWS EKS Pod Identity](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html) — AWS documentation
 - [Azure Workload Identity](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview) — Azure documentation
+- [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity) — GCP documentation

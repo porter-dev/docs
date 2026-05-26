@@ -338,6 +338,19 @@ services:
         resourceGroup: my-resource-group
 ```
 
+### GCP Service Account Connection
+
+Bind a GCP IAM service account to your service for GCP API access via GKE Workload Identity.
+
+```yaml
+services:
+  - name: web
+    ...
+    connections:
+      - type: gcpServiceAccount
+        serviceAccountEmail: my-app@my-project.iam.gserviceaccount.com
+```
+
 ### Cloud SQL Connection (GCP)
 
 Connect to Google Cloud SQL instances.
