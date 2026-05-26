@@ -282,6 +282,12 @@ services:
 ```
 
 <Info>
-Jobs `suspendCront: true` must be triggered manually using `porter app run --job`.
+Jobs with `suspendCron: true` must be triggered manually using `porter app run --job`.
 </Info>
+
+---
+
+## Job resource retention
+
+Completed job runs are automatically cleaned up from the cluster after 7 days. During this retention window, you can inspect completed job resources directly in Kubernetes. After the retention period, the underlying Kubernetes job resource is removed, but job run history remains available in the Porter dashboard.
 
