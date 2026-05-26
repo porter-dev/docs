@@ -1,104 +1,331 @@
 ---
 title: "AWS permissions required for Porter"
 sidebarTitle: "AWS Roles & Permissions"
-description: "Review the IAM roles, policies, and CloudFormation stack permissions that Porter creates and requires to manage your AWS cloud infrastructure"
+description: "Reference for the IAM roles Porter provisions in your AWS account, how cross-account access is established, and the full permission inventory for each role."
 ---
 
-import { awsPermissions } from "/snippets/aws-permissions.mdx";
-import { ShowPermissions, LastUpdated } from "/snippets/aws-permissions-component.mdx";
+This document describes the IAM roles Porter provisions in your AWS account, how access is established, and what each role is used for. It is intended for security review, compliance documentation, and internal audit.
 
-# Overview
+Porter operates on the principles of least privilege and separation of duties. The roles listed below have the minimal permissions necessary to support all Porter product features. Additional controls to limit the reach of Porter-created roles (e.g. IAM permissions boundaries, service control policies) are out of scope of this document; guidance is published separately.
 
+If you have questions or need a more restricted permission set, contact us at `support@porter.run`.
 
-Porter creates several roles and policies for use in the management of your AWS account. These may change over time, and will be automatically updated both here, and on your AWS account.
-Make sure to check back here for updates, and if you have any questions, please reach out to us on `support@porter.run`
+## How Porter gains access to your AWS account
 
-## Initial Permissions
+Porter uses AWS IAM role assumption to operate in your account. No long-lived customer credentials are stored by Porter; access is obtained through the AWS Security Token Service (STS) `AssumeRole` API, authenticated by a role in your account that trusts Porter's management infrastructure.
 
-When signing up for Porter on AWS, you will be asked to create a cloudformation stack. This is only used for setting up the initial permissions required for Porter to manage your account.
-If you are operating in a regulated environment, these are the minimum permissions required to execute the initial cloudformation stack:
+### One-time bootstrap
 
-```json
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "ManagePorterCloudFormation",
-			"Effect": "Allow",
-			"Action": [
-				"cloudformation:GetTemplateSummary",
-				"cloudformation:DescribeStackEvents",
-				"cloudformation:CreateStack",
-				"cloudformation:DeleteStack",
-				"cloudformation:DescribeStacks",
-				"cloudformation:ListStacks",
-				"cloudformation:ListStackResources",
-				"iam:DeleteRolePolicy",
-				"iam:DeleteRole",
-				"iam:PutRolePolicy",
-				"iam:GetRole",
-				"iam:CreateRole"
-			],
-			"Resource": "*"
-		}
-	]
-}
+When you first connect an AWS account to Porter:
+
+<Steps>
+  <Step title="Enter your AWS Account ID">
+    You enter your AWS Account ID in Porter's UI.
+  </Step>
+  <Step title="Launch CloudFormation">
+    Porter opens the AWS CloudFormation console in a new tab, pre-populated with the template URL and required parameters.
+  </Step>
+  <Step title="Review and create the stack">
+    You review the template, acknowledge that it creates IAM resources, and click **Create Stack**. This is a standard CloudFormation console interaction — you control the execution.
+  </Step>
+  <Step title="Initial role is provisioned">
+    CloudFormation creates **one** IAM role in your account: `porter-access-manager`. Its trust policy allows Porter's management role to assume it. Its inline policy grants IAM write access so Porter can programmatically provision the rest of the role structure.
+  </Step>
+</Steps>
+
+The CloudFormation stack is named `PorterRole` and lives entirely in your account. You retain full control over it — you can inspect, modify, or delete it at any time via the AWS Console, CLI, or IaC tooling.
+
+### Ongoing access
+
+For day-to-day operations, Porter's infrastructure assumes into your account through a two-step chain:
+
+```text
+Porter's management infrastructure
+        │
+        ▼  sts:AssumeRole
+Porter's management role: arn:aws:iam::<porter-acct>:role/CAPIManagement
+        │
+        ▼  sts:AssumeRole (with your project-specific ExternalId for porter-manager)
+Your account: arn:aws:iam::<your-acct>:role/porter-<role-name>
 ```
 
+All cross-account `AssumeRole` calls are logged in your AWS CloudTrail and attributed to Porter's role.
 
-## Roles
+## Roles Porter provisions in your account
 
+The table below lists every IAM role Porter creates in your account. **Assumable from outside** indicates whether the role can be assumed by a principal outside your AWS account (i.e. Porter's management role). Roles trusted only by AWS service principals or in-cluster pod identities cannot be directly assumed from outside your account.
 
-### Porter Access Manager
+| Role | Created by | Assumable from outside | Purpose |
+|---|---|---|---|
+| `porter-access-manager` | CloudFormation (initial bootstrap) | **Yes** (Porter's `CAPIManagement`) | Grants Porter the ability to provision and update the rest of the IAM roles and policies in your account. Used for IAM operations only. |
+| `porter-manager` | Provisioned by Porter after bootstrap | **Yes** (Porter's `CAPIManagement`, gated by a per-project ExternalId) | Primary operational role. Used by Porter's control plane to manage EKS clusters, networking, storage, container registries, observability, and datastores. |
+| `porter-infra-manager` | Provisioned by Porter after bootstrap | **Yes** (Porter's `CAPIManagement`) | Used by AWS Controllers for Kubernetes (ACK) to reconcile Kubernetes resource definitions to AWS state. Handles CloudWatch, CloudTrail, EventBridge, KMS, S3, SNS, and other EC2/VPC infrastructure. |
+| `porter-controlplane-manager` | Provisioned by Porter after bootstrap | No (trusted by `eks.amazonaws.com` only) | Assumed by the AWS EKS service to operate the EKS managed control plane on your cluster. |
+| `porter-node-manager` | Provisioned by Porter after bootstrap | No (trusted by `ec2.amazonaws.com` only) | Instance profile role for EKS worker nodes. Used by kubelet and in-cluster controllers (`cluster-autoscaler`, `aws-load-balancer-controller`) running on nodes. |
+| `porter-karpenter` | Provisioned by Porter after bootstrap | No (Pod Identity, `pods.eks.amazonaws.com`, scoped to your account) | Assumed by the Karpenter controller pod to provision and manage EC2 nodes for your cluster. |
+| `porter-telemetry-manager` | Provisioned by Porter after bootstrap | No (Pod Identity) | Assumed by Porter's OpenTelemetry collector pod to push cluster metrics to Amazon Managed Prometheus and Porter-managed S3 buckets. |
+| `porter-agent-compliance-manager` | Provisioned by Porter after bootstrap | No (Pod Identity) | Assumed by the `porter-agent` pod to manage CloudWatch alarms and publish SOC2 compliance notifications. |
+| `porter-eso-secrets-manager` | Provisioned by Porter after creation of environment groups | No (Pod Identity) | Assumed by the External Secrets Operator pod to retrieve environment-group secrets from AWS Secrets Manager. Scoped to the `/porter/env-groups/*` path. |
+| `porter-s3-<hash>` | Provisioned dynamically per bucket | No (Pod Identity) | One role per Porter-provisioned S3 bucket (logs buckets, release buckets, etc.). Each is scoped to objects in its specific bucket only, and can only be assumed by pods in your cluster. |
 
-Porter Access Manager is a role that Porter creates to manage the access given to the other roles in this document.
-If permissions are removed from this role, you will be **unable to access new features of Porter**.
+### Roles assumable from outside your account
 
-<ShowPermissions policyToShow={"role_porter_access_manager_inline_json"} allPolicies={awsPermissions} />
+Three roles — `porter-access-manager`, `porter-manager`, and `porter-infra-manager` — can be assumed from Porter's management infrastructure outside your account.
 
-### Porter Manager
+- **`porter-access-manager`** trust allows `sts:AssumeRole` from Porter's `CAPIManagement` role. No ExternalId is used on this trust — the ACK IAM controller that assumes it does not support the `sts:ExternalId` parameter. This is a known constraint we are actively working to address with alternative attestation mechanisms.
+- **`porter-manager`** trust requires a per-project ExternalId. The ExternalId is generated per Porter project and is treated as a sensitive identifier.
+- **`porter-infra-manager`** trust has the same no-ExternalId constraint as `porter-access-manager` for the same ACK compatibility reason.
 
-Porter Manager is used for all API operations from Porter, to your AWS account. This role is primarily used to read resources in your account to ensure that Porter is not creating duplicate resources, or using resources managed by a non-Porter process.
-This role may adopt policies from the other roles mentioned here, when managing their specific domains.
+All three trust policies also permit certain AWS service principals (`ec2.amazonaws.com`, `eks.amazonaws.com`, `pods.eks.amazonaws.com`, `vpc-flow-logs.amazonaws.com`) to assume the role for specific AWS-initiated operations.
 
-<ShowPermissions policyToShow={"policy_porter_manager_catchall_json"} allPolicies={awsPermissions} />
+## Permission inventory
 
-### Porter EKS Manager
-Porter EKS Manager is the role used by EKS to perform actions on your AWS account, for ongoing maintenance of your EKS cluster. 
+Detailed permissions for each Porter-provisioned role. Click any role to expand its statements.
 
-<ShowPermissions policyToShow={"role_porter_controlplane_manager_trust_json"} allPolicies={awsPermissions} />
-<ShowPermissions policyToShow={"policy_porter_eks_manager_json"} allPolicies={awsPermissions} />
+### `porter-access-manager`
 
-### Porter Node Manager
+*For creating, updating, and deleting the other Porter-provisioned roles and their attached policies.*
 
-Porter Node Manager is the role used by EKS worker nodes. This role also includes access to some AWS-provided roles such as:
-- `AmazonEKS_CNI_Policy`
-- `AmazonEKSClusterPolicy`
-- `AmazonEKSWorkerNodePolicy`
-- `AmazonEC2ContainerRegistryReadOnly`
-- `service-role/AmazonEBSCSIDriverPolicy`
-- `service-role/AmazonEFSCSIDriverPolicy`
+Assumable by Porter's `CAPIManagement` role, and by EC2, EKS, and EKS Pod Identity service principals.
 
-<ShowPermissions policyToShow={"role_porter_node_manager_inline_json"} allPolicies={awsPermissions} />
+This is the most security-critical role. To remove Porter's IAM management permissions, you can delete the CloudFormation stack that sets it up. In your AWS Console, navigate to **CloudFormation → `PorterRole` stack → Delete**.
 
-### Porter Infra Manager
+<Accordion title="View permissions">
 
-This is the role used to manage non-EKS resources such as RDS, Elasticache, S3, etc.
-<ShowPermissions policyToShow={"policy_porter_infra_manager_inline_json"} allPolicies={awsPermissions} />
+| Statement | Resource path | Actions | Condition |
+|---|---|---|---|
+| `IAMController` | `*` | `iam:AttachRolePolicy`<br/>`iam:CreatePolicy`<br/>`iam:CreatePolicyVersion`<br/>`iam:CreateRole`<br/>`iam:DeletePolicy`<br/>`iam:DeletePolicyVersion`<br/>`iam:DeleteRole`<br/>`iam:DeleteRolePolicy`<br/>`iam:DetachRolePolicy`<br/>`iam:GetPolicy`<br/>`iam:GetPolicyVersion`<br/>`iam:GetRole`<br/>`iam:GetRolePolicy`<br/>`iam:ListAttachedRolePolicies`<br/>`iam:ListPolicyTags`<br/>`iam:ListPolicyVersions`<br/>`iam:ListRolePolicies`<br/>`iam:ListRoleTags`<br/>`iam:PutRolePermissionsBoundary`<br/>`iam:PutRolePolicy`<br/>`iam:TagPolicy`<br/>`iam:TagRole`<br/>`iam:UntagPolicy`<br/>`iam:UntagRole`<br/>`iam:UpdateAssumeRolePolicy`<br/>`iam:UpdateRole` | — |
 
-## Policies
+</Accordion>
 
-On top of the roles above, the following policies are created which may be attached to one, or many of the roles above.
+### `porter-manager`
 
-### Cluster Autoscaler
+*For managing EKS clusters, networking, storage, container registries, and datastores via the Porter control plane.*
 
-Porter Cluster Autoscaler is used to allow Porter to scale your cluster up and down based on the load of your cluster.
-<ShowPermissions policyToShow={"policy_porter_cluster_autoscaler_json"} allPolicies={awsPermissions} />
+Assumable by Porter's `CAPIManagement` role with a per-project ExternalId required, and by EC2 and EKS service principals.
 
-### Loadbalancer
+<Accordion title="View permissions">
 
-Porter Loadbalancer is used to allow Porter to manage loadbalancers in your account.
-<ShowPermissions policyToShow={"policy_porter_loadbalancer_json"} allPolicies={awsPermissions} />
+| Statement | Resource path | Actions | Condition |
+|---|---|---|---|
+| `EksClusterManagement` | `*` | `ecr:CompleteLayerUpload`<br/>`ecr:CreateRepository`<br/>`ecr:InitiateLayerUpload`<br/>`ecr:PutImage`<br/>`ecr:TagResource`<br/>`ecr:UploadLayerPart`<br/>`eks:AssociateEncryptionConfig`<br/>`eks:CreateAddon`<br/>`eks:CreateCluster`<br/>`eks:CreateNodegroup`<br/>`eks:DeleteAddon`<br/>`eks:DeleteCluster`<br/>`eks:DeleteNodegroup`<br/>`eks:DescribeAddon`<br/>`eks:DescribeCluster`<br/>`eks:DescribeNodegroup`<br/>`eks:DescribeUpdate`<br/>`eks:ListAddons`<br/>`eks:ListFargateProfiles`<br/>`eks:ListNodegroups`<br/>`eks:ListUpdates`<br/>`eks:TagResource`<br/>`eks:UntagResource`<br/>`eks:UpdateAddon`<br/>`eks:UpdateClusterConfig`<br/>`eks:UpdateClusterVersion`<br/>`eks:UpdateNodegroupConfig`<br/>`eks:UpdateNodegroupVersion`<br/>`iam:AddClientIDToOpenIDConnectProvider`<br/>`iam:CreateOpenIDConnectProvider`<br/>`iam:CreateServiceLinkedRole`<br/>`iam:DeleteOpenIDConnectProvider`<br/>`iam:DeleteRole`<br/>`iam:DetachRolePolicy`<br/>`iam:GetOpenIDConnectProvider`<br/>`iam:GetRole`<br/>`iam:GetRolePolicy`<br/>`iam:ListAttachedRolePolicies`<br/>`iam:ListOpenIDConnectProviders`<br/>`iam:PassRole`<br/>`iam:TagOpenIDConnectProvider`<br/>`iam:UpdateOpenIDConnectProviderThumbprint`<br/>`secretsmanager:CreateSecret`<br/>`secretsmanager:DeleteSecret`<br/>`secretsmanager:TagResource`<br/>`servicequotas:GetServiceQuota`<br/>`servicequotas:ListRequestedServiceQuotaChangeHistoryByQuota`<br/>`servicequotas:ListServiceQuotas`<br/>`servicequotas:RequestServiceQuotaIncrease` | — |
+| `CloudFormation` | `*` | `cloudformation:CreateStack`<br/>`cloudformation:DescribeStacks`<br/>`cloudformation:UpdateStack` | — |
+| `IamPorterAssumeRolePolicy` | `arn:aws:iam::*:role/porter*` | `iam:UpdateAssumeRolePolicy` | — |
+| `KmsAliasAndKey` | `arn:aws:kms:*:*:alias/*`<br/>`arn:aws:kms:*:*:key/*` | `kms:CreateAlias`<br/>`kms:CreateGrant`<br/>`kms:EnableKeyRotation`<br/>`kms:PutKeyPolicy`<br/>`kms:TagResource` | — |
+| `KmsCreateKey` | `*` | `kms:CreateKey` | — |
+| `SsmGetParameter` | `*` | `ssm:GetParameter` | — |
+| `Efs` | `*` | `elasticfilesystem:CreateFileSystem`<br/>`elasticfilesystem:CreateMountTarget`<br/>`elasticfilesystem:DeleteFileSystem`<br/>`elasticfilesystem:DeleteMountTarget`<br/>`elasticfilesystem:DescribeFileSystems`<br/>`elasticfilesystem:DescribeMountTargets`<br/>`elasticfilesystem:TagResource`<br/>`elasticfilesystem:UntagResource` | — |
+| `Soc2Requirements` | `*` | `ecr:GetRegistryScanningConfiguration`<br/>`ecr:PutRegistryScanningConfiguration`<br/>`inspector2:Enable` | — |
+| `EksClusterOperations` | `*` | `account:ListRegions`<br/>`autoscaling:DescribeScalingActivities`<br/>`eks:CreatePodIdentityAssociation`<br/>`eks:DeletePodIdentityAssociation`<br/>`eks:DescribeCluster`<br/>`eks:DescribeNodegroup`<br/>`eks:DescribePodIdentityAssociation`<br/>`eks:ListClusters`<br/>`eks:ListPodIdentityAssociations` | — |
+| `LoadBalancersRead` | `*` | `acm:AddTagsToCertificate`<br/>`acm:DescribeCertificate`<br/>`acm:ListCertificates`<br/>`acm:RequestCertificate`<br/>`elasticloadbalancing:DescribeLoadBalancers`<br/>`elasticloadbalancing:DescribeTags` | — |
+| `IamRoles` | `*` | `iam:AttachRolePolicy`<br/>`iam:CreateRole`<br/>`iam:DeleteRole`<br/>`iam:DeleteRolePolicy`<br/>`iam:DetachRolePolicy`<br/>`iam:GetPolicy`<br/>`iam:GetRole`<br/>`iam:GetRolePolicy`<br/>`iam:ListAttachedRolePolicies`<br/>`iam:ListRolePolicies`<br/>`iam:PutRolePermissionsBoundary`<br/>`iam:PutRolePolicy`<br/>`iam:TagRole` | — |
+| `S3Storage` | `*` | `s3:CreateBucket`<br/>`s3:DeleteBucket`<br/>`s3:DeleteObject`<br/>`s3:GetBucketLocation`<br/>`s3:GetBucketPolicy`<br/>`s3:GetBucketTagging`<br/>`s3:GetObject`<br/>`s3:ListBucket`<br/>`s3:PutBucketPolicy`<br/>`s3:PutBucketPublicAccessBlock`<br/>`s3:PutBucketTagging`<br/>`s3:PutBucketVersioning`<br/>`s3:PutObject` | — |
+| `SsmParameterStore` | `*` | `ssm:AddTagsToResource`<br/>`ssm:DeleteParameter`<br/>`ssm:GetParameter`<br/>`ssm:PutParameter` | — |
+| `EnvGroupSecrets` | `arn:*:secretsmanager:*:*:secret:/porter/env-groups/*` | `secretsmanager:CreateSecret`<br/>`secretsmanager:DeleteSecret`<br/>`secretsmanager:GetSecretValue`<br/>`secretsmanager:PutSecretValue`<br/>`secretsmanager:TagResource` | — |
+| `Datastores` | `*` | `elasticache:AddTagsToResource`<br/>`elasticache:CreateCacheSubnetGroup`<br/>`elasticache:CreateReplicationGroup`<br/>`elasticache:DeleteCacheSubnetGroup`<br/>`elasticache:DeleteReplicationGroup`<br/>`elasticache:DescribeCacheClusters`<br/>`elasticache:DescribeCacheSubnetGroups`<br/>`elasticache:DescribeReplicationGroups`<br/>`elasticache:ListTagsForResource`<br/>`elasticache:ModifyCacheSubnetGroup`<br/>`elasticache:ModifyReplicationGroup`<br/>`rds:AddTagsToResource`<br/>`rds:CreateDBCluster`<br/>`rds:CreateDBInstance`<br/>`rds:CreateDBSubnetGroup`<br/>`rds:DeleteDBCluster`<br/>`rds:DeleteDBInstance`<br/>`rds:DeleteDBSubnetGroup`<br/>`rds:DescribeDBClusterSnapshots`<br/>`rds:DescribeDBClusters`<br/>`rds:DescribeDBEngineVersions`<br/>`rds:DescribeDBInstances`<br/>`rds:DescribeDBSnapshots`<br/>`rds:DescribeDBSubnetGroups`<br/>`rds:FailoverDBCluster`<br/>`rds:ListTagsForResource`<br/>`rds:ModifyDBCluster`<br/>`rds:ModifyDBInstance`<br/>`rds:ModifyDBSubnetGroup`<br/>`rds:RestoreDBClusterToPointInTime`<br/>`rds:RestoreDBInstanceFromDBSnapshot` | — |
+| `Telemetry` | `*` | `aps:*` | `aws:ResourceTag/porter.run/managed` = `true` |
+| `TelemetryAdmin` | `*` | `aps:ListWorkspaces` | — |
+| `ReadOnlyBilling` | `*` | `ce:Get*`<br/>`ce:List*`<br/>`freetier:GetAccountPlanState`<br/>`pricing:*` | — |
+| `PorterInstanceProxy` | `*` | `ec2:AssociateAddress`<br/>`ec2:ImportKeyPair` | — |
+| `Sqs` | `*` | `sqs:CreateQueue`<br/>`sqs:DeleteQueue`<br/>`sqs:GetQueueAttributes`<br/>`sqs:GetQueueUrl`<br/>`sqs:SetQueueAttributes`<br/>`sqs:TagQueue` | — |
+| `KarpenterInterruptionEventBridge` | `*` | `events:DeleteRule`<br/>`events:DescribeRule`<br/>`events:PutRule`<br/>`events:PutTargets`<br/>`events:RemoveTargets`<br/>`events:TagResource` | — |
+| `CloudWatchObservability` | `*` | `cloudwatch:DeleteAlarms`<br/>`cloudwatch:DescribeAlarms`<br/>`cloudwatch:GetMetricData`<br/>`cloudwatch:GetMetricStatistics`<br/>`cloudwatch:PutMetricAlarm`<br/>`cloudwatch:TagResource`<br/>`logs:DescribeLogGroups` | — |
+| `GuardDuty` | `*` | `guardduty:CreateDetector`<br/>`guardduty:DeleteDetector`<br/>`guardduty:GetAdministratorAccount`<br/>`guardduty:GetDetector`<br/>`guardduty:ListDetectors`<br/>`guardduty:TagResource`<br/>`guardduty:UpdateDetector` | — |
+| `EcrPullImages` | `*` | `ecr:BatchCheckLayerAvailability`<br/>`ecr:BatchGetImage`<br/>`ecr:DescribeRepositories`<br/>`ecr:GetAuthorizationToken`<br/>`ecr:GetDownloadUrlForLayer` | — |
+| `KmsClusterEncryption` | `*` | `kms:CreateGrant`<br/>`kms:Decrypt`<br/>`kms:DescribeKey`<br/>`kms:Encrypt` | — |
+| `CloudTrailLookup` | `*` | `cloudtrail:LookupEvents` | — |
+| `Ec2NetworkingCore` | `*` | `autoscaling:DescribeAutoScalingGroups`<br/>`ec2:AllocateAddress`<br/>`ec2:AssociateRouteTable`<br/>`ec2:AttachInternetGateway`<br/>`ec2:CreateInternetGateway`<br/>`ec2:CreateLaunchTemplate`<br/>`ec2:CreateLaunchTemplateVersion`<br/>`ec2:CreateNatGateway`<br/>`ec2:CreateNetworkInterface`<br/>`ec2:CreateRoute`<br/>`ec2:CreateRouteTable`<br/>`ec2:CreateSecurityGroup`<br/>`ec2:CreateSubnet`<br/>`ec2:CreateTags`<br/>`ec2:CreateVpc`<br/>`ec2:DeleteInternetGateway`<br/>`ec2:DeleteLaunchTemplate`<br/>`ec2:DeleteLaunchTemplateVersions`<br/>`ec2:DeleteNatGateway`<br/>`ec2:DeleteRouteTable`<br/>`ec2:DeleteSecurityGroup`<br/>`ec2:DeleteSubnet`<br/>`ec2:DeleteVpc`<br/>`ec2:DescribeAccountAttributes`<br/>`ec2:DescribeAddresses`<br/>`ec2:DescribeAvailabilityZones`<br/>`ec2:DescribeEgressOnlyInternetGateways`<br/>`ec2:DescribeImages`<br/>`ec2:DescribeInstanceTypes`<br/>`ec2:DescribeInstances`<br/>`ec2:DescribeInternetGateways`<br/>`ec2:DescribeKeyPairs`<br/>`ec2:DescribeLaunchTemplateVersions`<br/>`ec2:DescribeLaunchTemplates`<br/>`ec2:DescribeNatGateways`<br/>`ec2:DescribeRouteTables`<br/>`ec2:DescribeSecurityGroups`<br/>`ec2:DescribeSubnets`<br/>`ec2:DescribeVolumes`<br/>`ec2:DescribeVpcAttribute`<br/>`ec2:DescribeVpcs`<br/>`ec2:DetachInternetGateway`<br/>`ec2:DisassociateRouteTable`<br/>`ec2:ModifyLaunchTemplate`<br/>`ec2:ModifySubnetAttribute`<br/>`ec2:ModifyVpcAttribute`<br/>`ec2:ReleaseAddress`<br/>`ec2:ReplaceRoute`<br/>`ec2:RevokeSecurityGroupIngress`<br/>`ec2:RunInstances`<br/>`tag:GetResources` | — |
+| `VpcPeering` | `*` | `ec2:AcceptVpcPeeringConnection`<br/>`ec2:CreateVpcPeeringConnection`<br/>`ec2:DeleteVpcPeeringConnection`<br/>`ec2:DescribeVpcPeeringConnections`<br/>`ec2:ModifyVpcPeeringConnectionOptions` | — |
+| `VpcEndpoints` | `*` | `ec2:CreateVpcEndpoint`<br/>`ec2:DeleteVpcEndpoints`<br/>`ec2:DescribeVpcEndpointServiceConfigurations`<br/>`ec2:DescribeVpcEndpoints`<br/>`ec2:ModifyVpcEndpoint` | — |
+| `VpcFlowLogs` | `*` | `ec2:CreateFlowLogs`<br/>`ec2:DescribeFlowLogs` | — |
 
+</Accordion>
 
-<LastUpdated lastUpdated={awsPermissions["updated-at"]}/>
+### `porter-infra-manager`
+
+*For reconciling CloudWatch, CloudTrail, EventBridge, KMS, SNS, and other EC2/VPC infrastructure via AWS Controllers for Kubernetes (ACK).*
+
+Assumable by Porter's `CAPIManagement` role (no ExternalId), and by EC2, EKS, EKS Pod Identity, and VPC Flow Logs service principals.
+
+<Accordion title="View permissions">
+
+| Statement | Resource path | Actions | Condition |
+|---|---|---|---|
+| `KmsManagement` | `*` | `kms:CreateAlias`<br/>`kms:CreateKey`<br/>`kms:DeleteAlias`<br/>`kms:Describe*`<br/>`kms:EnableKeyRotation`<br/>`kms:GenerateRandom`<br/>`kms:Get*`<br/>`kms:List*`<br/>`kms:ScheduleKeyDeletion`<br/>`kms:TagResource`<br/>`kms:UntagResource`<br/>`kms:UpdateAlias` | — |
+| `IamReadOnly` | `*` | `iam:GetRolePolicy`<br/>`iam:GetUser`<br/>`iam:ListGroups`<br/>`iam:ListRoles`<br/>`iam:ListUsers` | — |
+| `CloudTrailS3Buckets` | `arn:aws:s3:::aws-cloudtrail-logs*`<br/>`arn:aws:s3:::porter-*`<br/>`arn:aws:s3:::porter-*/*` | `s3:*` | — |
+| `S3BucketsRead` | `*` | `s3:GetBucketLocation`<br/>`s3:GetBucketPolicy`<br/>`s3:ListAllMyBuckets` | — |
+| `SecurityGroups` | `*` | `ec2:AuthorizeSecurityGroupEgress`<br/>`ec2:AuthorizeSecurityGroupIngress`<br/>`ec2:CreateSecurityGroup`<br/>`ec2:DeleteSecurityGroup`<br/>`ec2:DeleteTags`<br/>`ec2:DescribeManagedPrefixLists`<br/>`ec2:DescribeSecurityGroupRules`<br/>`ec2:DescribeSecurityGroups`<br/>`ec2:RevokeSecurityGroupEgress`<br/>`ec2:RevokeSecurityGroupIngress` | — |
+| `VpcManagement` | `*` | `ec2:AcceptVpcPeeringConnection`<br/>`ec2:AssociateRouteTable`<br/>`ec2:CreateFlowLogs`<br/>`ec2:CreateRoute`<br/>`ec2:CreateRouteTable`<br/>`ec2:CreateSubnet`<br/>`ec2:CreateTags`<br/>`ec2:CreateVpc`<br/>`ec2:CreateVpcEndpoint`<br/>`ec2:CreateVpcEndpointServiceConfiguration`<br/>`ec2:CreateVpcPeeringConnection`<br/>`ec2:DeleteFlowLogs`<br/>`ec2:DeleteRoute`<br/>`ec2:DeleteRouteTable`<br/>`ec2:DeleteSubnet`<br/>`ec2:DeleteVpc`<br/>`ec2:DeleteVpcEndpoint`<br/>`ec2:DeleteVpcEndpointServiceConfigurations`<br/>`ec2:DeleteVpcPeeringConnection`<br/>`ec2:DescribeFlowLogs`<br/>`ec2:DescribeRouteTables`<br/>`ec2:DescribeSubnets`<br/>`ec2:DescribeVpcAttribute`<br/>`ec2:DescribeVpcEndpointServiceConfigurations`<br/>`ec2:DescribeVpcEndpointServicePermissions`<br/>`ec2:DescribeVpcEndpointServices`<br/>`ec2:DescribeVpcEndpoints`<br/>`ec2:DescribeVpcPeeringConnections`<br/>`ec2:DescribeVpcs`<br/>`ec2:DisassociateRouteTable`<br/>`ec2:ModifySubnetAttribute`<br/>`ec2:ModifyVpcAttribute`<br/>`ec2:ModifyVpcEndpoint`<br/>`ec2:ModifyVpcEndpointServiceConfiguration`<br/>`ec2:ModifyVpcEndpointServicePermissions` | — |
+| `CloudTrail` | `*` | `cloudtrail:*` | — |
+| `CloudTrailLogGroup` | `arn:aws:logs:*:*:log-group:aws-cloudtrail-logs*` | `logs:CreateLogGroup` | — |
+| `CloudTrailPassRole` | `*` | `iam:PassRole` | `iam:PassedToService` = `cloudtrail.amazonaws.com` |
+| `S3ReplicationPassRole` | `*` | `iam:PassRole` | `iam:PassedToService` = `s3.amazonaws.com` |
+| `PorterInfraManagerPassRole` | `arn:aws:iam::<account-id>:role/porter-infra-manager` | `iam:PassRole` | — |
+| `Datastores` | `*` | `cloudwatch:DeleteAlarms`<br/>`cloudwatch:DescribeAlarms`<br/>`cloudwatch:GetMetricData`<br/>`cloudwatch:GetMetricStatistics`<br/>`cloudwatch:ListMetrics`<br/>`cloudwatch:PutMetricAlarm`<br/>`ec2:CreateTags`<br/>`ec2:CreateVpcEndpoint`<br/>`ec2:DescribeAccountAttributes`<br/>`ec2:DescribeAvailabilityZones`<br/>`ec2:DescribeCoipPools`<br/>`ec2:DescribeInternetGateways`<br/>`ec2:DescribeLocalGatewayRouteTablePermissions`<br/>`ec2:DescribeLocalGatewayRouteTableVpcAssociations`<br/>`ec2:DescribeLocalGatewayRouteTables`<br/>`ec2:DescribeLocalGateways`<br/>`ec2:DescribeSecurityGroups`<br/>`ec2:DescribeVpcs`<br/>`ec2:GetCoipPoolUsage`<br/>`elasticache:*`<br/>`kms:DescribeKey`<br/>`kms:ListAliases`<br/>`kms:ListKeys`<br/>`logs:DescribeLogGroups`<br/>`logs:DescribeLogStreams`<br/>`logs:GetLogEvents`<br/>`rds:*`<br/>`sns:ListSubscriptions`<br/>`sns:ListTopics`<br/>`sns:Publish` | — |
+| `NodeGroupManagement` | `*` | `ec2:DescribeLaunchTemplates` | `aws:ResourceTag/porter.run/managed` = `true` |
+| `Telemetry` | `*` | `aps:*` | `aws:ResourceTag/porter.run/managed` = `true` |
+| `DatastoreServiceLinkedRoles` | `*` | `iam:CreateServiceLinkedRole` | `iam:AWSServiceName` in [`elasticache.amazonaws.com`, `rds.amazonaws.com`, `rds.application-autoscaling.amazonaws.com`] |
+| `CostExplorer` | `*` | `ce:GetCostAndUsage` | — |
+| `PorterInstanceProxy` | `*` | `ec2:AllocateAddress`<br/>`ec2:AssociateAddress`<br/>`ec2:AttachInternetGateway`<br/>`ec2:CreateInternetGateway`<br/>`ec2:DescribeAddresses`<br/>`ec2:DescribeInstances`<br/>`ec2:DetachInternetGateway`<br/>`ec2:ImportKeyPair`<br/>`ec2:RunInstances`<br/>`ec2:TerminateInstances` | — |
+| `CloudWatchLogs` | `*` | `logs:CreateLogGroup`<br/>`logs:CreateLogStream`<br/>`logs:DeleteLogGroup`<br/>`logs:DeleteRetentionPolicy`<br/>`logs:DescribeLogGroups`<br/>`logs:DescribeLogStreams`<br/>`logs:DescribeSubscriptionFilters`<br/>`logs:ListTagsForResource`<br/>`logs:PutLogEvents`<br/>`logs:PutRetentionPolicy`<br/>`logs:TagResource`<br/>`logs:UntagResource` | — |
+| `Sns` | `*` | `sns:CreateTopic`<br/>`sns:DeleteTopic`<br/>`sns:GetTopicAttributes`<br/>`sns:ListTagsForResource`<br/>`sns:SetTopicAttributes`<br/>`sns:Subscribe`<br/>`sns:TagResource`<br/>`sns:Unsubscribe` | — |
+| `EventBridgeRules` | `*` | `events:DescribeEventBus`<br/>`events:DescribeRule`<br/>`events:ListTagsForResource`<br/>`events:ListTargetsByRule`<br/>`events:PutRule`<br/>`events:TagResource` | — |
+
+</Accordion>
+
+### `porter-controlplane-manager`
+
+*For operating the EKS managed control plane.*
+
+Assumable by EKS service principals (not by Porter).
+
+Statements prefixed with `AmazonEKSClusterPolicy*` are defined by AWS in the [`AmazonEKSClusterPolicy`](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AmazonEKSClusterPolicy.html) managed policy.
+
+<Accordion title="View permissions">
+
+| Statement | Resource path | Actions | Condition |
+|---|---|---|---|
+| `AmazonEKSClusterPolicy` | `*` | `autoscaling:DescribeAutoScalingGroups`<br/>`autoscaling:UpdateAutoScalingGroup`<br/>`ec2:AttachVolume`<br/>`ec2:AuthorizeSecurityGroupIngress`<br/>`ec2:CreateRoute`<br/>`ec2:CreateSecurityGroup`<br/>`ec2:CreateTags`<br/>`ec2:CreateVolume`<br/>`ec2:DeleteRoute`<br/>`ec2:DeleteSecurityGroup`<br/>`ec2:DeleteVolume`<br/>`ec2:DescribeAccountAttributes`<br/>`ec2:DescribeAddresses`<br/>`ec2:DescribeAvailabilityZones`<br/>`ec2:DescribeDhcpOptions`<br/>`ec2:DescribeInstances`<br/>`ec2:DescribeInstanceTopology`<br/>`ec2:DescribeInternetGateways`<br/>`ec2:DescribeNetworkInterfaces`<br/>`ec2:DescribeRouteTables`<br/>`ec2:DescribeSecurityGroups`<br/>`ec2:DescribeSubnets`<br/>`ec2:DescribeVolumes`<br/>`ec2:DescribeVolumesModifications`<br/>`ec2:DescribeVpcs`<br/>`ec2:DetachVolume`<br/>`ec2:ModifyInstanceAttribute`<br/>`ec2:ModifyVolume`<br/>`ec2:RevokeSecurityGroupIngress`<br/>`elasticloadbalancing:AddTags`<br/>`elasticloadbalancing:ApplySecurityGroupsToLoadBalancer`<br/>`elasticloadbalancing:AttachLoadBalancerToSubnets`<br/>`elasticloadbalancing:ConfigureHealthCheck`<br/>`elasticloadbalancing:CreateListener`<br/>`elasticloadbalancing:CreateLoadBalancer`<br/>`elasticloadbalancing:CreateLoadBalancerListeners`<br/>`elasticloadbalancing:CreateLoadBalancerPolicy`<br/>`elasticloadbalancing:CreateTargetGroup`<br/>`elasticloadbalancing:DeleteListener`<br/>`elasticloadbalancing:DeleteLoadBalancer`<br/>`elasticloadbalancing:DeleteLoadBalancerListeners`<br/>`elasticloadbalancing:DeleteTargetGroup`<br/>`elasticloadbalancing:DeregisterInstancesFromLoadBalancer`<br/>`elasticloadbalancing:DeregisterTargets`<br/>`elasticloadbalancing:DescribeListeners`<br/>`elasticloadbalancing:DescribeLoadBalancerAttributes`<br/>`elasticloadbalancing:DescribeLoadBalancerPolicies`<br/>`elasticloadbalancing:DescribeLoadBalancers`<br/>`elasticloadbalancing:DescribeTargetGroupAttributes`<br/>`elasticloadbalancing:DescribeTargetGroups`<br/>`elasticloadbalancing:DescribeTargetHealth`<br/>`elasticloadbalancing:DetachLoadBalancerFromSubnets`<br/>`elasticloadbalancing:ModifyListener`<br/>`elasticloadbalancing:ModifyLoadBalancerAttributes`<br/>`elasticloadbalancing:ModifyTargetGroup`<br/>`elasticloadbalancing:ModifyTargetGroupAttributes`<br/>`elasticloadbalancing:RegisterInstancesWithLoadBalancer`<br/>`elasticloadbalancing:RegisterTargets`<br/>`elasticloadbalancing:SetLoadBalancerPoliciesForBackendServer`<br/>`elasticloadbalancing:SetLoadBalancerPoliciesOfListener`<br/>`kms:DescribeKey` | — |
+| `AmazonEKSClusterPolicySLRCreate` | `*` | `iam:CreateServiceLinkedRole` | `iam:AWSServiceName` = `elasticloadbalancing.amazonaws.com` |
+| `AmazonEKSClusterPolicyENIDelete` | `*` | `ec2:DeleteNetworkInterface` | `ec2:ResourceTag/eks:eni:owner` = `amazon-vpc-cni` |
+| `LoadBalancers` | `*` | `acm:DescribeCertificate`<br/>`acm:GetCertificate`<br/>`acm:ListCertificates`<br/>`acm:RequestCertificate`<br/>`ec2:DeleteTags`<br/>`elasticloadbalancing:AddListenerCertificates`<br/>`elasticloadbalancing:AddTags`<br/>`elasticloadbalancing:ApplySecurityGroupsToLoadBalancer`<br/>`elasticloadbalancing:ConfigureHealthCheck`<br/>`elasticloadbalancing:CreateLoadBalancer`<br/>`elasticloadbalancing:CreateRule`<br/>`elasticloadbalancing:DeleteLoadBalancer`<br/>`elasticloadbalancing:DeleteRule`<br/>`elasticloadbalancing:DeleteTargetGroup`<br/>`elasticloadbalancing:DeregisterInstancesFromLoadBalancer`<br/>`elasticloadbalancing:DescribeListenerAttributes`<br/>`elasticloadbalancing:DescribeListenerCertificates`<br/>`elasticloadbalancing:DescribeLoadBalancerAttributes`<br/>`elasticloadbalancing:DescribeLoadBalancers`<br/>`elasticloadbalancing:DescribeRules`<br/>`elasticloadbalancing:DescribeTags`<br/>`elasticloadbalancing:DescribeTargetGroups`<br/>`elasticloadbalancing:ModifyLoadBalancerAttributes`<br/>`elasticloadbalancing:ModifyRule`<br/>`elasticloadbalancing:RegisterInstancesWithLoadBalancer`<br/>`elasticloadbalancing:RemoveListenerCertificates`<br/>`elasticloadbalancing:RemoveTags`<br/>`elasticloadbalancing:SetRulePriorities`<br/>`elasticloadbalancing:SetSubnets`<br/>`elasticloadbalancing:SetWebACL`<br/>`wafv2:AssociateWebACL`<br/>`wafv2:GetWebACL`<br/>`wafv2:GetWebACLForResource`<br/>`wafv2:ListResourcesForWebACL`<br/>`wafv2:ListRuleGroups`<br/>`wafv2:ListTagsForResource`<br/>`wafv2:ListWebACLs`<br/>`wafv2:TagResource` | — |
+| `ClusterAutoscaling` | `*` | `autoscaling:DescribeAutoScalingGroups`<br/>`autoscaling:DescribeAutoScalingInstances`<br/>`autoscaling:DescribeLaunchConfigurations`<br/>`autoscaling:DescribeScalingActivities`<br/>`autoscaling:DescribeTags`<br/>`autoscaling:SetDesiredCapacity`<br/>`autoscaling:TerminateInstanceInAutoScalingGroup`<br/>`ec2:DescribeImages`<br/>`ec2:DescribeInstanceTypes`<br/>`ec2:DescribeLaunchTemplateVersions`<br/>`ec2:GetInstanceTypesFromInstanceRequirements`<br/>`eks:DescribeNodegroup` | — |
+
+</Accordion>
+
+### `porter-node-manager`
+
+*Instance profile role for EKS worker nodes.*
+
+Assumable by the EC2 service principal (not by Porter).
+
+Statements prefixed with `Amazon*` are defined by AWS in the corresponding AWS-managed policy. Statements prefixed with `Ebs*` are individual statements from the AWS-managed [`AmazonEBSCSIDriverPolicy`](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AmazonEBSCSIDriverPolicy.html); statement names below are descriptive and not part of the AWS-published policy.
+
+<Accordion title="View permissions">
+
+| Statement | Resource path | Actions | Condition |
+|---|---|---|---|
+| `CustomerCloudWatchLogs` | `*` | `logs:CreateLogGroup`<br/>`logs:CreateLogStream`<br/>`logs:DescribeLogStreams`<br/>`logs:PutLogEvents`<br/>`logs:PutRetentionPolicy` | — |
+| `CustomerEcrAccess` | `*` | `ecr:BatchCheckLayerAvailability`<br/>`ecr:BatchGetImage`<br/>`ecr:DescribeImages`<br/>`ecr:DescribeRegistry`<br/>`ecr:DescribeRepositories`<br/>`ecr:GetAuthorizationToken`<br/>`ecr:GetDownloadUrlForLayer`<br/>`ecr:ListImages`<br/>`ecr:ListTagsForResource` | — |
+| `CustomerEcrPublicAccess` | `*` | `ecr-public:GetAuthorizationToken`<br/>`sts:GetServiceBearerToken` | — |
+| `ParameterStoreAccess` | `*` | `ssm:GetParameter*` | — |
+| `AmazonEKSCNIPolicy` | `*` | `ec2:AssignPrivateIpAddresses`<br/>`ec2:AttachNetworkInterface`<br/>`ec2:CreateNetworkInterface`<br/>`ec2:DeleteNetworkInterface`<br/>`ec2:DescribeInstances`<br/>`ec2:DescribeInstanceTypes`<br/>`ec2:DescribeNetworkInterfaces`<br/>`ec2:DescribeSecurityGroups`<br/>`ec2:DescribeSubnets`<br/>`ec2:DescribeTags`<br/>`ec2:DetachNetworkInterface`<br/>`ec2:ModifyNetworkInterfaceAttribute`<br/>`ec2:UnassignPrivateIpAddresses` | — |
+| `AmazonEKSCNIPolicyENITag` | `arn:aws:ec2:*:*:network-interface/*` | `ec2:CreateTags` | — |
+| `AmazonEKSClusterPolicy` | `*` | (same actions as in `porter-controlplane-manager`'s `AmazonEKSClusterPolicy` statement) | — |
+| `AmazonEKSClusterPolicySLRCreate` | `*` | `iam:CreateServiceLinkedRole` | `iam:AWSServiceName` = `elasticloadbalancing.amazonaws.com` |
+| `AmazonEKSClusterPolicyENIDelete` | `*` | `ec2:DeleteNetworkInterface` | `ec2:ResourceTag/eks:eni:owner` = `amazon-vpc-cni` |
+| `WorkerNodePermissions` | `*` | `ec2:DescribeInstances`<br/>`ec2:DescribeInstanceTypes`<br/>`ec2:DescribeRouteTables`<br/>`ec2:DescribeSecurityGroups`<br/>`ec2:DescribeSubnets`<br/>`ec2:DescribeVolumes`<br/>`ec2:DescribeVolumesModifications`<br/>`ec2:DescribeVpcs`<br/>`eks:DescribeCluster`<br/>`eks-auth:AssumeRoleForPodIdentity` | — |
+| `AmazonEC2ContainerRegistryReadOnly` | `*` | `ecr:BatchCheckLayerAvailability`<br/>`ecr:BatchGetImage`<br/>`ecr:DescribeImages`<br/>`ecr:DescribeImageScanFindings`<br/>`ecr:DescribeRepositories`<br/>`ecr:GetAuthorizationToken`<br/>`ecr:GetDownloadUrlForLayer`<br/>`ecr:GetLifecyclePolicy`<br/>`ecr:GetLifecyclePolicyPreview`<br/>`ecr:GetRepositoryPolicy`<br/>`ecr:ListImages`<br/>`ecr:ListTagsForResource` | — |
+| `EbsDescribe` | `*` | `ec2:DescribeAvailabilityZones`<br/>`ec2:DescribeInstances`<br/>`ec2:DescribeInstanceTypes`<br/>`ec2:DescribeSnapshots`<br/>`ec2:DescribeTags`<br/>`ec2:DescribeVolumes`<br/>`ec2:DescribeVolumeStatus`<br/>`ec2:DescribeVolumesModifications` | — |
+| `EbsVolumeSnapshotModify` | `arn:aws:ec2:*:*:volume/*` | `ec2:CreateSnapshot`<br/>`ec2:ModifyVolume` | — |
+| `EbsCopyVolumes` | `arn:aws:ec2:*:*:volume/vol-*` | `ec2:CopyVolumes` | — |
+| `EbsAttachDetach` | `arn:aws:ec2:*:*:volume/*`<br/>`arn:aws:ec2:*:*:instance/*` | `ec2:AttachVolume`<br/>`ec2:DetachVolume` | — |
+| `EbsCreateVolumeFromSnapshot` | `arn:aws:ec2:*:*:snapshot/*` | `ec2:CreateVolume`<br/>`ec2:EnableFastSnapshotRestores` | — |
+| `EbsCreateTagsOnCreate` | `arn:aws:ec2:*:*:volume/*`<br/>`arn:aws:ec2:*:*:snapshot/*` | `ec2:CreateTags` | `ec2:CreateAction` in [`CreateVolume`, `CreateSnapshot`, `CopyVolumes`] |
+| `EbsDeleteTags` | `arn:aws:ec2:*:*:volume/*`<br/>`arn:aws:ec2:*:*:snapshot/*` | `ec2:DeleteTags` | — |
+| `EbsCreateVolumeClusterTag` | `arn:aws:ec2:*:*:volume/*` | `ec2:CreateVolume`<br/>`ec2:CopyVolumes` | `aws:RequestTag/ebs.csi.aws.com/cluster` like `true` |
+| `EbsCreateVolumeCsiName` | `arn:aws:ec2:*:*:volume/*` | `ec2:CreateVolume`<br/>`ec2:CopyVolumes` | `aws:RequestTag/CSIVolumeName` like `*` |
+| `EbsDeleteVolumeClusterTag` | `arn:aws:ec2:*:*:volume/*` | `ec2:DeleteVolume` | `ec2:ResourceTag/ebs.csi.aws.com/cluster` like `true` |
+| `EbsDeleteVolumeCsiName` | `arn:aws:ec2:*:*:volume/*` | `ec2:DeleteVolume` | `ec2:ResourceTag/CSIVolumeName` like `*` |
+| `EbsDeleteVolumePvcName` | `arn:aws:ec2:*:*:volume/*` | `ec2:DeleteVolume` | `ec2:ResourceTag/kubernetes.io/created-for/pvc/name` like `*` |
+| `EbsCreateSnapshotCsiName` | `arn:aws:ec2:*:*:snapshot/*` | `ec2:CreateSnapshot` | `aws:RequestTag/CSIVolumeSnapshotName` like `*` |
+| `EbsCreateSnapshotClusterTag` | `arn:aws:ec2:*:*:snapshot/*` | `ec2:CreateSnapshot` | `aws:RequestTag/ebs.csi.aws.com/cluster` like `true` |
+| `EbsDeleteSnapshotCsiName` | `arn:aws:ec2:*:*:snapshot/*` | `ec2:DeleteSnapshot`<br/>`ec2:LockSnapshot` | `ec2:ResourceTag/CSIVolumeSnapshotName` like `*` |
+| `EbsDeleteSnapshotClusterTag` | `arn:aws:ec2:*:*:snapshot/*` | `ec2:DeleteSnapshot`<br/>`ec2:LockSnapshot` | `ec2:ResourceTag/ebs.csi.aws.com/cluster` like `true` |
+| `AllowDescribe` | `*` | `elasticfilesystem:DescribeAccessPoints`<br/>`elasticfilesystem:DescribeFileSystems`<br/>`elasticfilesystem:DescribeMountTargets`<br/>`ec2:DescribeAvailabilityZones` | — |
+| `AllowCreateAccessPoint` | `*` | `elasticfilesystem:CreateAccessPoint` | `aws:RequestTag/efs.csi.aws.com/cluster` is not null; `aws:TagKeys` = `efs.csi.aws.com/cluster` |
+| `AllowTagNewAccessPoints` | `*` | `elasticfilesystem:TagResource` | `elasticfilesystem:CreateAction` = `CreateAccessPoint`; `aws:RequestTag/efs.csi.aws.com/cluster` is not null; `aws:TagKeys` = `efs.csi.aws.com/cluster` |
+| `AllowDeleteAccessPoint` | `*` | `elasticfilesystem:DeleteAccessPoint` | `aws:ResourceTag/efs.csi.aws.com/cluster` is not null |
+| `LoadBalancers` | `*` | (same as `porter-controlplane-manager`'s `LoadBalancers` statement) | — |
+| `ClusterAutoscaling` | `*` | (same as `porter-controlplane-manager`'s `ClusterAutoscaling` statement) | — |
+
+</Accordion>
+
+### `porter-karpenter`
+
+*For provisioning and managing cost-optimized EKS worker nodes.*
+
+Assumable by the Karpenter controller pod using EKS Pod Identities.
+
+<Accordion title="View permissions">
+
+| Statement | Resource path | Actions | Condition |
+|---|---|---|---|
+| `ScopedEc2InstanceAccess` | `arn:aws:ec2:*::image/*`<br/>`arn:aws:ec2:*::snapshot/*`<br/>`arn:aws:ec2:*:*:security-group/*`<br/>`arn:aws:ec2:*:*:subnet/*` | `ec2:CreateFleet`<br/>`ec2:RunInstances` | — |
+| `ScopedEc2LaunchTemplateAccess` | `arn:aws:ec2:*:*:launch-template/*` | `ec2:CreateFleet`<br/>`ec2:RunInstances` | — |
+| `ScopedEc2InstanceCreate` | `arn:aws:ec2:*:*:fleet/*`<br/>`arn:aws:ec2:*:*:instance/*`<br/>`arn:aws:ec2:*:*:launch-template/*`<br/>`arn:aws:ec2:*:*:network-interface/*`<br/>`arn:aws:ec2:*:*:spot-instances-request/*`<br/>`arn:aws:ec2:*:*:volume/*` | `ec2:CreateFleet`<br/>`ec2:CreateLaunchTemplate`<br/>`ec2:RunInstances` | — |
+| `ScopedResourceCreationTagging` | (same resources as above) | `ec2:CreateTags` | `ec2:CreateAction` in [`CreateFleet`, `CreateLaunchTemplate`, `RunInstances`]; `aws:RequestTag/karpenter.sh/nodepool` like `*` |
+| `ScopedResourceTagging` | `arn:aws:ec2:*:*:instance/*` | `ec2:CreateTags` | — |
+| `ScopedEc2Deletion` | `arn:aws:ec2:*:*:instance/*`<br/>`arn:aws:ec2:*:*:launch-template/*` | `ec2:DeleteLaunchTemplate`<br/>`ec2:TerminateInstances` | — |
+| `RegionalEc2Read` | `*` | `ec2:DescribeImages`<br/>`ec2:DescribeInstanceTypeOfferings`<br/>`ec2:DescribeInstanceTypes`<br/>`ec2:DescribeInstances`<br/>`ec2:DescribeLaunchTemplates`<br/>`ec2:DescribeSecurityGroups`<br/>`ec2:DescribeSpotPriceHistory`<br/>`ec2:DescribeSubnets` | — |
+| `PricingRead` | `*` | `pricing:GetProducts` | — |
+| `SsmParameterRead` | `*` | `ssm:GetParameter` | — |
+| `SqsInterruptionQueue` | `arn:aws:sqs:*:*:*` | `sqs:CreateQueue`<br/>`sqs:DeleteMessage`<br/>`sqs:DeleteQueue`<br/>`sqs:GetQueueAttributes`<br/>`sqs:GetQueueUrl`<br/>`sqs:ReceiveMessage`<br/>`sqs:SetQueueAttributes`<br/>`sqs:TagQueue` | — |
+| `EventBridgeRules` | `arn:aws:events:*:*:rule/*` | `events:DeleteRule`<br/>`events:DescribeRule`<br/>`events:PutRule`<br/>`events:PutTargets`<br/>`events:RemoveTargets` | — |
+| `PassNodeInstanceRole` | `arn:aws:iam::<account-id>:role/porter-node-manager` | `iam:PassRole` | `iam:PassedToService` in [`ec2.amazonaws.com`, `ec2.amazonaws.com.cn`] |
+| `InstanceProfileScoped` | `arn:aws:iam::*:instance-profile/*` | `iam:AddRoleToInstanceProfile`<br/>`iam:CreateInstanceProfile`<br/>`iam:DeleteInstanceProfile`<br/>`iam:GetInstanceProfile`<br/>`iam:RemoveRoleFromInstanceProfile`<br/>`iam:TagInstanceProfile` | — |
+| `InstanceProfileList` | `*` | `iam:ListInstanceProfiles` | — |
+| `EksClusterDescribe` | `arn:aws:eks:*:*:cluster/*` | `eks:DescribeCluster` | — |
+| `ServiceLinkedRoleCreate` | `arn:aws:iam::*:role/aws-service-role/*` | `iam:CreateServiceLinkedRole` | — |
+
+</Accordion>
+
+### `porter-telemetry-manager`
+
+*For collecting and exporting OTLP metrics.*
+
+Assumable by the OpenTelemetry Collector pod using EKS Pod Identities.
+
+<Accordion title="View permissions">
+
+| Statement | Resource path | Actions | Condition |
+|---|---|---|---|
+| `PorterMetrics` | `*` | `aps:GetLabels`<br/>`aps:GetMetricMetadata`<br/>`aps:GetSeries`<br/>`aps:QueryMetrics`<br/>`aps:RemoteWrite` | — |
+| `PorterLogs` | `arn:aws:s3:::porter-*`<br/>`arn:aws:s3:::porter-*/*` | `s3:AbortMultipartUpload`<br/>`s3:CreateBucket`<br/>`s3:DeleteObject`<br/>`s3:GetObject`<br/>`s3:ListBucket`<br/>`s3:ListBucketVersions`<br/>`s3:PutObject` | — |
+
+</Accordion>
+
+### `porter-agent-compliance-manager`
+
+*For managing compliance alarms.*
+
+Assumable by the Porter Agent pod using EKS Pod Identities.
+
+<Accordion title="View permissions">
+
+| Statement | Resource path | Actions | Condition |
+|---|---|---|---|
+| `CloudWatchAlarms` | `*` | `cloudwatch:DeleteAlarms`<br/>`cloudwatch:DescribeAlarms`<br/>`cloudwatch:ListTagsForResource`<br/>`cloudwatch:PutMetricAlarm`<br/>`cloudwatch:TagResource` | — |
+| `SnsPublish` | `arn:aws:sns:*:*:porter-soc2-notifications-*` | `sns:Publish` | — |
+
+</Accordion>
+
+### `porter-eso-secrets-manager`
+
+*For managing environment group secrets in Secrets Manager.*
+
+Assumable by the External Secrets Operator pod using EKS Pod Identities.
+
+<Accordion title="View permissions">
+
+| Statement | Resource path | Actions | Condition |
+|---|---|---|---|
+| `EnvGroupSecrets` | `arn:*:secretsmanager:*:*:secret:/porter/env-groups/*` | `secretsmanager:BatchGetSecretValue`<br/>`secretsmanager:DescribeSecret`<br/>`secretsmanager:GetSecretValue` | — |
+| `ListSecretsCatalog` | `*` | `secretsmanager:ListSecrets` | — |
+
+</Accordion>
+
+### `porter-s3-*`
+
+*For creating, updating, and deleting S3 objects for specific buckets.*
+
+Assumable by the Loki pod using EKS Pod Identities. One role is provisioned per Porter-managed bucket; scoping to a single bucket is enforced by the per-bucket EKS Pod Identity trust on the role itself.
+
+<Accordion title="View permissions">
+
+| Statement | Resource path | Actions | Condition |
+|---|---|---|---|
+| `S3ObjectAccess` | `arn:aws:s3:::*/*` | `s3:DeleteObject`<br/>`s3:DeleteObjectVersion`<br/>`s3:GetObject`<br/>`s3:GetObjectVersion`<br/>`s3:PutObject` | — |
+
+</Accordion>
