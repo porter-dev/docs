@@ -82,7 +82,12 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
         In Porter, select GCP. Enter your [GCP project ID](https://console.cloud.google.com) (visible at the top of any page in the GCP Console) and click **Connect**. Porter generates a one-time setup command scoped to this integration.
       </Step>
       <Step title="Run the setup in Cloud Shell">
-        Click **Open Cloud Shell** to launch a new tab with the [porter-dev/gcp-onboarding](https://github.com/porter-dev/gcp-onboarding) repository pre-loaded. Paste the command into the shell and press Enter.
+        In the Porter dashboard:
+
+        1. Copy the command shown in the **Run Setup in Cloud Shell** panel.
+        2. Click **Open Cloud Shell** to launch a new tab with the [porter-dev/gcp-onboarding](https://github.com/porter-dev/gcp-onboarding) repository pre-loaded.
+        3. Cloud Shell will warn that the repository is from an untrusted source. Click **Trust** to continue. The repository is open source so you can review the Terraform before approving.
+        4. Paste the command into the shell and press Enter.
 
         The script runs Terraform in your project and performs the initial setup:
 
@@ -108,7 +113,17 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
     2. Click **Migrate to Workload Identity Federation** in the banner at the top of the page.
     3. Follow the same Cloud Shell flow above.
 
-    Your existing clusters keep authenticating with the JSON key while the new federation is being verified. Once verified, Porter swaps the credential atomically. There is no service interruption. You can then safely delete the JSON key from GCP.
+    Your existing clusters keep authenticating with the JSON key while the new federation is being verified. Once verified, Porter swaps the credential atomically. There is no service interruption.
+
+    ### After Migration
+
+    Workload Identity Federation is now the active connection between Porter and your GCP project, but your previous service account and its JSON key are still present in your project until you remove them. To finish the migration:
+
+    1. In the [GCP Console](https://console.cloud.google.com), open **IAM & Admin** → **Service Accounts**.
+    2. Find your legacy service account (the one whose key you previously uploaded to Porter — typically named `porter-manager`, separate from the new `porter-manager-*` account created during federation).
+    3. Delete its JSON key, or delete the entire service account.
+
+    Porter no longer needs the legacy account once federation is active. Leaving it in place means an unrotated long-lived key continues to exist in your project.
 
     ## Revoking Access
 
