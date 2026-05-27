@@ -1,0 +1,84 @@
+---
+title: 'porter mcp'
+sidebarTitle: 'porter mcp'
+description: "Run the local Porter Model Context Protocol (MCP) server so AI assistants can read app state, validate porter.yaml, and deploy through structured tools"
+---
+
+`porter mcp` contains commands for running local Porter [Model Context Protocol](https://modelcontextprotocol.io/) servers. MCP lets AI coding assistants call a curated set of Porter tools (read app status, generate `porter.yaml`, validate, deploy, fetch logs and metrics) over stdio with structured input and output.
+
+Most users do not run these commands directly. [`porter setup ai`](/standard/cli/command-reference/porter-setup) wires this server into your AI tool of choice automatically.
+
+---
+
+## `porter mcp serve`
+
+Run the Porter MCP server over stdio. The server exposes a typed set of tools that your AI assistant can call. Secrets, tokens, and other sensitive values returned by Porter are redacted before they reach the assistant.
+
+### Usage
+
+```bash
+porter mcp serve [flags]
+```
+
+### Prerequisites
+
+- The Porter CLI is installed and authenticated via [`porter auth login`](/standard/cli/command-reference/porter-auth).
+- An MCP-aware client (for example, Claude Code or Codex) configured to launch this command. Run [`porter setup ai`](/standard/cli/command-reference/porter-setup) to do this automatically.
+
+### Options
+
+| Flag | Description |
+|------|-------------|
+| `--host` | Porter host URL. Defaults to your CLI configuration. |
+| `--repo` | Absolute path to the app repository the session is bound to. |
+| `--project` | Porter project ID. Defaults to your current CLI project. |
+| `--cluster` | Porter cluster ID. Defaults to your current CLI cluster. |
+| `--target` | Deployment target name or ID. |
+| `--log-level` | Stderr log level (default `info`). |
+
+### Available tools
+
+The server registers the following tools. Each one accepts and returns structured JSON so the assistant can chain calls reliably.
+
+| Tool | Purpose |
+|------|---------|
+| `check_porter_status` | Verify Porter CLI, auth, repository, and context readiness. |
+| `resolve_context` | Resolve Porter project, cluster, deployment target, and app context. |
+| `list_deployment_targets` | List deployment targets for the current or provided project. |
+| `list_apps` | List Porter apps in the current or provided context. |
+| `get_app` | Get app configuration and a current status summary. |
+| `list_env_groups` | List attachable environment groups (no secret values). |
+| `init_app_config` | Detect the local app shape and propose or write `porter.yaml`. |
+| `validate_app_config` | Validate `porter.yaml` locally and optionally with a Porter server dry-run. |
+| `deploy_app` | Validate and deploy a local app to Porter after explicit confirmation. |
+| `get_deploy_status` | Get high-level app deployment status and service health. |
+| `get_deploy_logs` | Return deploy and build logs when available for the current session. |
+| `get_runtime_logs` | Fetch historical runtime logs for an app. |
+| `get_app_metrics` | Fetch dashboard-aligned metrics for an app service. |
+| `summarize_app_health` | Summarize app health deterministically from Porter status evidence. |
+
+### Example client configuration
+
+If you prefer to wire the server up by hand, configure your MCP client with an entry like the following. Replace the placeholders with your project, cluster, deployment target, and repository path.
+
+```json
+{
+  "mcpServers": {
+    "porter": {
+      "command": "porter",
+      "args": [
+        "mcp",
+        "serve",
+        "--project", "1234",
+        "--cluster", "5678",
+        "--target", "default",
+        "--repo", "/absolute/path/to/your/repo"
+      ]
+    }
+  }
+}
+```
+
+<Tip>
+Run [`porter setup ai`](/standard/cli/command-reference/porter-setup) to generate this configuration automatically for Claude Code, Codex, or both.
+</Tip>

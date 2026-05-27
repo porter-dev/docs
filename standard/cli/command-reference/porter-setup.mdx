@@ -1,0 +1,75 @@
+---
+title: 'porter setup'
+sidebarTitle: 'porter setup'
+description: "Set up local Porter integrations, including connecting AI coding assistants to your Porter project via the Model Context Protocol (MCP)"
+---
+
+`porter setup` contains commands for configuring local Porter integrations on your machine.
+
+---
+
+## `porter setup ai`
+
+Configure a local AI coding assistant (Claude Code, Codex, or both) to talk to Porter through the Model Context Protocol (MCP). The command detects supported tools installed on your machine, resolves your current Porter context (project, cluster, deployment target, and repository), and writes the MCP server entry into each tool's configuration. It also drops a small `PORTER.md` guidance file into your repository so the assistant knows how to use Porter safely.
+
+Use this command when you want an AI assistant in your editor to read app status, propose a `porter.yaml`, run validations, or trigger a deploy without leaving the chat.
+
+### Usage
+
+```bash
+porter setup ai [flags]
+```
+
+### Prerequisites
+
+- The Porter CLI is installed and on your `PATH`.
+- You're logged in via [`porter auth login`](/standard/cli/command-reference/porter-auth).
+- You've selected the correct project and cluster with [`porter config`](/standard/cli/command-reference/porter-config).
+- A supported AI tool is installed locally (Claude Code CLI or Codex CLI). If neither is installed, the command prints manual configuration instructions.
+
+### Options
+
+| Flag | Description |
+|------|-------------|
+| `--tool` | AI tool to configure: `claude-code`, `claude`, `codex`, `all`, or `auto` (default). `auto` configures every supported tool that is detected. |
+| `--host` | Override the Porter host URL. |
+| `--project` | Porter project ID. Defaults to your current CLI project. |
+| `--cluster` | Porter cluster ID. Defaults to your current CLI cluster. |
+| `--target` | Deployment target name or ID. |
+| `--repo` | Absolute path to the repository to configure. Defaults to the current directory. |
+| `--yes` | Skip the confirmation prompt for safe writes. |
+| `--dry-run` | Show the planned writes without applying them. |
+| `--no-write` | Print manual configuration instructions without writing any files. |
+| `--output` | Output format: `interactive` (default), `json`, or `text`. Use `json` for scripting. |
+
+### Examples
+
+<CodeGroup>
+```bash Auto-detect tools
+porter setup ai
+```
+
+```bash Configure Claude Code only
+porter setup ai --tool claude-code --yes
+```
+
+```bash Preview the changes
+porter setup ai --dry-run
+```
+
+```bash Script-friendly output
+porter setup ai --tool all --yes --output json
+```
+</CodeGroup>
+
+### What gets written
+
+For each detected tool, `porter setup ai` registers an MCP server entry that runs `porter mcp serve` with your resolved project, cluster, deployment target, and repository. It also writes (or updates) `PORTER.md` at the root of the target repository with guidance for the assistant.
+
+After setup completes, open your AI assistant and ask it to use Porter, for example:
+
+> Use Porter to validate and deploy this app.
+
+---
+
+For details on the underlying server, see [`porter mcp serve`](/standard/cli/command-reference/porter-mcp).
