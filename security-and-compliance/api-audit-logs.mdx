@@ -1,0 +1,60 @@
+---
+title: "API audit logs"
+description: "View and filter a record of every API request made against your Porter project, including who made the request, what resource it targeted, and the response status."
+---
+
+API audit logs give you a chronological record of every API request made against your Porter project. Each entry captures the actor (user or token), HTTP method, target resource, source IP, response status code, and timestamp — useful for security reviews, compliance audits, and debugging unexpected changes to your project.
+
+You can view audit logs in the Porter dashboard at **Security → Audit logs**.
+
+## Viewing audit logs
+
+The audit logs page is split into two views that stay in sync as you filter:
+
+* A **volume chart** showing request counts over the selected time window.
+* A **paginated table** listing individual requests, with columns for time, actor, method, path, status code, and source IP.
+
+Click any row to expand the full request details, including the resource type, resource ID, and any request metadata Porter recorded.
+
+## Filtering audit logs
+
+Use the filter bar above the chart to narrow results. All filter values are persisted to the URL, so you can share or bookmark a filtered view.
+
+| Filter | Description |
+| --- | --- |
+| Date range | Filters by request start time. Defaults to the last 7 days. Presets are available for the last hour, 24 hours, 7 days, and 30 days, plus a custom range. |
+| Actors | Limits results to one or more users or tokens that initiated requests. |
+| Methods | Filters by HTTP method (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`). |
+| Actions | Filters by the semantic action recorded for the request (for example, `create`, `delete`, `update`). |
+| Resource types | Filters by the type of resource the request targeted (for example, applications, environment groups, clusters). |
+| Status codes | Filters by HTTP response status code. |
+| IPs | Filters by the source IP address of the request. |
+
+## Searching audit logs
+
+Above the filter bar there is a free-text **search** input that runs alongside any active filters. Use it to quickly locate requests when you know a distinctive substring — such as a path fragment, a resource name, or an actor email — without composing a multi-filter query.
+
+The search input behaves as follows:
+
+* **Debounced** — requests are issued after you stop typing, so the chart and table do not flash on every keystroke. Press **Enter** to issue the query immediately.
+* **URL-persisted** — the active term is stored in the `search` query parameter (`?search=...`) and rehydrated on refresh or when you share the link.
+* **Whitespace-safe** — empty or whitespace-only values are treated as no filter and removed from the URL.
+* **Length-limited** — the input accepts up to 255 characters.
+* **Synchronized** — both the volume chart and the table use the same search value, so totals always match the rows you see.
+* **Resets pagination** — changing the term jumps results back to page 1.
+
+Click the **X** inside the input to clear the term and remove the `search` parameter from the URL.
+
+### Example URL
+
+A bookmarkable URL combining the search term with other filters looks like:
+
+```text
+https://dashboard.porter.run/security/audit-logs?search=billing-service&methods=POST,DELETE&statusCodes=403
+```
+
+This view shows every `POST` or `DELETE` request containing `billing-service` that was rejected with a `403` over the default 7-day window.
+
+## Privacy
+
+Search terms entered into the audit logs page may contain sensitive identifiers such as user emails or API token names. Porter does **not** send raw search terms to its product analytics pipeline — only engagement signals (whether a search was active and the length of the term) are recorded.
