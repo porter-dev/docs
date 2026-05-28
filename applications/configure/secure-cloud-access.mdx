@@ -117,6 +117,16 @@ Workload identity support for GCP is **in development**. The equivalent flow on 
 
 If you'd like this enabled for your project, reach out to Porter support and we'll work with you to get early access.
 
+### Enabling Workload Identity on a node group
+
+When you turn on Workload Identity for a node group, GKE deploys a metadata server on those nodes that intercepts calls to the GCE metadata endpoint. Once enabled, pods can no longer reach the node's default Compute Engine service account through that endpoint — they obtain Google credentials through a Workload Identity–bound Kubernetes service account instead.
+
+<Warning>
+Enabling Workload Identity can interrupt workloads that rely on the node's default service account. If any pod on the node group authenticates to Google APIs using the default node service account (for example, through the GCE metadata endpoint or the default credential chain), it will lose access until it's reconfigured to use a Workload Identity–bound Kubernetes service account.
+</Warning>
+
+Before enabling it on a node group that already runs production traffic, confirm that none of its workloads depend on the default node service account. If you're not sure, create a new node group with Workload Identity enabled and [schedule your workloads](/cloud-accounts/node-groups#assigning-workloads-to-node-groups) on it to test before changing an existing node group.
+
 ---
 
 ## Related documentation
