@@ -3,18 +3,73 @@ title: "Advanced cluster settings"
 description: "Enable ECR scanning, GuardDuty, private clusters, KMS encryption, and custom networking options for your AWS and GCP Porter clusters"
 ---
 
-Porter offers advanced cluster configuration options for customers with specific compliance, security, or networking requirements. These settings are available for **AWS** and **GCP** clusters upon request and can be enabled by our support team.
-
-<Info>
-  If you're interested in enabling any of these advanced settings, please contact support via the chat widget to discuss your requirements.
-</Info>
+Porter exposes advanced cluster configuration options for customers with specific compliance, security, or networking requirements. These settings are available on the **Advanced** tab of your cluster settings for **AWS** and **GCP** clusters.
 
 <Tabs>
   <Tab title="AWS">
 
-## Compliance
+## Networking
 
-### ECR Scanning
+### Private cluster
+
+When **Private cluster** is enabled, Porter provisions the EKS cluster with **both public and private** API server endpoint access, and restricts the public endpoint to an IP allowlist containing Porter's [control-plane IPs](/security-and-compliance/porter-ip-ranges) plus any customer CIDRs you add. This configuration is SOC2 / HIPAA compliant.
+
+| Setting | Description |
+|---------|-------------|
+| **Private cluster** | Restricts the EKS API server's public endpoint to an IP allowlist (Porter's IPs plus any customer-supplied CIDRs). The private endpoint inside your VPC remains reachable from VPC-attached resources. |
+| **CIDR allowlist** | Additional CIDR ranges (beyond Porter's required IPs) that may reach the public endpoint. |
+
+<Info>
+  Porter intentionally does **not** enable EKS "private-only" endpoint mode. Private-only forces every control-plane call — including Porter's — through a VPN or VPC-peered path, which adds operational complexity and has historically caused outages for customers. Public + private with a tight IP allowlist meets the same compliance requirements and is significantly more reliable.
+</Info>
+
+The [Tailscale integration](/security-and-compliance/tailscale) is a separate layer that carries traffic for `porter kubectl` and `porter helm` commands; it does not control how the EKS API server endpoint itself is exposed.
+
+### Load balancer
+
+Configure the type of load balancer used for your cluster's ingress. Changing this setting causes downtime while the load balancer is recreated.
+
+| Type | Description |
+|------|-------------|
+| **NLB** | Network Load Balancer — operates at Layer 4, routes TCP/UDP traffic, and provides ultra-low latency and high throughput. |
+| **ALB** | Application Load Balancer — operates at Layer 7, routes HTTP/HTTPS traffic, and supports wildcard domains, ACM certificates, and WAFv2. |
+
+When **ALB** is selected, the following additional settings become available. See [Custom domains with ALB](/applications/configure/custom-domains-alb) for end-to-end setup instructions.
+
+| Setting | Description |
+|---------|-------------|
+| **Wildcard domains** | Domains to issue ACM certificates for. Do not include the `*.` prefix — Porter creates a SAN for `*.<domain>` automatically. Comma-separate multiple domains. |
+| **IP allow list** | Comma-separated list of CIDR ranges (e.g. `160.72.72.58/32,160.72.72.59/32`) permitted to reach the ALB. |
+| **Certificate ARNs** | Existing ACM certificate ARNs to attach to the ALB. |
+| **AWS tags** | Key/value tags applied to the ALB and related AWS resources. |
+| **WAFv2 enabled** | Attaches a Regional WAFv2 web ACL to the ALB. |
+| **WAFv2 ARN** | ARN of the Regional WAFv2 web ACL to attach. Only Regional WAFv2 is supported. |
+
+## Observability
+
+### CloudWatch control plane logs
+
+Configure which EKS cluster control plane log types are sent to AWS CloudWatch. These logs help with debugging, auditing, and monitoring your cluster's control plane components.
+
+| Log Type | Description |
+|----------|-------------|
+| **API Server logs** | Logs from the Kubernetes API server, useful for debugging API requests |
+| **Audit logs** | Records of individual users, administrators, or system components that have affected the cluster |
+| **Authenticator logs** | Logs from the AWS IAM authenticator, useful for debugging authentication issues |
+| **Controller manager logs** | Logs from the controller manager, which manages core control loops |
+| **Scheduler logs** | Logs from the scheduler, useful for debugging pod scheduling decisions |
+
+### CloudWatch Observability agent
+
+You may also enable the CloudWatch Observability agent as an EKS add-on for enhanced cluster monitoring.
+
+| Setting | Description |
+|---------|-------------|
+| **AWS CloudWatch Observability agent installed on cluster** | Enables the CloudWatch Observability add-on for metrics and logs collection |
+
+## Security
+
+### ECR scanning
 
 Enable Amazon ECR image scanning to automatically scan container images for software vulnerabilities.
 
@@ -31,7 +86,7 @@ AWS GuardDuty provides intelligent threat detection for your EKS cluster, monito
 
   1. Enable EKS Protection in the EKS Protection tab of the GuardDuty console
   2. Enable Runtime Monitoring
-  
+
   For automated agent configuration, enable both:
   - EKS agent auto-configuration
   - EC2 agent auto-configuration
@@ -41,58 +96,13 @@ AWS GuardDuty provides intelligent threat detection for your EKS cluster, monito
 |---------|-------------|
 | **AWS GuardDuty agent installed on cluster** | Installs the GuardDuty security agent on your cluster nodes |
 
-### KMS Encryption
+### KMS encryption
 
 Enable AWS Key Management Service (KMS) encryption for Kubernetes secrets stored in etcd.
 
 | Setting | Description |
 |---------|-------------|
 | **KMS encryption enabled** | Encrypts Kubernetes secrets at rest using a customer-managed KMS key |
-
-## AWS CloudWatch Logging
-
-Configure which EKS cluster control plane log types are sent to AWS CloudWatch. These logs help with debugging, auditing, and monitoring your cluster's control plane components.
-
-| Log Type | Description |
-|----------|-------------|
-| **API Server logs** | Logs from the Kubernetes API server, useful for debugging API requests |
-| **Audit logs** | Records of individual users, administrators, or system components that have affected the cluster |
-| **Authenticator logs** | Logs from the AWS IAM authenticator, useful for debugging authentication issues |
-| **Controller manager logs** | Logs from the controller manager, which manages core control loops |
-| **Scheduler logs** | Logs from the scheduler, useful for debugging pod scheduling decisions |
-
-### CloudWatch Observability Agent
-
-You may also enable the CloudWatch Observability agent as an EKS add-on for enhanced cluster monitoring.
-
-| Setting | Description |
-|---------|-------------|
-| **AWS CloudWatch Observability agent installed on cluster** | Enables the CloudWatch Observability add-on for metrics and logs collection |
-
-## Load Balancer
-
-Configure the type of load balancer used for your cluster's ingress.
-
-| Type | Description |
-|------|-------------|
-| **NLB** | Network Load Balancer - operates at Layer 4, provides ultra-low latency and high throughput |
-| **ALB** | Application Load Balancer - operates at Layer 7, supports advanced routing features |
-
-## Control Plane Access
-
-### Private Cluster
-
-When **Private cluster** is enabled, Porter provisions the EKS cluster with **both public and private** API server endpoint access, and restricts the public endpoint to an IP allowlist containing Porter's [control-plane IPs](/security-and-compliance/porter-ip-ranges) plus any customer CIDRs you add. This configuration is SOC2 / HIPAA compliant.
-
-| Setting | Description |
-|---------|-------------|
-| **Private cluster** | Restricts the EKS API server's public endpoint to an IP allowlist (Porter's IPs plus any customer-supplied CIDRs). The private endpoint inside your VPC remains reachable from VPC-attached resources. |
-
-<Info>
-  Porter intentionally does **not** enable EKS "private-only" endpoint mode. Private-only forces every control-plane call — including Porter's — through a VPN or VPC-peered path, which adds operational complexity and has historically caused outages for customers. Public + private with a tight IP allowlist meets the same compliance requirements and is significantly more reliable.
-</Info>
-
-The [Tailscale integration](/security-and-compliance/tailscale) is a separate layer that carries traffic for `porter kubectl` and `porter helm` commands; it does not control how the EKS API server endpoint itself is exposed.
 
   </Tab>
   <Tab title="GCP">
