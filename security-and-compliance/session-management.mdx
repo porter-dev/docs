@@ -1,0 +1,97 @@
+---
+title: "Session management"
+description: "List and revoke active Porter dashboard and CLI sessions for your own account or — as a project admin — for any member of your project"
+---
+
+<Info>
+    Session management is gated by a per-project feature flag. If the **Sessions** section is not visible in your settings, contact Porter support to have it enabled for your project.
+</Info>
+
+Porter tracks every active session created by the dashboard (browser) and the Porter CLI. Session management lets you see those sessions and revoke any that are stale, unexpected, or no longer trusted. Revoking a session invalidates its bearer token immediately, ending its usefulness for further API calls.
+
+There are two views:
+
+* **Account sessions** — your own sessions, available to every user on the account settings page.
+* **Team sessions** — every project member's sessions in one table, available to project **Admins** under the **Members** settings tab.
+
+## Account sessions
+
+To manage your own sessions, navigate to **Settings** and scroll to the **Sessions** section. The table lists each active session with:
+
+* The originating client — browser user agent or `porter-cli/<version>` for CLI sessions.
+* IP address last seen on the session.
+* When the session was created, last refreshed, and when it expires.
+* A **Current** badge on the session you are using right now.
+
+Select any sessions you no longer recognize and click **Revoke**. You can revoke your current session, but doing so will log you out of the dashboard or CLI you are using to revoke it.
+
+## Team sessions (admin)
+
+Project admins get a **Sessions** tab under **Settings → Members**. The table shows active sessions for every member of the project, attributed to the owning member's email, and supports:
+
+* Filtering by member, client type (dashboard / CLI), and when the session was started.
+* Sorting by member, started time, or expiry.
+* Bulk revocation across multiple members in a single action.
+
+Use this view to clean up sessions after offboarding a teammate, after a suspected credential compromise, or to enforce a periodic session refresh.
+
+<Info>
+    Porter staff sessions (used by Porter support when assisting your project) are only visible to — and revocable by — other Porter staff. They are filtered out of the admin view for customer admins so that support access cannot be accidentally disrupted.
+</Info>
+
+## API
+
+The same actions are available on the Porter API. All endpoints use bearer-token authentication.
+
+### List your own sessions
+
+```bash
+curl https://dashboard.porter.run/api/v2/user/sessions \
+  -H "Authorization: Bearer $PORTER_TOKEN"
+```
+
+The response includes an `is_current` flag on the session matching the token used to make the request, so clients can warn before revoking it.
+
+### Revoke one of your sessions
+
+```bash
+curl -X DELETE \
+  https://dashboard.porter.run/api/v2/user/sessions/$SESSION_ID \
+  -H "Authorization: Bearer $PORTER_TOKEN"
+```
+
+### List every member's sessions (admin)
+
+```bash
+curl https://dashboard.porter.run/api/v2/projects/$PROJECT_ID/sessions \
+  -H "Authorization: Bearer $PORTER_TOKEN"
+```
+
+Each entry is annotated with the `user_id` and `user_email` of the owning member.
+
+### Bulk-revoke project sessions (admin)
+
+```bash
+curl -X POST \
+  https://dashboard.porter.run/api/v2/projects/$PROJECT_ID/sessions/revoke \
+  -H "Authorization: Bearer $PORTER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sessions": [
+      { "user_id": 42, "session_id": "sess_abc123" },
+      { "user_id": 57, "session_id": "sess_def456" }
+    ]
+  }'
+```
+
+The response summarises the outcome:
+
+```json
+{
+  "total": 2,
+  "revoked": 2,
+  "failed": 0
+}
+```
+
+Targets are processed independently — an unknown session, or a session belonging to a user who is not a member of the project, is counted as `failed` rather than aborting the rest of the request.
