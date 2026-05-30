@@ -101,6 +101,10 @@ When you update an environment group, all applications synced to it are automati
 
 Navigate to the **Env Groups** tab, click the environment group you want to update, make your changes, and click **Update**.
 
+<Info>
+Each key in an environment group must be unique. If you add a row with a key that already exists, the editor highlights the conflicting rows, shows an inline error, and disables the **Update** button until the duplicate is resolved. To change an existing value, edit it in place rather than adding a new row with the same key.
+</Info>
+
 ### From the CLI
 
 Use `porter env set` to add or update variables, and `porter env unset` to remove them:
