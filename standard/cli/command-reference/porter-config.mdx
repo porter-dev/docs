@@ -45,6 +45,34 @@ porter config set-project 12345
 
 ---
 
+## `porter config set-login-method`
+
+Select which browser-based login flow `porter auth login` uses.
+
+**Usage:**
+<CodeGroup>
+```bash Use v2 (WorkOS PKCE, short-lived tokens)
+porter config set-login-method v2
+```
+
+```bash Use v1 (Porter JWT, long-lived token)
+porter config set-login-method v1
+```
+</CodeGroup>
+
+| Method | When to use |
+|--------|-------------|
+| `v1` (default) | CI/CD pipelines, scripts, and any environment that needs a long-lived token. |
+| `v2` | Developer machines where your organization requires session-bound credentials. Signs in through Porter SSO and stores a short-lived WorkOS access token that is refreshed automatically. |
+
+After switching, run `porter auth login` again to reauthenticate with the selected method.
+
+<Info>
+The `v2` flow is supported on Porter API hosts that have WorkOS configured. If your instance does not have WorkOS enabled, stay on `v1`.
+</Info>
+
+---
+
 ## `porter config set-cluster`
 
 Set the active cluster. This command shows a list of clusters in the current project and lets you select one.
