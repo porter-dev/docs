@@ -4,3 +4,12 @@ description: "Enable instant SOC 2 and HIPAA compliance for your infrastructure 
 ---
 
 Porter supports one-click compliant infrastructure, which ensures SOC2/HIPAA compliance for all AWS infrastructure that is managed by Porter, including EKS, RDS, S3, and auxiliary services like Cloudwatch so all infra controls on compliance management platforms such as [Oneleet](https://www.oneleet.com/) and [Thoropass](https://www.thoropass.com/) pass instantly.
+
+## Required project role[](#required-project-role "Direct link to heading")
+
+Anyone with access to a Porter project can view the compliance dashboard, including the list of vendor checks and the provisioning status of each cluster. Actions that change infrastructure are restricted by [project role](/security-and-compliance/role-based-access-control):
+
+* **Admin** and **Developer**: can enable compliance controls and re-run infrastructure provisioning for failing clusters.
+* **Viewer**: can review compliance status only. The **Enable controls** button and **Re-run infrastructure provisioning** links are hidden, and a message in the action banner explains that admin or developer access is required.
+
+If you open the cost-consent dialog without the required role, the **Enable controls** action is replaced with a **Dismiss** button and an inline notice. Ask a project admin to change your role from **Settings → Members** if you need to perform these actions.
