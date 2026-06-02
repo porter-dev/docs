@@ -147,6 +147,7 @@
           "pages": [
             "cli/installation",
             "cli/basic-usage",
+            "cli/claude-code-setup",
             {
               "group": "Command Reference",
               "pages": [

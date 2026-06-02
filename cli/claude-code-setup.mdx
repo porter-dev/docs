@@ -1,0 +1,99 @@
+---
+title: "Set up Porter AI for Claude Code"
+description: "Install the Porter Claude Code plugin and per-repo guidance with `porter setup ai` so Claude Code can drive deploy, environment, storage, and troubleshooting workflows through the Porter CLI"
+---
+
+`porter setup ai` configures [Claude Code](https://docs.anthropic.com/en/docs/claude-code) to drive Porter workflows through the existing `porter` CLI. It installs a Porter-authored Claude Code plugin made up of workflow-specific skills and writes a `CLAUDE.md` guidance block into the target repository so Claude has the operating rules it needs to deploy safely.
+
+<Note>
+This is an early prototype. Only the skills-only setup path is supported today — no MCP server, no new Porter API surfaces, and no token storage. Claude runs the same `porter` commands you would run yourself.
+</Note>
+
+## What it installs
+
+Running the command produces two changes on your machine:
+
+- **A Claude Code plugin** under `~/.porter/claude/skills-marketplace/`. The plugin is named `porter@porter-ai-skills` and bundles the following skills:
+  - `porter` — top-level router that picks the right workflow skill and enforces operating rules.
+  - `porter-deploy` — app deploys and `porter.yaml` workflows.
+  - `porter-environment` — environment variables and environment groups.
+  - `porter-storage-data` — object storage, datastores, and add-ons.
+  - `porter-troubleshooting` — logs, status, and failure triage.
+- **A `CLAUDE.md` block** in the target repository between `<!-- PORTER AI START -->` and `<!-- PORTER AI END -->` markers. The block tells Claude to use the Porter CLI, run one command at a time, confirm before mutations, and never print secret values. Re-running the command updates the block in place without touching the rest of the file.
+
+After the plugin files are written, the command registers the marketplace and installs the plugin into Claude Code using `claude plugin marketplace add` and `claude plugin install`.
+
+## Prerequisites
+
+- The [Porter CLI](/cli/installation) installed and on your `PATH`.
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and the `claude` binary on your `PATH`. The setup command still writes the plugin files if Claude Code is missing, but you will need to load them manually.
+
+## Usage
+
+Run the command from the repository you want Claude Code to deploy:
+
+```bash
+porter setup ai
+```
+
+The command prints the planned writes, asks for confirmation, applies them, and prints the next steps to start Claude Code.
+
+### Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--tool` | `auto` | AI tool to configure. Supported values: `claude-code`, `claude`, `auto`. |
+| `--repo` | current directory | Path to the repository that should receive the `CLAUDE.md` guidance block. |
+| `--skills-only` | `true` | Configure Claude Code skills without MCP. This is the only supported mode in the prototype. |
+| `--yes` | `false` | Skip the confirmation prompt and apply the planned writes. |
+| `--dry-run` | `false` | Print the planned writes without applying them. |
+| `--no-write` | `false` | Print the manual setup instructions without writing any files. |
+| `--output` | `interactive` | Output format. Supported values: `interactive`, `json`, `text`. |
+
+### Preview the plan
+
+Use `--dry-run` to see what the command would change without writing anything:
+
+```bash
+porter setup ai --dry-run --output json
+```
+
+The JSON output includes the resolved Porter binary, repo info, detected Claude Code state, planned plugin and guidance writes, any warnings, and the next steps to run.
+
+### Non-interactive setup
+
+In scripts or CI, skip the prompt with `--yes` and target a specific repository:
+
+```bash
+porter setup ai --yes --repo ./my-app --output json
+```
+
+## After setup
+
+Once setup completes, start Claude Code in the repository and ask it to perform a Porter workflow:
+
+```bash
+claude
+```
+
+Then, in Claude Code:
+
+> Use Porter to prepare and deploy this app.
+
+If the marketplace install step did not run — for example, when `claude plugin` commands are not available — load the plugin directly from disk:
+
+```bash
+claude --plugin-dir ~/.porter/claude/skills-marketplace/plugins/porter
+```
+
+## Operating rules baked into the skills
+
+The skills enforce a small set of safety rules so Claude does not surprise you:
+
+- Run one shell command at a time. No chained commands or piping unless you explicitly ask for it.
+- Show a concise plan before any Porter resource mutation or file write.
+- Require explicit confirmation before deploys, env changes, storage or datastore changes, add-on changes, or file writes.
+- Never print or summarize secret values — only key names and whether a value was touched.
+- Prefer `porter.yaml` v2 for repo-backed app configuration.
+
+These rules also appear in the `CLAUDE.md` block written into your repository, so they apply even outside of a single skill invocation.
