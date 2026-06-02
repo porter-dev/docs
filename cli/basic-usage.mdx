@@ -89,6 +89,12 @@ porter app run my-app --cluster 67890 -- bash
 ```
 </CodeGroup>
 
+## Credential Storage
+
+After `porter auth login`, your session tokens are stored in your operating system's secure credential store (macOS Keychain, Windows Credential Manager, GNOME Secret Service, or KWallet) rather than in `porter.yaml`. Tokens are automatically migrated from any older `porter.yaml` on your first run after upgrading.
+
+For details on headless environments and the `PORTER_KEYRING_PASSWORD` fallback, see [`porter config`](/standard/cli/command-reference/porter-config#credential-storage).
+
 ## Environment Variables
 
 Environment variables provide an alternative way to configure the CLI, which is especially useful in CI/CD pipelines.
@@ -100,6 +106,7 @@ Environment variables provide an alternative way to configure the CLI, which is 
 | `PORTER_TOKEN` | Authentication token | `--token` |
 | `PORTER_HOST` | Custom Porter API host | `--host` |
 | `PORTER_APP_NAME` | Default app name for commands | `--app` |
+| `PORTER_KEYRING_PASSWORD` | Password for the encrypted keyring file used in headless environments | — |
 
 <Info>
 Environment variables take precedence over values in your config file, but flags take precedence over environment variables.
