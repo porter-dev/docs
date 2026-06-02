@@ -113,9 +113,11 @@ See [Connections in porter.yaml](/applications/configuration-as-code/services/co
 
 ## GCP
 
-Workload identity support for GCP is **in development**. The equivalent flow on GKE — binding a Porter service to a Google service account via [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation) — is not yet generally available.
+Porter uses [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity) to let a service's Kubernetes service account impersonate a GCP IAM service account. Your application code can then use Google's default credential chain (e.g. `google.auth.default()` in Python, `google.NewDefaultCredentials` in Go) and tokens for the GCP service account are resolved automatically — no JSON key files mounted into the pod.
 
-If you'd like this enabled for your project, reach out to Porter support and we'll work with you to get early access.
+Workload Identity is enabled per node pool. Toggle **Enable Workload Identity** on the GKE node group your service runs on before attaching a GCP service account — see [Enabling Workload Identity on a node group](#enabling-workload-identity-on-a-node-group) below.
+
+Full self-serve UI for binding a Porter service to a Google service account is still rolling out. If you'd like this enabled for your project, reach out to Porter support and we'll work with you to get early access.
 
 ### Enabling Workload Identity on a node group
 
