@@ -130,6 +130,34 @@ Create custom node groups for specialized workloads like GPU processing, high-me
 
 ---
 
+## GKE Workload Identity (GCP)
+
+For node groups on GKE clusters, you can opt individual node pools into [Workload Identity](https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity). When enabled, the GKE metadata server runs on the node pool so pods scheduled there can impersonate a GCP IAM service account at runtime — without mounting service account keys.
+
+Enable this on any node group whose workloads need to call GCP APIs (for example, BigQuery, Cloud Storage, or Pub/Sub) using a GCP service account connection.
+
+<Steps>
+  <Step title="Edit the node group">
+    From your Porter dashboard, navigate to **Infrastructure** → your GKE cluster, and expand the node group you want to enable Workload Identity on.
+  </Step>
+  <Step title="Toggle Enable Workload Identity">
+    Switch on **Enable Workload Identity**. The toggle appears only for GCP clusters.
+  </Step>
+  <Step title="Update">
+    Scroll to the bottom and click **Update**. GKE applies the change to the node pool. Existing pods on the pool restart as nodes are rolled.
+  </Step>
+</Steps>
+
+<Warning>
+Enabling Workload Identity on an existing node group can interrupt workloads that rely on the node's default Compute Engine service account. See [Enabling Workload Identity on a node group](/applications/configure/secure-cloud-access#enabling-workload-identity-on-a-node-group) for the full impact and rollout guidance.
+</Warning>
+
+<Info>
+Leave Workload Identity disabled on node groups whose workloads don't need GCP API access. The metadata server adds a small amount of overhead per node and exposes additional metadata endpoints to pods on the pool.
+</Info>
+
+---
+
 ## Assigning Workloads to Node Groups
 
 Once your custom node group is created, assign applications to run on it:
