@@ -20,11 +20,15 @@ porter config
 
 | Flag | Description |
 |------|-------------|
-| `--show-token` | Display the CLI authentication token in the output. By default, the token is hidden for security. Pass this flag to reveal the token value. |
+| `--show-token` | Display the CLI authentication token and session credentials in the output. By default, tokens are hidden for security. Pass this flag to reveal the values. |
 
 <Info>
 Configuration values can be overridden using flags or environment variables. See [Basic Usage](/cli/basic-usage) for details.
 </Info>
+
+<Note>
+Session tokens for browser-based logins are stored in your operating system's secure credential store (macOS Keychain, Windows Credential Manager, GNOME Keyring/Secret Service, or KWallet) rather than in `porter.yaml`. The `--show-token` flag reads these values from the keyring and prints them alongside the rest of your configuration.
+</Note>
 
 ---
 
@@ -76,3 +80,27 @@ Porter stores configuration in `~/.porter/config.json`. You can also override se
 | `PORTER_CLUSTER` | Override cluster ID |
 | `PORTER_TOKEN` | Override authentication token |
 | `PORTER_HOST` | Override API host |
+
+## Credential Storage
+
+When you log in with `porter auth login`, the CLI stores your session tokens in your operating system's secure credential store:
+
+| Platform | Backend |
+|----------|---------|
+| macOS | Keychain |
+| Windows | Credential Manager (wincred) |
+| Linux (GNOME) | Secret Service / libsecret |
+| Linux (KDE) | KWallet |
+| Headless / fallback | Encrypted file at `~/.porter/keyring` |
+
+If you previously logged in with an older CLI version that wrote session tokens to `porter.yaml`, those tokens are automatically migrated to the keyring on the next run and removed from the YAML file.
+
+### Headless environments
+
+On systems without a native credential store (for example, CI containers or headless servers), Porter falls back to an encrypted file at `~/.porter/keyring`. Set `PORTER_KEYRING_PASSWORD` to control the password used to encrypt that file:
+
+```bash
+export PORTER_KEYRING_PASSWORD="your-strong-password"
+```
+
+If the variable is unset, a non-interactive default is used so token refresh can run without a TTY prompt.
