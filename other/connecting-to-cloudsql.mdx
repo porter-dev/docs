@@ -1,30 +1,58 @@
 ---
 title: "Connecting to Cloud SQL"
-description: "Connect your Porter web or worker service to a Google Cloud SQL PostgreSQL or MySQL database using the Cloud SQL Auth proxy and IAM roles"
+description: "Connect your Porter web, worker, or job service to one or more Google Cloud SQL instances using the Cloud SQL Auth Proxy and a GCP service account."
 ---
 
-Porter supports connecting to a Google Cloud SQL database using the [Cloud SQL Auth proxy](https://cloud.google.com/sql/docs/mysql/sql-proxy). This connection method provides Google Cloud users strong encryption and IAM-based authentication when accessing a MySQL, PostgreSQL, or SQL Server instance hosted on Cloud SQL.
+Porter supports connecting services to Google Cloud SQL using the [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/mysql/sql-proxy). The proxy provides strong encryption and IAM-based authentication when accessing a MySQL, PostgreSQL, or SQL Server instance hosted on Cloud SQL.
 
-If you don't already have a Cloud SQL instance, please refer to the official docs for [creating a Cloud SQL instance](https://cloud.google.com/sql/docs/mysql/create-instance).
+<Info>
+The Cloud SQL section only appears on GCP clusters. You won't see it in the Advanced tab on AWS or Azure clusters.
+</Info>
 
-##### info
+If you don't already have a Cloud SQL instance, refer to the official docs for [creating a Cloud SQL instance](https://cloud.google.com/sql/docs/mysql/create-instance).
 
-This guide will demonstrate how to securely connect to a PostgreSQL instance hosted on Cloud SQL. That said, the steps for connecting to MySQL or a generic SQL Server on Cloud SQL are virtually identical.
+## Prerequisites
 
-1. First, navigate to the **Launch** tab from the Porter dashboard and choose to create either a **Web Service** or **Worker** (depending on whether you would like to expose your service to external traffic).
-2. After naming your service and configuring any desired application settings, navigate to the **Advanced** tab under **Additional Settings** and select **Enable Google Cloud SQL Proxy**:
+- A GCP cluster provisioned through Porter.
+- At least one Cloud SQL instance in the same GCP project.
+- A GCP service account with the **Cloud SQL Client** role, added to your cluster from **Cluster settings → Connections**. Porter populates the service account dropdown in the form from this list.
 
-![Cloud SQL proxy](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/8f02cd10-0fae-4437-3ca5-ee2face91d00/large "Screen Shot 2021-04-19 at 10.23.18 PM.png")
+## Enable Cloud SQL on a service
 
-1. You will be prompted for an **Instance Connection Name**, **Database Port**, and **Service Account JSON**. First, go to your [Cloud SQL dashboard](https://console.cloud.google.com/sql/instances) and copy your database's **Instance Connection Name** into Porter:
+1. From the Porter dashboard, create a new **Web Service**, **Worker**, or **Job**, or clone an existing app.
+2. In the service config, open the **Advanced** tab.
+3. Toggle **Enable Google Cloud SQL Proxy** on.
+4. For each Cloud SQL instance you want to attach, fill in:
+   - **Instance connection name** — copy this from your [Cloud SQL dashboard](https://console.cloud.google.com/sql/instances). It uses the format `project-id:region:instance-name`.
+   - **Database port** — defaults to `5432` (PostgreSQL). Use `3306` for MySQL or `1433` for SQL Server.
+5. Click **Add instance** to attach additional Cloud SQL instances to the same service. Each instance is reachable inside your pod on `localhost` at the port you specified.
+6. Select a **Service account** from the dropdown. Only service accounts already registered on your cluster are listed.
+7. Deploy your service. The Cloud SQL Auth Proxy is injected as a sidecar, and your app code can connect to each database over `localhost:<database_port>`.
 
-![Instance connection name](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/3259bd4e-17b1-4d21-8d92-f916ad6bc400/large "Screen Shot 2021-04-19 at 10.38.36 PM.png")
+## Cloning an app with Cloud SQL
 
-1. Next, on the Porter dashboard specify the port for your database. Defaults are: Postgres: 5432, MySQL: 3306, SQLServer: 1433.
-2. Finally, copy the raw JSON of your Cloud SQL Service Account into the **Service Account JSON** field. If you don't already have a Cloud SQL Service Account, you should [create a Service Account with Cloud SQL access permissions](https://cloud.google.com/sql/docs/mysql/connect-admin-proxy#create-service-account):
+When you clone an app that uses Cloud SQL, the create-app form prefills the Cloud SQL section with all instances and the service account from the source app. Review the values, then deploy as normal.
 
-![Service Account JSON](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/23893b93-addf-4e22-9809-4483b9767600/large "Screen Shot 2021-04-19 at 10.41.48 PM.png")
+## Connecting in code
 
-1. After deploying your template, your service should be able to connect to your Cloud SQL database via `localhost`.
+Once the proxy is running as a sidecar, connect to your database using the loopback address. For example, in Python with PostgreSQL:
 
-If you would like to learn more about connecting to Cloud SQL via Auth proxy, please refer to refer to the [official Google Cloud guide](https://cloud.google.com/sql/docs/mysql/connect-kubernetes-engine) for additional information.
+```python
+import psycopg2
+
+conn = psycopg2.connect(
+    host="127.0.0.1",
+    port=5432,
+    user="my-db-user",
+    password="my-db-password",
+    dbname="my-database",
+)
+```
+
+If you attached multiple Cloud SQL instances to the same service, give each one a distinct port and use that port when connecting.
+
+## Related
+
+- [Cloud SQL Auth Proxy documentation](https://cloud.google.com/sql/docs/mysql/sql-proxy)
+- [Connecting to Cloud SQL from GKE](https://cloud.google.com/sql/docs/mysql/connect-kubernetes-engine)
+- [Cloud SQL connection in porter.yaml](/applications/configuration-as-code/services/connections#cloud-sql-connection-gcp)
