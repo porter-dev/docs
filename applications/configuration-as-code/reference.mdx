@@ -338,6 +338,19 @@ services:
         resourceGroup: my-resource-group
 ```
 
+### GCP Service Account Connection
+
+Bind a GCP IAM service account to your service for GCP API access without service account key files.
+
+```yaml
+services:
+  - name: web
+    ...
+    connections:
+      - type: gcpServiceAccount
+        serviceAccountEmail: my-app@my-project.iam.gserviceaccount.com
+```
+
 ### Cloud SQL Connection (GCP)
 
 Connect to Google Cloud SQL instances.
@@ -528,4 +541,3 @@ services:
 - [Autoscaling Configuration](/applications/configuration-as-code/services/autoscaling) - Autoscaling configuration reference
 - [Connections Configuration](/applications/configuration-as-code/services/connections) - Cloud connections reference
 - [porter apply](/standard/cli/command-reference/porter-apply) - CLI reference for deployments
-
