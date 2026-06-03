@@ -113,9 +113,29 @@ See [Connections in porter.yaml](/applications/configuration-as-code/services/co
 
 ## GCP
 
-Workload identity support for GCP is **in development**. The equivalent flow on GKE — binding a Porter service to a Google service account via [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation) — is not yet generally available.
+Porter uses [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity) to let a service's Kubernetes service account impersonate a GCP IAM service account. Your application code can then use Google's default credential chain (e.g. `google.auth.default()` in Python, `google.NewDefaultCredentials` in Go) and tokens for the GCP service account are resolved automatically — no JSON key files mounted into the pod.
 
-If you'd like this enabled for your project, reach out to Porter support and we'll work with you to get early access.
+### Step 1 — Enable Workload Identity on the node group
+
+GKE only runs the metadata server on node pools that have Workload Identity enabled. Before attaching a GCP service account to a Porter service, opt the service's node group in:
+
+1. Navigate to **Infrastructure** → your GKE cluster.
+2. Expand the node group your service runs on.
+3. Toggle **Enable Workload Identity** on and click **Update**.
+
+See [Node groups → GKE Workload Identity](/cloud-accounts/node-groups#gke-workload-identity-gcp) for details. If your service runs on a node group without Workload Identity enabled, GCP API calls from the pod fail to resolve credentials.
+
+### Step 2 — Create a GCP service account
+
+In the same GCP project as your GKE cluster, create a service account and grant it the IAM roles needed to access the specific resources your service will call.
+
+We strongly recommend following the principle of least privilege: scope roles to individual resources rather than the whole project, prefer narrow predefined roles over `Owner` or `Editor`, and create a dedicated service account per Porter service.
+
+### Step 3 — Attach the service account to your service
+
+Reach out to Porter support to bind your Porter service to the GCP service account. Wider self-serve UI for Workload Identity Federation is still rolling out.
+
+On the next deploy, your pods can call GCP APIs as the service account immediately — no application restart logic required.
 
 ### Enabling Workload Identity on a node group
 
