@@ -91,16 +91,16 @@ Only one `azureManagedIdentity` connection is permitted per service. If you need
 
 ## GCP Service Account Connection
 
-Bind a GCP IAM service account to your service for secure GCP API access without managing service account key files. Porter uses [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity) to map the service's Kubernetes service account to the IAM service account, so your application can authenticate to GCP resources using [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials).
+Bind a GCP IAM service account to your service for secure GCP API access without managing service account key files. Your application can authenticate to GCP resources using [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials), and Porter handles the identity binding for your service.
 
 ### Prerequisites
 
 Before adding this connection to your service, you must:
 
-1. Have a GCP IAM service account provisioned in the same GCP project as your GKE cluster. Porter does **not** create the IAM service account for you — provision it via the Google Cloud Console, Terraform, or the `gcloud` CLI.
+1. Have a GCP IAM service account provisioned in the same GCP project as your Porter infrastructure. Porter does **not** create the IAM service account for you — provision it via the Google Cloud Console, Terraform, or the `gcloud` CLI.
 2. Grant the IAM service account the GCP IAM roles it needs to access the resources your service will call (e.g. `roles/storage.objectViewer` on a storage bucket).
 
-When your service deploys, Porter adds an IAM policy binding on the IAM service account granting `roles/iam.workloadIdentityUser` to the Kubernetes service account Porter creates for your service. At runtime, the pod receives a projected OIDC token that GCP exchanges for an access token scoped to the IAM service account.
+When your service deploys, Porter configures the required IAM binding so the service can receive short-lived credentials scoped to the IAM service account.
 
 ### Field Reference
 
@@ -224,4 +224,3 @@ services:
 - [Worker Services](/applications/configuration-as-code/services/worker-service) - Worker service configuration
 - [Job Services](/applications/configuration-as-code/services/job-service) - Job service configuration
 - [porter.yaml Reference](/applications/configuration-as-code/reference) - Complete configuration reference
-
