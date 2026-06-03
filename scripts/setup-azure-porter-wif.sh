@@ -148,14 +148,15 @@ enable_resource_providers() {
 
 # Function to create or update custom role
 create_custom_role() {
-    print_status "Managing custom porter-aks-restricted role..."
+    ROLE_NAME="porter-aks-restricted"
+    print_status "Managing custom $ROLE_NAME role..."
 
     # Create expected role definition
     cat > /tmp/porter-role-expected.json << EOF
 {
     "assignableScopes": ["/subscriptions/${SUBSCRIPTION_ID}"],
     "description": "Grants Porter access to manage resources for an AKS cluster.",
-    "name": "porter-aks-restricted",
+    "name": "${ROLE_NAME}",
     "permissions": [
         {
             "actions": ["*"],
@@ -173,11 +174,11 @@ create_custom_role() {
 EOF
 
     # Check if role already exists
-    if [ "$(az role definition list --name "porter-aks-restricted" --query "length(@)" -o tsv)" != "0" ]; then
-        print_info "Role porter-aks-restricted already exists, checking if update is needed..."
+    if [ "$(az role definition list --name "$ROLE_NAME" --query "length(@)" -o tsv)" != "0" ]; then
+        print_info "Role $ROLE_NAME already exists, checking if update is needed..."
 
         # Get existing role definition
-        az role definition list --name "porter-aks-restricted" --output json > /tmp/porter-role-existing.json
+        az role definition list --name "$ROLE_NAME" --output json > /tmp/porter-role-existing.json
 
         # Extract relevant fields for comparison (normalize the structure)
         jq -r '.[0] | {
@@ -207,7 +208,19 @@ EOF
         if cmp -s /tmp/porter-role-existing-normalized.json /tmp/porter-role-expected-normalized.json; then
             print_success "Role is up to date, no changes needed"
         else
-            print_warning "Role definition has diverged, updating..."
+            print_warning "Role $ROLE_NAME already exists but does not match Porter's required permissions."
+            read -p "Press Enter to update it, or type a new role name to create a separate one: " USER_ROLE_INPUT
+            if [ -n "$USER_ROLE_INPUT" ]; then
+                ROLE_NAME="$USER_ROLE_INPUT"
+                rm /tmp/porter-role-existing.json /tmp/porter-role-existing-normalized.json /tmp/porter-role-expected-normalized.json
+                jq --arg name "$ROLE_NAME" '.name = $name' /tmp/porter-role-expected.json > /tmp/porter-role-new.json
+                mv /tmp/porter-role-new.json /tmp/porter-role-expected.json
+                az role definition create --role-definition /tmp/porter-role-expected.json
+                rm /tmp/porter-role-expected.json
+                print_success "New role '$ROLE_NAME' created"
+                return
+            fi
+            print_warning "Updating..."
 
             # Get the role ID (GUID) for update
             ROLE_ID=$(jq -r '.[0].id' /tmp/porter-role-existing.json)
@@ -244,6 +257,18 @@ EOF
 
 # Function to create app registration and service principal
 create_app_registration() {
+    TENANT_ID=$(az account show --query tenantId -o tsv)
+
+    # Reuse existing app registration if one already exists
+    EXISTING=$(az ad app list --display-name "azure-porter-federated-sp" --query "[0].appId" -o tsv 2>/dev/null)
+    if [ -n "$EXISTING" ] && [ "$EXISTING" != "None" ]; then
+        print_info "App registration already exists, reusing it..."
+        APP_ID="$EXISTING"
+        APP_OBJECT_ID=$(az ad app show --id "$APP_ID" --query id -o tsv)
+        print_success "Using existing app registration (Client ID: $APP_ID)"
+        return
+    fi
+
     print_status "Creating app registration..."
 
     APP_OUTPUT=$(az ad app create --display-name "azure-porter-federated-sp")
@@ -260,10 +285,8 @@ create_app_registration() {
 
     az role assignment create \
         --assignee "$APP_ID" \
-        --role "porter-aks-restricted" \
+        --role "$ROLE_NAME" \
         --scope "/subscriptions/${SUBSCRIPTION_ID}" > /dev/null
-
-    TENANT_ID=$(az account show --query tenantId -o tsv)
 
     print_success "App registration created"
 }
