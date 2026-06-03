@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# Porter Azure Workload Identity Federation Setup Script
-# Sets up an Azure App Registration with a federated identity credential for Porter.
-# No client secret is generated — Porter authenticates via OIDC instead.
+# Porter Azure Setup Script
+# Automates the Azure cloud provider setup for Porter using federated identity credentials.
 
 set -e
 
@@ -148,7 +147,7 @@ enable_resource_providers() {
 
 # Function to create or update custom role
 create_custom_role() {
-    ROLE_NAME="porter-aks-restricted"
+    ROLE_NAME="porter-aks-restricted-test"
     print_status "Managing custom $ROLE_NAME role..."
 
     # Create expected role definition
