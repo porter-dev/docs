@@ -1,0 +1,99 @@
+---
+title: "GCP permissions required for Porter"
+sidebarTitle: "GCP Roles & Permissions"
+description: "Review the IAM roles, custom role, deny policy, and resource tags that Porter creates in your GCP project to manage Kubernetes infrastructure"
+---
+
+Porter manages your GCP infrastructure through a single service account in your project. This page covers what that service account is granted, the optional security hardening Porter can layer on top, and how to scope down the permissions Porter holds.
+
+For instructions on creating the service account and uploading its key, see [Connecting a cloud account](/cloud-accounts/connecting-a-cloud-account).
+
+## Service account
+
+When you connect a GCP project to Porter, you grant a single service account the **Project IAM Admin** role (`roles/resourcemanager.projectIamAdmin`). Porter uses this bootstrap role to enable required APIs and grant itself the rest of the permissions it needs. After the initial sync, Porter does not require any manual permission changes.
+
+## Default roles
+
+By default, Porter binds the following predefined roles to its service account in your project:
+
+| Role | Purpose |
+|------|---------|
+| `roles/resourcemanager.projectIamAdmin` | Manage IAM bindings for Porter-owned resources |
+| `roles/serviceusage.serviceUsageAdmin` | Enable required GCP APIs |
+| `roles/iam.roleAdmin` | Manage the optional Porter custom role (see below) |
+| `roles/iam.denyAdmin` | Manage the optional deny policy (see below) |
+| `roles/container.admin` | Provision and manage GKE clusters |
+| `roles/container.defaultNodeServiceAccount` | Workload Identity binding for GKE nodes |
+| `roles/resourcemanager.tagAdmin` | Manage the `porter.run-managed` resource tag |
+
+Additional service-specific roles (such as `roles/storage.admin`, `roles/cloudkms.admin`, `roles/secretmanager.admin`, `roles/artifactregistry.admin`, and `roles/compute.networkAdmin`) are granted to provision and manage cluster-supporting resources like GCS buckets, KMS keys, Secret Manager secrets, Artifact Registry repositories, and VPCs.
+
+## Resource tagging
+
+Porter binds the **`porter.run-managed=true`** Resource Manager tag to every resource it provisions in your GCP project, including:
+
+- GKE clusters
+- VPC networks
+- KMS key rings and crypto keys
+- Secret Manager secrets
+- Cloud Storage buckets
+- Artifact Registry repositories
+
+This tag is the GCP equivalent of the `porter.run/managed: true` tag used on AWS. The short name uses a dash instead of a slash because GCP Resource Manager tag short names cannot contain forward slashes.
+
+The tag is created on the first sync of your project and bound to resources as Porter creates them. It cannot be removed without also removing Porter's ability to manage the affected resource.
+
+You can use this tag to:
+
+- Filter Porter-managed resources in billing and inventory reports
+- Build organization policies that target only Porter-managed infrastructure
+- Distinguish Porter-managed resources from your own when auditing your project
+
+## Custom role (optional)
+
+For projects that need to enforce a least-privilege posture, Porter can replace the broad predefined roles (like `roles/storage.admin` and `roles/compute.admin`) with a **project-scoped custom role** named `porterManager`. This role grants only the specific permissions Porter actually uses.
+
+When enabled:
+
+- Porter creates a custom role at `projects/{project}/roles/porterManager`
+- The role is bound to the Porter service account in place of the broad predefined roles
+- Porter keeps the role's permission set in sync on every reconcile
+
+This feature is gated and rolled out per project. To enable custom-role enforcement for your project, contact Porter support.
+
+## Deny policy (optional)
+
+In addition to scoping down what the Porter service account *can* do, Porter can install an **IAM v2 deny policy** that explicitly blocks the Porter service account from performing destructive operations on resources that are not tagged `porter.run-managed=true`.
+
+The deny policy is attached to your GCP project and denies the Porter service account from these operations on un-tagged resources:
+
+- `delete` on GCS buckets and objects, KMS crypto key versions, Secret Manager secrets, GKE clusters, VPC networks, and Artifact Registry repositories
+- `update` on the same resource types
+- `setIamPolicy` on KMS keys/key rings, Secret Manager secrets, GCS buckets, GKE clusters, and Artifact Registry repositories
+- `destroy` on KMS crypto key versions and Secret Manager secret versions
+- `disable` on Secret Manager secret versions
+- `deleteArtifacts` on Artifact Registry repositories
+
+Read permissions (`get`, `list`, `access`, `use`) and create permissions are intentionally **not** denied. Customer workloads running on GKE inherit the Porter service account as their node identity by default, and denying reads would break those workloads.
+
+The deny rule uses a CEL condition that evaluates the `porter.run-managed` tag on the target resource: if the resource does not carry `porter.run-managed=true`, the listed permissions are denied. Resources Porter creates are tagged automatically, so the policy is a no-op for Porter's normal operations. The effect is to prevent the Porter service account from being able to delete or modify resources you create and manage outside Porter.
+
+<Warning>
+Before enabling the deny policy, verify that every Porter-managed resource in your project carries the `porter.run-managed=true` tag. Resources created by Porter before tagging was introduced may need to be retagged. Contact Porter support to coordinate the rollout.
+</Warning>
+
+### Workload Identity exception
+
+The deny rule includes an exception for the GKE Workload Identity pool (`{projectId}.svc.id.goog`). Pods that authenticate as customer-owned GCP service accounts via Workload Identity Federation are not subject to the deny policy — only the Porter service account itself is.
+
+This feature is gated and rolled out per project. To enable the deny policy for your project, contact Porter support.
+
+## Revoking access
+
+To revoke Porter's access:
+
+1. Delete any clusters through the Porter dashboard
+2. In the GCP Console, navigate to **IAM & Admin** → **Service Accounts**
+3. Find and delete the Porter service account
+
+Removing the service account stops Porter from being able to manage anything in your project. The `porter.run-managed` tag and any deny policy installed by Porter remain in place; you can remove them manually after revoking access.
