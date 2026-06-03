@@ -167,6 +167,24 @@ Environment groups can be deleted from the **Settings** tab on the environment g
 You cannot delete an environment group that is synced to an application. Unsync the environment group from all applications before deleting it.
 </Warning>
 
+## Troubleshooting
+
+### Cloud permission errors on create
+
+Because environment group secrets are written to your cloud account's secret manager, the Porter role on the connected cloud account needs permission to manage secrets in the selected region. If those permissions are missing, creating an environment group fails with:
+
+```
+403 the connected cloud account is missing permissions to manage secrets. Check that the Porter role has secrets manager access in the selected region, then try again.
+```
+
+To resolve this, confirm that the Porter role has the following access on the cloud account you are creating the environment group in:
+
+- **AWS** — `secretsmanager:CreateSecret`, `secretsmanager:PutSecretValue`, `secretsmanager:GetSecretValue`, `secretsmanager:UpdateSecret`, and `sts:AssumeRole` for the Porter role.
+- **GCP** — `secretmanager.secrets.create`, `secretmanager.versions.add`, and `secretmanager.versions.access` on the project.
+- **Azure** — `Key Vault Secrets Officer` (or equivalent get/set permissions) on the Key Vault used by the connected cloud account.
+
+After updating the role, retry the create. The same permissions are required for any later updates to the environment group.
+
 ## CLI Reference
 
 For the full list of flags and options, see the [porter env](/standard/cli/command-reference/porter-env) CLI reference.
