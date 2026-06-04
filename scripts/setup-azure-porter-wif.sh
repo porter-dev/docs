@@ -1,36 +1,41 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Porter Azure Setup Script
 # Automates the Azure cloud provider setup for Porter using federated identity credentials.
 
-set -e
+set -eo pipefail
 
 # Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+RED=$'\E[0;31m'
+GREEN=$'\E[0;32m'
+YELLOW=$'\E[1;33m'
+BLUE=$'\E[0;34m'
+NC=$'\E[0m'
 
 # Function to print colored output
 print_status() {
-    echo -e "${BLUE}$1${NC}"
+    echo "${BLUE}$1${NC}"
 }
 
 print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo "${GREEN}✅ $1${NC}"
 }
 
 print_warning() {
-    echo -e "${YELLOW}$1${NC}"
+    echo "${YELLOW}$1${NC}"
 }
 
 print_error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo "${RED}❌ $1${NC}"
 }
 
 print_info() {
-    echo -e "${YELLOW}$1${NC}"
+    echo "${YELLOW}$1${NC}"
+}
+
+print_fatal() {
+    print_error "$@"
+    return 1
 }
 
 # Function to check prerequisites
@@ -39,14 +44,12 @@ check_prerequisites() {
 
     # Check if Azure CLI is installed
     if ! command -v az &> /dev/null; then
-        print_error "Azure CLI not found. Please install it from https://docs.microsoft.com/en-us/cli/azure/install-azure-cli"
-        exit 1
+        print_fatal "Azure CLI not found. Please install it from https://docs.microsoft.com/en-us/cli/azure/install-azure-cli"
     fi
 
     # Check if logged in
     if ! az account show &> /dev/null; then
-        print_error "Not logged in to Azure CLI. Please run 'az login' first"
-        exit 1
+        print_fatal "Not logged in to Azure CLI. Please run 'az login' first"
     fi
 
     print_success "Prerequisites check passed"
@@ -63,20 +66,18 @@ get_subscription_id() {
         print_status "Available subscriptions:"
         az account list --query "[].{Name:name, SubscriptionId:id, State:state}" -o table
         echo ""
-        read -p "Enter the subscription ID you want to use: " SUBSCRIPTION_ID
+        read -rp "Enter the subscription ID you want to use: " SUBSCRIPTION_ID
 
         if [ -z "$SUBSCRIPTION_ID" ]; then
-            print_error "Subscription ID is required"
-            exit 1
+            print_fatal "Subscription ID is required"
         fi
     fi
 
     # Validate subscription ID exists and is accessible
     if ! az account show --subscription "$SUBSCRIPTION_ID" &> /dev/null; then
-        print_error "Subscription '$SUBSCRIPTION_ID' not found or not accessible"
         print_info "Available subscriptions:"
         az account list --query "[].{Name:name, SubscriptionId:id, State:state}" -o table
-        exit 1
+        print_fatal "Subscription '$SUBSCRIPTION_ID' not found or not accessible"
     fi
 
     # Get subscription details for confirmation
@@ -84,8 +85,7 @@ get_subscription_id() {
     SUB_STATE=$(az account show --subscription "$SUBSCRIPTION_ID" --query state -o tsv)
 
     if [ "$SUB_STATE" != "Enabled" ]; then
-        print_error "Subscription '$SUBSCRIPTION_ID' is not enabled (state: $SUB_STATE)"
-        exit 1
+        print_fatal "Subscription '$SUBSCRIPTION_ID' is not enabled (state: $SUB_STATE)"
     fi
 
     # Set the subscription as active
@@ -103,17 +103,15 @@ get_oidc_subject() {
         echo ""
         print_info "Copy the OIDC subject shown in Porter during the Azure cloud account connection steps."
         echo ""
-        read -p "Enter the OIDC subject (e.g. porter:azure:42): " OIDC_SUBJECT
+        read -rp "Enter the OIDC subject (e.g. porter:azure:42): " OIDC_SUBJECT
 
         if [ -z "$OIDC_SUBJECT" ]; then
-            print_error "OIDC subject is required"
-            exit 1
+            print_fatal "OIDC subject is required"
         fi
     fi
 
     if [[ ! "$OIDC_SUBJECT" =~ ^porter:azure:[0-9]+$ ]]; then
-        print_error "OIDC subject must be in the format porter:azure:<projectId> (e.g. porter:azure:42)"
-        exit 1
+        print_fatal "OIDC subject must be in the format porter:azure:<projectId> (e.g. porter:azure:42)"
     fi
 
     print_success "Using OIDC subject: $OIDC_SUBJECT"
@@ -208,7 +206,7 @@ EOF
             print_success "Role is up to date, no changes needed"
         else
             print_warning "Role $ROLE_NAME already exists but does not match Porter's required permissions."
-            read -p "Press Enter to update it, or type a new role name to create a separate one: " USER_ROLE_INPUT
+            read -rp "Press Enter to update it, or type a new role name to create a separate one: " USER_ROLE_INPUT
             if [ -n "$USER_ROLE_INPUT" ]; then
                 ROLE_NAME="$USER_ROLE_INPUT"
                 rm /tmp/porter-role-existing.json /tmp/porter-role-existing-normalized.json /tmp/porter-role-expected-normalized.json
@@ -231,8 +229,7 @@ EOF
             if az role definition update --role-definition /tmp/porter-role-update.json; then
                 print_success "Role updated successfully"
             else
-                print_error "Failed to update role"
-                exit 1
+                print_fatal "Failed to update role"
             fi
 
             rm /tmp/porter-role-update.json
@@ -246,8 +243,7 @@ EOF
         if az role definition create --role-definition /tmp/porter-role-expected.json; then
             print_success "Custom role created"
         else
-            print_error "Failed to create role"
-            exit 1
+            print_fatal "Failed to create role"
         fi
     fi
 
@@ -275,8 +271,7 @@ create_app_registration() {
     APP_OBJECT_ID=$(echo "$APP_OUTPUT" | jq -r '.id')
 
     if [ -z "$APP_ID" ] || [ "$APP_ID" = "null" ]; then
-        print_error "Failed to create app registration"
-        exit 1
+        print_fatal "Failed to create app registration"
     fi
 
     az ad sp create --id "$APP_ID" > /dev/null
@@ -313,8 +308,7 @@ add_api_permissions() {
     msgraph_sp=$(az ad sp show --id "$MSGRAPH_APP_ID" --query "appRoles[?value != null].{value:value,id:id}" -o json)
 
     if [ "$msgraph_sp" = "null" ] || [ -z "$msgraph_sp" ]; then
-        print_error "Failed to fetch Microsoft Graph service principal"
-        exit 1
+        print_fatal "Failed to fetch Microsoft Graph service principal"
     fi
 
     # Get existing permissions to avoid duplicates
@@ -374,12 +368,13 @@ create_federated_credential() {
 
     PROJECT_ID="${OIDC_SUBJECT##*:}"
     FIC_NAME="porter-project-${PROJECT_ID}"
+    ISSUER="${PORTER_ISSUER:-https://oidc.porter.run}"
 
     az ad app federated-credential create \
         --id "$APP_OBJECT_ID" \
         --parameters "{
             \"name\": \"${FIC_NAME}\",
-            \"issuer\": \"https://oidc.porter.run\",
+            \"issuer\": \"${ISSUER}\",
             \"subject\": \"${OIDC_SUBJECT}\",
             \"audiences\": [\"api://AzureADTokenExchange\"]
         }" > /dev/null
@@ -432,16 +427,15 @@ main() {
         exit 0
     fi
 
-    echo -e "${GREEN}Starting Azure Workload Identity Federation setup for Porter...${NC}"
+    echo "${GREEN}Starting Azure Workload Identity Federation setup for Porter...${NC}"
     echo ""
 
     # Check if jq is installed
     if ! command -v jq &> /dev/null; then
-        print_error "jq is required but not installed. Please install jq first:"
         echo "  macOS: brew install jq"
         echo "  Ubuntu/Debian: sudo apt-get install jq"
         echo "  CentOS/RHEL: sudo yum install jq"
-        exit 1
+        print_fatal "jq is required but not installed. Please install jq first."
     fi
 
     check_prerequisites
