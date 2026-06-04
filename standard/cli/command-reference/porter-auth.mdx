@@ -36,6 +36,13 @@ porter auth login --token <YOUR_TOKEN>
 After logging in, Porter automatically sets your default project and cluster if you have access to any. You can view these with `porter config`.
 </Info>
 
+### Credential storage
+
+The location where credentials are persisted depends on the login method configured via [`porter config set-login-method`](/standard/cli/command-reference/porter-config#porter-config-set-login-method):
+
+- **`v1` (default):** A long-lived Porter JWT is written to `porter.yaml`.
+- **`v2`:** Access and refresh tokens are stored in your OS credential store (macOS Keychain, Linux Secret Service, or Windows Credential Manager) and refreshed automatically. Switching to `v2` and logging in migrates any existing plaintext tokens out of `porter.yaml`.
+
 ---
 
 ## `porter auth logout`
