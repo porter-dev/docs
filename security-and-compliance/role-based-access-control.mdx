@@ -6,8 +6,12 @@ description: "Assign admin, developer, or viewer roles to team members with SSO 
 Porter supports setting basic authorization permissions via for other members in a Porter project. At the moment, there are 3 roles that can be assigned in a Porter project:
 
 * **Admin:** read/write access to all resources, ability to delete the project and manage team members.
-* **Developer:** read/write access to applications, jobs, environment groups, cluster data, and integrations.
-* **Viewer:** read access to applications, jobs, environment groups, and cluster data.
+* **Developer:** read/write access to applications, jobs, environment groups, cluster data, and integrations. Required to list datastores, view datastore details, or reveal datastore connection credentials.
+* **Viewer:** read access to applications, jobs, environment groups, and cluster data. Cannot list datastores or access datastore connection credentials.
+
+<Info>
+    Datastore endpoints that expose connection details (listing datastores, fetching a datastore, and revealing its credentials) require at least the **Developer** role. Viewers attempting to access these endpoints will receive a permissions error.
+</Info>
 
 ## Adding Collaborators[](#adding-collaborators "Direct link to heading")
 
