@@ -94,6 +94,16 @@ get_subscription_id() {
     print_success "Using subscription: $SUB_NAME ($SUBSCRIPTION_ID)"
 }
 
+# Function to get app registration name
+get_app_name() {
+    if [ -n "$1" ]; then
+        APP_NAME="$1"
+    else
+        APP_NAME="azure-porter-federated-sp"
+    fi
+    print_success "Using app registration name: $APP_NAME"
+}
+
 # Function to get and validate OIDC subject
 get_oidc_subject() {
     # Check if OIDC subject was provided as argument
@@ -255,7 +265,7 @@ create_app_registration() {
     TENANT_ID=$(az account show --query tenantId -o tsv)
 
     # Reuse existing app registration if one already exists
-    EXISTING=$(az ad app list --display-name "azure-porter-federated-sp" --query "[0].appId" -o tsv 2>/dev/null)
+    EXISTING=$(az ad app list --display-name "$APP_NAME" --query "[0].appId" -o tsv 2>/dev/null)
     if [ -n "$EXISTING" ] && [ "$EXISTING" != "None" ]; then
         print_info "App registration already exists, reusing it..."
         APP_ID="$EXISTING"
@@ -266,7 +276,7 @@ create_app_registration() {
 
     print_status "Creating app registration..."
 
-    APP_OUTPUT=$(az ad app create --display-name "azure-porter-federated-sp")
+    APP_OUTPUT=$(az ad app create --display-name "$APP_NAME")
     APP_ID=$(echo "$APP_OUTPUT" | jq -r '.appId')
     APP_OBJECT_ID=$(echo "$APP_OUTPUT" | jq -r '.id')
 
@@ -407,25 +417,35 @@ display_results() {
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 [SUBSCRIPTION_ID] [OIDC_SUBJECT]"
+    echo "Usage: $0 [--subscription SUBSCRIPTION_ID] [--subject OIDC_SUBJECT] [--app-name APP_NAME]"
     echo ""
-    echo "  SUBSCRIPTION_ID  Optional: Azure subscription ID to use"
+    echo "  --subscription   Azure subscription ID to use"
     echo "                   If not provided, you'll be prompted to select one"
-    echo "  OIDC_SUBJECT     Porter OIDC subject (e.g. porter:azure:42)"
+    echo "  --subject        Porter OIDC subject (e.g. porter:azure:42)"
     echo "                   Copy this from Porter during the Azure cloud account connection steps"
+    echo "  --app-name       Azure app registration name (default: azure-porter-federated-sp)"
+    echo "                   Use a unique name per dev environment to avoid collisions"
     echo ""
-    echo "Example:"
-    echo "  $0 xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx porter:azure:42"
+    echo "Examples:"
+    echo "  $0"
+    echo "  $0 --subscription xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx --subject porter:azure:42"
+    echo "  $0 --subject porter:azure:42 --app-name azure-porter-dev-name"
     echo ""
 }
 
 # Main execution
 main() {
-    # Show help if requested
-    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-        show_usage
-        exit 0
-    fi
+    local arg_subscription="" arg_subject="" arg_app_name=""
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help) show_usage; exit 0 ;;
+            --subscription) arg_subscription="$2"; shift 2 ;;
+            --subject) arg_subject="$2"; shift 2 ;;
+            --app-name) arg_app_name="$2"; shift 2 ;;
+            *) print_fatal "Unknown argument: $1. Use --help for usage." ;;
+        esac
+    done
 
     echo "${GREEN}Starting Azure Workload Identity Federation setup for Porter...${NC}"
     echo ""
@@ -439,8 +459,9 @@ main() {
     fi
 
     check_prerequisites
-    get_subscription_id "$1"
-    get_oidc_subject "$2"
+    get_subscription_id "$arg_subscription"
+    get_oidc_subject "$arg_subject"
+    get_app_name "$arg_app_name"
     enable_resource_providers
     create_custom_role
     create_app_registration
