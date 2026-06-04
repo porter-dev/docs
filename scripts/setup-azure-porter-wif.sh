@@ -429,7 +429,7 @@ show_usage() {
     echo "Examples:"
     echo "  $0"
     echo "  $0 --subscription xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx --subject porter:azure:42"
-    echo "  $0 --subject porter:azure:42 --app-name azure-porter-dev-cathy"
+    echo "  $0 --subject porter:azure:42 --app-name azure-porter-dev-name"
     echo ""
 }
 
