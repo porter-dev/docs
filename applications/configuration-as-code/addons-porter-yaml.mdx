@@ -83,9 +83,9 @@ addons:
       config:
         name: cache
         masterUserPassword: password
-        allocatedStorage: 2 # Persistent storage size in GB. Cannot be changed after creation.
         cpuCores: 0.1
         ramMegabytes: 110
+        storageGigabytes: 2 # Persistent storage size in GB.
   - name: db
     type: MANAGED-POSTGRES
     engine: POSTGRES
@@ -93,8 +93,24 @@ addons:
       config:
         name: db
         masterUserPassword: password
-        allocatedStorage: 2
         cpuCores: 0.1
         ramMegabytes: 110
+        storageGigabytes: 2
 ```
+
+## Resource configuration
+
+Managed Postgres and Redis addons accept the following resource fields under `values.config`:
+
+| Field | Type | Description | UI range |
+| :--- | :--- | :--- | :--- |
+| `cpuCores` | number | CPU allocation for the addon (e.g. `0.1`, `0.5`, `1`). | Bounded by the cluster node size. |
+| `ramMegabytes` | integer | Memory allocation in megabytes. | Bounded by the cluster node size. |
+| `storageGigabytes` | integer | Persistent storage size in GB. | `1`–`100` GB. |
+
+You can also edit these values from the **Resources** tab of the Postgres or Redis addon in the Porter dashboard, which exposes CPU, RAM, and Storage sliders.
+
+<Info>
+The dashboard sliders clamp `storageGigabytes` at **100 GB**. To allocate more, set the value directly in `porter.yaml` — values above 100 declared in YAML are preserved as-is and are not silently clamped.
+</Info>
 
