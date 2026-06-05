@@ -129,6 +129,33 @@ Provisions an Amazon Elasticache replication group with:
 
 ---
 
+## Managing resources
+
+After a datastore is created, you can adjust its compute and storage allocation from the **Resources** tab when viewing the datastore in the Porter dashboard.
+
+### Compute
+
+Change the instance type to scale CPU and memory up or down. The selector lists every instance class compatible with your datastore engine (RDS, Aurora, or Elasticache).
+
+### Storage
+
+For RDS datastores, the **Resources** tab includes a **Storage** section where you can increase the allocated disk size.
+
+- **Disk size**: Enter the new size in GB. The input enforces a minimum equal to the currently allocated size and a maximum of 20,480 GB.
+- **Utilization bar**: Displays current usage, available capacity, and any newly available capacity from a pending increase, so you can see the impact of your change before applying it.
+
+<Warning>
+Storage increases are supported, but decreases are not. Plan your increases carefully — once applied, the new size becomes the new minimum.
+</Warning>
+
+<Info>
+Storage controls are only available for standard RDS datastores. Aurora manages storage automatically, in-cluster datastores have fixed storage, and Elasticache does not use disk storage.
+</Info>
+
+Click **Update** to apply pending compute and storage changes together. The datastore performs a modification in place, which may briefly affect availability depending on the engine and configuration.
+
+---
+
 ## Monitoring
 
 You can monitor the performance of your database from the Porter dashboard. Metrics are available in the "Metrics" tab when opening a datastore.
