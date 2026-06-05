@@ -372,19 +372,28 @@ grant_admin_consent() {
     print_success "Admin consent granted"
 }
 
+# Function to get and validate OIDC issuer
+get_oidc_issuer() {
+    if [ -n "$1" ]; then
+        OIDC_ISSUER="$1"
+    else
+        print_fatal "--issuer is required"
+    fi
+    print_success "Using OIDC issuer: $OIDC_ISSUER"
+}
+
 # Function to create federated identity credential
 create_federated_credential() {
     print_status "Creating federated identity credential..."
 
     PROJECT_ID="${OIDC_SUBJECT##*:}"
     FIC_NAME="porter-project-${PROJECT_ID}"
-    ISSUER="${PORTER_ISSUER:-https://oidc.porter.run}"
 
     az ad app federated-credential create \
         --id "$APP_OBJECT_ID" \
         --parameters "{
             \"name\": \"${FIC_NAME}\",
-            \"issuer\": \"${ISSUER}\",
+            \"issuer\": \"${OIDC_ISSUER}\",
             \"subject\": \"${OIDC_SUBJECT}\",
             \"audiences\": [\"api://AzureADTokenExchange\"]
         }" > /dev/null
@@ -417,31 +426,33 @@ display_results() {
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 [--subscription SUBSCRIPTION_ID] [--subject OIDC_SUBJECT] [--app-name APP_NAME]"
+    echo "Usage: $0 [--subject OIDC_SUBJECT] [--issuer OIDC_ISSUER] [--subscription SUBSCRIPTION_ID] [--app-name APP_NAME]"
     echo ""
-    echo "  --subscription   Azure subscription ID to use"
-    echo "                   If not provided, you'll be prompted to select one"
     echo "  --subject        Porter OIDC subject (e.g. porter:azure:42)"
     echo "                   Copy this from Porter during the Azure cloud account connection steps"
+    echo "  --issuer         Porter OIDC issuer URL (e.g. https://oidc.porter.run)"
+    echo "  --subscription   Azure subscription ID to use"
+    echo "                   If not provided, you'll be prompted to select one"
     echo "  --app-name       Azure app registration name (default: azure-porter-federated-sp)"
-    echo "                   Use a unique name per dev environment to avoid collisions"
+    echo "                   Use a unique name per Porter environment to avoid collisions"
     echo ""
     echo "Examples:"
-    echo "  $0"
-    echo "  $0 --subscription xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx --subject porter:azure:42"
-    echo "  $0 --subject porter:azure:42 --app-name azure-porter-dev-name"
+    echo "  $0 --subject porter:azure:42 --issuer https://oidc.porter.run"
+    echo "  $0 --subject porter:azure:42 --issuer https://oidc.porter.run --subscription xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    echo "  $0 --subject porter:azure:42 --issuer https://oidc.dev-porter.run --app-name azure-porter-dev-name"
     echo ""
 }
 
 # Main execution
 main() {
-    local arg_subscription="" arg_subject="" arg_app_name=""
+    local arg_subscription="" arg_subject="" arg_app_name="" arg_issuer=""
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -h|--help) show_usage; exit 0 ;;
             --subscription) arg_subscription="$2"; shift 2 ;;
             --subject) arg_subject="$2"; shift 2 ;;
+            --issuer) arg_issuer="$2"; shift 2 ;;
             --app-name) arg_app_name="$2"; shift 2 ;;
             *) print_fatal "Unknown argument: $1. Use --help for usage." ;;
         esac
@@ -461,6 +472,7 @@ main() {
     check_prerequisites
     get_subscription_id "$arg_subscription"
     get_oidc_subject "$arg_subject"
+    get_oidc_issuer "$arg_issuer"
     get_app_name "$arg_app_name"
     enable_resource_providers
     create_custom_role
