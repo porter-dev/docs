@@ -426,7 +426,7 @@ display_results() {
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 --subject OIDC_SUBJECT --issuer OIDC_ISSUER [--subscription SUBSCRIPTION_ID] [--app-name APP_NAME]"
+    echo "Usage: $0 [--subject OIDC_SUBJECT] [--issuer OIDC_ISSUER] [--subscription SUBSCRIPTION_ID] [--app-name APP_NAME]"
     echo ""
     echo "  --subject        Porter OIDC subject (e.g. porter:azure:42)"
     echo "                   Copy this from Porter during the Azure cloud account connection steps"
