@@ -129,6 +129,48 @@ Provisions an Amazon Elasticache replication group with:
 
 ---
 
+## Managing resources after creation
+
+Open a datastore from the dashboard and use the **Resources** and **Settings** tabs to adjust capacity and engine version in place. Changes are previewed before they are applied, and you must acknowledge the diff before Porter submits the update.
+
+### Resources tab
+
+The **Resources** tab lets you resize an existing RDS or Aurora datastore without recreating it.
+
+- **Instance type** — Pick a new RDS or Aurora-compatible instance class. Porter shows the current selection and only enables the update button when the form is dirty.
+- **Allocated storage** (RDS only) — Increase the disk size in GB. The usage bar shows currently used storage, currently available headroom, and the additional headroom you are about to provision. Decreases are not supported by RDS and are blocked in the form. Aurora storage continues to autoscale and does not expose a disk size control.
+
+When you submit a change, Porter runs a dry run against the contract and shows a diff modal. Confirming the diff applies the patch; resetting discards your pending edits.
+
+<Info>
+In-cluster Postgres and Redis datastores have fixed CPU/RAM limits and a fixed disk size. The Resources tab is only available for managed RDS, Aurora, and Elasticache datastores.
+</Info>
+
+### Upgrading PostgreSQL versions
+
+RDS and Aurora datastores expose a PostgreSQL version selector in the **Settings** tab. Use it to perform an in-place engine upgrade.
+
+<Steps>
+  <Step title="Open the Settings tab">
+    Select your Postgres datastore in the dashboard and open the **Settings** tab.
+  </Step>
+  <Step title="Pick a target version">
+    The selector lists the versions AWS currently offers for your engine in the datastore's region. Only versions greater than or equal to the current version are shown — downgrades are not supported.
+  </Step>
+  <Step title="Review the dry-run diff">
+    Porter runs a dry run and opens a confirmation modal showing exactly what will change on the datastore contract.
+  </Step>
+  <Step title="Confirm the upgrade">
+    Acknowledge the diff to apply the upgrade. The datastore status reflects the in-progress modification until AWS finishes the version change.
+  </Step>
+</Steps>
+
+<Info>
+The version selector is only shown for managed RDS and Aurora Postgres datastores. In-cluster Postgres uses a pinned image and is not upgradeable from this UI. Viewers cannot submit version updates.
+</Info>
+
+---
+
 ## Monitoring
 
 You can monitor the performance of your database from the Porter dashboard. Metrics are available in the "Metrics" tab when opening a datastore.
