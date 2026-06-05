@@ -439,7 +439,7 @@ show_usage() {
     echo "Examples:"
     echo "  $0 --subject porter:azure:42 --issuer https://oidc.porter.run"
     echo "  $0 --subject porter:azure:42 --issuer https://oidc.porter.run --subscription xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-    echo "  $0 --subject porter:azure:42 --issuer https://oidc.dev-porter.run --app-name azure-porter-dev-cathy"
+    echo "  $0 --subject porter:azure:42 --issuer https://oidc.dev-porter.run --app-name azure-porter-dev-name"
     echo ""
 }
 
