@@ -140,9 +140,73 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
 
     ## Create the Service Principal
 
-    You can create the service principal using our automated script (recommended) or manually.
+    You can create the service principal using our automated script (recommended) or manually. If your project has Azure Workload Identity Federation enabled, use the WIF setup instead—it issues short-lived federated tokens rather than a static client secret, so there's no password to rotate.
 
     <AccordionGroup>
+      <Accordion title="Option 0: Workload Identity Federation setup (beta)">
+        <Info>
+        Azure Workload Identity Federation (WIF) is currently rolling out behind a feature flag. The Azure connection dialog in Porter will show WIF instructions automatically once your project is enabled. Contact support to opt in.
+        </Info>
+
+        With WIF, Porter authenticates to Azure using a short-lived federated token signed by Porter's OIDC issuer. You configure a federated identity credential on your Azure App Registration that trusts a project-specific subject (`porter:azure:<project_id>`), and Porter exchanges its OIDC token for an Azure access token at runtime.
+
+        ### Prerequisites
+
+        - Azure CLI installed and authenticated (`az login`)
+        - Permission to create app registrations, custom roles, and role assignments in your subscription
+
+        ### Run the setup script
+
+        Porter generates a setup command pre-filled with the correct subject and OIDC issuer for your project. In the Porter dashboard, open **Connect cloud account** → **Azure** and copy the displayed commands. They look like this:
+
+        ```bash
+        # Log in to Azure CLI
+        az login
+
+        # Download the setup script
+        curl -O https://raw.githubusercontent.com/porter-dev/docs/main/scripts/setup-azure-porter-wif.sh
+
+        # Make it executable
+        chmod +x setup-azure-porter-wif.sh
+
+        # Run the script (subject and issuer come from the dashboard)
+        ./setup-azure-porter-wif.sh \
+          --subject "porter:azure:<project_id>" \
+          --issuer <oidc-issuer-url>
+        ```
+
+        The script:
+
+        - Enables all required Azure resource providers
+        - Creates the custom `porter-aks-restricted` role
+        - Creates an App Registration and service principal
+        - Adds a federated identity credential trusting Porter's OIDC issuer and the project-specific subject
+        - Adds Microsoft Graph API permissions and attempts to grant admin consent
+        - Prints the **Subscription ID**, **Application (Client) ID**, and **Tenant ID** to paste into Porter
+
+        <Info>
+        Unlike the classic service principal flow, no client secret is generated or stored. Federated tokens are minted on demand and expire automatically.
+        </Info>
+
+        ### Enter credentials in Porter
+
+        In the Azure dialog, paste the three values printed by the script:
+
+        | Field | Value |
+        |-------|-------|
+        | **Subscription ID** | Your Azure subscription ID |
+        | **Application (Client) ID** | The `appId` from the script output |
+        | **Tenant ID** | The `tenant` from the script output |
+
+        No client secret is required.
+
+        ### Revoking access
+
+        1. Delete any clusters through the Porter dashboard
+        2. In the Azure portal, search for **App registrations** and delete the Porter App Registration (the federated credential is removed with it)
+        3. Optionally, delete the custom `porter-aks-restricted` role
+      </Accordion>
+
       <Accordion title="Option 1: Automated setup (recommended)">
         If you have the Azure CLI installed and authenticated (`az login`), run our setup script:
 
