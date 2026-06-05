@@ -1,0 +1,74 @@
+---
+title: 'porter job'
+description: "View and filter job runs for a Porter project from the CLI, with filters for job, application, revision, deployment target, and status"
+---
+
+`porter job` contains commands for inspecting job runs in your project.
+
+## Prerequisites
+
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
+
+---
+
+## `porter job runs`
+
+View the job runs for a project, with optional filters applied. Job runs are sorted by creation time, with the most recent runs appearing first.
+
+**Usage:**
+```bash
+porter job runs [JOB_NAME] [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--job` | Filter job runs by job name |
+| `--app` | Filter job runs by application name |
+| `--revision` | Filter job runs by revision number (requires `--app`) |
+| `--target` | Filter job runs by deployment target. Uses the default target if not provided; pass `ALL` to pull runs across all deployment targets |
+| `--status` | Filter job runs by status |
+| `--limit` | Limit the number of job runs returned (default: 100) |
+
+<CodeGroup>
+```bash All Runs
+porter job runs
+```
+
+```bash By Job Name
+porter job runs --job my-job
+```
+
+```bash By Application
+porter job runs --app my-app
+```
+
+```bash By Revision
+porter job runs --app my-app --revision 3
+```
+
+```bash Across All Targets
+porter job runs --target ALL
+```
+
+```bash By Status
+porter job runs --status successful
+```
+
+```bash Limit Results
+porter job runs --limit 25
+```
+</CodeGroup>
+
+<Info>
+The `--revision` flag requires `--app` to be set, since revisions are scoped to a specific application.
+</Info>
+
+---
+
+## Related Commands
+
+- [porter app run](/standard/cli/command-reference/porter-app) - Trigger a job with the `--job` flag
+- [porter target list](/standard/cli/command-reference/porter-target) - List deployment targets to filter runs by
