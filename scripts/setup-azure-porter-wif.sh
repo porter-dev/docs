@@ -382,6 +382,53 @@ get_oidc_issuer() {
     print_success "Using OIDC issuer: $OIDC_ISSUER"
 }
 
+# Wait for the federated identity credential to become active in Azure.
+#
+# The `az ad app federated-credential create` command returns as soon as
+# the credential is persisted, but Azure's authorization service can take
+# additional time to replicate it; during that window token-exchange requests
+# fail with AADSTS70021 / AADSTS700211 / AADSTS700213 / AADSTS70025. See:
+wait4_federated_credential() {
+    print_status 'Waiting for the federated identity credential to become active...'
+
+    local now exp jwt_header jwt_payload jwt
+    now=$(date +%s)
+    exp=$((now + 300))
+    # Microsoft Entra requires the "kid" to be present so we use our own
+    # since the signature/key check happens after FIC matching which is
+    # what we're really testing.
+    jwt_header=$(printf '{"alg":"RS256","typ":"JWT","kid":"propagation-probe"}' | base64 | tr '+/' '-_' | tr -d '=\n')
+    jwt_payload=$(jq -nc \
+        --arg iss "${OIDC_ISSUER}" \
+        --arg sub "${OIDC_SUBJECT}" \
+        --argjson iat "${now}" \
+        --argjson exp "${exp}" \
+        '{iss:$iss, sub:$sub, aud:"api://AzureADTokenExchange", iat:$iat, exp:$exp}' |
+        base64 | tr '+/' '-_' | tr -d '=\n')
+    jwt="${jwt_header}.${jwt_payload}.invalid"
+
+    local pending='AADSTS70021|AADSTS700211|AADSTS700213|AADSTS70025'
+    local response
+    local i=0
+    while ((i++ < 60)); do
+        response=$(curl -sS -X POST \
+            "https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token" \
+            --data-urlencode "client_id=${APP_ID}" \
+            --data-urlencode 'scope=https://management.azure.com/.default' \
+            --data-urlencode 'client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer' \
+            --data-urlencode "client_assertion=${jwt}" \
+            --data-urlencode 'grant_type=client_credentials') || response=""
+        if [[ -n ${response} ]] && ! grep -qE "${pending}" <<<"${response}"; then
+            return 0
+        fi
+        sleep 3
+        print_status '  Checking again if the federated identity credential is active...'
+    done
+
+    print_warning "Last token-exchange response: ${response}"
+    return 1
+}
+
 # Function to create federated identity credential
 create_federated_credential() {
     print_status "Creating federated identity credential..."
@@ -396,9 +443,14 @@ create_federated_credential() {
             \"issuer\": \"${OIDC_ISSUER}\",
             \"subject\": \"${OIDC_SUBJECT}\",
             \"audiences\": [\"api://AzureADTokenExchange\"]
-        }" > /dev/null
+        }" >/dev/null
 
-    print_success "Federated identity credential created"
+    if wait4_federated_credential; then
+        print_success "Federated identity credential is active"
+    else
+        # Note: this might not be a fatal error.
+        print_error "Timed out waiting for the federated-credential ${APP_OBJECT_ID} to become active in Azure."
+    fi
 }
 
 # Function to display results
