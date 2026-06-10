@@ -75,8 +75,12 @@ You can pass environment variables and secrets directly via command-line flags w
 
 | Flag | Description |
 |------|-------------|
-| `--validate` | Check that the `porter.yaml` file is valid YAML syntax |
+| `--validate` | Validate the `porter.yaml` file locally without applying. Checks YAML syntax and, when `addons` are present, validates each in-cluster datastore addon (Postgres and Redis) — see [Validating datastore addons](/applications/configuration-as-code/addons-porter-yaml#validating-datastore-addons) |
 | `--dry-run` | Perform server-side validation to confirm the configuration is valid without applying changes |
+
+<Info>
+You can also run `porter apply validate` (no flag) as a standalone subcommand to validate `porter.yaml` in the current directory.
+</Info>
 
 ### Advanced Options
 
@@ -118,7 +122,7 @@ porter apply -f porter.yaml --preview
 ```
 
 ```bash Validate YAML Syntax
-# Check that porter.yaml is valid YAML
+# Check that porter.yaml is valid YAML and that any datastore addons are well-formed
 porter apply -f porter.yaml --validate
 ```
 
