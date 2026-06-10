@@ -155,7 +155,7 @@ enable_resource_providers() {
 
 # Function to create or update custom role
 create_custom_role() {
-    ROLE_NAME="porter-aks-restricted-test"
+    ROLE_NAME="porter-aks-restricted"
     print_status "Managing custom $ROLE_NAME role..."
 
     # Create expected role definition
@@ -264,8 +264,9 @@ EOF
 create_app_registration() {
     TENANT_ID=$(az account show --query tenantId -o tsv)
 
-    # Reuse existing app registration if one already exists
-    EXISTING=$(az ad app list --display-name "$APP_NAME" --query "[0].appId" -o tsv 2>/dev/null)
+    # Reuse existing app registration only on an exact display-name match
+    # (--display-name uses startsWith, so filter the results)
+    EXISTING=$(az ad app list --display-name "$APP_NAME" -o json 2>/dev/null | jq -r --arg name "$APP_NAME" '[.[] | select(.displayName == $name)] | .[0].appId // empty')
     if [ -n "$EXISTING" ] && [ "$EXISTING" != "None" ]; then
         print_info "App registration already exists, reusing it..."
         APP_ID="$EXISTING"
