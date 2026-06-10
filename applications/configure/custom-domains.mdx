@@ -73,3 +73,15 @@ Once the DNS record changes have been propagated, you will be able to attach the
 Click on **Add Custom Domain**, input the custom domain you have just pointed to the load balancer, then hit deploy.
 
 In a few minutes, you will be able to view the application on the custom domain, secured with an SSL certificate.
+
+## TLS certificate status
+
+After you deploy a custom domain, Porter requests an SSL certificate from Let's Encrypt for it. TLS provisioning can take up to 10 minutes to complete.
+
+The application header surfaces the status of each domain so you can see at a glance whether the certificate is ready:
+
+- **Ready** — the certificate has been issued and the domain renders as a clickable link.
+- **Pending** — provisioning is in progress. The domain shows a spinner and a tooltip explaining that the certificate is still being issued. The link is not clickable until the certificate is ready.
+- **Failed** — Porter could not issue a certificate. The domain shows a warning icon and a tooltip with the failure reason. The link is not clickable.
+
+If a domain remains pending for more than 10 minutes or surfaces a failed state, double-check that DNS has propagated to the load balancer address shown in the **Networking** tab. Once DNS resolves correctly, Porter will retry issuance automatically.
