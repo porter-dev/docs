@@ -1,0 +1,128 @@
+---
+title: "Private load balancers"
+description: "Expose web services through an internal NGINX ingress controller backed by a private NLB, with TLS certificates issued via the ACME DNS-01 challenge"
+---
+
+<Info>
+  Private load balancers are gated behind a feature flag. Contact Porter support to enable internal NLBs and DNS-01 certificate issuance on your cluster.
+</Info>
+
+Porter clusters ship with a public load balancer that fronts every web service by default. For workloads that should only be reachable from inside your VPC — internal admin tools, partner integrations, services consumed exclusively by other apps in the cluster — you can attach a **private load balancer** to the cluster. Porter provisions a dedicated internal NGINX ingress controller for it and issues TLS certificates using the ACME DNS-01 challenge, so the certificate flow works even when the load balancer has no public endpoint.
+
+## When to use a private load balancer
+
+Use a private load balancer when:
+
+- The service must not be reachable from the public internet.
+- Traffic should stay inside the VPC, a peered network, or a corporate network reached over a VPN or Direct Connect / Cloud Interconnect / ExpressRoute.
+- You still want a managed TLS certificate on a custom domain, served by NGINX, with automatic renewal.
+
+Stick with the default public load balancer when the service needs to be reachable from the public internet.
+
+## How it works
+
+When you enable a private load balancer on the cluster, Porter installs the following onto your cluster:
+
+- A second `ingress-nginx` controller (chart `ingress-nginx` `v4.14.0`) bound to the ingress class `nginx-private` and fronted by an internal Network Load Balancer.
+- A `ClusterIssuer` that solves ACME challenges via DNS-01 instead of HTTP-01, so the load balancer never has to be reachable from Let's Encrypt's validation servers.
+- The cert-manager components required to drive that issuer.
+
+Web services that select the private ingress class are routed through the internal NLB. Their TLS certificates are issued and renewed automatically by cert-manager using the DNS-01 challenge against your DNS provider.
+
+## Prerequisites
+
+Before you can attach a private load balancer to a cluster, you need:
+
+- A cluster with the private load balancer feature enabled by Porter.
+- A DNS provider that Porter supports for DNS-01 challenges. Today this is **Cloudflare**.
+- An API token from your DNS provider with permission to create and delete `TXT` records on the zones whose certificates the cluster will issue.
+
+### Creating a Cloudflare API token
+
+In the Cloudflare dashboard, create an API token with:
+
+- **Permissions:** `Zone — DNS — Edit`
+- **Zone Resources:** the specific zone(s) whose certificates Porter will issue, or **All zones** if you want one token to cover everything.
+
+Copy the token — Cloudflare only shows it once.
+
+## Storing DNS provider credentials
+
+Porter stores the DNS provider API token as a Kubernetes secret in the cluster's `cert-manager` namespace, where cert-manager reads it to solve DNS-01 challenges. You manage the credentials per cluster through the Porter API.
+
+### Store or rotate credentials
+
+```bash
+curl -X POST \
+  "https://api.porter.run/api/v2/projects/{project_id}/clusters/{cluster_id}/dns/credentials" \
+  -H "Authorization: Bearer $PORTER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "cloudflare",
+    "api_token": "<your-cloudflare-api-token>"
+  }'
+```
+
+| Field       | Description                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------ |
+| `provider`  | The DNS provider to use for DNS-01 challenges. Only `cloudflare` is currently supported.   |
+| `api_token` | API token authorizing the DNS provider to create and delete records for the cluster's domains. |
+
+`POST` is idempotent: calling it again with a new token rotates the stored credentials in place.
+
+### Check whether credentials are stored
+
+```bash
+curl "https://api.porter.run/api/v2/projects/{project_id}/clusters/{cluster_id}/dns/credentials" \
+  -H "Authorization: Bearer $PORTER_TOKEN"
+```
+
+The response indicates whether credentials are present and which provider they target:
+
+```json
+{
+  "exists": true,
+  "provider": "cloudflare"
+}
+```
+
+### Remove credentials
+
+```bash
+curl -X DELETE \
+  "https://api.porter.run/api/v2/projects/{project_id}/clusters/{cluster_id}/dns/credentials" \
+  -H "Authorization: Bearer $PORTER_TOKEN"
+```
+
+Removing credentials stops cert-manager from being able to issue or renew certificates that depend on DNS-01. Only delete credentials when you are decommissioning the private load balancer or rotating to a different provider.
+
+## Enabling a private load balancer on the cluster
+
+A private load balancer is declared on the cluster contract as an `AdditionalLoadBalancer` with `network_access` set to `PRIVATE` and a `dns_provider_config` that matches your stored credentials:
+
+```yaml
+additional_load_balancers:
+  - network_access: PRIVATE
+    dns_provider_config:
+      provider: cloudflare
+```
+
+Notes:
+
+- Only `PRIVATE` is supported on additional load balancers today. Non-private entries are ignored.
+- Only one additional load balancer of each network access type is allowed per cluster. Contract writes that include duplicates are rejected.
+- The DNS provider in `dns_provider_config` must match the provider whose credentials you stored on the cluster. Unsupported providers are rejected at contract write time.
+
+When the contract is applied, Porter reconciles the cluster: it installs the private NGINX controller (ingress class `nginx-private`) and the DNS-01 `ClusterIssuer`, and provisions the internal NLB.
+
+## Routing a web service through the private load balancer
+
+Once the private controller is installed, web services on the cluster can opt into it by selecting the `nginx-private` ingress class for their domains. Custom domains attached to those services receive certificates issued via DNS-01 — no public reachability is required.
+
+Public web services on the same cluster continue to use the default public load balancer and the existing HTTP-01 issuer. The two stacks run side by side.
+
+## Troubleshooting
+
+- **`unsupported DNS provider` when writing the contract.** The `provider` in `dns_provider_config` is not one Porter supports yet. Use `cloudflare`.
+- **`internal load balancers are not enabled for this cluster` from the DNS credentials endpoints.** The feature flag is off for this cluster. Contact Porter support to enable it.
+- **Certificate stuck in `Pending` for a private domain.** Confirm that DNS credentials are stored on the cluster (`GET .../dns/credentials` returns `"exists": true`), that the API token still has `Zone — DNS — Edit` permission on the zone, and that the token has not been rotated out of band in your DNS provider.
