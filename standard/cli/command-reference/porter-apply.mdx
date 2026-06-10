@@ -78,6 +78,12 @@ You can pass environment variables and secrets directly via command-line flags w
 | `--validate` | Check that the `porter.yaml` file is valid YAML syntax |
 | `--dry-run` | Perform server-side validation to confirm the configuration is valid without applying changes |
 
+When you pass `--validate` (or run `porter apply validate`), Porter validates the file based on its format:
+
+- **Single-app `porter.yaml`** — validated as one application configuration.
+- **Multi-app/addon `porter.yaml`** (top-level `apps:` and/or `addons:` arrays) — each app and addon block is split out and validated individually. The command fails on the first invalid app or addon and reports its index in the array.
+- **Legacy addon schemas** — addon blocks that use the deprecated legacy schema are skipped with a yellow `DEPRECATION WARNING`. Validation still succeeds for the rest of the file, but support for the legacy schema will be removed in a future release. Update the addon to the current schema to keep it covered by validation.
+
 ### Advanced Options
 
 | Flag | Short | Description |
@@ -120,6 +126,12 @@ porter apply -f porter.yaml --preview
 ```bash Validate YAML Syntax
 # Check that porter.yaml is valid YAML
 porter apply -f porter.yaml --validate
+```
+
+```bash Validate Multi-App/Addon YAML
+# Validate every app and addon block in a multi-app porter.yaml individually.
+# Legacy addon blocks are skipped with a deprecation warning.
+porter apply validate -f porter.yaml
 ```
 
 ```bash Dry Run
