@@ -98,3 +98,43 @@ addons:
         ramMegabytes: 110
 ```
 
+## Validating datastore addons
+
+When your `porter.yaml` defines one or more `addons`, the CLI validates each in-cluster datastore addon (Postgres and Redis) before applying it. This surfaces common configuration mistakes locally as clear errors instead of opaque backend failures.
+
+Validation runs automatically as part of:
+
+- `porter apply -f porter.yaml` — before any addon is applied
+- `porter apply validate` and `porter apply -f porter.yaml --validate` — without applying
+
+### What is validated
+
+For every datastore addon block, the CLI checks that:
+
+| Field | Requirement |
+|---|---|
+| `name` | Must be set |
+| `type` | Must be `POSTGRES` or `REDIS` |
+| `kind` | Must be `IN_CLUSTER` (the only kind currently validated by the CLI) |
+| `config.storageGigabytes` | Must be greater than `0` |
+| `config.cpuCores` | Must be greater than `0` |
+| `config.ramMegabytes` | Must be greater than `0` |
+
+If any check fails, `porter apply` exits with a non-zero status and prints the failing field. No apps or addons are applied until the errors are fixed.
+
+### Example
+
+```bash
+PORTER_ADDON_YAML=true porter apply -f porter.yaml --validate
+```
+
+A missing or zero field produces output similar to:
+
+```
+✗ porter.yaml validation failed
+addon 'config.storageGigabytes' must be greater than 0
+```
+
+<Info>
+Only in-cluster Postgres and Redis datastores are validated by the CLI today. Managed datastores and custom Helm chart addons skip CLI validation and are validated server-side at apply time.
+</Info>
