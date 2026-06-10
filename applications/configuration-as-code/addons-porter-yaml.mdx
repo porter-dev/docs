@@ -98,3 +98,14 @@ addons:
         ramMegabytes: 110
 ```
 
+## Validating multi-app/addon porter.yaml
+
+Run `porter apply validate` (or `porter apply --validate`) to check a multi-app/addon `porter.yaml` before deploying. Each app and addon block under `apps:` and `addons:` is split out and validated individually, and the command fails on the first invalid block and reports its index in the array.
+
+```bash
+porter apply validate -f porter.yaml
+```
+
+<Warning>
+Addon blocks that use the deprecated legacy schema are skipped during validation and print a yellow `DEPRECATION WARNING`. The command still succeeds for the rest of the file, but legacy addon support will be removed in a future release. Update those addons to the current schema so they're covered by validation.
+</Warning>
