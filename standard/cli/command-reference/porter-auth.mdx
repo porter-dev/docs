@@ -21,6 +21,7 @@ porter auth login [flags]
 | Flag | Description |
 |------|-------------|
 | `--token` | Log in using an existing token |
+| `--manual` | Prompt for email and password instead of opening a browser |
 
 <CodeGroup>
 ```bash Browser Login (Default)
@@ -36,11 +37,50 @@ porter auth login --token <YOUR_TOKEN>
 After logging in, Porter automatically sets your default project and cluster if you have access to any. You can view these with `porter config`.
 </Info>
 
+### Login methods
+
+The CLI supports two login flows. Switch between them with [`porter config set-login-method`](/standard/cli/command-reference/porter-config#porter-config-set-login-method).
+
+<Tabs>
+  <Tab title="v1 (Porter JWT)">
+    The default flow. `porter auth login` opens a browser to your Porter instance, which returns a long-lived Porter JWT. The token is stored locally in `~/.porter/porter.yaml` and used as a Bearer token on every API request.
+
+    Use this method when:
+    - You are logging in from a CI/CD pipeline using `--token`
+    - Your Porter instance does not have WorkOS configured
+  </Tab>
+  <Tab title="v2 (WorkOS session)">
+    A session-based flow using the OAuth 2.0 [Device Authorization Grant](https://datatracker.ietf.org/doc/html/rfc8628). `porter auth login` prints a verification URL and a short user code, attempts to open the URL in your browser, and polls until you approve the login. The CLI then stores a short-lived access token and a refresh token; the access token is refreshed transparently as it expires.
+
+    Use this method when:
+    - You want sessions to appear in the **CLI sessions** list in your Porter account settings, where you can review device details and revoke access
+    - You are logging in over SSH, in a remote container, or in WSL — the device flow does not need a localhost redirect
+    - Your Porter instance has WorkOS configured
+
+    Enable it with:
+    ```bash
+    porter config set-login-method v2
+    porter auth login
+    ```
+
+    Example output:
+    ```text
+    To log in, visit:
+      https://api.workos.com/user_management/authorize/device?user_code=ABCD-EFGH
+
+    And confirm the code: ABCD-EFGH
+
+    Waiting for authorization in browser...
+    Successfully logged in!
+    ```
+  </Tab>
+</Tabs>
+
 ---
 
 ## `porter auth logout`
 
-Log out from Porter and clear your local credentials.
+Log out from Porter and clear your local credentials. This clears both the Porter JWT and any WorkOS session tokens stored in your config.
 
 **Usage:**
 ```bash
@@ -48,5 +88,5 @@ porter auth logout
 ```
 
 <Tip>
-After logging out, you'll need to run `porter auth login` again before using other commands.
+After logging out, you'll need to run `porter auth login` again before using other commands. To revoke a session from a different machine, use the **CLI sessions** list in your Porter account settings.
 </Tip>

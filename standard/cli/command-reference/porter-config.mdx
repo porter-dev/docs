@@ -66,6 +66,40 @@ Run `porter cluster list` first to see available clusters and their IDs.
 
 ---
 
+## `porter config set-login-method`
+
+Select which authentication flow `porter auth login` uses. The choice is persisted in your local config so future logins use the same method.
+
+**Usage:**
+```bash
+porter config set-login-method [v1|v2]
+```
+
+**Arguments:**
+
+| Value | Description |
+|-------|-------------|
+| `v1` | Porter JWT login (default). Opens a browser against your Porter instance and stores a long-lived token. Use this in CI/CD or against Porter instances without WorkOS configured. |
+| `v2` | WorkOS session login. Runs an OAuth 2.0 device authorization flow, stores a short-lived access token and a refresh token, and refreshes transparently. Sessions appear in the **CLI sessions** list in your Porter account settings and can be revoked from the dashboard. Requires that your Porter instance has WorkOS configured. |
+
+<CodeGroup>
+```bash Switch to WorkOS sessions
+porter config set-login-method v2
+porter auth login
+```
+
+```bash Switch back to Porter JWT
+porter config set-login-method v1
+porter auth login
+```
+</CodeGroup>
+
+<Info>
+See [`porter auth login`](/standard/cli/command-reference/porter-auth#porter-auth-login) for a detailed comparison of the two flows.
+</Info>
+
+---
+
 ## Configuration File
 
 Porter stores configuration in `~/.porter/config.json`. You can also override settings using environment variables:
