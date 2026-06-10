@@ -387,7 +387,7 @@ get_oidc_issuer() {
 # The `az ad app federated-credential create` command returns as soon as
 # the credential is persisted, but Azure's authorization service can take
 # additional time to replicate it; during that window token-exchange requests
-# fail with AADSTS70021 / AADSTS700211 / AADSTS700213 / AADSTS70025. See:
+# fail with AADSTS70021 / AADSTS700211 / AADSTS700213 / AADSTS70025.
 wait4_federated_credential() {
     print_status 'Waiting for the federated identity credential to become active...'
 
@@ -453,8 +453,12 @@ create_federated_credential() {
     if wait4_federated_credential; then
         print_success "Federated identity credential is active"
     else
-        # Note: this might not be a fatal error.
-        print_error "Timed out waiting for the federated-credential ${APP_OBJECT_ID} to become active in Azure."
+        print_error "$(
+            printf 'Timed out waiting for the federated-credential %s to become active in Azure.\n' \
+                'This is not necessarily a fatal error and you should still attempt to connect your\n' \
+                'account to Porter though you may have to click the "Continue" button multiple times.' \
+                "${APP_OBJECT_ID}"
+        )"
     fi
 }
 
