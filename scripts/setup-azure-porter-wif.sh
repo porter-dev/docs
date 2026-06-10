@@ -409,6 +409,7 @@ wait4_federated_credential() {
 
     local pending='AADSTS70021|AADSTS700211|AADSTS700213|AADSTS70025'
     local response
+    local success=0
     local i=0
     while ((i++ < 60)); do
         response=$(curl -sS -X POST \
@@ -419,7 +420,11 @@ wait4_federated_credential() {
             --data-urlencode "client_assertion=${jwt}" \
             --data-urlencode 'grant_type=client_credentials') || response=""
         if [[ -n ${response} ]] && ! grep -qE "${pending}" <<<"${response}"; then
-            return 0
+            if ((success++ > 3)); then
+                return 0 # Wait for 3 "successful" exchanges in a row
+            fi
+        else
+            success=0 # Restart counter.
         fi
         sleep 3
         print_status '  Checking again if the federated identity credential is active...'
