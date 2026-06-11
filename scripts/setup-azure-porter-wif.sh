@@ -120,7 +120,7 @@ get_oidc_subject() {
         fi
     fi
 
-    if [[ ! "$OIDC_SUBJECT" =~ ^arn:aws:iam::[0-9]{12}:role/porter-azure-fic-[0-9]+$ ]]; then
+    if [[ ! "$OIDC_SUBJECT" =~ ^arn:aws:iam::[0-9]{12}:role/porter-azure-fic-[1-9][0-9]*$ ]]; then
         print_fatal "OIDC subject must be the per-project IAM role ARN (e.g. arn:aws:iam::123456789012:role/porter-azure-fic-42)"
     fi
 
