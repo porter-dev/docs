@@ -113,15 +113,15 @@ get_oidc_subject() {
         echo ""
         print_info "Copy the OIDC subject shown in Porter during the Azure cloud account connection steps."
         echo ""
-        read -rp "Enter the OIDC subject (e.g. porter:azure:42): " OIDC_SUBJECT
+        read -rp "Enter the OIDC subject (e.g. arn:aws:iam::123456789012:role/porter-azure-fic-42): " OIDC_SUBJECT
 
         if [ -z "$OIDC_SUBJECT" ]; then
             print_fatal "OIDC subject is required"
         fi
     fi
 
-    if [[ ! "$OIDC_SUBJECT" =~ ^porter:azure:[0-9]+$ ]]; then
-        print_fatal "OIDC subject must be in the format porter:azure:<projectId> (e.g. porter:azure:42)"
+    if [[ ! "$OIDC_SUBJECT" =~ ^arn:aws:iam::[0-9]{12}:role/porter-azure-fic-[0-9]+$ ]]; then
+        print_fatal "OIDC subject must be the per-project IAM role ARN (e.g. arn:aws:iam::123456789012:role/porter-azure-fic-42)"
     fi
 
     print_success "Using OIDC subject: $OIDC_SUBJECT"
@@ -439,7 +439,9 @@ wait4_federated_credential() {
 create_federated_credential() {
     print_status "Creating federated identity credential..."
 
-    PROJECT_ID="${OIDC_SUBJECT##*:}"
+    # OIDC_SUBJECT is an IAM role ARN ending in porter-azure-fic-<projectID>.
+    ROLE_NAME="${OIDC_SUBJECT##*/}"
+    PROJECT_ID="${ROLE_NAME##*-}"
     FIC_NAME="porter-project-${PROJECT_ID}"
 
     az ad app federated-credential create \
@@ -490,18 +492,22 @@ display_results() {
 show_usage() {
     echo "Usage: $0 [--subject OIDC_SUBJECT] [--issuer OIDC_ISSUER] [--subscription SUBSCRIPTION_ID] [--app-name APP_NAME]"
     echo ""
-    echo "  --subject        Porter OIDC subject (e.g. porter:azure:42)"
+    echo "  --subject        Porter OIDC subject — the per-project IAM role ARN"
+    echo "                   (e.g. arn:aws:iam::123456789012:role/porter-azure-fic-42)"
     echo "                   Copy this from Porter during the Azure cloud account connection steps"
-    echo "  --issuer         Porter OIDC issuer URL (e.g. https://oidc.porter.run)"
+    echo "  --issuer         Porter OIDC issuer URL — AWS account-specific tokens.sts.global.api.aws URL"
+    echo "                   (e.g. https://<uuid>.tokens.sts.global.api.aws)"
     echo "  --subscription   Azure subscription ID to use"
     echo "                   If not provided, you'll be prompted to select one"
     echo "  --app-name       Azure app registration name (default: azure-porter-federated-sp)"
     echo "                   Use a unique name per Porter environment to avoid collisions"
     echo ""
     echo "Examples:"
-    echo "  $0 --subject porter:azure:42 --issuer https://oidc.porter.run"
-    echo "  $0 --subject porter:azure:42 --issuer https://oidc.porter.run --subscription xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-    echo "  $0 --subject porter:azure:42 --issuer https://oidc.dev-porter.run --app-name azure-porter-dev-name"
+    echo "  $0 --subject arn:aws:iam::123456789012:role/porter-azure-fic-42 \\"
+    echo "     --issuer https://abc-123.tokens.sts.global.api.aws"
+    echo "  $0 --subject arn:aws:iam::123456789012:role/porter-azure-fic-42 \\"
+    echo "     --issuer https://abc-123.tokens.sts.global.api.aws \\"
+    echo "     --subscription xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
     echo ""
 }
 
