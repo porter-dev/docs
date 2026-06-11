@@ -10,7 +10,7 @@ Requires Porter CLI **v0.68.30 or later**. Check your version with `porter versi
 porter apply -f porter.yaml --wait
 ```
 
-To guarantee that the datastore and its env group is ready before the app starts, use the --wait flag. Addons are always applied before apps, and `--wait` holds the apply until each datastore is fully available (up to 10 minutes) before any apps deploy. This guarantees that the datastores' environment groups and credentials exist by the time the apps start. The flag also waits for each app's rollout to succeed before exiting.
+To guarantee that the datastore and its env group are ready before the app starts, use the --wait flag. Addons are always applied before apps, and `--wait` holds the apply until each datastore is fully available (up to 10 minutes) before any apps deploy. This guarantees that the datastores' environment groups and credentials exist by the time the apps start. The flag also waits for each app's rollout to succeed before exiting.
 
 Without `--wait`, the CLI proceeds about 10 seconds after creating a datastore. Apps may then fail their first deploy with a missing-environment-group error until the datastore finishes provisioning.
 
