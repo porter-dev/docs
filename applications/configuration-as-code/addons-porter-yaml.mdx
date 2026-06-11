@@ -9,11 +9,21 @@ You can deploy multiple Porter apps alongside multiple Porter addons in a single
 
 ### Usage
 
-To enable this feature, set the `PORTER_ADDON_YAML` environment variable while running the apply command.
+Run `porter apply` against a `porter.yaml` that uses the top-level `apps:` and `addons:` arrays. The CLI automatically detects the multi-app format and applies each addon and app in sequence.
 
 ```bash
-PORTER_ADDON_YAML=true porter apply -f porter.yaml
+porter apply -f porter.yaml
 ```
+
+### Waiting for addons to become available
+
+Pass the `--wait` (`-w`) flag to block until each datastore addon reaches the `AVAILABLE` state before any apps are deployed. This is useful when your apps reference an addon's connection environment group (for example `db` or `cache` in the example below) — without `--wait`, an app can start rolling out before the datastore (and its generated env group) is ready, causing the app to crash on startup.
+
+```bash
+porter apply -f porter.yaml --wait
+```
+
+`--wait` polls each addon for up to 10 minutes. After all addons are available, Porter applies the apps and, as before, waits for each app's rollout to complete.
 
 ## Example Configuration
 
