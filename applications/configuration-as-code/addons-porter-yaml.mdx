@@ -4,14 +4,19 @@ title: "Deploying Multiple Apps with porter.yaml"
 
 You can deploy multiple Porter apps alongside multiple Porter addons in a single `porter.yaml` file. This is particularly useful when you need to deploy related services that work together, such as a web application with its associated database or cache.
 
-<Warning> This feature is in development and is subject to change. </Warning>
-
 ### Usage
 
-To enable this feature, set the `PORTER_ADDON_YAML` environment variable while running the apply command.
-
 ```bash
-PORTER_ADDON_YAML=true porter apply -f porter.yaml
+porter apply -f porter.yaml --wait
+```
+
+When connecting datastores, use the `--wait` flag so that the addons are deployed first. This ensures their environment groups exist before the apps are deployed, so they can be correctly linked.
+
+Each datastore exposes an environment group named after the addon. You can connect a datastore's environment group to an app by referencing it in the app's `envGroups` section:
+
+```yaml
+envGroups:
+  - cache
 ```
 
 ## Example Configuration
@@ -76,24 +81,18 @@ apps:
       tag: latest
 addons:
   - name: cache
-    type: MANAGED-REDIS
-    engine: REDIS
-    values:
-      config:
-        name: cache
-        masterUserPassword: password
-        allocatedStorage: 2 # Persistent storage size in GB. Cannot be changed after creation.
-        cpuCores: 0.1
-        ramMegabytes: 110
+    type: redis
+    kind: in-cluster
+    config:
+      storageGigabytes: 2 # Persistent storage size in GB. Cannot be changed after creation.
+      cpuCores: 0.1
+      ramMegabytes: 110
   - name: db
-    type: MANAGED-POSTGRES
-    engine: POSTGRES
-    values:
-      config:
-        name: db
-        masterUserPassword: password
-        allocatedStorage: 2
-        cpuCores: 0.1
-        ramMegabytes: 110
+    type: postgres
+    kind: in-cluster
+    config:
+      storageGigabytes: 2
+      cpuCores: 0.1
+      ramMegabytes: 110
 ```
 
