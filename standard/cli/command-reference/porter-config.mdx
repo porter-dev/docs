@@ -66,6 +66,44 @@ Run `porter cluster list` first to see available clusters and their IDs.
 
 ---
 
+## `porter config set-login-method`
+
+Select the authentication flow used by `porter auth login`.
+
+**Usage:**
+```bash
+porter config set-login-method [v1|v2]
+```
+
+**Modes:**
+
+| Mode | Description |
+|------|-------------|
+| `v1` | Legacy flow that issues a long-lived Porter JWT. The token is stored in `porter.yaml`. |
+| `v2` | Refreshable session flow. Tokens are stored in your OS credential store (Keychain on macOS, Secret Service on Linux, Credential Manager on Windows) and are automatically refreshed. |
+
+<CodeGroup>
+```bash Switch to v2 (recommended)
+porter config set-login-method v2
+porter auth login
+```
+
+```bash Switch back to v1
+porter config set-login-method v1
+porter auth login
+```
+</CodeGroup>
+
+<Info>
+When you log in with `v2`, Porter stores your access and refresh tokens in the OS keyring instead of in `porter.yaml`. If you previously logged in with `v1`, switching to `v2` and logging in once migrates any plaintext tokens out of `porter.yaml` automatically.
+</Info>
+
+<Tip>
+Use `v2` for local development on a single machine. For CI/CD pipelines, continue to use a `PORTER_TOKEN` environment variable — the keyring is intended for interactive sessions.
+</Tip>
+
+---
+
 ## Configuration File
 
 Porter stores configuration in `~/.porter/config.json`. You can also override settings using environment variables:
