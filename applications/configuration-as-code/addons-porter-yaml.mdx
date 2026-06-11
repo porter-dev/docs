@@ -6,6 +6,10 @@ You can deploy multiple Porter apps alongside multiple Porter addons in a single
 
 Requires Porter CLI **v0.68.30 or later**. Check your version with `porter version`, and upgrade with `brew install porter-dev/porter/porter`.
 
+<Note>
+Migrating from the beta shape? Replace `type: MANAGED-POSTGRES` / `engine: POSTGRES` / `values.config.{...}` with the schema above: `allocatedStorage` becomes `config.storageGigabytes`, and the duplicated `name` inside `config` is gone. The old shape currently prints `DEPRECATION WARNING` and will stop working in a future CLI release.
+</Note>
+
 ```bash
 porter apply -f porter.yaml --wait
 ```
