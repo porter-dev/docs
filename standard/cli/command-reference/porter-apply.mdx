@@ -36,7 +36,7 @@ porter apply -f porter.yaml [flags]
 | `--file` | `-f` | Path to the `porter.yaml` configuration file (optional if app already exists) |
 | `--app` | | Override the app name specified in `porter.yaml` |
 | `--target` | `-x` | Specify a deployment target (name or ID) |
-| `--wait` | `-w` | Wait for the deployment to complete before exiting |
+| `--wait` | `-w` | Wait for the deployment to complete before exiting. For multi-app `porter.yaml` files that include datastore addons, also waits up to 10 minutes for each addon to reach the `AVAILABLE` state before apps are deployed |
 | `--preview` | `-p` | Deploy to a preview environment based on current git branch |
 
 <Warning>
@@ -161,7 +161,7 @@ When you run `porter apply`, the following steps occur:
     Porter deploys or updates all services defined in the configuration
   </Step>
   <Step title="Wait for Rollout (if --wait)">
-    If `--wait` is specified, Porter waits for all services to become healthy
+    If `--wait` is specified, Porter waits for all services to become healthy. When the `porter.yaml` defines datastore addons, Porter also waits for each addon to reach the `AVAILABLE` state before deploying the apps that depend on it.
   </Step>
 </Steps>
 
