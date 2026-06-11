@@ -1,0 +1,66 @@
+---
+title: "Deprecate user-scoped JWT tokens"
+description: "Reject legacy user-scoped Porter JWT tokens for a project while keeping project API tokens, WorkOS access tokens, and dashboard sessions working."
+---
+
+Porter projects can opt out of legacy **user-scoped JWT tokens**. When this setting is enabled, any API request to the project that is authenticated with a user-scoped Porter JWT is rejected by the auth middleware.
+
+This is useful for hardening a project against long-lived personal tokens that may have been issued to individual users in the past. Project-scoped API tokens, WorkOS access tokens, and dashboard cookie sessions are unaffected, so admins, CI/CD pipelines, and the CLI continue to work normally.
+
+## What gets rejected
+
+When the toggle is on, the following requests are blocked for the project:
+
+* Bearer tokens identified as user-scoped Porter JWTs (`sub_kind=user`, no `token_id` claim).
+
+The following continue to work:
+
+* **Project API tokens** issued from the project settings.
+* **WorkOS access tokens** used by the dashboard and SSO sessions.
+* **Cookie-based sessions** in the Porter dashboard.
+
+Because dashboard access is preserved, an admin can always toggle the setting back off from the UI even if their personal JWTs are being rejected.
+
+## Enabling the setting
+
+You must be a project **Admin** to change this setting.
+
+1. Open the Porter dashboard and select the project you want to update.
+2. Navigate to **Settings** &rarr; **General**.
+3. Find the **User JWT tokens** section.
+4. Toggle **Reject user-scoped JWT tokens** on.
+
+Any in-flight API call using a user-scoped JWT against this project will start returning an authentication error immediately.
+
+## Toggling via the API
+
+Admins can also toggle the setting via the Porter API. The endpoint is admin-scoped.
+
+```bash
+curl -X PUT \
+  "https://api.porter.run/api/v2/projects/{project_id}/reject-user-jwt-tokens" \
+  -H "Authorization: Bearer $PORTER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"reject_user_jwt_tokens": true}'
+```
+
+The response echoes the updated value:
+
+```json
+{
+  "reject_user_jwt_tokens": true
+}
+```
+
+The current value is also returned on the get-project response as the `reject_user_jwt_tokens` field.
+
+## Migrating off user-scoped JWTs
+
+Before enabling this setting, audit any automation or scripts that authenticate against the project and replace user-scoped JWTs with a **project API token**:
+
+1. Have an Admin generate a project API token from project settings.
+2. Update CI/CD secrets, scripts, and integrations to use the new token.
+3. Verify the new token works against the project.
+4. Enable **Reject user-scoped JWT tokens** in **Settings** &rarr; **General**.
+
+If you need to roll back, an Admin can disable the toggle at any time from the dashboard or via the API endpoint above.
