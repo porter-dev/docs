@@ -1,0 +1,69 @@
+---
+title: 'porter sandbox'
+description: "List sandboxes running in a Porter project and cluster from the CLI, with filters for phase and tags and machine-readable output for scripting"
+---
+
+`porter sandbox` contains commands for inspecting sandboxes in your project and cluster.
+
+<Info>
+Sandboxes are currently in alpha and gated by the `sandboxes_enabled` feature flag. Contact Porter to enable sandboxes for your project before using these commands.
+</Info>
+
+## Prerequisites
+
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project and cluster by running [porter config set-project](/standard/cli/command-reference/porter-config) and [porter config set-cluster](/standard/cli/command-reference/porter-config)
+- The `sandboxes_enabled` feature flag is on for your project
+
+---
+
+## `porter sandbox list`
+
+List sandboxes in the current project and cluster. Results are sorted by creation time, most recent first, and the command auto-paginates through the API.
+
+By default, sandboxes in the `terminated` phase are hidden so the active state is visible. Use `--phase` to override.
+
+**Usage:**
+```bash
+porter sandbox list [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--phase` | Filter by phase: `all`, `queued`, `creating`, `running`, `succeeded`, `failed`, or `terminated`. Defaults to hiding `terminated`. |
+| `--tag` | Filter sandboxes by tag in `key=value` form. Repeatable. |
+| `-o, --output` | Output format: `table`, `json`, or `plain`. Defaults to `table` on a TTY and `plain` when piped or redirected. |
+
+### Output formats
+
+- **`table`** — Human-friendly table with color-coded phases. Default when stdout is a terminal.
+- **`plain`** — Tab-separated rows for composing with `grep`, `awk`, or `cut`. Default when piped or redirected.
+- **`json`** — Machine-readable JSON array for scripts and agents.
+
+<CodeGroup>
+```bash All active sandboxes
+porter sandbox list
+```
+
+```bash Include terminated
+porter sandbox list --phase all
+```
+
+```bash Filter by phase and tag
+porter sandbox list --phase running --tag env=dev
+```
+
+```bash JSON for scripts
+porter sandbox list -o json | jq '.[] | select(.phase=="running") | .id'
+```
+
+```bash Plain output with awk
+porter sandbox list | awk -F'\t' '$3=="running" {print $1}'
+```
+</CodeGroup>
+
+<Info>
+`--tag` values must be in `key=value` form. Pass the flag multiple times to filter by multiple tags.
+</Info>
