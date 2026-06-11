@@ -57,11 +57,17 @@ services:
 
 <Badge shape="pill" color="gray">Optional</Badge>
 
-When `true`, the service is only accessible within the cluster (not publicly exposed).
+When `true`, the service is routed through the cluster's internal load balancer and is only reachable from clients on the same private network (for example, a VPN or peered VPC). Public traffic is not accepted.
 
 ```yaml
 private: true
 ```
+
+<Info>
+Private web services require an internal load balancer controller to be installed on the target cluster. Porter validates this when you create or update an app — if the controller is not installed, the request is rejected with an `invalid_load_balancer_mode` error. In the dashboard, the **Internal** load-balancer option only appears when the controller is detected. Contact Porter support if you need the internal load balancer enabled on a cluster.
+
+Private services use a different CNAME target than public services. After enabling `private: true`, copy the load-balancer hostname shown in the **Networking** tab of your web service when configuring DNS for any custom domains — do not reuse the public hostname.
+</Info>
 
 ---
 
