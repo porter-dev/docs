@@ -1,0 +1,64 @@
+---
+title: 'porter sandbox'
+description: "Run non-interactive commands inside a Porter sandbox from the CLI"
+---
+
+`porter sandbox` contains commands for interacting with sandboxes on a Porter cluster.
+
+## Prerequisites
+
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
+- You're connected to the correct cluster by running [porter config set-cluster](/standard/cli/command-reference/porter-config)
+
+---
+
+## `porter sandbox exec`
+
+Runs a single non-interactive command inside a sandbox and prints its stdout and stderr. Use this for scripting, CI/CD steps, and automated agents that need to run a command in a running sandbox and act on the result.
+
+**Usage:**
+```bash
+porter sandbox exec <sandbox-id> -- COMMAND [args...] [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-c`, `--command` | Command to run, as a single shell-style string. Wrapped in `sh -c` so pipes, `&&`, redirects, and globs work. Mutually exclusive with positional args after `--`. |
+| `-i`, `--interactive` | Reserved; interactive exec is not yet supported. |
+| `-t`, `--tty` | Reserved; TTY allocation is not yet supported. |
+
+There are two ways to pass a command:
+
+- **Positional, after `--`** — argv is sent verbatim with no shell involved. Use this when you want predictable argument handling.
+- **`-c`/`--command "<string>"`** — the string is wrapped in `sh -c` inside the sandbox, so shell features like pipes, `&&`, redirects, and globs work.
+
+<CodeGroup>
+```bash Positional args
+porter sandbox exec abc123 -- ls -la /workspace
+```
+
+```bash Shell string
+porter sandbox exec abc123 --command "echo hi && ls"
+```
+
+```bash Propagate exit code
+porter sandbox exec abc123 -- sh -c 'exit 7'
+```
+</CodeGroup>
+
+### Exit codes
+
+`porter sandbox exec` propagates the sandbox process's exit code so CI/CD pipelines and agents can branch on the result:
+
+| Exit code | Meaning |
+|-----------|---------|
+| `0`–`255` | The sandbox process's own exit code. Values outside this range are clamped into the low 8 bits; a non-zero original that would mask to `0` (for example `256`) is bumped to `1` so a failure is never reported as success. |
+| `2` | CLI usage error — bad flags, missing command, or an interactive flag was passed. |
+| `3` | The sandbox is not in the `running` phase and cannot accept exec calls. Reserved so scripts and agents can branch on "wait and retry" vs. "adjust and re-run". |
+
+<Info>
+Interactive (`-i`) and TTY (`-t`) flags are reserved for a future release. Passing them today exits with code `2` and a "not yet supported" message.
+</Info>
