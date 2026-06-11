@@ -4,28 +4,26 @@ title: "Deploying Multiple Apps with porter.yaml"
 
 You can deploy multiple Porter apps alongside multiple Porter addons in a single `porter.yaml` file. This is particularly useful when you need to deploy related services that work together, such as a web application with its associated database or cache.
 
-Requires Porter CLI **v0.68.30 or later**. Check your version with `porter version`, and upgrade with `brew install porter-dev/porter/porter`.
-
-<Note>
-Migrating from the beta shape? Replace `type: MANAGED-POSTGRES` / `engine: POSTGRES` / `values.config.{...}` with the schema above: `allocatedStorage` becomes `config.storageGigabytes`, and the duplicated `name` inside `config` is gone. The old shape currently prints `DEPRECATION WARNING` and will stop working in a future CLI release.
-</Note>
+Requires Porter CLI **v0.68.30 or later**. Check your version with `porter version`, and see the [CLI installation guide](https://docs.porter.run/cli/installation) to install or upgrade.
 
 ```bash
 porter apply -f porter.yaml --wait
 ```
 
-When connecting datastores, use the `--wait` flag. Addons are always applied before apps, and `--wait` holds the apply until each datastore is fully available (up to 10 minutes) before any apps deploy. This guarantees that the datastores' environment groups and credentials exist by the time the apps start. The flag also waits for each app's rollout to succeed before exiting.
+To guarantee that the datastore and its env group is ready before the app starts, use the --wait flag. Addons are always applied before apps, and `--wait` holds the apply until each datastore is fully available (up to 10 minutes) before any apps deploy. This guarantees that the datastores' environment groups and credentials exist by the time the apps start. The flag also waits for each app's rollout to succeed before exiting.
 
 Without `--wait`, the CLI proceeds about 10 seconds after creating a datastore. Apps may then fail their first deploy with a missing-environment-group error until the datastore finishes provisioning.
 
-To link a datastore to an app, reference its environment group in the app's `envGroups` section:
+When a datastore is provisioned, Porter automatically creates an environment group with the **same name as the datastore**. This environment group holds the datastore's connection details (host, port, credentials, etc.) as environment variables.
+
+To link a datastore to an app, reference that environment group by name in the app's `envGroups` section. The entry must match the datastore's `name` exactly. For example, to connect an app to a datastore named `cache`:
 
 ```yaml
 envGroups:
   - cache
 ```
 
-Embed the normal app schema as an item in the `apps:` list. Then attach addons as a list of `addons:` items.
+Embed the app schema as an item in the `apps:` list. Then attach addons as a list of `addons:` items.
 
 ## Example Configuration
 
