@@ -1,0 +1,35 @@
+---
+title: "Managing sessions"
+description: "Review and revoke active dashboard and CLI sessions for yourself and for team members in your Porter project"
+---
+
+Porter tracks the active sessions you and your teammates use to access a project, including both dashboard (browser) sessions and CLI sessions. You can review when each session was created, when it last made a request, and revoke sessions you no longer recognize.
+
+## Viewing your own sessions
+
+Open **Settings** in the sidebar and navigate to the **Sessions** tab to see every active session signed in as you.
+
+Each row shows:
+
+* **Client:** whether the session is from the dashboard (browser) or the Porter CLI.
+* **Last active:** the most recent time the session made a request.
+* **Created:** when the session was started.
+* **Expires:** when the session will expire if not refreshed.
+
+The session you are currently using is marked with a **Current session** badge so you can avoid revoking it by mistake.
+
+<Info>
+  CLI sessions are recognizable by a `porter-cli/` prefix on their user agent. Their last-active timestamp comes from the identity provider, so it may lag behind dashboard sessions slightly.
+</Info>
+
+## Viewing team sessions
+
+Admins can review active sessions for every member of the project from **Settings** → **Team sessions**. This is useful when offboarding a teammate or investigating suspicious activity — the **Last active** column shows when each session most recently made a request.
+
+You must be logged in with an **Admin** role to see this tab. See [Role-based access control](/security-and-compliance/role-based-access-control) for how roles are assigned.
+
+## Revoking sessions
+
+Select one or more sessions and choose **Revoke** to sign them out. A revoked session can no longer be used to make requests; the next time that browser or CLI tries to use it, the user is prompted to sign in again.
+
+Revoking your **Current session** signs you out of the dashboard immediately, so the UI will warn you before letting you proceed.

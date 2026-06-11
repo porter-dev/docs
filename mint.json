@@ -176,6 +176,7 @@
           "group": "Security and Compliance",
           "pages": [
             "security-and-compliance/role-based-access-control",
+            "security-and-compliance/managing-sessions",
             "security-and-compliance/static-egress-ip",
             "security-and-compliance/configuring-alb",
             "security-and-compliance/cloudflare-dns",
