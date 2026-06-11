@@ -1,0 +1,79 @@
+---
+title: "Legacy JWT token usage"
+description: "Track which project members still authenticate with legacy user-scoped JWT tokens and disable them project-wide before the end-of-June 2026 deprecation"
+---
+
+User-scoped JWT tokens — the credentials cached locally by older versions of the Porter CLI and used by some long-running CI workflows — will be deprecated at the **end of June 2026**. Once disabled, requests that present one of these tokens are rejected with a 401.
+
+To make the cutover safe, project admins can:
+
+* See which members of the project have authenticated with a legacy JWT token in the last 7 days.
+* Toggle a project-wide setting that immediately rejects user-scoped JWT tokens for every member.
+
+Both controls live under **Settings → General** in the dashboard and are only visible to admins.
+
+<Info>
+This page is only relevant if your project still has members using legacy user-scoped JWT tokens. If the **Disable user JWT tokens** panel is not visible in your project settings, no action is required.
+</Info>
+
+## Who can see it
+
+The **Disable user JWT tokens** panel is shown when:
+
+* Your role on the project is **Admin**.
+* The project has user session management enabled.
+
+If you do not see the panel and you believe you should, contact Porter support.
+
+## Reviewing recent token usage
+
+Before flipping the toggle, review the **Recent token usage** table at the bottom of the panel. It lists every project member who authenticated with a user-scoped JWT token in the last 7 days, along with the timestamp of their most recent authentication.
+
+If the table is empty, no member has used a legacy token in the last week and it is safe to disable them.
+
+If members appear in the table, reach out to them before disabling tokens — once you flip the switch, any active session or CI job using a legacy token will start failing until they re-authenticate.
+
+## Disabling user-scoped JWT tokens
+
+To reject user-scoped JWT tokens project-wide:
+
+<Steps>
+  <Step title="Open project settings">
+    In the dashboard, click **Settings** in the sidebar and select the **General** tab.
+  </Step>
+  <Step title="Review recent usage">
+    Scroll to the **Disable user JWT tokens** panel and check the **Recent token usage** table.
+  </Step>
+  <Step title="Toggle the switch">
+    Enable **Disable user-scoped JWT tokens**. The change takes effect immediately for every member of the project.
+  </Step>
+</Steps>
+
+You can flip the toggle back off at any time before the end-of-June 2026 deprecation if you need to restore access.
+
+## Helping members re-authenticate
+
+After you disable user-scoped JWT tokens, members whose CLI or CI workflows were using one will see authentication errors. They have two options for restoring access.
+
+### Re-authenticate the CLI
+
+Members can switch their local CLI to the v2 login method and sign in again:
+
+```bash
+porter config set-login-method v2 && porter auth login
+```
+
+This issues a new session that does not use the deprecated token format.
+
+### Use a project-scoped API token for CI
+
+CI/CD workflows that previously relied on a user-scoped JWT token should be moved to a [project-scoped API token](/security-and-compliance/role-based-access-control). Project-scoped tokens are not affected by this change.
+
+In your workflow, pass the token via the `PORTER_TOKEN` environment variable:
+
+```bash
+export PORTER_TOKEN="<project-scoped-token>"
+porter apply -f porter.yaml
+```
+
+See [CLI basic usage](/cli/basic-usage) for the full list of environment variables the CLI honors.
