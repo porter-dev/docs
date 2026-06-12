@@ -1,0 +1,80 @@
+---
+title: "Audit logs"
+description: "Review project activity in Porter, filter audit log entries, and export matching results for security reviews"
+---
+
+Porter audit logs help admins review project activity across the dashboard, CLI, and API token usage. Each entry captures when the request happened, who initiated it, what resource it targeted, which action ran, and the resulting status code.
+
+<Info>
+  Audit logs are only available to users with the **Admin** role. See [Role-based access control](/security-and-compliance/role-based-access-control) for more information about Porter roles.
+</Info>
+
+## Open audit logs
+
+In the Porter dashboard, open **Security** and select the **Audit logs** tab.
+
+When you open audit logs from the dashboard navigation, Porter applies a default filter that excludes `GET` requests. This keeps the initial view focused on write operations such as creating, updating, deploying, and deleting resources. Clear the `Method excludes GET` filter if you need to review read-only activity.
+
+## What each entry shows
+
+The audit log table includes:
+
+- **Timestamp:** when Porter received the request, shown in your browser's time zone.
+- **Actor:** the user or API token that made the request. CLI activity is marked with a `CLI` badge.
+- **Method:** the HTTP method, such as `POST`, `PATCH`, `PUT`, or `DELETE`.
+- **Status:** the HTTP response status code returned by Porter.
+- **Resource:** the Porter resource associated with the request, such as an application, cluster, datastore, environment group, project, cloud account, API token, integration, or user.
+- **Action:** a human-readable action name. Hover over the action to view the underlying request path.
+
+Porter preserves readable actor names for deleted users and revoked API tokens so older entries remain useful during investigations.
+
+## Filter audit logs
+
+Audit logs are available for the last 30 days. Use the **Date range** filter to choose a preset, such as the last hour, last 24 hours, last 7 days, or last 30 days, or select a custom date and time range.
+
+You can filter by:
+
+- Actor
+- Method
+- Source
+- Date range
+- Action
+- Status code
+- Resource type
+- Application
+- Cluster
+
+Most filters support include and exclude modes. For example, you can include only `DELETE` requests or exclude a noisy application while reviewing the rest of the project.
+
+Use the search field to search across matching audit entries. Search can match request paths, user email addresses, API token names, application names, and cluster names.
+
+The volume chart above the table shows activity over the selected range. Select part of the chart to narrow the table to that time window.
+
+## Share a filtered view
+
+Filters, search, date range, and pagination are stored in the page URL. Copy the URL from your browser to share the same audit log view with another project admin.
+
+## Export audit logs
+
+If audit log export is enabled for your project, the **Export** button appears above the table. Exports use the current date range and supported table filters, including actor, method, action, status code, resource type, application, cluster, and search.
+
+You can download matching entries as:
+
+- `.csv`
+- `.ndjson`
+
+Exports are capped at the first 10,000 matching rows. If the current filters match more than 10,000 rows, narrow the date range or add filters before exporting.
+
+## Troubleshooting
+
+### I cannot see the Audit logs tab
+
+Only project admins can view audit logs. Ask a project admin to update your role, or have an admin export the entries you need.
+
+### I expected to see read-only requests
+
+The dashboard applies `Method excludes GET` by default when opening audit logs from the Security navigation. Clear that filter to include `GET` requests.
+
+### A filter combination returns no results
+
+Application and cluster include filters do not overlap. Each audit log entry is tied to a single resource, so filtering for both a specific application and a specific cluster can return no rows. Clear one of those filters or use an exclude filter instead.
