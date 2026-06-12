@@ -1,0 +1,59 @@
+---
+title: "API audit logs"
+description: "Review every API action performed against your Porter project, including who performed it and whether it came from the dashboard or the Porter CLI"
+---
+
+Porter records an audit log entry for every API action performed against your project. Use audit logs to investigate changes, attribute actions to specific users or API tokens, and confirm whether a request originated from the dashboard or the Porter CLI.
+
+## Viewing audit logs
+
+Audit logs are available to project **Admins** under **Settings** → **Audit Logs**. Each row in the table includes:
+
+* **Timestamp** — when the action occurred.
+* **Actor** — the user email or API token name that performed the action. CLI-originated rows display a terminal icon next to the actor.
+* **Method and path** — the HTTP method and request path.
+* **Action** — the operation that ran (for example, `list_applications`).
+* **Resource** — the resource type, name, and parent (for example, the cluster an application belongs to).
+* **Status** — the HTTP response status code.
+
+## Identifying the source of an action
+
+Entries that originated from the [Porter CLI](/cli/installation) are tagged with a terminal icon next to the actor. Hovering the icon shows the tooltip **Performed via Porter CLI**. Rows without the icon were performed from the Porter dashboard or another API client.
+
+Porter classifies an entry as CLI-originated when its captured `User-Agent` begins with `porter-cli`. The classification is read-only — no additional configuration is required, and existing audit log rows are classified automatically.
+
+## Querying audit logs via the API
+
+You can fetch audit log entries programmatically by calling the audit logs query endpoint:
+
+```bash
+curl -X POST \
+  https://api.porter.run/api/v2/projects/{project_id}/api-audit-logs/query \
+  -H "Authorization: Bearer $PORTER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "start_time": "2026-05-20T00:00:00Z",
+    "end_time":   "2026-05-27T00:00:00Z"
+  }'
+```
+
+Each entry in the response includes a `source` field when the action originated from a recognized client. Today the only emitted value is `cli`; the field is omitted from entries originating from the dashboard or other API clients.
+
+```json
+{
+  "id": "0ab6b6f0-3c2b-4f2e-9d5a-1f2a3b4c5d6e",
+  "occurred_at": "2026-05-26T14:32:18Z",
+  "method": "POST",
+  "path": "/api/v2/projects/12492/applications",
+  "action": "create_application",
+  "actor_type": "USER",
+  "actor_id": "58392",
+  "actor_name": "alice@example.com",
+  "resource_type": "application",
+  "resource_name": "my-app",
+  "status_code": 200,
+  "source": "cli"
+}
+```
+
+Use `source` to filter or group audit log entries by client when building your own reporting on top of the API.
