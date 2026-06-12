@@ -5,4 +5,24 @@ description: "Set up Slack, email, and PagerDuty notification groups to receive 
 
 On critical events such as Application Crash Loop, Out of Memory errors, or non-zero exit codes, Porter will alert you on Slack. 
 
-You can create `Notification Groups` by heading to `Settings` on your Porter project and setting up channels - you can set up email, Slack or PagerDuty. These can then be attached to apps(in any app on the Porter dashboard, head to the `Settings` tab to attach a notification group to that specific app). For advanced and custom alerts, we recommend using a 3rd party addon such as Datadog, Mezmo, or New Relic that you can easily install from the `Addons` tab. 
+You can create `Notification Groups` by heading to `Settings` on your Porter project and setting up channels - you can set up email, Slack or PagerDuty. These can then be attached to apps(in any app on the Porter dashboard, head to the `Settings` tab to attach a notification group to that specific app). For advanced and custom alerts, we recommend using a 3rd party addon such as Datadog, Mezmo, or New Relic that you can easily install from the `Addons` tab.
+
+## Reconfiguring a Slack integration
+
+If the Slack channel, workspace, or webhook URL for an existing notification group needs to change, you can re-run the Slack OAuth flow against the same integration without deleting it. This preserves the integration's group name and mention settings, so any apps already attached to that notification group continue to receive alerts after the new channel is authorized.
+
+To reconfigure a Slack integration:
+
+1. From your Porter project, go to `Settings` and open the notification group backed by Slack.
+2. Under the Slack integration, click `Reconfigure webhook`.
+3. You'll be redirected to Slack to authorize Porter against the workspace and channel you want alerts delivered to.
+4. After approving, Slack redirects you back to the notification settings and the integration is updated in place.
+
+Use this flow when:
+
+- A channel was renamed, archived, or you want to point alerts at a different channel.
+- The Slack workspace changed and the previous webhook is no longer valid.
+- You want to rotate the webhook URL without re-attaching the notification group to each app.
+
+If you instead need a brand new integration (for example, to send alerts to a second workspace), use `Add Slack integration` rather than reconfiguring an existing one.
+
