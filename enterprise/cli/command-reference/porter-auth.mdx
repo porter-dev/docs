@@ -16,6 +16,17 @@ porter auth login --manual
 
 ```
 
+#### Default login method (v2)
+
+New CLI installs default to the **v2** login method, which uses a refreshable session and stores credentials in your operating system's keyring instead of `~/.porter/porter.yaml`. Sessions refresh automatically while you use the CLI.
+
+- Existing configs are upgraded to v2 automatically on the next CLI run; any legacy plaintext token in `porter.yaml` is cleared and replaced by a session stored in the keyring.
+- To keep the legacy JWT-based flow on older self-hosted instances, set `login_method: v1` in `~/.porter/porter.yaml`.
+
+#### Token overrides
+
+The `--token` flag and the `PORTER_TOKEN` environment variable still take precedence over the v2 default and are the recommended way to authenticate from CI/CD pipelines. If `PORTER_TOKEN` is set but rejected by the server, the CLI prompts you to `unset PORTER_TOKEN` before retrying.
+
 ### `porter auth logout`[](#porter-auth-logout "Direct link to heading")
 
-Logs a user out from a Porter instance.
+Logs a user out from a Porter instance. For v2 sessions, this also clears the session stored in your OS keyring.
