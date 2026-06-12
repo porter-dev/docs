@@ -3,17 +3,28 @@ title: "Deploying multiple apps with porter.yaml"
 description: "Define and deploy multiple Porter applications alongside datastores and custom Helm chart addons in a single porter.yaml file using porter apply"
 ---
 
-You can deploy multiple Porter apps alongside multiple Porter addons in a single `porter.yaml` file. This is particularly useful when you need to deploy related services that work together, such as a web application with its associated database or cache.
+You can deploy multiple Porter apps alongside multiple Porter addons in a single `porter.yaml` file. Currently only in-cluster datastores are supported for now.
 
-<Warning> This feature is in development and is subject to change. </Warning>
-
-### Usage
-
-To enable this feature, set the `PORTER_ADDON_YAML` environment variable while running the apply command.
+Requires Porter CLI **v0.68.30 or later**. Check your version with `porter version`, and see the [CLI installation guide](https://docs.porter.run/cli/installation) to install or upgrade.
 
 ```bash
-PORTER_ADDON_YAML=true porter apply -f porter.yaml
+porter apply -f porter.yaml --wait
 ```
+
+To guarantee that the datastore and its env group are ready before the app starts, use the --wait flag. Addons are always applied before apps, and `--wait` holds the apply until each datastore is fully available (up to 10 minutes) before any apps deploy. This guarantees that the datastores' environment groups and credentials exist by the time the apps start. The flag also waits for each app's rollout to succeed before exiting.
+
+Without `--wait`, the CLI proceeds about 10 seconds after creating a datastore. Apps may then fail their first deploy with a missing-environment-group error until the datastore finishes provisioning.
+
+When a datastore is provisioned, Porter automatically creates an environment group with the **same name as the datastore**. This environment group holds the datastore's connection details (host, port, credentials, etc.) as environment variables.
+
+To link a datastore to an app, reference that environment group by name in the app's `envGroups` section. The entry must match the datastore's `name` exactly. For example, to connect an app to a datastore named `cache`:
+
+```yaml
+envGroups:
+  - cache
+```
+
+Embed the app schema as an item in the `apps:` list. Then attach addons as a list of `addons:` items.
 
 ## Example Configuration
 
@@ -77,24 +88,18 @@ apps:
       tag: latest
 addons:
   - name: cache
-    type: MANAGED-REDIS
-    engine: REDIS
-    values:
-      config:
-        name: cache
-        masterUserPassword: password
-        allocatedStorage: 2 # Persistent storage size in GB. Cannot be changed after creation.
-        cpuCores: 0.1
-        ramMegabytes: 110
+    type: redis
+    kind: in-cluster
+    config:
+      storageGigabytes: 2 # Persistent storage size in GB. Cannot be changed after creation.
+      cpuCores: 0.1
+      ramMegabytes: 110
   - name: db
-    type: MANAGED-POSTGRES
-    engine: POSTGRES
-    values:
-      config:
-        name: db
-        masterUserPassword: password
-        allocatedStorage: 2
-        cpuCores: 0.1
-        ramMegabytes: 110
+    type: postgres
+    kind: in-cluster
+    config:
+      storageGigabytes: 2
+      cpuCores: 0.1
+      ramMegabytes: 110
 ```
 
