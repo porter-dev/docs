@@ -126,6 +126,8 @@ Configure a combined health check that applies to liveness, readiness, and start
 | `httpPath` | string | HTTP endpoint to check |
 | `timeoutSeconds` | integer | Request timeout (min: 1) |
 | `initialDelaySeconds` | integer | Initial delay before checking (min: 0) |
+| `periodSeconds` | integer | How often to perform the health check (min: 1) |
+| `failureThreshold` | integer | Consecutive failures before the container is considered unhealthy (min: 1) |
 
 ```yaml
 healthCheck:
@@ -133,7 +135,13 @@ healthCheck:
   httpPath: /healthz
   timeoutSeconds: 1
   initialDelaySeconds: 15
+  periodSeconds: 10
+  failureThreshold: 3
 ```
+
+<Info>
+`periodSeconds` and `failureThreshold` are optional. When omitted, Kubernetes defaults are used (`periodSeconds: 10`, `failureThreshold: 3`). Increase `failureThreshold` or `periodSeconds` for applications that may have transient slowness, and decrease them for faster failure detection.
+</Info>
 
 <Warning>
 Cannot be used together with `livenessCheck`, `readinessCheck`, or `startupCheck`. Use either the combined `healthCheck` or the individual checks.
@@ -163,6 +171,8 @@ livenessCheck:
   httpPath: /livez
   timeoutSeconds: 1
   initialDelaySeconds: 15
+  periodSeconds: 10
+  failureThreshold: 3
 ```
 
 ### `readinessCheck`
@@ -179,6 +189,8 @@ readinessCheck:
   httpPath: /readyz
   timeoutSeconds: 1
   initialDelaySeconds: 15
+  periodSeconds: 5
+  failureThreshold: 3
 ```
 
 ### `startupCheck`
@@ -195,7 +207,17 @@ startupCheck:
   httpPath: /startupz
   timeoutSeconds: 1
   initialDelaySeconds: 15
+  periodSeconds: 10
+  failureThreshold: 30
 ```
+
+<Tip>
+For slow-starting containers, set `failureThreshold` on `startupCheck` high enough that `periodSeconds * failureThreshold` covers your worst-case startup time. Once the startup probe succeeds, the liveness and readiness probes take over.
+</Tip>
+
+<Note>
+`periodSeconds` and `failureThreshold` are supported on each of `livenessCheck`, `readinessCheck`, and `startupCheck` and follow the same minimum-of-1 validation as the combined `healthCheck`.
+</Note>
 
 ---
 
