@@ -47,7 +47,7 @@ When **ALB** is selected, the following additional settings become available. Se
 
 ### Private load balancer
 
-In addition to the default public cluster load balancer, you can provision a **private load balancer** that only accepts traffic from inside your VPC (or networks peered to it). Use this when you want to expose services to internal clients — for example, an internal admin tool, a service consumed only by other VPCs, or a workload that must not be reachable from the public internet.
+In addition to the default public cluster load balancer, you can provision an **internal load balancer** that only accepts traffic from inside your VPC (or networks peered to it). Use this when you want to expose services to internal clients — for example, an internal admin tool, a service consumed only by other VPCs, or a workload that must not be reachable from the public internet.
 
 | Setting | Description |
 |---------|-------------|
@@ -59,7 +59,7 @@ Once enabled, you must configure DNS provider credentials so Porter can issue an
 |---------|-------------|
 | **DNS credentials** | API token for your DNS provider. Cloudflare is currently the only supported provider. The token must have permission to create and delete `TXT` records on the zones used by your private ingress hostnames. |
 
-Save the credentials before applying the cluster contract. You can rotate the token later with **Edit credentials**, or remove the integration entirely with **Remove** — note that removing credentials stops certificate issuance and renewal for private load balancer ingress.
+Save the credentials before updating the cluster. You can rotate the token later with **Edit credentials**, or remove the integration entirely with **Remove**. Note that removing credentials stops certificate issuance and renewal for private load balancer ingress.
 
 ## Observability
 
