@@ -53,13 +53,36 @@ In addition to the default public cluster load balancer, you can provision an **
 |---------|-------------|
 | **Add private load balancer** | Provisions a private NLB alongside the existing public cluster load balancer. Only NLB private load balancers are supported. |
 
-Once enabled, you must configure DNS provider credentials so Porter can issue and renew TLS certificates for ingress hostnames attached to the private load balancer over ACME DNS-01. HTTP-01 challenges cannot reach a private load balancer, so DNS-01 is required.
+Once enabled, you must configure a DNS provider so Porter can issue and renew TLS certificates for ingress hostnames attached to the private load balancer over ACME DNS-01. HTTP-01 challenges cannot reach a private load balancer, so DNS-01 is required.
 
 | Setting | Description |
 |---------|-------------|
-| **DNS credentials** | API token for your DNS provider. Cloudflare is currently the only supported provider. The token must have permission to create and delete `TXT` records on the zones used by your private ingress hostnames. |
+| **DNS provider** | The DNS provider used to solve ACME DNS-01 challenges for private load balancer ingress. Choose **Cloudflare** or **AWS Route53**. |
 
-Save the credentials before updating the cluster. You can rotate the token later with **Edit credentials**, or remove the integration entirely with **Remove**. Note that removing credentials stops certificate issuance and renewal for private load balancer ingress.
+<Tabs>
+  <Tab title="Cloudflare">
+
+When **Cloudflare** is selected, provide an API token that has permission to create and delete `TXT` records on the zones used by your private ingress hostnames.
+
+| Setting | Description |
+|---------|-------------|
+| **DNS credentials** | Cloudflare API token. Must have permission to create and delete `TXT` records on the zones used by your private ingress hostnames. |
+
+Save the credentials before updating the cluster. You can rotate the token later with **Edit credentials**, or remove the integration entirely with **Remove**. Removing credentials stops certificate issuance and renewal for private load balancer ingress.
+
+  </Tab>
+  <Tab title="AWS Route53">
+
+When **AWS Route53** is selected, no credentials are required — Porter authenticates to Route53 through the cluster's pod identity. You only need to specify the domain whose hosted zone Porter should write challenge records to.
+
+| Setting | Description |
+|---------|-------------|
+| **Route53 domain** | The domain this private load balancer issues certificates for. Must be managed in a Route53 hosted zone in the same AWS account as the cluster. |
+
+Porter resolves the domain to its hosted zone at install time and uses pod identity to create and delete the `TXT` records needed for ACME DNS-01 challenges.
+
+  </Tab>
+</Tabs>
 
 ## Observability
 
