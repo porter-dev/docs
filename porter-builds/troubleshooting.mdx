@@ -1,0 +1,107 @@
+---
+title: "Troubleshooting"
+sidebarTitle: "Troubleshooting"
+---
+
+## Build stuck in "Provisioning"
+
+**Symptom:** The build status shows "Provisioning" for more than 2 minutes.
+
+**Cause:** The BuildKit daemon is starting up. On the first build after a period of inactivity, Porter needs to provision a new compute node and start the daemon. This typically takes 30–60 seconds, but can take longer if a new node needs to be added to the cluster.
+
+**Resolution:**
+- Wait up to 3 minutes — most provisioning delays resolve on their own as the node becomes ready.
+- If the build remains stuck beyond 5 minutes, cancel and retry the build. The node should be warm for the next attempt.
+- If the issue persists, contact Porter support.
+
+## Build fails immediately after starting
+
+**Symptom:** Build transitions from "Building" to "Failed" within seconds, with no meaningful build output in the logs.
+
+**Cause:** This usually indicates an issue with the Dockerfile or build context rather than the build infrastructure.
+
+**Resolution:**
+- Check that your Dockerfile path is correct in the build template. It should be relative to the repository root (e.g., `./Dockerfile` or `./services/api/Dockerfile`).
+- Verify that the Dockerfile exists on the branch configured for the build template.
+- Check that the build context directory exists and contains the expected files.
+
+## Build fails with "out of memory" (OOM)
+
+**Symptom:** Build logs show the process being killed, or the build fails during a memory-intensive step like compilation or linking.
+
+**Cause:** The build daemon's memory allocation is insufficient for your build workload.
+
+**Resolution:**
+1. Go to the **Builds** tab and click **Settings**
+2. Increase the **Memory** allocation (e.g., from 4 GiB to 8 or 16 GiB)
+3. Click **Save** and retry the build
+
+Use the **Metrics** section to monitor peak memory usage during builds and set the allocation with some headroom above the peak.
+
+## Build is slow despite caching
+
+**Symptom:** Builds take longer than expected even though you've run them before.
+
+**Possible causes and resolutions:**
+
+- **Cache was evicted:** If no builds ran for an extended period, the hot cache may have been rotated to cold storage. The first build after a long idle period restores the cache, which adds roughly 10 seconds. Subsequent builds will be fast again.
+- **Dockerfile layer ordering:** If you copy your entire source tree before installing dependencies, the dependency layer is invalidated on every code change. Restructure your Dockerfile to copy dependency manifests first — see [Dockerfile Best Practices](/porter-builds/configuration#dockerfile-best-practices).
+- **Large build context:** A missing or incomplete `.dockerignore` can cause the entire repository (including `.git`, `node_modules`, test data, etc.) to be uploaded on every build. Add a `.dockerignore` to exclude files not needed for the build.
+- **Cache size too small:** If your project produces many large layers, the cache volume may be full, forcing older layers to be evicted. Check the **Metrics** section for disk usage and increase **Cache size** in **Settings** if it's near capacity.
+
+## Build fails with a Dockerfile syntax error
+
+**Symptom:** Build logs show a parse error or unexpected token in the Dockerfile.
+
+**Resolution:** Builds uses BuildKit, which supports the full Dockerfile specification including multi-stage builds, `--mount` flags, and heredoc syntax. However, these features require the `# syntax=docker/dockerfile:1` directive at the top of your Dockerfile. If you're using advanced Dockerfile features and seeing parse errors, add:
+
+```dockerfile
+# syntax=docker/dockerfile:1
+FROM node:20-alpine AS builder
+...
+```
+
+## Build-time environment variables not available
+
+**Symptom:** Environment variables that are set on the application are not accessible during the build.
+
+**Resolution:**
+- For **Dockerfile builds**, you must declare variables with `ARG` before using them. Simply setting them on the application is not enough — the Dockerfile needs an explicit `ARG VAR_NAME` line for each variable. See [Build-Time Environment Variables](/porter-builds/configuration#build-time-environment-variables).
+- Variables defined as **Secrets** in Environment Groups are not available during builds for security reasons.
+- Supplementary variables in your GitHub Actions file must be prefixed with `PORTER_` to be passed to the build.
+
+## Multi-arch build fails for one architecture
+
+**Symptom:** The AMD64 build succeeds but the ARM64 build fails (or vice versa).
+
+**Cause:** Multi-arch builds run independently on native hardware for each architecture. A failure on one architecture typically means the Dockerfile has a platform-specific issue.
+
+**Resolution:**
+- Check the build logs for the failing architecture specifically.
+- Common issues include: base images that don't support the target architecture, platform-specific system packages (e.g., `apt-get install` of a package only available for x86), or compiled binaries that aren't cross-platform.
+- Ensure your base image supports both architectures. Most official images (e.g., `node`, `python`, `golang`) publish multi-arch manifests.
+
+## "Incompatible" badge on a build context
+
+**Symptom:** A build context in the Builds tab shows an "Incompatible" badge and cannot be enabled for Builds.
+
+**Cause:** Builds only supports Dockerfile-based builds. Build contexts that use buildpacks are marked as incompatible.
+
+**Resolution:** If you want to use Builds for this application, switch the build method to Dockerfile in the application's **Build** tab. Otherwise, the application will continue to build using the existing GitHub Actions flow.
+
+## Cannot access Settings page
+
+**Symptom:** The Settings button doesn't appear on the Builds tab, or the Settings page shows a message that Builds is not enabled.
+
+**Cause:** Builder settings are only available when at least one build context has Builds enabled.
+
+**Resolution:** Enable Builds on at least one build context first by clicking **Edit build contexts** and selecting a compatible build template.
+
+## Build logs not loading
+
+**Symptom:** The build detail page shows a build completed or failed, but logs are empty or not loading.
+
+**Resolution:**
+- Build logs may take a few seconds to become available after a build completes. Refresh the page.
+- For builds that failed during provisioning (before the daemon started), there may be no build logs — only the status reason will be available.
+- If logs consistently fail to load, contact Porter support.
