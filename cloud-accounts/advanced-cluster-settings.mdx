@@ -53,13 +53,34 @@ In addition to the default public cluster load balancer, you can provision an **
 |---------|-------------|
 | **Add private load balancer** | Provisions a private NLB alongside the existing public cluster load balancer. Only NLB private load balancers are supported. |
 
-Once enabled, you must configure DNS provider credentials so Porter can issue and renew TLS certificates for ingress hostnames attached to the private load balancer over ACME DNS-01. HTTP-01 challenges cannot reach a private load balancer, so DNS-01 is required.
+Once enabled, you must configure a DNS provider so Porter can issue and renew TLS certificates for ingress hostnames attached to the private load balancer over ACME DNS-01. HTTP-01 challenges cannot reach a private load balancer, so DNS-01 is required.
+
+Porter supports two DNS providers for private load balancer ingress: **Cloudflare** and **AWS Route53**.
+
+<Tabs>
+  <Tab title="Cloudflare">
 
 | Setting | Description |
 |---------|-------------|
-| **DNS credentials** | API token for your DNS provider. Cloudflare is currently the only supported provider. The token must have permission to create and delete `TXT` records on the zones used by your private ingress hostnames. |
+| **DNS credentials** | API token for Cloudflare. The token must have permission to create and delete `TXT` records on the zones used by your private ingress hostnames. |
 
-Save the credentials before updating the cluster. You can rotate the token later with **Edit credentials**, or remove the integration entirely with **Remove**. Note that removing credentials stops certificate issuance and renewal for private load balancer ingress.
+Save the credentials before updating the cluster. You can rotate the token later with **Edit credentials**, or remove the integration entirely with **Remove**. Removing credentials stops certificate issuance and renewal for private load balancer ingress.
+
+  </Tab>
+  <Tab title="Route53">
+
+When the cluster is on AWS, you can use Route53 instead of Cloudflare. Porter authenticates to Route53 through an [EKS Pod Identity](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html) scoped to a single hosted zone, so no API tokens are stored.
+
+| Setting | Description |
+|---------|-------------|
+| **Route53 domain** | The DNS zone the private ingress serves certificates for (for example, `internal.example.com`). At install time, Porter resolves the matching public Route53 hosted zone in the same AWS account and provisions a cert-manager pod identity scoped to that zone. |
+
+The domain you provide must already exist as a **public** hosted zone in the cluster's AWS account, and the zone name must match the domain exactly. If only a parent zone exists — for example, you set the domain to `internal.example.com` but only `example.com` is hosted in Route53 — Porter refuses to scope cert-manager to the parent. Delegate `internal.example.com` into its own hosted zone first.
+
+Private hosted zones and duplicate public hosted zones with the same name are not supported. Remove duplicates before saving.
+
+  </Tab>
+</Tabs>
 
 ## Observability
 
