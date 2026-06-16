@@ -1,0 +1,84 @@
+---
+title: "Export API audit logs"
+description: "Stream a CSV of your Porter project's API audit logs for compliance reviews, SIEM ingestion, and offline analysis"
+---
+
+Porter records every API call made against your project to an audit log. You can export the entries that match your current filters as a CSV directly from the dashboard, or by calling the export API. Use this for SOC 2 / HIPAA evidence collection, ingesting events into a SIEM, or running ad-hoc analysis in a spreadsheet.
+
+## Export from the dashboard
+
+1. Sign in as an **Admin** and open **Security** in the sidebar.
+2. Open the **API audit logs** tab.
+3. Set the date range and any filters (actor, method, status code, resource type, cluster, application, IP, action, free-text search) you want included in the export.
+4. Click **Export CSV** next to the view-mode toggle.
+
+The browser shows a "Preparing your CSV export…" toast while the response streams. When the download completes, you'll see "Export ready — check your downloads." The file is named:
+
+```text
+api-audit-logs-project-<project_id>-<YYYYMMDD>-to-<YYYYMMDD>.csv
+```
+
+The export honors the same filter set as the audit log view, so what you see on screen is what you get in the file.
+
+## Export from the API
+
+Send a `POST` to the export endpoint with the same request body shape as the audit log query endpoint, minus the `page` field. The response is a chunked `text/csv` stream — write it directly to disk as it arrives instead of buffering in memory.
+
+```bash
+curl -X POST \
+  "https://dashboard.porter.run/api/v2/projects/{project_id}/api-audit-logs/export" \
+  -H "Authorization: Bearer $PORTER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -o api-audit-logs.csv \
+  -d '{
+    "start_date": "2026-05-01T00:00:00Z",
+    "end_date":   "2026-05-26T00:00:00Z",
+    "methods":      ["POST", "DELETE"],
+    "status_codes": ["2xx", "4xx"],
+    "cluster_ids":  [1234]
+  }'
+```
+
+Supported filter fields mirror the audit log query: `actors`, `actors_exclude`, `methods`, `methods_exclude`, `status_codes`, `status_codes_exclude`, `resource_types`, `resource_types_exclude`, `ips`, `ips_exclude`, `actions`, `actions_exclude`, `application_ids`, `application_ids_exclude`, `cluster_ids`, `cluster_ids_exclude`, `path`, and `search`.
+
+### CSV columns
+
+Column order is stable so downstream tools can rely on it:
+
+| Column | Description |
+| --- | --- |
+| `started_at` | RFC 3339 timestamp (UTC) when the API call started. |
+| `method` | HTTP method. |
+| `path` | Request path. |
+| `action` | Logical action performed (for example, `app.deploy`). |
+| `actor_type` | `user` or `api_token`. |
+| `actor_id` | Stable identifier for the actor. |
+| `actor_name` | Display name resolved at export time. |
+| `remote_ip` | Source IP of the request. |
+| `user_agent` | Client user agent. |
+| `resource_type` | Resource the request targeted. |
+| `resource_id` | Resource identifier. |
+| `resource_name` | Display name resolved at export time. |
+| `cluster_id` | Cluster the request targeted, if any. |
+| `cluster_name` | Cluster display name. |
+| `preview_environment_id` | Preview environment UUID, if any. |
+| `preview_environment_name` | Preview environment display name. |
+| `status_code` | HTTP status code returned to the original caller. |
+
+## Detecting truncated exports
+
+The endpoint streams rows as they're read from the database, so the response status (`200 OK`) is committed before the full result set is known. If an error occurs mid-stream, Porter appends a sentinel footer row to mark the file as incomplete:
+
+```text
+__porter_export_failed__
+```
+
+If you see this row at the end of a downloaded CSV, the export did not finish — re-run it, ideally with a narrower date range or tighter filters.
+
+<Info>
+  Validation errors (for example, an invalid date range) return a `400` JSON error envelope before any CSV data is written, so a partial CSV always indicates a runtime failure, not a bad request.
+</Info>
+
+## Audit trail for exports
+
+Every export is itself recorded in the audit log under the operation ID `ExportApiAuditLogs`, so you can prove who exported what and when as part of a compliance review.
