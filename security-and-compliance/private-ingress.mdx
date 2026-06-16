@@ -1,0 +1,102 @@
+---
+title: "Private ingress with DNS-01 certificates"
+sidebarTitle: "Private ingress"
+description: "Expose internal services on a Porter-managed private NLB with automatic Let's Encrypt certificates issued via the DNS-01 challenge"
+---
+
+In addition to the default public load balancer, a Porter cluster can have one or more **additional load balancers** attached. The first supported variant is a **private (internal) NLB** with its own ingress-nginx controller, intended for services that should only be reachable from inside your VPC or peered networks.
+
+Because the private ingress is not reachable from the public internet, Let's Encrypt cannot complete the standard HTTP-01 challenge against it. Porter instead provisions a cert-manager `ClusterIssuer` that uses the **ACME DNS-01 challenge** to obtain and renew TLS certificates for private domains.
+
+## When to use it
+
+Enable a private ingress when you need to:
+
+- Serve internal tools, dashboards, or admin APIs to engineers on a VPN, Tailscale, or peered VPC without exposing them publicly.
+- Run service-to-service traffic between accounts or VPCs over HTTPS with valid, automatically-renewed certificates instead of self-signed certs.
+- Keep sensitive workloads off the public internet while still using a real DNS name and a trusted TLS certificate.
+
+If you only need public domains, the default public load balancer already handles HTTP-01 certificate issuance — no additional configuration is required. See [HTTPS certificates and custom domains](/applications/configure/custom-domains) for the public path.
+
+## How it works
+
+When a private additional load balancer is attached to your cluster, Porter:
+
+1. Installs a second `ingress-nginx` release configured with `scheme: internal` and a dedicated ingress class of `nginx-private`. This controller is fronted by an internal AWS NLB that only accepts traffic from inside the VPC.
+2. Installs a cert-manager `ClusterIssuer` whose ACME solver uses **DNS-01** against your configured DNS provider, so certificates can be issued without inbound public traffic to the cluster.
+3. Wires cert-manager up to the DNS provider — for Cloudflare via a Kubernetes secret holding an API token, for Route 53 via a cert-manager EKS Pod Identity scoped to a single hosted zone.
+
+Services attached to the private ingress receive automatically issued and renewed Let's Encrypt certificates, exactly like services on the public ingress.
+
+## Requirements
+
+- A Porter-managed EKS cluster.
+- A DNS provider that supports ACME DNS-01 challenges. Currently supported:
+  - **Cloudflare**
+  - **Route 53** (AWS)
+- A hosted zone for the domain you want to serve from the private ingress.
+- Network connectivity from your clients to the cluster's private subnets — for example via VPN, AWS PrivateLink, VPC peering, or Tailscale.
+
+<Info>The private ingress is an internal NLB. Requests from outside the VPC will not reach it, even if DNS resolves. Make sure clients have a network path to the cluster's private subnets before debugging certificate issues.</Info>
+
+## Configuring the private ingress
+
+Reach out to Porter support to attach a private additional load balancer to your cluster. You will need to provide:
+
+- The cluster you want to enable the private ingress on.
+- The DNS provider you want cert-manager to use for DNS-01 challenges (`cloudflare` or `route53`).
+- For Cloudflare: a scoped API token with `Zone:Read` and `Zone:DNS:Edit` permissions for the target zone(s).
+- For Route 53: the hosted zone ID Porter should scope the cert-manager pod identity to.
+
+Porter applies this configuration through the cluster contract. Conceptually, the additional load balancer is described as:
+
+```yaml
+additional_load_balancers:
+  - network_access: PRIVATE
+    dns_provider_config:
+      provider: cloudflare   # or "route53"
+```
+
+Once applied, Porter provisions the internal NLB, the `nginx-private` ingress controller, and the matching DNS-01 `ClusterIssuer`.
+
+### Cloudflare credentials
+
+For Cloudflare, the API token is stored in a Kubernetes secret named `private-ingress-dns-credentials` in the cert-manager namespace, under the key `api-token`. The DNS-01 solver references this secret directly — rotating the token is a matter of updating the secret value.
+
+### Route 53 credentials
+
+For Route 53, no API key is needed. Porter creates a least-privilege IAM role and binds it to the cert-manager service account through an EKS Pod Identity association. The role grants record-set changes only on the configured hosted zone; zone discovery is read-only across the account.
+
+The first reconcile after enabling Route 53 may take an extra minute or two while IAM associations propagate — Porter automatically retries until cert-manager can authenticate.
+
+## Attaching a service to the private ingress
+
+Once the private ingress is enabled, route a web service through it by setting the `nginx-private` ingress class on the service.
+
+In `porter.yaml`:
+
+```yaml
+services:
+  - name: internal-admin
+    type: web
+    run: npm start
+    port: 3000
+    ingress:
+      ingressClassName: nginx-private
+      customDomain: admin.internal.example.com
+```
+
+Then create a DNS record in your provider that points `admin.internal.example.com` at the private NLB's DNS name. The record must resolve, but the load balancer itself only accepts traffic from inside the VPC.
+
+Once DNS has propagated:
+
+- Clients on the private network can reach `https://admin.internal.example.com` over HTTPS.
+- cert-manager issues and renews the certificate automatically using the DNS-01 challenge, without needing inbound public traffic to the cluster.
+
+## Troubleshooting
+
+**Certificate stuck in `Pending` or `Issuing`.** DNS-01 challenges require cert-manager to write a `TXT` record to your DNS provider. Confirm that the Cloudflare token or Route 53 pod identity has permission to edit records on the target zone. cert-manager logs the specific challenge error on the `Certificate` and `Order` resources.
+
+**Domain resolves but does not load.** Verify that the client has a network path to the private NLB. The NLB DNS name is reachable only from inside the VPC or from networks peered to it.
+
+**Need a different DNS provider.** Only Cloudflare and Route 53 are supported for DNS-01 today. Contact Porter support if you need another provider.
