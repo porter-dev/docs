@@ -1,0 +1,65 @@
+---
+title: "Datastore compute resources"
+sidebarTitle: "Compute resources"
+description: "Resize the compute backing your managed RDS, Aurora, and Elasticache datastores from the Porter dashboard"
+---
+
+<Info>
+The **Resources** tab is part of the new datastore experience and is rolled out per project. If you don't see it on your datastore, reach out to Porter support to have it enabled.
+</Info>
+
+The **Resources** tab lets you change the compute instance type for an existing managed datastore without leaving the Porter dashboard. It surfaces a curated set of AWS instance families for the datastore engine, previews the change before it applies, and submits the update through the same safe modification path used everywhere else in Porter.
+
+## When to use it
+
+Use the Resources tab when you need to:
+
+- Scale a production database up because CPU or memory is saturated.
+- Scale down a staging or development datastore to save cost.
+- Move a workload from burstable to general purpose (or vice versa) as traffic patterns change.
+- Switch to a newer instance generation (for example, from `db.m6g` to `db.m8g`).
+
+The tab is available for managed datastores only: **RDS Postgres**, **Aurora Postgres**, and **Elasticache Redis**. In-cluster datastores continue to be sized through their existing CPU and memory limits.
+
+## Instance families
+
+Instance types are grouped into families so you can pick the right shape for your workload without scrolling through the full AWS catalog:
+
+| Family | Best for | AWS family |
+| :--- | :--- | :--- |
+| **Burstable** | Cost-efficient instances for variable workloads and smaller databases | `t` (e.g. `db.t4g.*`) |
+| **General purpose** | Balanced CPU and memory for steady production workloads | `m` (e.g. `db.m8g.*`) |
+| **Memory optimized** | Higher memory ratios for larger datasets and cache-heavy workloads | `r` (e.g. `db.r7g.*`) |
+| **Custom** | Any instance type supported by the datastore engine | All other families |
+
+Each named family shows a short list of recommended sizes on the latest generation. To pick an older generation, a specialized class, or a size that isn't in the recommended list, select **Custom** and search the full catalog.
+
+## Updating compute
+
+<Steps>
+  <Step title="Open the Resources tab">
+    From **Add-ons**, open your datastore and select the **Resources** tab.
+  </Step>
+  <Step title="Pick a family and size">
+    Choose an instance family, then select an instance type from the family's dropdown. The selector shows the instance type, vCPU count, and memory for each option.
+  </Step>
+  <Step title="Review the diff">
+    Click **Review changes**. Porter runs a dry-run against the datastore contract and shows you exactly what will change before anything is applied.
+  </Step>
+  <Step title="Apply">
+    Confirm the change to start the modification. The datastore moves to the `MODIFYING` state while AWS resizes the instance, and the tab re-enables once the datastore returns to `AVAILABLE`.
+  </Step>
+</Steps>
+
+If you make a selection and want to revert without applying, click **Cancel** to reset the form to the datastore's current instance type.
+
+## Behavior notes
+
+- **Availability gating** — The **Review changes** button is only enabled when the datastore is in the `AVAILABLE` state. You can't queue resource changes during another modification.
+- **Failover** — For Aurora clusters with a read replica and for Elasticache replication groups, AWS performs an automatic failover during the resize to minimize downtime. Expect a short connection drop while the failover happens.
+- **Permissions** — Project viewers can see the current instance type but can't submit a change. You need Developer or Admin role to apply a resize.
+- **Validation** — Porter only offers instance types that are valid for the datastore's engine and version. Custom selections that the engine rejects are surfaced inline before the dry-run.
+
+## Related
+
+- [Datastores overview](/addons/datastores) — provisioning, networking, and monitoring for Porter-managed databases.
