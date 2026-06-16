@@ -78,6 +78,17 @@ Once created, your Temporal integration will appear in the integrations list and
 ![Temporal Integration List](/images/configure/temporal-integration-list.png)
 *Temporal integrations in the Integrations page*
 
+### Update an API key
+
+If your API key expires or you need to rotate it, you can update the key for an existing integration without recreating it.
+
+1. Navigate to **Integrations** in the Porter dashboard
+2. Select the **Temporal** tab
+3. Find the integration you want to update and click **Update API key**
+4. Enter the new API key and click **Update API key** to confirm
+
+The new key takes effect immediately. Any services using this integration will automatically use the updated key on their next scaling evaluation.
+
 ## Step 3: Configure Temporal Autoscaling for Your Service
 
 With your Temporal integration set up, you can now configure autoscaling for your worker services.
