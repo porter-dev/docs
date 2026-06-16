@@ -32,6 +32,7 @@ porter app run [application] -- COMMAND [args...] [flags]
 | `--allow-concurrent` | Allow concurrent job runs when using `--job` (overrides job config if concurrency is disabled) |
 | `--cpu` | CPU allocation in millicores (1000 millicores = 1 vCPU) |
 | `--ram` | RAM allocation in Mi (1024 Mi = 1 GB) |
+| `-c`, `--container` | Name of the container inside the pod to run the command in. If omitted, the first non-sidecar application container is selected automatically |
 |`-v` | Print verbose output |
 
 <Warning>
@@ -70,6 +71,14 @@ porter app run my-app --cpu 500 --ram 512 -- python heavy_script.py
 
 <Info>
 In these examples, we use `bash` and `python`, but those commands need to actually be present within the container to run. With very lightweight containers, you may find that none of these are available. If you run into trouble here, feel free to reach out to the support team.
+</Info>
+
+<Info>
+**Service mesh support:** `porter app run` works on services with Linkerd injected without any extra flags. The CLI automatically skips the `linkerd-proxy` sidecar when picking a container, and ephemeral copy pods are created without the proxy injected. If you need to target a specific container explicitly, use `-c` / `--container`:
+
+```bash
+porter app run my-app -c my-container -- bash
+```
 </Info>
 
 ---
