@@ -1,0 +1,135 @@
+---
+title: "Sandboxes"
+description: "Run short-lived container workloads on a Porter cluster through the sandbox API"
+---
+
+<Info>The sandbox API is currently in alpha. Endpoints live under `/api/v2/alpha/...` and may change without notice.</Info>
+
+Sandboxes let you run a container image on a Porter-managed cluster for a
+single task — running an evaluation, executing a one-off script, or attaching
+short-lived compute to an agent — without packaging it as a long-running
+application.
+
+You give the API a container image (and optionally a command, arguments, tags,
+or volume mounts), and Porter schedules it on the target cluster, captures its
+logs, and exposes status and exec endpoints while it runs.
+
+## When to use a sandbox
+
+Use a sandbox when you want to:
+
+- Run an ad-hoc workload (data job, eval, migration probe) without defining an application.
+- Give an agent or upstream service a clean container to execute a command in.
+- Mount an existing volume into a fresh container to inspect or process its data.
+
+For long-running services, jobs on a schedule, or anything that needs autoscaling,
+use [applications](/applications/deploy/overview) instead.
+
+## Lifecycle
+
+A sandbox moves through these phases:
+
+| Phase | Meaning |
+|-------|---------|
+| `queued` | Accepted by the API, waiting to be scheduled. |
+| `creating` | Pod is being created on the cluster. |
+| `running` | Container is running and can accept `exec` calls. |
+| `succeeded` | Container exited with code `0`. |
+| `failed` | Container exited with a non-zero code. |
+| `terminated` | Sandbox was deleted before completing. |
+
+Logs remain queryable after a sandbox finishes.
+
+## Creating a sandbox
+
+Send a `POST` to the create endpoint with the image you want to run. The
+response returns the sandbox `id`, which you use for all follow-up calls.
+
+```bash
+curl -X POST \
+  "https://api.porter.run/api/v2/alpha/projects/{project_id}/clusters/{cluster_id}/sandboxes" \
+  -H "Authorization: Bearer $PORTER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "image": "python:3.11-alpine",
+    "command": ["python", "-c"],
+    "args": ["print(\"hello from sandbox\")"],
+    "tags": {
+      "env": "prod",
+      "owner": "alice"
+    }
+  }'
+```
+
+```json Response
+{
+  "id": "sbx_01HNXYZ...",
+  "volume_mounts": {}
+}
+```
+
+### Request fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `image` | string | Yes | Container image to run (e.g. `python:3.11-alpine`). |
+| `command` | string[] | No | Overrides the image entrypoint. |
+| `args` | string[] | No | Arguments passed to `command`. |
+| `tags` | object | No | Key/value labels for filtering sandboxes later via `list`. |
+| `volume_mounts` | object | No | Volumes to mount, keyed by absolute mount path inside the container; values are volume IDs. |
+
+### Mounting volumes
+
+Pass a map of mount path to volume ID to make persistent data available to the
+sandbox:
+
+```json
+{
+  "image": "alpine:3.20",
+  "command": ["sh", "-c"],
+  "args": ["ls -la /mnt/my-data"],
+  "volume_mounts": {
+    "/mnt/my-data": "9b2f6f3a-8a44-4f59-9d3e-2f1f1c5f2b10"
+  }
+}
+```
+
+## Running a command in a sandbox
+
+Once the sandbox reaches the `running` phase, use the exec endpoint to run a
+command and capture its stdout, stderr, and exit code. A non-zero exit code is
+returned as part of the response, not as an error.
+
+```bash
+curl -X POST \
+  "https://api.porter.run/api/v2/alpha/projects/{project_id}/clusters/{cluster_id}/sandboxes/{sandbox_id}/exec" \
+  -H "Authorization: Bearer $PORTER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "command": ["echo", "hello"] }'
+```
+
+If the sandbox is not in the `running` phase the API returns `409`.
+
+## Listing, status, logs, and termination
+
+| Action | Method & path |
+|--------|---------------|
+| List sandboxes (optionally filter by tag) | `GET /api/v2/alpha/projects/{project_id}/clusters/{cluster_id}/sandboxes` |
+| Get sandbox status | `GET /api/v2/alpha/projects/{project_id}/clusters/{cluster_id}/sandboxes/{sandbox_id}` |
+| Get sandbox logs | `GET /api/v2/alpha/projects/{project_id}/clusters/{cluster_id}/sandboxes/{sandbox_id}/logs` |
+| Run a command | `POST /api/v2/alpha/projects/{project_id}/clusters/{cluster_id}/sandboxes/{sandbox_id}/exec` |
+| Terminate sandbox | `DELETE /api/v2/alpha/projects/{project_id}/clusters/{cluster_id}/sandboxes/{sandbox_id}` |
+
+Filter `list` by repeating the `tag` query parameter (`?tag=env=prod&tag=owner=alice`);
+results must match every tag passed in. The `logs` endpoint accepts `limit`
+(default `500`, max `5000`) and `since` (e.g. `30m`, `1h`, `6h`) query parameters,
+and logs persist after the sandbox is terminated.
+
+## Error responses
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Invalid request (missing `image`, malformed body, bad path parameters). |
+| `404` | Sandbox not found. |
+| `409` | Sandbox is not in the `running` phase (returned from `exec`). |
+| `502` / `503` / `504` | The sandbox service on the cluster is not ready. |
