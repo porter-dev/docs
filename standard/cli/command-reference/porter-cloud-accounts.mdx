@@ -1,0 +1,87 @@
+---
+title: 'porter cloud-accounts'
+description: "List cloud accounts connected to a Porter project, filter by provider or connection status, sort the results, and output as JSON for scripting"
+---
+
+`porter cloud-accounts` contains commands for viewing the AWS, GCP, and Azure cloud accounts connected to your Porter project.
+
+## Prerequisites
+
+- You've logged in to the Porter CLI by running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
+
+---
+
+## `porter cloud-accounts list`
+
+List the cloud accounts connected to the current project. The command prints a table with each account's name, provider, provider account ID, connection status, and the date it was connected.
+
+**Usage:**
+
+```bash
+porter cloud-accounts list [flags]
+```
+
+**Flags:**
+
+| Flag | Description |
+|------|-------------|
+| `--provider <providers>` | Filter by cloud provider. Accepts `aws`, `gcp`, or `azure`. Repeatable and comma-separated (e.g. `--provider aws,gcp`). |
+| `--status <status>` | Filter by connection status. One of `connected` or `pending`. |
+| `--sort <field>` | Sort the results. One of `connected_at` (default), `name`, or `provider`. |
+| `--json` | Print the results as JSON instead of a table. |
+| `--project <id>` | Override the active project for this command. |
+
+### Examples
+
+List every cloud account connected to the current project:
+
+```bash
+porter cloud-accounts list
+```
+
+Show only the AWS and GCP accounts that have finished connecting, sorted by name:
+
+```bash
+porter cloud-accounts list --provider aws,gcp --status connected --sort name
+```
+
+List cloud accounts in a specific project without changing your active configuration:
+
+```bash
+porter cloud-accounts list --project 12345
+```
+
+### JSON output
+
+Pass `--json` to get a machine-readable response suitable for scripting or piping into tools like `jq`:
+
+```bash
+porter cloud-accounts list --json
+```
+
+```json
+{
+  "cloud_accounts": [
+    {
+      "id": "01HXXXXXXXXXXXXXXXXXXXXXXX",
+      "name": "production-aws",
+      "provider": "aws",
+      "provider_id": "123456789012",
+      "status": "connected",
+      "connected_at": "2026-05-12T18:24:51Z"
+    }
+  ]
+}
+```
+
+<Tip>
+When the output is piped to another command, the table renders as tab-separated values with no header row, so you can grep or `awk` columns directly.
+</Tip>
+
+---
+
+## Related commands
+
+- [porter cluster list](/standard/cli/command-reference/porter-cluster) - List clusters in the current project
+- [porter config set-project](/standard/cli/command-reference/porter-config) - Switch the active project
