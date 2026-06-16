@@ -192,7 +192,8 @@
             "other/deleting-dangling-resources",
             "other/aws-vpc-peering",
             "other/kubernetes-101",
-            "other/migrate-from-heroku"
+            "other/migrate-from-heroku",
+            "other/status-endpoints"
           ]
         },
         {

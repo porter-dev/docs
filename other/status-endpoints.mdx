@@ -1,0 +1,91 @@
+---
+title: "Platform status endpoints"
+sidebarTitle: "Status Endpoints"
+description: "Public HTTP endpoints for monitoring the health of Porter's infrastructure, application, and datastore management subsystems."
+---
+
+Porter exposes a set of unauthenticated HTTP endpoints that report the health of its internal control plane workers. You can use these endpoints to power external status pages (such as OpenStatus), uptime monitors, or your own dashboards.
+
+Each endpoint reflects the runtime state of the JetStream consumers that back a particular subsystem. They surface whether messages are being processed, how large the backlog is, and how long the oldest unacknowledged piece of work has been waiting.
+
+## When to use these endpoints
+
+Use the status endpoints when you want to:
+
+- Drive an external status page or uptime monitor without provisioning Porter credentials.
+- Alert on backlogs or stalled processing in Porter's infrastructure, app, or datastore workers.
+- Verify that the control plane is healthy before triggering a deploy or provisioning workflow from automation.
+
+These endpoints describe the health of Porter's platform workers, not the health of your individual apps or clusters. For application-level health, use the standard application and cluster views in the dashboard.
+
+## Endpoints
+
+All endpoints are public (no authentication required) and return `HTTP 200` with a JSON `ComponentHealth` body.
+
+| Method | Endpoint                  | Subsystem                                       |
+| ------ | ------------------------- | ----------------------------------------------- |
+| GET    | `/api/v2/status/infra`    | Infrastructure provisioning                     |
+| GET    | `/api/v2/status/apps`     | Application provisioning and deployment        |
+| GET    | `/api/v2/status/datastores` | Datastore provisioning and management         |
+
+### Response schema
+
+Every endpoint returns the same `ComponentHealth` payload:
+
+| Field                    | Type    | Description                                                                 |
+| ------------------------ | ------- | --------------------------------------------------------------------------- |
+| `status`                 | string  | Overall health: `up`, `degraded`, or `down`.                                |
+| `live_pullers`           | integer | Number of active consumer pull requests across the subsystem.               |
+| `backlog`                | integer | Largest pending-message count among the subsystem's consumers.              |
+| `in_flight`              | integer | Largest count of delivered-but-unacknowledged messages.                     |
+| `oldest_unacked_seconds` | integer | Age in seconds of the oldest unacknowledged piece of work.                  |
+| `detail`                 | string  | Human-readable context describing the current status.                       |
+
+### Status values
+
+- `up` — The subsystem is processing work normally.
+- `degraded` — Workers are running but a backlog, in-flight count, or unacked age has crossed the warning threshold.
+- `down` — No live pullers are available, or the subsystem cannot process work.
+
+## Example
+
+Fetch the current health of the infrastructure provisioning subsystem:
+
+```bash
+curl https://api.porter.run/api/v2/status/infra
+```
+
+A healthy response:
+
+```json
+{
+  "status": "up",
+  "live_pullers": 3,
+  "backlog": 0,
+  "in_flight": 0,
+  "oldest_unacked_seconds": 0,
+  "detail": ""
+}
+```
+
+A degraded response will include a non-zero backlog or in-flight count and a `detail` string describing the condition:
+
+```json
+{
+  "status": "degraded",
+  "live_pullers": 3,
+  "backlog": 142,
+  "in_flight": 8,
+  "oldest_unacked_seconds": 95,
+  "detail": "backlog above warning threshold"
+}
+```
+
+## Integrating with OpenStatus
+
+To wire these endpoints into [OpenStatus](https://openstatus.dev) (or any similar uptime monitor):
+
+1. Create a new HTTP monitor for each endpoint you want to track.
+2. Set the request URL to the relevant status endpoint (for example, `https://api.porter.run/api/v2/status/infra`).
+3. Assert that the response body's `status` field equals `up`. Treat `degraded` or `down` as a failed check.
+4. Configure the monitor's region and frequency to match your status page's needs.
