@@ -36,6 +36,21 @@ porter auth login --token <YOUR_TOKEN>
 After logging in, Porter automatically sets your default project and cluster if you have access to any. You can view these with `porter config`.
 </Info>
 
+### Login methods
+
+`porter auth login` supports two browser-based flows. Switch between them with [`porter config set-login-method`](/standard/cli/command-reference/porter-config#porter-config-set-login-method).
+
+| Method | Credential stored locally | Token lifetime |
+|--------|---------------------------|----------------|
+| `v1` (default) | Long-lived Porter JWT | Does not expire |
+| `v2` | Short-lived WorkOS access token issued via PKCE | Refreshed automatically; expires after a short window |
+
+The `v2` flow signs in through your Porter SSO identity provider and authenticates subsequent API requests with a short-lived access token. Use it when your organization requires session-bound credentials on developer machines. The `v1` flow remains the default and is recommended for CI/CD and other automated environments that need a stable long-lived token.
+
+<Info>
+Both flows use the same `porter auth login` command — only the credential stored in `~/.porter/config.json` and sent on each request differs. No changes are required to existing scripts when staying on `v1`.
+</Info>
+
 ---
 
 ## `porter auth logout`
