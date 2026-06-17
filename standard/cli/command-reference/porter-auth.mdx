@@ -21,6 +21,7 @@ porter auth login [flags]
 | Flag | Description |
 |------|-------------|
 | `--token` | Log in using an existing token |
+| `--host` | Log in to a non-default Porter host (for example, a self-hosted or staging instance) |
 
 <CodeGroup>
 ```bash Browser Login (Default)
@@ -30,11 +31,23 @@ porter auth login
 ```bash Token Login
 porter auth login --token <YOUR_TOKEN>
 ```
+
+```bash Non-default Host
+porter auth login --host https://porter.example.com
+```
 </CodeGroup>
 
 <Info>
 After logging in, Porter automatically sets your default project and cluster if you have access to any. You can view these with `porter config`.
 </Info>
+
+### Logging in to multiple Porter hosts
+
+When you log in with `--host` to a non-default Porter instance, the CLI stores those credentials in a separate, host-specific entry in your operating system keyring. This means you can stay logged in to multiple Porter hosts (for example, production and a self-hosted instance) at the same time without one login overwriting the other.
+
+Switch between hosts by running `porter config set-host <host>` or by passing `--host` on individual commands — the CLI looks up the matching credentials automatically.
+
+`porter auth logout` only clears the credentials for the currently configured host. To log out of another host, set it as the active host first, then run `porter auth logout`.
 
 ---
 
