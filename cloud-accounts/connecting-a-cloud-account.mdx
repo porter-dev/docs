@@ -105,6 +105,10 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
       </Step>
     </Steps>
 
+    <Note>
+      Each GCP project can only be connected to a single Porter project. If you try to connect a GCP project that is already linked to a different Porter project, the dashboard and CLI return a `409 Conflict` with the message *"GCP project is already connected to another Porter project"*. To proceed, either reconnect from the Porter project that already owns the GCP project, or revoke access from that Porter project first (see [Revoking Access](#revoking-access)).
+    </Note>
+
     ## Migrating from a Service Account JSON
 
     If you previously connected GCP using a service account JSON key, you can switch to Workload Identity Federation with no downtime:
