@@ -1,0 +1,66 @@
+---
+title: 'porter sandbox'
+description: "Create sandboxes from container images on a Porter cluster, with support for entrypoint overrides, env vars, tags, and persistent volume mounts"
+---
+
+`porter sandbox` contains commands for managing ephemeral sandboxes on a Porter cluster. A sandbox is a container launched from an image with optional command, environment variables, tags, and persistent volume mounts.
+
+## Prerequisites
+
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project and cluster by running [porter config set-project](/standard/cli/command-reference/porter-config) and [porter config set-cluster](/standard/cli/command-reference/porter-config)
+
+---
+
+## `porter sandbox create`
+
+Create a sandbox in the current project and cluster from a container image. The image is required; entrypoint, args, environment variables, tags, and volume mounts are optional.
+
+Pass the command after `--` for the common one-shot form, or use `--command` and `--arg` to script individual argv elements.
+
+**Usage:**
+```bash
+porter sandbox create <image> [-- <command> [args...]] [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--command` | Override the image entrypoint. Repeat the flag for each argv element. |
+| `--arg` | Argument passed to the command. Repeatable. |
+| `-e, --env` | Environment variable to set in the sandbox in `KEY=VALUE` form. Repeatable. |
+| `--tag` | Tag to attach to the sandbox in `key=value` form. Repeatable. |
+| `--volume` | Volume mount in `mount_path=volume_id` form. Mount path must be absolute. Repeatable. |
+| `-o, --output` | Output format: `text` or `json`. Defaults to `text`. |
+
+<CodeGroup>
+```bash One-shot command
+porter sandbox create alpine:3.20 --env PORT=8080 -- sleep 3600
+```
+
+```bash With tags
+porter sandbox create ghcr.io/example/tool:latest --tag env=dev --tag owner=me
+```
+
+```bash With volume and JSON output
+porter sandbox create ubuntu:24.04 \
+  --volume /workspace=vol_abc123 \
+  --command bash --arg -lc --arg 'ls -la' \
+  -o json
+```
+</CodeGroup>
+
+On success, the command prints the created sandbox ID and any mounted volumes:
+
+```text
+Created sandbox sb_abc123.
+Mounted volumes:
+  /workspace -> vol_abc123
+```
+
+With `-o json`, the full create result is emitted as indented JSON for scripting.
+
+<Info>
+Tag values are required (`key=value`); environment variables may have empty values (`KEY=`). Volume mount paths must be absolute (start with `/`).
+</Info>
