@@ -1,0 +1,222 @@
+---
+title: "Sandboxes CLI"
+description: "Manage Porter Sandboxes from the Porter CLI"
+---
+
+The `porter sandbox` command manages sandboxes in the currently selected Porter project and cluster.
+
+<Warning>
+Sandboxes are in a private beta. Please reach out to us at support@porter.run or over Slack if you are interested in joining.
+</Warning>
+
+## Prerequisites
+
+- Run `porter auth login`
+- Select the correct project and cluster with `porter config set-project` and `porter config set-cluster`
+- Use an AWS cluster with sandboxes enabled from the Dashboard
+
+If the CLI cannot find a selected project or cluster, it asks you to run `porter config` or pass `--project` and `--cluster`.
+
+## `porter sandbox list`
+
+Lists sandboxes in the current project and cluster. The command auto-paginates through the API and sorts results most-recent-first.
+
+```bash
+porter sandbox list
+```
+
+By default, `terminated` sandboxes are hidden. Use `--phase all` to include them, or filter to one phase:
+
+```bash
+porter sandbox list --phase all
+porter sandbox list --phase running
+porter sandbox list --phase failed --tag workflow=agent-run
+```
+
+Available phases are:
+
+```text
+queued
+creating
+running
+succeeded
+failed
+terminated
+```
+
+### Output formats
+
+When stdout is a terminal, output defaults to a colorized table. When output is piped or redirected, it defaults to plain tab-separated rows.
+
+Use `--output` or `-o` to choose a format:
+
+```bash
+porter sandbox list -o table
+porter sandbox list -o plain
+porter sandbox list -o json
+```
+
+Plain output includes a header and these tab-separated columns:
+
+```text
+ID    IMAGE    PHASE    CREATED    STARTED    EXIT    TAGS
+```
+
+JSON output is the best option for scripts:
+
+```bash
+porter sandbox list -o json | jq -r '.[] | select(.phase == "running") | .id'
+```
+
+### Tag filters
+
+Use `--tag key=value` to filter. The flag is repeatable, and every provided tag must match.
+
+```bash
+porter sandbox list --tag workflow=agent-run --tag run=2026-06-17
+```
+
+## `porter sandbox exec`
+
+Runs one non-interactive command in a running sandbox and prints stdout and stderr.
+
+```bash
+porter sandbox exec <sandbox-id> -- <command> [args...]
+```
+
+Examples:
+
+```bash
+porter sandbox exec abc123 -- ls -la /workspace
+porter sandbox exec abc123 -- python --version
+porter sandbox exec abc123 -- sh -c 'echo hi && ls'
+```
+
+You can also pass a shell-style command string with `--command` or `-c`. This form is wrapped in `sh -c` inside the sandbox, so shell features like pipes, `&&`, redirects, and globs work.
+
+```bash
+porter sandbox exec abc123 --command "echo hi && ls /workspace"
+```
+
+Do not combine `--command` with positional command arguments.
+
+Interactive exec and TTY allocation are reserved but not supported yet. Passing `--interactive`, `-i`, `--tty`, or `-t` exits with a usage error.
+
+### Exit codes
+
+`porter sandbox exec` propagates the sandbox process exit code when the API call succeeds.
+
+| Exit code | Meaning |
+| --- | --- |
+| `0` | Command succeeded |
+| `1` | Operational error or a propagated sandbox command failure |
+| `2` | CLI usage error |
+| `3` | Sandbox is not in the `running` phase |
+
+Only `running` sandboxes accept exec calls.
+
+## `porter sandbox logs`
+
+Fetches and prints a batch of log lines for a sandbox.
+
+```bash
+porter sandbox logs <sandbox-id>
+```
+
+By default, the CLI requests logs from the last hour with a limit of 500 lines. Each line renders as:
+
+```text
+<timestamp> [<level>] <text>
+```
+
+Common examples:
+
+```bash
+porter sandbox logs abc123
+porter sandbox logs abc123 --since 15m --tail 100
+porter sandbox logs abc123 --level error --no-timestamps
+porter sandbox logs abc123 --tail 200 | grep -i 'panic\|fatal'
+```
+
+Options:
+
+| Flag | Description |
+| --- | --- |
+| `--since` | Lookback window as a Go duration, such as `30m` or `1h30m`. Defaults to `1h`. |
+| `--limit` | Maximum number of log lines. Defaults to `500`; server cap is `5000`; `0` uses the server default. |
+| `--tail` | Alias for `--limit`. When greater than `0`, it overrides `--limit`. |
+| `--level` | Client-side filter: `info`, `warning`, or `error`. |
+| `--no-timestamps` | Suppress the leading RFC3339 timestamp on each line. |
+
+## `porter sandbox terminate`
+
+Terminates one sandbox by ID:
+
+```bash
+porter sandbox terminate <sandbox-id>
+```
+
+Terminate every actionable sandbox in the current project and cluster with `--all`:
+
+```bash
+porter sandbox terminate --all
+```
+
+Use `--dry-run` before terminating many sandboxes:
+
+```bash
+porter sandbox terminate --all --dry-run
+```
+
+Scope bulk termination with tags:
+
+```bash
+porter sandbox terminate --all --tag workflow=agent-run --dry-run
+porter sandbox terminate --all --tag workflow=agent-run
+```
+
+Notes:
+
+- `--all` has no interactive confirmation.
+- `--tag` requires `--all`.
+- Already-terminated sandboxes are skipped.
+- During `--all`, a `404` for an individual sandbox is treated as success because the sandbox may already have been deleted by another caller.
+
+## Common workflows
+
+List running sandboxes:
+
+```bash
+porter sandbox list --phase running
+```
+
+Get the IDs of running sandboxes for a script:
+
+```bash
+porter sandbox list -o json | jq -r '.[] | select(.phase == "running") | .id'
+```
+
+Run a smoke command in a sandbox:
+
+```bash
+porter sandbox exec <sandbox-id> -- python -c 'print("ok")'
+```
+
+Fetch recent errors:
+
+```bash
+porter sandbox logs <sandbox-id> --since 30m --level error
+```
+
+Clean up a tagged test run:
+
+```bash
+porter sandbox terminate --all --tag run=<run-id> --dry-run
+porter sandbox terminate --all --tag run=<run-id>
+```
+
+## Related docs
+
+- [Sandboxes getting started](/sandboxes/getting-started)
+- [porter-python-sdk](https://github.com/porter-dev/porter-python-sdk)
+- [porter-typescript-sdk](https://github.com/porter-dev/porter-typescript-sdk)
