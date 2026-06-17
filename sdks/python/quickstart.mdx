@@ -1,0 +1,119 @@
+---
+title: "Python SDK quickstart"
+description: "Create and manage Porter Sandboxes from Python"
+---
+
+The Python SDK is published as `porter-sandbox`. Use it from application code running in your sandbox-enabled Porter cluster.
+
+<Warning>
+Sandboxes are in a private beta. Please reach out to us at support@porter.run or over Slack if you are interested in joining.
+</Warning>
+
+## Install
+
+Add the SDK to your application image:
+
+```bash
+pip install porter-sandbox
+```
+
+Or with `uv`:
+
+```bash
+uv add porter-sandbox
+```
+
+## Create your first sandbox
+
+Create a sandbox, execute a command, print the command output, and terminate the sandbox when the work is done:
+
+```python
+from porter_sandbox import Porter
+
+with Porter() as porter:
+    sandbox = porter.sandboxes.create(
+        image="python:3.12-slim",
+        tags={"example": "python-quickstart"},
+    )
+
+    result = sandbox.exec(["python", "-c", "print('hello from porter')"])
+    print(result.stdout)
+
+    sandbox.terminate()
+```
+
+The SDK connects to the in-cluster Sandbox API automatically when this code runs as a Porter Application in the same cluster where sandboxes are enabled.
+
+## Fetch logs
+
+Logs are returned as structured log lines:
+
+```python
+from porter_sandbox import Porter
+
+with Porter() as porter:
+    sandbox = porter.sandboxes.create(image="python:3.12-slim")
+
+    try:
+        sandbox.exec(["python", "-c", "print('log me')"])
+
+        for line in sandbox.logs(limit=100):
+            print(f"{line.timestamp} [{line.level}] {line.line}")
+    finally:
+        sandbox.terminate()
+```
+
+## List sandboxes
+
+Use tags to find sandboxes created by a workflow:
+
+```python
+from porter_sandbox import Porter
+
+with Porter() as porter:
+    sandboxes = porter.sandboxes.list(tags={"workflow": "agent-run"})
+
+    for sandbox in sandboxes:
+        print(sandbox.id, sandbox.phase)
+```
+
+## Async usage
+
+Use `AsyncPorter` from async application code:
+
+```python
+import asyncio
+from porter_sandbox import AsyncPorter
+
+async def main():
+    async with AsyncPorter() as porter:
+        sandbox = await porter.sandboxes.create(image="python:3.12-slim")
+
+        try:
+            result = await sandbox.exec(["python", "-c", "print(2 + 2)"])
+            print(result.stdout)
+        finally:
+            await sandbox.terminate()
+
+asyncio.run(main())
+```
+
+Launch many sandboxes concurrently with `asyncio.gather`:
+
+```python
+async with AsyncPorter() as porter:
+    sandboxes = await asyncio.gather(*[
+        porter.sandboxes.create(
+            image="python:3.12-slim",
+            tags={"batch": "demo"},
+        )
+        for _ in range(10)
+    ])
+```
+
+## Next steps
+
+- [Python SDK reference](/sdks/python/reference)
+- [Python SDK volumes](/sdks/python/volumes)
+- [Python SDK errors](/sdks/python/errors)
+- [Sandboxes getting started](/sandboxes/getting-started)

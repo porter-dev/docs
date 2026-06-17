@@ -1,0 +1,116 @@
+---
+title: "Sandboxes getting started"
+description: "Enable Porter Sandboxes on a cluster and launch your first sandbox with the SDK"
+---
+
+Porter Sandboxes are short-lived, isolated container workloads that you launch from code running inside your Porter cluster. Use them for one-off execution, code interpreters, agent tools, batch fan-out, and other ephemeral workloads.
+
+<Warning>
+Sandboxes are in a private beta. Please reach out to us at support@porter.run or over Slack if you are interested in joining.
+</Warning>
+
+## Prerequisites
+
+- A Porter project
+- An AWS cluster where you want to run sandboxes. We recommend creating a new AWS cluster for sandboxes so sandbox workloads are isolated from your other running workloads.
+
+## Enable sandboxes
+
+<Steps>
+  <Step title="Enable sandboxes from the Sandbox tab">
+    Sandboxes can only be enabled on AWS clusters.
+
+    In the Porter Dashboard, navigate to the Sandbox tab for the AWS cluster where you want to run sandboxes and click **Enable sandboxes**.
+
+    ![Sandbox tab with the enable sandboxes button](/images/sandboxes/enable-sandboxes.webp)
+  </Step>
+
+  <Step title="Install an SDK in your application">
+    Add either the Python or TypeScript SDK to the application that will create and manage sandboxes.
+
+    ![Sandbox tab after sandboxes are enabled](/images/sandboxes/sandbox-list.webp)
+  </Step>
+
+  <Step title="Write your first sandbox call">
+    In your application code, create a sandbox, execute a command, read the output, and terminate the sandbox when the work is done. The examples below show the smallest end-to-end flow.
+  </Step>
+
+  <Step title="Deploy your application to the sandbox cluster">
+    For now, we recommend deploying the application that uses the SDK as a Porter Application in the same cluster where you want to run sandboxes.
+  </Step>
+</Steps>
+
+## Python quickstart
+
+Install the SDK in your application image:
+
+```bash
+pip install porter-sandbox
+```
+
+Create a sandbox, run a command, print the output, and terminate it:
+
+```python
+from porter_sandbox import Porter
+
+with Porter() as porter:
+    sandbox = porter.sandboxes.create(
+        image="python:3.12-slim",
+        tags={"example": "getting-started"},
+    )
+
+    result = sandbox.exec(["python", "-c", "print(2 + 2)"])
+    print(result.stdout)
+
+    logs = sandbox.logs(limit=100)
+    print(logs)
+
+    sandbox.terminate()
+```
+
+## TypeScript quickstart
+
+Install the SDK in your application image:
+
+```bash
+npm install porter-sandbox
+```
+
+Create a sandbox, run a command, print the output, and terminate it:
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+
+const sandbox = await porter.sandboxes.create({
+  image: "python:3.12-slim",
+  tags: { example: "getting-started" },
+});
+
+const result = await sandbox.exec(["python", "-c", "print(2 + 2)"]);
+console.log(result.stdout);
+
+const logs = await sandbox.logs({ limit: 100 });
+console.log(logs);
+
+await sandbox.terminate();
+porter.close();
+```
+
+## Use tags to identify sandboxes
+
+Tags make it easier to find sandboxes created by a workflow:
+
+```python
+sandbox = porter.sandboxes.create(
+    image="python:3.12-slim",
+    tags={"workflow": "agent-run", "run": "2026-06-17"},
+)
+```
+
+## Next steps
+
+- Use [the sandbox CLI guide](/sandboxes/cli) to list, inspect logs, exec into, and terminate sandboxes.
+- Use the [Python SDK quickstart](/sdks/python/quickstart) for Python services.
+- Use the [TypeScript SDK quickstart](/sdks/typescript/quickstart) for Node.js and TypeScript services.

@@ -1,0 +1,108 @@
+---
+title: "TypeScript SDK volumes"
+description: "Create, mount, list, and delete sandbox volumes with the TypeScript SDK"
+---
+
+Volumes provide persistent storage that can be mounted into Porter Sandboxes. Create a volume before launching the sandbox, then pass the volume ID in `volume_mounts`.
+
+<Warning>
+Sandboxes are in a private beta. Please reach out to us at support@porter.run or over Slack if you are interested in joining.
+</Warning>
+
+## Create and mount a volume
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+
+const volume = await porter.volumes.create({
+  name: "agent-workspace",
+});
+
+const sandbox = await porter.sandboxes.create({
+  image: "python:3.12-slim",
+  volume_mounts: {
+    "/workspace": volume.id,
+  },
+});
+
+try {
+  await sandbox.exec(["python", "-c", "open('/workspace/result.txt', 'w').write('done')"]);
+  const result = await sandbox.exec(["cat", "/workspace/result.txt"]);
+  console.log(result.stdout);
+} finally {
+  await sandbox.terminate();
+  porter.close();
+}
+```
+
+`volume_mounts` is an object keyed by the absolute mount path inside the sandbox. Each value is a volume ID.
+
+## List volumes
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+const response = await porter.volumes.list();
+
+for (const volume of response.volumes) {
+  console.log(volume.id, volume.name, volume.phase, volume.attached_to);
+}
+
+porter.close();
+```
+
+## Look up a volume by name
+
+Volume names are unique within the cluster. Use `list({ name })` when you know a volume name and need its ID:
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+const response = await porter.volumes.list({ name: "agent-workspace" });
+const volume = response.volumes[0];
+
+if (volume) {
+  console.log(volume.id);
+}
+
+porter.close();
+```
+
+Volume names must be valid DNS labels: lowercase alphanumeric characters and dashes.
+
+## Get a volume by ID
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+const volume = await porter.volumes.get("volume-id");
+
+console.log(volume.name, volume.phase, volume.attached_to);
+porter.close();
+```
+
+## Delete a volume
+
+Delete volumes by ID:
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+
+await porter.volumes.delete("volume-id");
+porter.close();
+```
+
+Deleting a volume fails while it is attached to a sandbox. Terminate any attached sandboxes before deleting the volume.
+
+## Next steps
+
+- [TypeScript SDK quickstart](/sdks/typescript/quickstart)
+- [TypeScript SDK reference](/sdks/typescript/reference)
+- [TypeScript SDK errors](/sdks/typescript/errors)

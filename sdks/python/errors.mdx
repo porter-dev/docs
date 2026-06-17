@@ -1,0 +1,54 @@
+---
+title: "Python SDK errors"
+description: "Error classes raised by the porter-sandbox Python SDK"
+---
+
+All SDK errors inherit from `SandboxError`.
+
+```python
+from porter_sandbox import (
+    AuthenticationError,
+    NotFoundError,
+    RateLimitError,
+    SandboxError,
+    ServerError,
+)
+```
+
+## Error classes
+
+| Error | Raised when |
+| ----- | ----------- |
+| `SandboxError` | Base class for SDK-raised API errors. |
+| `AuthenticationError` | The API rejects credentials. |
+| `NotFoundError` | A sandbox, volume, or other resource cannot be found. |
+| `RateLimitError` | The API returns a rate limit response. |
+| `ServerError` | The API returns a server-side error. |
+
+Each `SandboxError` includes:
+
+| Attribute | Type | Description |
+| --------- | ---- | ----------- |
+| `message` | `str` | Human-readable error message. |
+| `status_code` | `int \| None` | HTTP status code, when available. |
+| `body` | `object \| None` | Parsed response body, when available. |
+
+## Handle errors
+
+```python
+from porter_sandbox import Porter, SandboxError
+
+with Porter() as porter:
+    sandbox = porter.sandboxes.create(image="python:3.12-slim")
+
+    try:
+        result = sandbox.exec(["python", "-c", "raise SystemExit(2)"])
+        if result.exit_code != 0:
+            print(result.stderr)
+    except SandboxError as exc:
+        print(f"Sandbox API error: {exc.message}")
+    finally:
+        sandbox.terminate()
+```
+
+Non-zero command exit codes are returned in the exec response. They are normal command results, not SDK exceptions.

@@ -1,0 +1,108 @@
+---
+title: "TypeScript SDK quickstart"
+description: "Create and manage Porter Sandboxes from TypeScript"
+---
+
+The TypeScript SDK is published as `porter-sandbox`. Use it from application code running in your sandbox-enabled Porter cluster.
+
+<Warning>
+Sandboxes are in a private beta. Please reach out to us at support@porter.run or over Slack if you are interested in joining.
+</Warning>
+
+## Install
+
+Add the SDK to your application:
+
+```bash
+npm install porter-sandbox
+```
+
+## Create your first sandbox
+
+Create a sandbox, execute a command, print the command output, and terminate the sandbox when the work is done:
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+
+const sandbox = await porter.sandboxes.create({
+  image: "python:3.12-slim",
+  tags: { example: "typescript-quickstart" },
+});
+
+try {
+  const result = await sandbox.exec(["python", "-c", "print('hello from porter')"]);
+  console.log(result.stdout);
+} finally {
+  await sandbox.terminate();
+  porter.close();
+}
+```
+
+The SDK connects to the in-cluster Sandbox API automatically when this code runs as a Porter Application in the same cluster where sandboxes are enabled.
+
+## Fetch logs
+
+Logs are returned as structured log lines:
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+const sandbox = await porter.sandboxes.create({ image: "python:3.12-slim" });
+
+try {
+  await sandbox.exec(["python", "-c", "print('log me')"]);
+
+  const logs = await sandbox.logs({ limit: 100 });
+  for (const line of logs) {
+    console.log(`${line.timestamp} [${line.level}] ${line.line}`);
+  }
+} finally {
+  await sandbox.terminate();
+  porter.close();
+}
+```
+
+## List sandboxes
+
+Use tags to find sandboxes created by a workflow:
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+
+const sandboxes = await porter.sandboxes.list({
+  tags: { workflow: "agent-run" },
+});
+
+for (const sandbox of sandboxes) {
+  console.log(sandbox.id, sandbox.phase);
+}
+
+porter.close();
+```
+
+## Concurrent sandboxes
+
+All TypeScript SDK methods are promise-based, so you can fan out with `Promise.all`:
+
+```typescript
+const sandboxes = await Promise.all(
+  Array.from({ length: 10 }, () =>
+    porter.sandboxes.create({
+      image: "python:3.12-slim",
+      tags: { batch: "demo" },
+    }),
+  ),
+);
+```
+
+## Next steps
+
+- [TypeScript SDK reference](/sdks/typescript/reference)
+- [TypeScript SDK volumes](/sdks/typescript/volumes)
+- [TypeScript SDK errors](/sdks/typescript/errors)
+- [Sandboxes getting started](/sandboxes/getting-started)

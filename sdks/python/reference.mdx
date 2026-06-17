@@ -1,0 +1,154 @@
+---
+title: "Python SDK reference"
+description: "Core classes and methods in the porter-sandbox Python SDK"
+---
+
+Import the top-level client from `porter_sandbox`:
+
+```python
+from porter_sandbox import Porter, AsyncPorter
+```
+
+## `Porter`
+
+`Porter` is the top-level sync client. It exposes resource namespaces for sandboxes, volumes, health, and readiness.
+
+```python
+from porter_sandbox import Porter
+
+with Porter() as porter:
+    sandbox = porter.sandboxes.create(image="python:3.12-slim")
+```
+
+Constructor options:
+
+| Option | Type | Description |
+| ------ | ---- | ----------- |
+| `api_key` | `str \| None` | Optional API key. Defaults to `PORTER_SANDBOX_API_KEY` when set. |
+| `base_url` | `str \| None` | Optional API base URL override. Defaults to the in-cluster Sandbox API URL. |
+| `timeout` | `float \| None` | Request timeout in seconds. Defaults to 30 seconds. |
+
+## `porter.sandboxes`
+
+### `create`
+
+```python
+sandbox = porter.sandboxes.create(
+    image="python:3.12-slim",
+    command=None,
+    args=None,
+    tags={"workflow": "demo"},
+    volume_mounts=None,
+)
+```
+
+Arguments:
+
+| Argument | Type | Description |
+| -------- | ---- | ----------- |
+| `image` | `str` | Container image to run. |
+| `command` | `list[str] \| None` | Optional entrypoint override. |
+| `args` | `list[str] \| None` | Optional arguments passed to the command. |
+| `tags` | `dict[str, str] \| None` | Key-value labels for finding related sandboxes. |
+| `volume_mounts` | `dict[str, str] \| None` | Volume IDs keyed by absolute mount path inside the sandbox. |
+
+Returns a `Sandbox` handle.
+
+### `get`
+
+```python
+sandbox = porter.sandboxes.get("sandbox-id")
+```
+
+Fetches status for a sandbox and returns a `Sandbox` handle.
+
+### `list`
+
+```python
+sandboxes = porter.sandboxes.list(tags={"workflow": "demo"}, page=1)
+```
+
+Lists sandboxes, optionally filtered by tags and page.
+
+## `Sandbox`
+
+`Sandbox` is the handle returned by `porter.sandboxes`.
+
+Properties:
+
+| Property | Type | Description |
+| -------- | ---- | ----------- |
+| `id` | `str` | Sandbox identifier. |
+| `phase` | `StatusResponsePhase \| None` | Last-known lifecycle phase. |
+| `tags` | `dict[str, str] \| None` | Last-known tags. |
+
+Methods:
+
+```python
+status = sandbox.refresh()
+result = sandbox.exec(["python", "-c", "print('hi')"])
+logs = sandbox.logs(limit=100)
+sandbox.terminate()
+```
+
+| Method | Description |
+| ------ | ----------- |
+| `refresh()` | Refetches status and updates `phase` and `tags`. |
+| `exec(command)` | Runs a command in the sandbox and returns stdout, stderr, and exit code. |
+| `logs(since=None, limit=None)` | Fetches structured log lines. |
+| `terminate()` | Terminates the sandbox. |
+
+## Volumes
+
+Volumes are persistent storage that can be mounted into sandboxes.
+
+```python
+from porter_sandbox._models import VolumeSpec
+
+volume = porter.volumes.create(VolumeSpec(name="my-data"))
+
+sandbox = porter.sandboxes.create(
+    image="python:3.12-slim",
+    volume_mounts={"/mnt/data": volume.id},
+)
+```
+
+Volume names are unique within a cluster and must be valid DNS labels: lowercase alphanumeric characters and dashes. Volume operations use IDs, so use `porter.volumes.list(name="...")` when you know the name and need to look up the ID.
+
+Volume methods:
+
+| Method | Description |
+| ------ | ----------- |
+| `porter.volumes.list(name=None)` | Lists volumes, optionally filtered by name. |
+| `porter.volumes.create(body)` | Creates a volume from a `VolumeSpec`. |
+| `porter.volumes.get(id)` | Fetches a volume by ID. |
+| `porter.volumes.delete(id)` | Deletes a volume. |
+
+## Async client
+
+`AsyncPorter` mirrors `Porter` with awaitable methods:
+
+```python
+from porter_sandbox import AsyncPorter
+
+async with AsyncPorter() as porter:
+    sandbox = await porter.sandboxes.create(image="python:3.12-slim")
+    result = await sandbox.exec(["python", "-c", "print('hi')"])
+    await sandbox.terminate()
+```
+
+## Low-level client
+
+The top-level client exposes generated low-level clients through `.raw`:
+
+```python
+raw_client = porter.raw
+raw_sandboxes = porter.sandboxes.raw
+```
+
+Use these only when you need an endpoint that is not wrapped by the ergonomic SDK surface yet.
+
+## Next steps
+
+- [Python SDK volumes](/sdks/python/volumes)
+- [Python SDK errors](/sdks/python/errors)
