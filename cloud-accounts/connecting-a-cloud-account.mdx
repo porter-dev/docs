@@ -136,6 +136,191 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
   </Tab>
 
   <Tab title="Azure">
+    Porter connects to Azure using a service principal authenticated via [workload identity federation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation) to manage your infrastructure.
+
+    ## Create the Service Principal
+
+    You can create the service principal using our automated script (recommended) or manually. Both flows need the **OIDC subject** and **OIDC issuer** that Porter shows in the dashboard during the Azure cloud account connection — copy these before starting.
+
+    <AccordionGroup>
+      <Accordion title="Option 1: Automated setup (recommended)">
+        If you have the Azure CLI installed and authenticated (`az login`), run our setup script:
+
+        ```bash
+        # Download the setup script
+        curl -O https://raw.githubusercontent.com/porter-dev/docs/main/scripts/setup-azure-porter-wif.sh
+
+        # Make it executable
+        chmod +x setup-azure-porter-wif.sh
+
+        # Run the script with the OIDC subject and issuer from Porter
+        ./setup-azure-porter-wif.sh \
+          --subject <oidc-subject-from-porter> \
+          --issuer <oidc-issuer-from-porter>
+        ```
+
+        The script:
+        - Enables all required Azure resource providers
+        - Creates the custom `porter-aks-restricted` role
+        - Creates the app registration and service principal with proper permissions
+        - Adds Microsoft Graph API permissions
+        - Grants admin consent (if you have permissions)
+        - Adds the federated identity credential trusting Porter's OIDC issuer
+        - Displays the credentials needed for Porter
+
+        <Info>
+        If the script fails to grant admin consent automatically, grant it manually in the Azure Portal: **App registrations** > **azure-porter-federated-sp** > **API permissions** > **Grant admin consent for Default Directory**.
+        </Info>
+      </Accordion>
+
+      <Accordion title="Option 2: Manual setup">
+        ### Enable Resource Providers
+
+        Before creating the service principal, enable the required resource providers:
+
+        1. In the Azure portal, search for **Subscriptions**
+        2. Select your subscription and click **Resource providers**
+        3. Enable the following providers by selecting them and clicking **Register**:
+           - Microsoft.Capacity
+           - Microsoft.Compute
+           - Microsoft.ContainerRegistry
+           - Microsoft.ContainerService
+           - Microsoft.ManagedIdentity
+           - Microsoft.Network
+           - Microsoft.OperationalInsights
+           - Microsoft.OperationsManagement
+           - Microsoft.ResourceGraph
+           - Microsoft.Resources
+           - Microsoft.Storage
+
+        Registration may take a few minutes per provider. Confirm all providers are enabled before proceeding.
+
+        ### Create the Custom Role
+
+        Run the following commands in the Azure Cloud Shell (Bash) or your local terminal with the Azure CLI:
+
+        ```bash
+        # Set your subscription ID
+        PORTER_AZURE_SUBSCRIPTION_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+        # Create the role
+        envsubst << EOF | az role definition create --role-definition @-
+        {
+            "assignableScopes": ["/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"],
+            "description": "Grants Porter access to manage resources for an AKS cluster.",
+            "id": "/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}/providers/Microsoft.Authorization/roleDefinitions/porter-aks-restricted",
+            "isCustom": true,
+            "name": "porter-aks-restricted",
+            "permissions": [
+                {
+                    "actions": ["*"],
+                    "dataActions": [],
+                    "notActions": [
+                        "Microsoft.Authorization/elevateAccess/Action",
+                        "Microsoft.Blueprint/blueprintAssignments/write",
+                        "Microsoft.Blueprint/blueprintAssignments/delete",
+                        "Microsoft.Compute/galleries/share/action"
+                    ],
+                    "notDataActions": []
+                }
+            ],
+            "roleName": "Contributor",
+            "roleType": "BuiltInRole",
+            "type": "Microsoft.Authorization/roleDefinitions"
+        }
+        EOF
+        ```
+
+        ### Create the Service Principal
+
+        ```bash
+        # Create the app registration and capture its Application (Client) ID
+        APP_ID=$(az ad app create --display-name "azure-porter-federated-sp" --query appId -o tsv)
+
+        # Create the matching service principal
+        az ad sp create --id "$APP_ID"
+
+        # Wait for the service principal to propagate before assigning a role to it
+        sleep 10
+
+        # Assign the custom role at the subscription scope
+        az role assignment create \
+          --assignee "$APP_ID" \
+          --role "porter-aks-restricted" \
+          --scope "/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"
+        ```
+
+        Save the `APP_ID` — you'll enter it in Porter as the Application (Client) ID. Get your Tenant ID with `az account show --query tenantId -o tsv`.
+
+        ### Add the Federated Identity Credential
+
+        Trust Porter's OIDC issuer to exchange tokens for this app registration. Use the **OIDC subject** and **OIDC issuer** shown in Porter:
+
+        ```bash
+        # Values copied from the Porter dashboard
+        PORTER_OIDC_SUBJECT=<oidc-subject-from-porter>
+        PORTER_OIDC_ISSUER=<oidc-issuer-from-porter>
+
+        # Derive a name from the project ID in the subject
+        PROJECT_ID="${PORTER_OIDC_SUBJECT##*-}"
+
+        az ad app federated-credential create \
+          --id "$APP_ID" \
+          --parameters "{
+            \"name\": \"porter-project-${PROJECT_ID}\",
+            \"issuer\": \"${PORTER_OIDC_ISSUER}\",
+            \"subject\": \"${PORTER_OIDC_SUBJECT}\",
+            \"audiences\": [\"api://AzureADTokenExchange\"]
+          }"
+        ```
+
+        <Info>
+        Azure can take a few minutes to propagate the federated credential. If Porter rejects the first connection attempt, wait a moment and retry.
+        </Info>
+
+        ### Grant API Permissions
+
+        1. In the Azure portal, search for **App registrations**
+        2. Under **All applications**, select your new service principal
+        3. Navigate to **API Permissions**
+        4. Click **Add a permission** → **Microsoft Graph** → **Application permissions**
+        5. Select these permissions:
+           - Application.ReadWrite.All
+           - Directory.ReadWrite.All
+           - Domain.Read.All
+           - Group.Create
+           - Group.ReadWrite.All
+           - RoleManagement.ReadWrite.Directory
+           - User.ReadWrite.All
+        6. Click **Add permissions**
+        7. Click **Grant admin consent for Default Directory**
+      </Accordion>
+    </AccordionGroup>
+
+    ## Enter Credentials in Porter
+
+    In Porter, enter the following values from your service principal:
+
+    | Field | Value |
+    |-------|-------|
+    | **Subscription ID** | Your Azure subscription ID |
+    | **Application (Client) ID** | The `appId` from your app registration |
+    | **Tenant ID** | Your Azure tenant ID (`az account show --query tenantId -o tsv`) |
+
+    No client secret is required — Porter authenticates by exchanging its OIDC token for short-lived Azure credentials.
+
+    ## Revoking Access
+
+    To revoke Porter's access:
+
+    1. First, delete any clusters through the Porter dashboard
+    2. In the Azure portal, search for **App registrations** and delete **azure-porter-federated-sp**
+    3. Optionally, delete the custom role definition
+
+    This removes the service principal and prevents Porter from accessing your account.
+  </Tab>
+
+  <Tab title="Azure via client secret">
     Porter connects to Azure using a service principal with permissions to manage your infrastructure.
 
     ## Create the Service Principal
