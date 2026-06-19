@@ -1,0 +1,148 @@
+---
+title: 'porter sandbox volume'
+description: "Manage persistent volumes that Porter sandboxes can mount, including creating, listing, inspecting, and deleting cluster-scoped sandbox volumes."
+---
+
+`porter sandbox volume` contains commands for managing persistent volumes that sandboxes mount at launch.
+
+Sandbox volumes are cluster-scoped persistent volumes created up front with a stable name. Once created, you reference them from `porter sandbox create` via `--volume <mount_path>=<name|id>` so data persists across sandbox runs.
+
+## Prerequisites
+
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
+- You're connected to the correct cluster by running [porter config set-cluster](/standard/cli/command-reference/porter-config)
+
+---
+
+## `porter sandbox volume create`
+
+Creates a persistent volume on the current cluster. Volumes start in the `pending` phase. Sandboxes that mount them wait for the underlying claim to bind, so you don't need an explicit wait step before `porter sandbox create`.
+
+The name must be a valid DNS label (lowercase alphanumerics and dashes). Omit the name to let the server default it to the new volume's ID.
+
+**Usage:**
+```bash
+porter sandbox volume create [name] [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-o, --output` | Output format: `text` or `json`. Defaults to `text`. |
+
+<CodeGroup>
+```bash Named volume
+porter sandbox volume create my-data
+```
+
+```bash Auto-named volume
+porter sandbox volume create
+```
+
+```bash JSON output
+porter sandbox volume create my-data -o json
+```
+</CodeGroup>
+
+---
+
+## `porter sandbox volume list`
+
+Lists every volume on the current project and cluster, including the IDs of any sandboxes the volume is currently attached to. Output is sorted most-recent first.
+
+When stdout is a TTY, the default output is a human-friendly table with color-coded phases. When piped or redirected, output defaults to plain tab-separated rows. Use `--output json` for machine-readable consumption.
+
+**Usage:**
+```bash
+porter sandbox volume list [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-o, --output` | Output format: `table`, `json`, or `plain`. Defaults to `table` on a TTY, `plain` when piped. |
+
+<CodeGroup>
+```bash List volumes
+porter sandbox volume list
+```
+
+```bash Extract IDs with jq
+porter sandbox volume list -o json | jq -r '.[].id'
+```
+
+```bash Filter ready volumes
+porter sandbox volume list | awk -F'\t' '$3=="ready" {print $2}'
+```
+</CodeGroup>
+
+---
+
+## `porter sandbox volume get`
+
+Shows the phase, creation time, and currently attached sandboxes for a single volume. Accepts either a volume name or ID. IDs are detected by UUID shape; names are resolved server-side.
+
+**Usage:**
+```bash
+porter sandbox volume get <name|id> [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-o, --output` | Output format: `text` or `json`. Defaults to `text`. |
+
+<CodeGroup>
+```bash Get by name
+porter sandbox volume get my-data
+```
+
+```bash Get by ID
+porter sandbox volume get 7c1f4a2b-1234-4abc-9def-0123456789ab
+```
+
+```bash JSON output
+porter sandbox volume get my-data -o json
+```
+</CodeGroup>
+
+---
+
+## `porter sandbox volume delete`
+
+Deletes a volume by name or ID. The server rejects the call while the volume is still attached to any sandbox — terminate the dependent sandboxes first with `porter sandbox terminate <id>`.
+
+**Usage:**
+```bash
+porter sandbox volume delete <name|id>
+```
+
+<CodeGroup>
+```bash Delete by name
+porter sandbox volume delete my-data
+```
+
+```bash Delete by ID
+porter sandbox volume delete 7c1f4a2b-1234-4abc-9def-0123456789ab
+```
+</CodeGroup>
+
+<Warning>
+Deletion is permanent. The underlying persistent volume claim is removed and any data stored on it is lost.
+</Warning>
+
+---
+
+## Mounting volumes in a sandbox
+
+Once a volume exists, mount it when creating a sandbox with `--volume <mount_path>=<name|id>`. Either the volume name or its UUID works — names are resolved client-side via a single lookup.
+
+```bash
+porter sandbox create ubuntu:24.04 --volume /workspace=my-data -- bash -lc 'ls -la /workspace'
+```
+
+The `--volume` flag is repeatable, so you can attach multiple volumes at distinct mount paths in a single sandbox.
