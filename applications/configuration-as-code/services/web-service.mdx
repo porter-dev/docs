@@ -16,7 +16,8 @@ Web services are HTTP-based services that can be exposed publicly or kept privat
 | `cpuCores` | number | Yes | CPU allocation |
 | `ramMegabytes` | integer | Yes | Memory allocation in MB |
 | `instances` | integer | No | Number of replicas (default: 1) |
-| `private` | boolean | No | Make service private (default: false) |
+| `private` | boolean | No | Route the service through the cluster's private load balancer (default: false) |
+| `loadBalancerConfig` | object | No | Load balancer configuration (`public_lb` or `private_lb`) |
 | `disableTLS` | boolean | No | Disable TLS termination |
 | `autoscaling` | object | No | Autoscaling configuration |
 | `domains` | array | No | Custom domain configuration |
@@ -57,10 +58,48 @@ services:
 
 <Badge shape="pill" color="gray">Optional</Badge>
 
-When `true`, the service is only accessible within the cluster (not publicly exposed).
+When `true`, the service is fronted by the cluster's **private load balancer** instead of the default public one. The service is reachable only from networks peered to your VPC (PrivateLink, VPC peering, transit gateway) — not from the public internet.
+
+This requires the cluster to have a private load balancer provisioned. See [advanced cluster settings](/cloud-accounts/advanced-cluster-settings#private-load-balancer) to enable one.
 
 ```yaml
 private: true
+```
+
+<Info>
+`private` is shorthand for `loadBalancerConfig.mode: private_lb`. Prefer `loadBalancerConfig` for new services — setting both on the same service is not supported.
+</Info>
+
+---
+
+## `loadBalancerConfig`
+
+`object`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Configures the load balancer that fronts the web service. Use this to explicitly route the service through the cluster's public or private load balancer.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `mode` | string | Yes | `public_lb` (default) or `private_lb` |
+
+When `mode` is `private_lb`, the service is fronted by the cluster's private load balancer and is reachable only from peered networks. The cluster must have a private load balancer provisioned (see [advanced cluster settings](/cloud-accounts/advanced-cluster-settings#private-load-balancer)). Custom domains attached to a private service must have DNS provider credentials configured on the cluster so Porter can complete ACME DNS-01 challenges to issue TLS certificates — HTTP-01 cannot reach a private load balancer.
+
+When `mode` is `public_lb` or `loadBalancerConfig` is omitted, the service is fronted by the cluster's default public load balancer.
+
+```yaml
+services:
+  - name: internal-admin
+    type: web
+    run: node server.js
+    port: 8080
+    cpuCores: 0.5
+    ramMegabytes: 512
+    loadBalancerConfig:
+      mode: private_lb
+    domains:
+      - name: admin.internal.example.com
 ```
 
 ---
