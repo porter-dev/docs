@@ -1,0 +1,222 @@
+---
+title: 'porter sandbox'
+description: "Manage Porter sandboxes from the CLI, including interactive exec sessions, log streaming, persistent volumes, and lifecycle commands."
+---
+
+`porter sandbox` contains commands for creating, inspecting, and running commands inside short-lived sandboxes on your Porter cluster.
+
+<Info>
+Sandboxes are an opt-in capability. If `porter sandbox` reports that sandboxes are not enabled for your project, contact Porter support to turn on the `sandboxes_enabled` feature flag.
+</Info>
+
+## Prerequisites
+
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
+- You're connected to the correct cluster by running [porter config set-cluster](/standard/cli/command-reference/porter-config)
+- Sandboxes are enabled for your project
+
+---
+
+## `porter sandbox list`
+
+Lists sandboxes in the current project and cluster, auto-paginating through the API's pages. Output is sorted most-recent-first. By default, sandboxes in the `terminated` phase are hidden.
+
+**Usage:**
+```bash
+porter sandbox list [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--tag` | Filter sandboxes by tag (`key=value`). Repeatable. |
+| `-o`, `--output` | Output format: `table`, `json`, or `plain`. Defaults to `table` on a TTY and `plain` when piped. |
+| `--phase` | Filter by phase: `all`, `queued`, `creating`, `running`, `succeeded`, `failed`, or `terminated`. Defaults to hiding `terminated`. |
+
+<CodeGroup>
+```bash All Active
+porter sandbox list
+```
+
+```bash Including Terminated
+porter sandbox list --phase all
+```
+
+```bash Filter by Phase and Tag
+porter sandbox list --phase running --tag env=dev
+```
+
+```bash JSON Output
+porter sandbox list -o json | jq '.[] | select(.phase=="running") | .id'
+```
+</CodeGroup>
+
+---
+
+## `porter sandbox create`
+
+Creates a sandbox from a container image. You can override the entrypoint, pass arguments and environment variables, attach tags, and mount persistent volumes.
+
+**Usage:**
+```bash
+porter sandbox create <image> [-- <command> [args...]] [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--command` | Override the image entrypoint. Repeat for each argv element. |
+| `--arg` | Argument passed to the command. Repeatable. |
+| `-e`, `--env` | Environment variable to set in the sandbox (`KEY=VALUE`). Repeatable. |
+| `--tag` | Tag to attach to the sandbox (`key=value`). Repeatable. |
+| `--volume` | Volume mount in `mount_path=<name\|id>` form. Names are resolved client-side. Repeatable. |
+| `-o`, `--output` | Output format: `text` or `json`. Defaults to `text`. |
+
+<CodeGroup>
+```bash One-Shot Command
+porter sandbox create alpine:3.20 --env PORT=8080 -- sleep 3600
+```
+
+```bash With Tags
+porter sandbox create ghcr.io/example/tool:latest --tag env=dev --tag owner=me
+```
+
+```bash Mount a Volume
+porter sandbox create ubuntu:24.04 --volume /workspace=my-data -- bash -lc 'ls -la /workspace'
+```
+
+```bash Scripted argv
+porter sandbox create ubuntu:24.04 --command bash --arg -lc --arg 'ls -la' -o json
+```
+</CodeGroup>
+
+---
+
+## `porter sandbox exec`
+
+Runs a command inside a running sandbox. The command may be passed positionally after a `--` separator, or as a single shell-style string via `--command` (wrapped in `sh -c` so pipes, `&&`, redirects, and globs work).
+
+Pass `-it` to open an **interactive** session with a TTY — useful for debugging or exploring a sandbox shell. Interactive exec streams stdin to the sandbox, allocates a TTY, and forwards window-resize signals so editors like `vim` and `less` work correctly.
+
+**Usage:**
+```bash
+porter sandbox exec <sandbox-id> [-it] -- <command> [args...]
+porter sandbox exec <sandbox-id> [-it] --command "<shell-string>"
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-c`, `--command` | Command to run as a single shell-style string. Mutually exclusive with positional args. |
+| `-i`, `--interactive` | Keep stdin open and stream it to the sandbox. |
+| `-t`, `--tty` | Allocate a TTY. Combine with `-i` to open an interactive shell. |
+
+<CodeGroup>
+```bash One-Shot Command
+porter sandbox exec abc123 -- ls -la /workspace
+```
+
+```bash Shell String
+porter sandbox exec abc123 --command "echo hi && ls"
+```
+
+```bash Interactive Shell
+porter sandbox exec abc123 -it -- sh
+```
+
+```bash Propagate Exit Code
+porter sandbox exec abc123 -- sh -c 'exit 7'
+```
+</CodeGroup>
+
+<Info>
+Only sandboxes in the `running` phase accept `exec`. If the sandbox is still creating or has already terminated, the command exits with a clear error.
+</Info>
+
+---
+
+## `porter sandbox logs`
+
+Fetches and prints recent log lines from a sandbox. Each line renders as `<timestamp> [<level>] <text>` with level-colored brackets in a TTY.
+
+**Usage:**
+```bash
+porter sandbox logs <sandbox-id> [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--since` | Lookback window as a Go duration (e.g. `30m`, `1h30m`). Defaults to `1h`. |
+| `--limit` | Maximum log lines to return. Server cap is 5000. Defaults to 500. |
+| `--tail` | Alias for `--limit` (kubectl style). Overrides `--limit` when > 0. |
+| `--level` | Client-side filter: `info`, `warning`, or `error`. |
+| `--no-timestamps` | Suppress the leading RFC3339 timestamp on each line. |
+
+<CodeGroup>
+```bash Recent Logs
+porter sandbox logs abc123
+```
+
+```bash Time Window and Tail
+porter sandbox logs abc123 --since 15m --tail 100
+```
+
+```bash Errors Only
+porter sandbox logs abc123 --level error --no-timestamps
+```
+
+```bash Pipe to grep
+porter sandbox logs abc123 --tail 200 | grep -i 'panic\|fatal'
+```
+</CodeGroup>
+
+---
+
+## `porter sandbox terminate`
+
+Terminates one or more sandboxes. Pass a sandbox id to terminate a single sandbox, or `--all` (optionally with `--tag` filters) to terminate every matching sandbox in the project.
+
+**Usage:**
+```bash
+porter sandbox terminate [sandbox-id] [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--all` | Terminate every sandbox in the current cluster (combine with `--tag` to scope). |
+| `--tag` | Filter sandboxes by tag (`key=value`). Requires `--all`. Repeatable. |
+| `--dry-run` | Print the sandboxes that would be terminated without performing the action. |
+
+<CodeGroup>
+```bash Single Sandbox
+porter sandbox terminate abc123
+```
+
+```bash All Sandboxes
+porter sandbox terminate --all
+```
+
+```bash Tagged Subset
+porter sandbox terminate --all --tag env=dev --dry-run
+```
+</CodeGroup>
+
+---
+
+## `porter sandbox volume`
+
+Manages persistent volumes that can be attached to sandboxes with `--volume` at create time. Subcommands include `list`, `create`, `get`, and `delete`. Run `porter sandbox volume --help` for details.
+
+---
+
+## Related Commands
+
+- [porter app run](/standard/cli/command-reference/porter-app) - Run a command in your application's environment
