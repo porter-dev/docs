@@ -57,6 +57,10 @@ Once enabled, you must configure a DNS provider so Porter can issue and renew TL
 
 Porter supports two DNS providers for private load balancer ingress: **Cloudflare** and **AWS Route53**.
 
+<Tip>
+  We recommend serving private ingress from a standalone zone dedicated to internal traffic (for example, `internal.example.com`) rather than reusing a zone that also serves production domains. A dedicated zone avoids record conflicts with existing production DNS, and it keeps DNS access scoped to internal hostnames only, which limits the blast radius away from your production domains.
+</Tip>
+
 <Tabs>
   <Tab title="Cloudflare">
 
@@ -75,9 +79,7 @@ When the cluster is on AWS, you can use Route53 instead of Cloudflare. Porter au
 |---------|-------------|
 | **Route53 domain** | The DNS zone the private ingress serves certificates for (for example, `internal.example.com`). At install time, Porter resolves the matching public Route53 hosted zone in the same AWS account and provisions a cert-manager pod identity scoped to that zone. |
 
-The domain you provide must already exist as a **public** hosted zone in the cluster's AWS account, and the zone name must match the domain exactly. If only a parent zone exists — for example, you set the domain to `internal.example.com` but only `example.com` is hosted in Route53 — Porter refuses to scope cert-manager to the parent. Delegate `internal.example.com` into its own hosted zone first.
-
-Private hosted zones and duplicate public hosted zones with the same name are not supported. Remove duplicates before saving.
+The domain must already exist as a public hosted zone in the cluster's AWS account, and the zone name must match the domain exactly. If only a parent zone is present (for example, `example.com` for a domain of `internal.example.com`), Porter cannot issue certificates for it, and the domain requires its own dedicated hosted zone.
 
   </Tab>
 </Tabs>
