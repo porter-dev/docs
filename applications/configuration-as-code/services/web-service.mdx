@@ -84,7 +84,7 @@ Configures the load balancer that fronts the web service. Use this to explicitly
 |-------|------|----------|-------------|
 | `mode` | string | Yes | `public_lb` (default) or `private_lb` |
 
-When `mode` is `private_lb`, the service is fronted by the cluster's private load balancer and is reachable only from peered networks. The cluster must have a private load balancer provisioned (see [advanced cluster settings](/cloud-accounts/advanced-cluster-settings#private-load-balancer)). Custom domains attached to a private service must have DNS provider credentials configured on the cluster so Porter can complete ACME DNS-01 challenges to issue TLS certificates — HTTP-01 cannot reach a private load balancer.
+When `mode` is `private_lb`, the service is fronted by the cluster's private load balancer and is reachable only from peered networks. The cluster must have a private load balancer provisioned (see [advanced cluster settings](/cloud-accounts/advanced-cluster-settings#private-load-balancer)). Custom domains attached to a private service must have DNS provider credentials configured on the cluster so Porter can provision certificates for custom domains.
 
 When `mode` is `public_lb` or `loadBalancerConfig` is omitted, the service is fronted by the cluster's default public load balancer.
 
