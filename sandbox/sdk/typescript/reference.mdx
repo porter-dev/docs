@@ -1,0 +1,153 @@
+---
+title: "TypeScript Sandbox SDK reference"
+description: "Core classes and methods in the porter-sandbox TypeScript Sandbox SDK"
+---
+
+Import the top-level client from `porter-sandbox`:
+
+```typescript
+import { Porter } from "porter-sandbox";
+```
+
+## `Porter`
+
+`Porter` is the top-level client. It exposes resource namespaces for sandboxes, volumes, health, and readiness.
+
+```typescript
+const porter = new Porter();
+const sandbox = await porter.sandboxes.create({
+  image: "python:3.12-slim",
+  name: "my-sandbox",
+});
+```
+
+Constructor options:
+
+| Option | Type | Description |
+| ------ | ---- | ----------- |
+| `apiKey` | `string \| undefined` | Optional API key. Only required when invoking the Sandbox API from outside the sandbox-enabled cluster. Defaults to `PORTER_SANDBOX_API_KEY` when set. |
+| `baseUrl` | `string \| undefined` | Optional API base URL override. In-cluster Porter Applications use the in-cluster Sandbox API URL by default. |
+| `timeoutMs` | `number \| undefined` | Request timeout in milliseconds. Defaults to 30 seconds. |
+
+Close the client when your process is done:
+
+```typescript
+porter.close();
+```
+
+## `porter.sandboxes`
+
+### `create`
+
+```typescript
+const sandbox = await porter.sandboxes.create({
+  image: "python:3.12-slim",
+  name: "my-sandbox",
+  command: undefined,
+  args: undefined,
+  env: undefined,
+  tags: { workflow: "demo" },
+  volume_mounts: undefined,
+});
+```
+
+Options:
+
+| Option | Type | Description |
+| ------ | ---- | ----------- |
+| `image` | `string` | Container image to run. |
+| `name` | `string \| undefined` | Optional cluster-unique sandbox name. Must be a valid DNS label. Defaults to the sandbox ID when omitted. Names currently cannot be reused, even after termination. |
+| `command` | `string[] \| undefined` | Optional entrypoint override. |
+| `args` | `string[] \| undefined` | Optional arguments passed to the command. |
+| `env` | `Record<string, string> \| undefined` | Environment variables to set in the sandbox. |
+| `tags` | `Record<string, string> \| undefined` | Key-value labels for finding related sandboxes. |
+| `volume_mounts` | `Record<string, string> \| undefined` | Volume IDs keyed by absolute mount path inside the sandbox. |
+
+Returns a `Sandbox` handle.
+
+### `get`
+
+```typescript
+const sandbox = await porter.sandboxes.get("my-sandbox");
+```
+
+Looks up a sandbox by name and returns a `Sandbox` handle. Use names as the canonical reference for sandboxes you need to operate on later.
+
+### `list`
+
+```typescript
+const sandboxes = await porter.sandboxes.list({
+  tags: { workflow: "demo" },
+  page: 1,
+});
+```
+
+Lists sandboxes, optionally filtered by tags and page.
+
+## `Sandbox`
+
+`Sandbox` is the handle returned by `porter.sandboxes`.
+
+Properties:
+
+| Property | Type | Description |
+| -------- | ---- | ----------- |
+| `id` | `string` | Sandbox identifier. |
+| `phase` | `StatusResponsePhase \| null` | Last-known lifecycle phase. |
+| `tags` | `Record<string, string> \| null` | Last-known tags. |
+
+Methods:
+
+```typescript
+const status = await sandbox.refresh();
+const result = await sandbox.exec(["python", "-c", "print('hi')"]);
+const logs = await sandbox.logs({ limit: 100 });
+await sandbox.terminate();
+```
+
+| Method | Description |
+| ------ | ----------- |
+| `refresh()` | Refetches status and updates `phase` and `tags`. |
+| `exec(command)` | Runs a command in the sandbox and returns stdout, stderr, and exit code. |
+| `logs(options?)` | Fetches structured log lines. |
+| `terminate()` | Terminates the sandbox. |
+
+## Volumes
+
+Volumes are persistent storage that can be mounted into sandboxes.
+
+```typescript
+const volume = await porter.volumes.create({ name: "my-data" });
+
+const sandbox = await porter.sandboxes.create({
+  image: "python:3.12-slim",
+  volume_mounts: { "/mnt/data": volume.id },
+});
+```
+
+Sandbox and volume names must be valid DNS labels: lowercase alphanumeric characters and dashes. Sandbox names currently cannot be reused, even after termination. Volume names must be unique for the lifetime of the volume and can be reused after deletion.
+
+Volume methods:
+
+| Method | Description |
+| ------ | ----------- |
+| `porter.volumes.list()` | Lists volumes. |
+| `porter.volumes.create(body)` | Creates a volume. Omit `name` to default the volume name to its ID. |
+| `porter.volumes.get(name)` | Fetches a volume by name. |
+| `porter.volumes.delete(name)` | Deletes a volume by name. |
+
+## Low-level client
+
+The top-level client exposes generated low-level clients through `.raw`:
+
+```typescript
+const rawClient = porter.raw;
+const rawSandboxes = porter.sandboxes.raw;
+```
+
+Use these only when you need an endpoint that is not wrapped by the ergonomic SDK surface yet.
+
+## Next steps
+
+- [TypeScript Sandbox SDK volumes](/sandbox/sdk/typescript/volumes)
+- [TypeScript Sandbox SDK errors](/sandbox/sdk/typescript/errors)

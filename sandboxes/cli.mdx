@@ -1,0 +1,452 @@
+---
+title: "Sandboxes CLI"
+description: "Manage Porter Sandboxes from the Porter CLI"
+---
+
+`porter sandbox` contains commands for listing, inspecting, executing commands in, and terminating sandboxes in the currently selected Porter project and cluster.
+
+<Warning>
+Sandboxes are in a private beta. Please reach out to us at support@porter.run or over Slack if you are interested in joining.
+</Warning>
+
+## Prerequisites
+
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
+- You're connected to the correct cluster by running [porter config set-cluster](/standard/cli/command-reference/porter-config)
+- Sandboxes are enabled on the selected AWS cluster
+
+If the CLI cannot find a selected project or cluster, it asks you to run `porter config` or pass `--project` and `--cluster`.
+
+---
+
+## `porter sandbox create`
+
+Creates a sandbox from a container image in the current project and cluster.
+
+**Usage:**
+```bash
+porter sandbox create <image> [-- <command> [args...]] [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--name` | Cluster-unique sandbox name, as a valid DNS label. Use this name with `exec`, `logs`, and `terminate` |
+| `--command` | Override the image entrypoint. Repeat for each argv element |
+| `--arg` | Argument passed to the command. Repeatable |
+| `-e, --env` | Environment variable in `KEY=VALUE` form. Repeatable |
+| `--tag` | Tag in `key=value` form. Repeatable |
+| `--volume` | Volume mount in `mount_path=volume-ref` form, where `volume-ref` is a volume name or ID. Repeatable. The mount path must be absolute |
+| `-o, --output` | Output format: `text` or `json` |
+
+Use the positional form after `--` for common one-shot commands. Use `--command` and `--arg` when scripting individual argv elements.
+
+Volume values can be volume names or volume IDs. The CLI resolves names first, then falls back to treating the value as an ID.
+
+Sandbox names currently cannot be reused, even after the sandbox is terminated. Omit `--name` only for one-off sandboxes where you do not need stable lookup later.
+
+<CodeGroup>
+```bash Create Sandbox
+porter sandbox create alpine:3.20
+```
+
+```bash Named Sandbox
+porter sandbox create alpine:3.20 --name web -- sleep 3600
+```
+
+```bash With Env and Tags
+porter sandbox create ghcr.io/example/tool:latest --env PORT=8080 --tag env=dev --tag owner=me
+```
+
+```bash With Volume
+porter sandbox create ubuntu:24.04 --volume /workspace=my-data -- bash -lc 'ls -la /workspace'
+```
+
+```bash JSON Output
+porter sandbox create ubuntu:24.04 --volume /workspace=my-data --command bash --arg -lc --arg 'ls -la' -o json
+```
+</CodeGroup>
+
+---
+
+## `porter sandbox list`
+
+Lists sandboxes in the current project and cluster. The command auto-paginates through the API and sorts results most-recent-first.
+
+**Usage:**
+```bash
+porter sandbox list [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--phase` | Filter by phase. Defaults to hiding `terminated` sandboxes. Use `all` to include every phase |
+| `--tag` | Filter by tag in `key=value` format. Repeat the flag to require multiple tags |
+| `-o, --output` | Output format: `table`, `plain`, or `json` |
+
+**Phases:**
+
+| Phase | Description |
+|-------|-------------|
+| `queued` | Accepted by the API and waiting for capacity |
+| `creating` | Runtime is being prepared and the container is starting |
+| `running` | Sandbox is ready and can accept exec calls |
+| `succeeded` | Sandbox command completed successfully |
+| `failed` | Sandbox command or runtime failed |
+| `terminated` | Sandbox was explicitly terminated |
+| `all` | Includes every phase when used with `--phase` |
+
+**Output formats:**
+
+| Format | Description |
+|--------|-------------|
+| `table` | Colorized table for terminal output |
+| `plain` | Tab-separated rows with a header. Used by default when output is piped or redirected |
+| `json` | JSON array, recommended for scripts |
+
+Plain output includes these columns:
+
+| Column | Description |
+|--------|-------------|
+| `NAME` | Sandbox name |
+| `IMAGE` | Container image |
+| `PHASE` | Current sandbox phase |
+| `CREATED` | Creation timestamp |
+| `STARTED` | Start timestamp, when available |
+| `EXIT` | Exit code, when available |
+| `TAGS` | Sandbox tags |
+
+<CodeGroup>
+```bash List Sandboxes
+porter sandbox list
+```
+
+```bash Include Terminated
+porter sandbox list --phase all
+```
+
+```bash Filter by Phase
+porter sandbox list --phase running
+```
+
+```bash Filter by Tags
+porter sandbox list --tag workflow=agent-run --tag run=2026-06-17
+```
+
+```bash JSON Output
+porter sandbox list -o json
+```
+
+```bash Script Running Names
+porter sandbox list -o json | jq -r '.[] | select(.phase == "running") | .name'
+```
+</CodeGroup>
+
+---
+
+## `porter sandbox exec`
+
+Runs a command in a running sandbox, identified by name. Non-interactive exec prints stdout and stderr; interactive exec opens a shell session.
+
+**Usage:**
+```bash
+porter sandbox exec <sandbox> [-it] -- <command> [args...] [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-c, --command` | Shell-style command string to run through `sh -c` inside the sandbox |
+| `-i, --interactive` | Keep stdin open and stream it to the sandbox |
+| `-t, --tty` | Allocate a TTY for an interactive shell |
+
+Do not combine `--command` with positional command arguments.
+
+**Exit codes:**
+
+| Exit code | Meaning |
+|-----------|---------|
+| `0` | Command succeeded |
+| `1` | Operational error or propagated sandbox command failure |
+| `2` | CLI usage error |
+| `3` | Sandbox is not in the `running` phase |
+
+Only `running` sandboxes accept exec calls.
+
+<CodeGroup>
+```bash List Files
+porter sandbox exec abc123 -- ls -la /workspace
+```
+
+```bash Check Python
+porter sandbox exec abc123 -- python --version
+```
+
+```bash Shell Command
+porter sandbox exec abc123 --command "echo hi && ls /workspace"
+```
+
+```bash Inline Script
+porter sandbox exec abc123 -- python -c 'print("ok")'
+```
+
+```bash Interactive Shell
+porter sandbox exec web -it -- sh
+```
+</CodeGroup>
+
+---
+
+## `porter sandbox logs`
+
+Fetches and prints a batch of log lines for a sandbox. By default, the CLI requests logs from the last hour with a limit of 500 lines.
+
+**Usage:**
+```bash
+porter sandbox logs <sandbox> [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--since` | Lookback window as a Go duration, such as `30m` or `1h30m`. Defaults to `1h` |
+| `--limit` | Maximum number of log lines. Defaults to `500`; server cap is `5000`; `0` uses the server default |
+| `--tail` | Alias for `--limit`. When greater than `0`, it overrides `--limit` |
+| `--level` | Client-side filter: `info`, `warning`, or `error` |
+| `--no-timestamps` | Suppress the leading RFC3339 timestamp on each line |
+
+Each rendered log line uses this format:
+
+```text
+<timestamp> [<level>] <text>
+```
+
+<CodeGroup>
+```bash Recent Logs
+porter sandbox logs abc123
+```
+
+```bash Last 15 Minutes
+porter sandbox logs abc123 --since 15m --tail 100
+```
+
+```bash Errors Only
+porter sandbox logs abc123 --level error --no-timestamps
+```
+
+```bash Search Logs
+porter sandbox logs abc123 --tail 200 | grep -i 'panic\|fatal'
+```
+</CodeGroup>
+
+---
+
+## `porter sandbox terminate`
+
+Terminates one sandbox by name, or terminates many sandboxes with `--all`.
+
+**Usage:**
+```bash
+porter sandbox terminate <sandbox> [flags]
+porter sandbox terminate --all [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--all` | Terminate every actionable sandbox in the current project and cluster |
+| `--dry-run` | Print the sandboxes that would be terminated without terminating them |
+| `--tag` | Scope bulk termination by tag in `key=value` format. Requires `--all` |
+
+**Behavior:**
+
+| Case | Behavior |
+|------|----------|
+| `--all` | No interactive confirmation is shown |
+| Already terminated sandboxes | Skipped |
+| `404` during `--all` | Treated as success because another caller may have already deleted the sandbox |
+
+<CodeGroup>
+```bash Terminate One
+porter sandbox terminate abc123
+```
+
+```bash Dry Run Bulk Terminate
+porter sandbox terminate --all --dry-run
+```
+
+```bash Terminate by Tag Dry Run
+porter sandbox terminate --all --tag workflow=agent-run --dry-run
+```
+
+```bash Terminate by Tag
+porter sandbox terminate --all --tag workflow=agent-run
+```
+</CodeGroup>
+
+---
+
+## `porter sandbox volume`
+
+Manages persistent volumes that sandboxes can mount at launch. Create a volume first, then reference it from `porter sandbox create` with `--volume <mount_path>=<volume-ref>`, where `volume-ref` is a volume name or ID.
+
+### `porter sandbox volume list`
+
+Lists sandbox volumes in the current project and cluster, sorted most-recent-first.
+
+**Usage:**
+```bash
+porter sandbox volume list [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-o, --output` | Output format: `table`, `plain`, or `json` |
+
+**Volume phases:**
+
+| Phase | Description |
+|-------|-------------|
+| `pending` | The volume was created and is waiting for the underlying claim to bind |
+| `ready` | The volume is ready to mount into sandboxes |
+| `failed` | The volume failed to provision |
+
+**Output formats:**
+
+| Format | Description |
+|--------|-------------|
+| `table` | Colorized table for terminal output |
+| `plain` | Tab-separated rows with a header. Used by default when output is piped or redirected |
+| `json` | JSON array, recommended for scripts |
+
+Plain output includes these columns:
+
+| Column | Description |
+|--------|-------------|
+| `NAME` | Volume name |
+| `PHASE` | Current volume phase |
+| `ATTACHED` | Attached sandboxes, or `-` when unattached |
+| `CREATED` | Creation timestamp |
+
+<CodeGroup>
+```bash List Volumes
+porter sandbox volume list
+```
+
+```bash JSON Output
+porter sandbox volume list -o json
+```
+
+```bash Script Volume Names
+porter sandbox volume list -o json | jq -r '.[].name'
+```
+
+```bash Ready Volume Names
+porter sandbox volume list | awk -F'\t' '$2=="ready" {print $1}'
+```
+</CodeGroup>
+
+### `porter sandbox volume create`
+
+Creates a persistent volume on the current cluster. The volume name must be a valid DNS label with lowercase alphanumeric characters and dashes. Omit the name only for one-off volumes where a generated name is fine.
+
+Volumes start in the `pending` phase. Sandboxes that mount them wait for the underlying claim to bind, so `porter sandbox create` does not need a separate wait step.
+
+Volume names must be unique within a cluster for the lifetime of the volume. After a volume is deleted, its name can be used again.
+
+**Usage:**
+```bash
+porter sandbox volume create [name] [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-o, --output` | Output format: `text` or `json` |
+
+<CodeGroup>
+```bash Create Named Volume
+porter sandbox volume create my-data
+```
+
+```bash Create Generated Name
+porter sandbox volume create
+```
+
+```bash JSON Output
+porter sandbox volume create my-data -o json
+```
+</CodeGroup>
+
+### `porter sandbox volume get`
+
+Shows a single sandbox volume by name, including phase, creation time, and currently attached sandboxes.
+
+**Usage:**
+```bash
+porter sandbox volume get <name> [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-o, --output` | Output format: `text` or `json` |
+
+<CodeGroup>
+```bash Get by Name
+porter sandbox volume get my-data
+```
+
+```bash JSON Output
+porter sandbox volume get my-data -o json
+```
+</CodeGroup>
+
+### `porter sandbox volume delete`
+
+Deletes a sandbox volume by name.
+
+**Usage:**
+```bash
+porter sandbox volume delete <name>
+```
+
+The server rejects deletion while the volume is attached to any sandbox. Terminate or recreate the attached sandboxes first.
+
+<CodeGroup>
+```bash Delete by Name
+porter sandbox volume delete my-data
+```
+
+</CodeGroup>
+
+## Common Workflows
+
+| Workflow | Command |
+|----------|---------|
+| Create a named sandbox | `porter sandbox create alpine:3.20 --name web -- sleep 3600` |
+| Create and mount a volume | `porter sandbox volume create my-data && porter sandbox create ubuntu:24.04 --volume /workspace=my-data -- bash` |
+| List running sandboxes | `porter sandbox list --phase running` |
+| Get running sandbox names for a script | `porter sandbox list -o json \| jq -r '.[] \| select(.phase == "running") \| .name'` |
+| Run a smoke command | `porter sandbox exec <sandbox-name> -- python -c 'print("ok")'` |
+| Fetch recent errors | `porter sandbox logs <sandbox-name> --since 30m --level error` |
+| Preview tagged cleanup | `porter sandbox terminate --all --tag run=<run-id> --dry-run` |
+| Clean up tagged sandboxes | `porter sandbox terminate --all --tag run=<run-id>` |
+
+## Related Docs
+
+- [Sandboxes Overview](/sandboxes/overview)
+- [Sandboxes Getting Started](/sandboxes/getting-started)
+- [Python Sandbox SDK quickstart](/sandbox/sdk/python/quickstart)
+- [TypeScript Sandbox SDK quickstart](/sandbox/sdk/typescript/quickstart)

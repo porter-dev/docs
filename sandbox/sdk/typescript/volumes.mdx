@@ -1,0 +1,105 @@
+---
+title: "TypeScript Sandbox SDK volumes"
+description: "Create, mount, list, and delete sandbox volumes with the TypeScript Sandbox SDK"
+---
+
+Volumes provide persistent storage that can be mounted into Porter Sandboxes. Create a volume before launching the sandbox, then pass the volume ID in `volume_mounts`.
+
+<Warning>
+Sandboxes are in a private beta. Please reach out to us at support@porter.run or over Slack if you are interested in joining.
+</Warning>
+
+## Create and mount a volume
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+
+const volume = await porter.volumes.create({
+  name: "agent-workspace",
+});
+
+const sandbox = await porter.sandboxes.create({
+  image: "python:3.12-slim",
+  volume_mounts: {
+    "/workspace": volume.id,
+  },
+});
+
+try {
+  await sandbox.exec(["python", "-c", "open('/workspace/result.txt', 'w').write('done')"]);
+  const result = await sandbox.exec(["cat", "/workspace/result.txt"]);
+  console.log(result.stdout);
+} finally {
+  await sandbox.terminate();
+  porter.close();
+}
+```
+
+`volume_mounts` is an object keyed by the absolute mount path inside the sandbox. Each value is a volume ID.
+
+## List volumes
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+const response = await porter.volumes.list();
+
+for (const volume of response.volumes) {
+  console.log(volume.id, volume.name, volume.phase, volume.attached_to);
+}
+
+porter.close();
+```
+
+## Get a volume by name
+
+Volume names are unique within the cluster. Use `get(name)` when you know a volume name:
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+const volume = await porter.volumes.get("agent-workspace");
+
+console.log(volume.id);
+
+porter.close();
+```
+
+Volume names must be valid DNS labels: lowercase alphanumeric characters and dashes. A volume name must be unique within the cluster for the lifetime of the volume. After the volume is deleted, the name can be used again.
+
+## Inspect a volume
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+const volume = await porter.volumes.get("agent-workspace");
+
+console.log(volume.name, volume.phase, volume.attached_to);
+porter.close();
+```
+
+## Delete a volume
+
+Delete volumes by name:
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+
+await porter.volumes.delete("agent-workspace");
+porter.close();
+```
+
+Deleting a volume fails while it is attached to a sandbox. Terminate any attached sandboxes before deleting the volume.
+
+## Next steps
+
+- [TypeScript Sandbox SDK quickstart](/sandbox/sdk/typescript/quickstart)
+- [TypeScript Sandbox SDK reference](/sandbox/sdk/typescript/reference)
+- [TypeScript Sandbox SDK errors](/sandbox/sdk/typescript/errors)
