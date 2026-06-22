@@ -43,6 +43,8 @@ try {
 
 The SDK connects to the in-cluster Sandbox API automatically when this code runs as a Porter Application in the same cluster where sandboxes are enabled.
 
+If you need to invoke sandboxes from outside that cluster, pass an API token to the SDK. You can create an API token from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions.
+
 Use sandbox names when you need to fetch, inspect, exec into, or terminate a sandbox later. Sandbox names must be unique within a cluster and currently cannot be reused, even after the sandbox is terminated.
 
 ## Fetch logs
