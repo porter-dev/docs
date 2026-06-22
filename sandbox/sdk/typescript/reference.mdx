@@ -25,7 +25,7 @@ Constructor options:
 
 | Option | Type | Description |
 | ------ | ---- | ----------- |
-| `apiKey` | `string \| undefined` | Optional API key. Only required when invoking the Sandbox API from outside the sandbox-enabled cluster. Defaults to `PORTER_SANDBOX_API_KEY` when set. |
+| `apiKey` | `string \| undefined` | Optional API key. Only required when invoking the Sandbox API from outside the sandbox-enabled cluster. Create one from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions. |
 | `baseUrl` | `string \| undefined` | Optional API base URL override. In-cluster Porter Applications use the in-cluster Sandbox API URL by default. |
 | `timeoutMs` | `number \| undefined` | Request timeout in milliseconds. Defaults to 30 seconds. |
 
@@ -56,7 +56,7 @@ Options:
 | Option | Type | Description |
 | ------ | ---- | ----------- |
 | `image` | `string` | Container image to run. |
-| `name` | `string \| undefined` | Optional cluster-unique sandbox name. Must be a valid DNS label. Defaults to the sandbox ID when omitted. Names currently cannot be reused, even after termination. |
+| `name` | `string \| undefined` | Optional cluster-unique sandbox name. Use lowercase letters, numbers, and hyphens; start and end with a letter or number. Names currently cannot be reused, even after termination. |
 | `command` | `string[] \| undefined` | Optional entrypoint override. |
 | `args` | `string[] \| undefined` | Optional arguments passed to the command. |
 | `env` | `Record<string, string> \| undefined` | Environment variables to set in the sandbox. |
@@ -125,14 +125,14 @@ const sandbox = await porter.sandboxes.create({
 });
 ```
 
-Sandbox and volume names must be valid DNS labels: lowercase alphanumeric characters and dashes. Sandbox names currently cannot be reused, even after termination. Volume names must be unique for the lifetime of the volume and can be reused after deletion.
+Sandbox and volume names may contain lowercase letters, numbers, and hyphens, and must start and end with a letter or number. Sandbox names currently cannot be reused, even after termination. Volume names must be unique for the lifetime of the volume and can be reused after deletion.
 
 Volume methods:
 
 | Method | Description |
 | ------ | ----------- |
 | `porter.volumes.list()` | Lists volumes. |
-| `porter.volumes.create(body)` | Creates a volume. Omit `name` to default the volume name to its ID. |
+| `porter.volumes.create(body)` | Creates a volume. Pass a name when you need stable lookup later. |
 | `porter.volumes.get(name)` | Fetches a volume by name. |
 | `porter.volumes.delete(name)` | Deletes a volume by name. |
 

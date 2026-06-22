@@ -33,7 +33,7 @@ porter sandbox create <image> [-- <command> [args...]] [flags]
 
 | Flag | Description |
 |------|-------------|
-| `--name` | Cluster-unique sandbox name, as a valid DNS label. Use this name with `exec`, `logs`, and `terminate` |
+| `--name` | Cluster-unique sandbox name. Use lowercase letters, numbers, and hyphens; start and end with a letter or number. Use this name with `exec`, `logs`, and `terminate` |
 | `--command` | Override the image entrypoint. Repeat for each argv element |
 | `--arg` | Argument passed to the command. Repeatable |
 | `-e, --env` | Environment variable in `KEY=VALUE` form. Repeatable |
@@ -357,7 +357,7 @@ porter sandbox volume list | awk -F'\t' '$2=="ready" {print $1}'
 
 ### `porter sandbox volume create`
 
-Creates a persistent volume on the current cluster. The volume name must be a valid DNS label with lowercase alphanumeric characters and dashes. Omit the name only for one-off volumes where a generated name is fine.
+Creates a persistent volume on the current cluster. The volume name may contain lowercase letters, numbers, and hyphens, and must start and end with a letter or number. Omit the name only for one-off volumes where you do not need stable lookup later.
 
 Volumes start in the `pending` phase. Sandboxes that mount them wait for the underlying claim to bind, so `porter sandbox create` does not need a separate wait step.
 

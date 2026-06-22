@@ -69,7 +69,7 @@ console.log(volume.id);
 porter.close();
 ```
 
-Volume names must be valid DNS labels: lowercase alphanumeric characters and dashes. A volume name must be unique within the cluster for the lifetime of the volume. After the volume is deleted, the name can be used again.
+Volume names may contain lowercase letters, numbers, and hyphens, and must start and end with a letter or number. A volume name must be unique within the cluster for the lifetime of the volume. After the volume is deleted, the name can be used again.
 
 ## Inspect a volume
 

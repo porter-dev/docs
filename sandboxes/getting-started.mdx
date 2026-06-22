@@ -40,6 +40,12 @@ Sandboxes are in a private beta. Please reach out to us at support@porter.run or
   </Step>
 </Steps>
 
+## Calling from outside the cluster
+
+The SDK connects to the in-cluster Sandbox API automatically when your application runs as a Porter Application in the same cluster where sandboxes are enabled.
+
+If you need to invoke sandboxes from outside that cluster, configure the SDK with a Porter API token. You can create an API token from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions.
+
 ## Python quickstart
 
 Install the SDK in your application image:
