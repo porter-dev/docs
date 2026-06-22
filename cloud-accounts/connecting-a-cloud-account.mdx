@@ -144,16 +144,17 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
 
     <AccordionGroup>
       <Accordion title="Option 1: Automated setup (recommended)">
-        If you have the Azure CLI installed and authenticated (`az login`), run our setup script:
+        Make sure the Azure CLI is installed and you've authenticated:
 
         ```bash
-        # Download the setup script
+        az login
+        ```
+
+        Then download and run our setup script. The block below is a single copyable script — it downloads the setup script, makes it executable, and runs it. Optionally append your subscription ID as an argument.
+
+        ```bash
         curl -O https://raw.githubusercontent.com/porter-dev/docs/main/scripts/setup-azure-porter.sh
-
-        # Make it executable
         chmod +x setup-azure-porter.sh
-
-        # Run the script (optionally provide subscription ID)
         ./setup-azure-porter.sh [your-subscription-id]
         ```
 
