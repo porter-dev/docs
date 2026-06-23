@@ -159,6 +159,32 @@ Enable AWS Key Management Service (KMS) encryption for Kubernetes secrets stored
 | **Enable Endpoint Independent Mapping** | Recommended for most use cases. Affects Cloud NAT behavior. | Enabled |
 | **Enable Dynamic Port Allocation** | Allows GKE to dynamically allocate more ports to VMs that need them | Disabled |
 
+## Networking
+
+### Private load balancer
+
+In addition to the default public cluster load balancer, you can provision an **internal load balancer** on GKE that only accepts traffic from inside your VPC (or networks peered to it). Use this when you want to expose services to internal clients — for example, an internal admin tool, a service consumed only by other VPCs, or a workload that must not be reachable from the public internet.
+
+On GKE, Porter provisions the internal load balancer using Google's `networking.gke.io/load-balancer-type: Internal` annotation, with `externalTrafficPolicy: Local` to preserve client source IPs.
+
+| Setting | Description |
+|---------|-------------|
+| **Add private load balancer** | Provisions a GKE internal load balancer alongside the existing public cluster load balancer. |
+
+Once enabled, you must configure a DNS provider so Porter can issue and renew TLS certificates for ingress hostnames attached to the private load balancer over ACME DNS-01. HTTP-01 challenges cannot reach a private load balancer, so DNS-01 is required.
+
+On GKE, **Cloudflare** is the supported DNS provider for private load balancer ingress. Route53 is only available on AWS EKS clusters, where Porter resolves a hosted zone and provisions a cert-manager pod identity.
+
+<Tip>
+  We recommend serving private ingress from a standalone zone dedicated to internal traffic (for example, `internal.example.com`) rather than reusing a zone that also serves production domains. A dedicated zone avoids record conflicts with existing production DNS, and it keeps DNS access scoped to internal hostnames only, which limits the blast radius away from your production domains.
+</Tip>
+
+| Setting | Description |
+|---------|-------------|
+| **DNS credentials** | API token for Cloudflare. The token must have permission to create and delete `TXT` records on the zones used by your private ingress hostnames. |
+
+Save the credentials before updating the cluster. You can rotate the token later with **Edit credentials**, or remove the integration entirely with **Remove**. Removing credentials stops certificate issuance and renewal for private load balancer ingress.
+
 ## Observability Settings
 
 Configure observability features for the GKE cluster control plane.
