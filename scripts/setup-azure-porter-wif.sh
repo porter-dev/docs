@@ -421,8 +421,8 @@ wait4_federated_credential() {
             --data-urlencode "client_assertion=${jwt}" \
             --data-urlencode 'grant_type=client_credentials') || response=""
         if [[ -n ${response} ]] && ! grep -qE "${pending}" <<<"${response}"; then
-            if ((success++ > 3)); then
-                return 0 # Wait for 3 "successful" exchanges in a row
+            if ((success++ > 6)); then
+                return 0 # Wait for 6 "successful" exchanges in a row
             fi
         else
             success=0 # Restart counter.
