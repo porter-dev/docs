@@ -479,13 +479,7 @@ display_results() {
     echo "└─────────────────────────────────────────────────────────────┘"
     echo ""
 
-    print_info "Next steps:"
-    echo "1. Copy the above credentials to Porter dashboard"
-    echo "2. Request quota increases if needed:"
-    echo "   - Total Regional vCPUs: 40"
-    echo "   - Standard Basv2 Family vCPUs: 40"
-    echo "   Go to: Azure Portal > Subscriptions > Usage + quotas"
-    echo "3. Proceed with cluster provisioning in Porter"
+    print_info "Copy the above credentials back to the Porter dashboard to finish connecting your Azure account."
 }
 
 # Function to show usage
