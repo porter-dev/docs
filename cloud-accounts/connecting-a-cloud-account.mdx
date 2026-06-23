@@ -1,7 +1,7 @@
 ---
 title: "Connecting a cloud account"
 sidebarTitle: "Connecting a Cloud Account"
-description: "Grant Porter access to your AWS, GCP, or Azure account using IAM roles, Workload Identity Federation, or service principals to provision infrastructure"
+description: "Grant Porter access to your AWS, GCP, or Azure account using IAM role assumption or Workload Identity Federation to provision infrastructure"
 ---
 
 Before Porter can create a cluster, you need to grant it access to your cloud account. Porter uses secure credential methods that don't require storing static API keys.
@@ -136,169 +136,88 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
   </Tab>
 
   <Tab title="Azure">
-    Porter connects to Azure using a service principal with permissions to manage your infrastructure.
+    Porter connects to Azure using a service principal authenticated via [workload identity federation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation) to manage your infrastructure.
 
-    ## Create the Service Principal
+    ## Prerequisites
 
-    You can create the service principal using our automated script (recommended) or manually.
+    - Permissions to create app registrations, role definitions, and role assignments in your Azure subscription
+    - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and [`jq`](https://jqlang.github.io/jq/) installed
 
-    <AccordionGroup>
-      <Accordion title="Option 1: Automated setup (recommended)">
-        If you have the Azure CLI installed and authenticated (`az login`), run our setup script:
+    ## Connect Your Azure Subscription
+
+    <Steps>
+      <Step title="Initiate an Azure cloud connection in Porter">
+        In the Porter dashboard, click **Connect a new account** and select **Azure**. Porter generates a one-time setup command with your OIDC subject and issuer already substituted. Keep this open — you'll paste it into your terminal in the next step.
+      </Step>
+      <Step title="Run the setup commands">
+        Copy the commands shown in the dashboard and run it in your terminal. The commands look like:
 
         ```bash
+        # Authenticate the Azure CLI
+        az login
+
         # Download the setup script
-        curl -O https://raw.githubusercontent.com/porter-dev/docs/main/scripts/setup-azure-porter.sh
+        curl -O https://raw.githubusercontent.com/porter-dev/docs/main/scripts/setup-azure-porter-wif.sh
 
         # Make it executable
-        chmod +x setup-azure-porter.sh
+        chmod +x setup-azure-porter-wif.sh
 
-        # Run the script (optionally provide subscription ID)
-        ./setup-azure-porter.sh [your-subscription-id]
+        # Run the script with the OIDC subject and issuer from Porter
+        ./setup-azure-porter-wif.sh \
+          --subject <oidc-subject-from-porter> \
+          --issuer <oidc-issuer-from-porter>
         ```
 
-        The script:
-        - Enables all required Azure resource providers
-        - Creates the custom `porter-aks-restricted` role
-        - Creates the service principal with proper permissions
-        - Adds Microsoft Graph API permissions
-        - Grants admin consent (if you have permissions)
-        - Displays the credentials needed for Porter
+        The script performs the initial setup in your Azure account:
+
+        - Enables the required Azure resource providers:
+          - Microsoft.Capacity
+          - Microsoft.Compute
+          - Microsoft.ContainerRegistry
+          - Microsoft.ContainerService
+          - Microsoft.ManagedIdentity
+          - Microsoft.Network
+          - Microsoft.OperationalInsights
+          - Microsoft.OperationsManagement
+          - Microsoft.ResourceGraph
+          - Microsoft.Resources
+          - Microsoft.Storage
+        - Creates the custom `porter-aks-restricted` role and grants all subscription actions except:
+          - `Microsoft.Authorization/elevateAccess/Action`
+          - `Microsoft.Blueprint/blueprintAssignments/write`
+          - `Microsoft.Blueprint/blueprintAssignments/delete`
+          - `Microsoft.Compute/galleries/share/action`
+        - Creates the `azure-porter-federated-sp` app registration and matching service principal, then assigns the custom role at the subscription scope
+        - Adds these Microsoft Graph application permissions:
+          - Application.ReadWrite.All
+          - Directory.ReadWrite.All
+          - Domain.Read.All
+          - Group.Create
+          - Group.ReadWrite.All
+          - RoleManagement.ReadWrite.Directory
+          - User.ReadWrite.All
+        - Grants admin consent for the Graph permissions
+        - Adds a federated identity credential on the app registration trusting Porter's OIDC issuer (audience `api://AzureADTokenExchange`)
+        - Prints the Subscription ID, Application (Client) ID, and Tenant ID. Copy these for the next step
+
+        Setup takes a few minutes.
 
         <Info>
-        If the script fails to grant admin consent automatically, grant it manually in the Azure Portal: **App registrations** > **azure-porter-restricted-sp** > **API permissions** > **Grant admin consent for Default Directory**.
+        If the script fails to grant admin consent automatically, grant it manually in the Azure Portal: **App registrations** > **azure-porter-federated-sp** > **API permissions** > **Grant admin consent for Default Directory**.
         </Info>
-      </Accordion>
-
-      <Accordion title="Option 2: Manual setup">
-        ### Enable Resource Providers
-
-        Before creating the service principal, enable the required resource providers:
-
-        1. In the Azure portal, search for **Subscriptions**
-        2. Select your subscription and click **Resource providers**
-        3. Enable the following providers by selecting them and clicking **Register**:
-           - Microsoft.Capacity
-           - Microsoft.Compute
-           - Microsoft.ContainerRegistry
-           - Microsoft.ContainerService
-           - Microsoft.KeyVault
-           - Microsoft.ManagedIdentity
-           - Microsoft.Network
-           - Microsoft.OperationalInsights
-           - Microsoft.OperationsManagement
-           - Microsoft.ResourceGraph
-           - Microsoft.Resources
-           - Microsoft.Storage
-
-        Registration may take a few minutes per provider. Confirm all providers are enabled before proceeding.
-
-        ### Create the Custom Role
-
-        Run the following commands in the Azure Cloud Shell (Bash) or your local terminal with the Azure CLI:
-
-        ```bash
-        # Set your subscription ID
-        PORTER_AZURE_SUBSCRIPTION_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-
-        # Create the role
-        envsubst << EOF | az role definition create --role-definition @-
-        {
-            "assignableScopes": ["/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"],
-            "description": "Grants Porter access to manage resources for an AKS cluster.",
-            "id": "/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}/providers/Microsoft.Authorization/roleDefinitions/porter-aks-restricted",
-            "isCustom": true,
-            "name": "porter-aks-restricted",
-            "permissions": [
-                {
-                    "actions": ["*"],
-                    "dataActions": [],
-                    "notActions": [
-                        "Microsoft.Authorization/elevateAccess/Action",
-                        "Microsoft.Blueprint/blueprintAssignments/write",
-                        "Microsoft.Blueprint/blueprintAssignments/delete",
-                        "Microsoft.Compute/galleries/share/action"
-                    ],
-                    "notDataActions": []
-                }
-            ],
-            "roleName": "Contributor",
-            "roleType": "BuiltInRole",
-            "type": "Microsoft.Authorization/roleDefinitions"
-        }
-        EOF
-        ```
-
-        ### Create the Service Principal
-
-        ```bash
-        az ad sp create-for-rbac \
-          --name="azure-porter-restricted-sp" \
-          --role="porter-aks-restricted" \
-          --scopes="/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"
-        ```
-
-        Save the output—you'll need these values:
-
-        ```json
-        {
-          "appId": "00000000-0000-0000-0000-000000000000",
-          "displayName": "azure-porter-restricted-sp",
-          "password": "0000-0000-0000-0000-000000000000",
-          "tenant": "00000000-0000-0000-0000-000000000000"
-        }
-        ```
-
-        ### Grant API Permissions
-
-        1. In the Azure portal, search for **App registrations**
-        2. Under **All applications**, select your new service principal
-        3. Navigate to **API Permissions**
-        4. Click **Add a permission** → **Microsoft Graph** → **Application permissions**
-        5. Select these permissions:
-           - Application.ReadWrite.All
-           - Directory.ReadWrite.All
-           - Domain.Read.All
-           - Group.Create
-           - Group.ReadWrite.All
-           - RoleManagement.ReadWrite.Directory
-           - User.ReadWrite.All
-        6. Click **Add permissions**
-        7. Click **Grant admin consent for Default Directory**
-      </Accordion>
-    </AccordionGroup>
-
-    ## Enter Credentials in Porter
-
-    In Porter, enter the following values from your service principal:
-
-    | Field | Value |
-    |-------|-------|
-    | **Subscription ID** | Your Azure subscription ID |
-    | **Application (Client) ID** | The `appId` from your service principal |
-    | **Client Secret** | The `password` from your service principal |
-    | **Tenant ID** | The `tenant` from your service principal |
-
-    ## Rotating Credentials
-
-    Azure requires client secrets to expire every 365 days. When a secret expires, Porter can't manage infrastructure or deploy updates (existing workloads continue running).
-
-    To refresh your client secret:
-
-    1. Visit [https://aka.ms/NewClientSecret](https://aka.ms/NewClientSecret)
-    2. Select the app ID for your Porter service principal
-    3. Generate a new client secret and copy the value
-    4. In Porter, navigate to **Integrations** → **Azure**
-    5. Update the **Password** field with the new value
+      </Step>
+      <Step title="Enter credentials in Porter">
+        Paste the **Subscription ID**, **Application (Client) ID**, and **Tenant ID** the script printed back into Porter to finish the connection.
+      </Step>
+    </Steps>
 
     ## Revoking Access
 
     To revoke Porter's access:
 
     1. First, delete any clusters through the Porter dashboard
-    2. In the Azure portal, search for **App registrations**
-    3. Find and delete the Porter service principal
-    4. Optionally, delete the custom role definition
+    2. In the Azure portal, search for **App registrations** and delete **azure-porter-federated-sp**
+    3. Optionally, delete the custom role definition
 
     This removes the service principal and prevents Porter from accessing your account.
   </Tab>
