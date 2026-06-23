@@ -67,6 +67,25 @@ Once DNS has propagated, you can now [deploy your application using the custom d
 
 <Info>After you complete the previous steps, it might take up to 30 minutes for DNS records to fully propagate. Please wait before deploying your applications until the DNS propagation is complete. You can check this using tools like [dnschecker.org](https://dnschecker.org) or running `nslookup <your-domain>`.</Info>
 
+## Delegating ACME challenges with a CNAME[](#delegating-acme-challenges-with-a-cname "Direct link to heading")
+
+Porter uses the [ACME DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge) to prove domain ownership when issuing certificates. By default, the cert-manager solver writes a `TXT` record at `_acme-challenge.<your-domain>` in the same DNS zone as your domain.
+
+If you cannot — or do not want to — grant Porter write access to your production DNS zone, you can delegate just the ACME challenge to a lower-privilege zone using a `CNAME` record. Porter's DNS-01 solvers follow CNAMEs on `_acme-challenge` records, so the challenge is satisfied in the delegated zone without exposing the rest of your DNS.
+
+To delegate the challenge:
+
+1. Create a zone (or reuse an existing one) that Porter has permission to write `TXT` records into — for example, `acme.example.net`.
+2. In your production DNS zone, create a `CNAME` record from `_acme-challenge.<your-domain>` to a record name in the delegated zone.
+
+For example, to issue a certificate for `app.example.com` while keeping write access scoped to `acme.example.net`:
+
+```text DNS records
+_acme-challenge.app.example.com.   CNAME   app.example.com.acme.example.net.
+```
+
+When Porter requests a certificate, cert-manager follows the CNAME and writes the `TXT` record to `app.example.com.acme.example.net` in the delegated zone. Without such a CNAME the solver behaves identically to the default flow, so this change is safe to leave in place even if you're not using delegation.
+
 ## Deploying on the Custom Domain[](#deploying-on-the-custom-domain "Direct link to heading")
 
 Once the DNS record changes have been propagated, you will be able to attach the custom domain to your application.
