@@ -1,0 +1,67 @@
+---
+title: "Metabase"
+sidebarTitle: "Metabase"
+description: "Deploy Metabase on your Porter cluster and choose whether the dashboard is reachable from the public internet or only from peered networks"
+---
+
+[Metabase](https://www.metabase.com/) is an open source business intelligence tool. Install it as an add-on to query your Porter-managed datastores and share dashboards with your team.
+
+## Prerequisites
+
+Before installing the Metabase add-on, make sure you have:
+
+- A running Porter cluster.
+- A Postgres datastore (or other supported database) for Metabase's application data. You'll provide its host, port, database name, username, and password during setup.
+- A custom domain you control if you plan to expose Metabase through the cluster's private load balancer.
+
+## Install the add-on
+
+1. From the Porter dashboard, open the **Add-ons** tab and click **New add-on**.
+2. Select **Metabase** under the Analytics category.
+3. Provide the cluster and connection details for the datastore that will back Metabase.
+4. Configure how Metabase is reached on the network (see [Networking](#networking)).
+5. Click **Deploy**.
+
+Porter installs Metabase into the cluster and wires it up to the datastore you provided.
+
+## Networking
+
+The **External networking** control on the Metabase form decides how traffic reaches the dashboard. The available options depend on whether the cluster has a private load balancer provisioned.
+
+### Clusters without a private load balancer
+
+If the cluster only has the default public load balancer, you'll see a single toggle:
+
+| Setting | Description |
+|---------|-------------|
+| **Expose to external traffic** | When on, Metabase is fronted by the cluster's public load balancer and is reachable from the public internet. When off, the dashboard stays cluster-internal and is only reachable via `kubectl port-forward` or another in-cluster client. |
+| **Add a custom domain** | Optional. Attach your own domain instead of the Porter-provisioned `*.onporter.run` hostname. |
+
+### Clusters with a private load balancer
+
+If the cluster has a [private load balancer](/cloud-accounts/advanced-cluster-settings#private-load-balancer) provisioned, the toggle is replaced by a three-way choice:
+
+| Option | When to use it |
+|--------|----------------|
+| **None** | Keep Metabase cluster-internal. No ingress is created. |
+| **Public LB** | Front Metabase with the cluster's public load balancer. Reachable from the public internet. A custom domain is optional — Porter provisions a `*.onporter.run` hostname when one isn't supplied. |
+| **Private LB** | Front Metabase with the cluster's internal load balancer. Reachable only from networks peered to your VPC (PrivateLink, VPC peering, transit gateway, Tailscale, etc.). |
+
+<Info>
+Selecting **Private LB** requires a custom domain — Porter does not provision a public `*.onporter.run` hostname for a privately-exposed add-on. The form will keep the custom-domain input visible and require a value.
+</Info>
+
+### Custom domain DNS
+
+When you attach a custom domain, create a DNS record pointing it at the load balancer that fronts the ingress:
+
+- **Public LB** — point the record at the cluster's public ingress IP or hostname.
+- **Private LB** — point the record at the private load balancer's DNS name (shown in the form once **Private LB** is selected).
+
+The cluster must also have a DNS provider configured so Porter can issue and renew the TLS certificate. See [advanced cluster settings](/cloud-accounts/advanced-cluster-settings#private-load-balancer) for the supported providers.
+
+## Choosing between public and private
+
+Use the **Private LB** option when you want Metabase to stay off the public internet — for example, when dashboards expose internal financial or customer data and access should be gated by your existing network controls (VPN, PrivateLink, transit gateway) instead of by Metabase's own auth.
+
+Use **Public LB** when you want the dashboard to be reachable from anywhere and rely on Metabase's authentication, SSO, and IP allowlist features to control access.

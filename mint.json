@@ -161,6 +161,7 @@
           "pages": [
             "addons/overview",
             "addons/datastores",
+            "addons/metabase",
             "addons/custom-helm-charts",
             "addons/third-party-observability",
             "addons/storage"
