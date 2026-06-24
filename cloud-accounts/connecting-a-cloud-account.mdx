@@ -35,6 +35,12 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
     The IAM role must remain in your AWS account for Porter to manage your infrastructure. Deleting it will prevent Porter from making changes.
     </Info>
 
+    ## Finishing the connection later
+
+    Porter starts polling for the new IAM role as soon as you click **Grant Permissions**, so the connection usually completes within a few minutes of the CloudFormation stack reaching `CREATE_COMPLETE`.
+
+    If you step away before applying the stack, you do not need to restart the flow. Porter keeps retrying the connection in the background for up to 7 days after the account was created. Apply the CloudFormation stack any time within that window and Porter will detect the role on its next sweep and mark the account connected. If 7 days pass without the stack being applied, reopen the connect flow in Porter to start over.
+
     ## Permissions Granted
 
     The CloudFormation stack creates an IAM role with permissions to:
