@@ -190,7 +190,8 @@
                 "standard/cli/command-reference/porter-job",
                 "standard/cli/command-reference/porter-datastore-connect",
                 "standard/cli/command-reference/porter-env",
-                "standard/cli/command-reference/porter-target"
+                "standard/cli/command-reference/porter-target",
+                "standard/cli/command-reference/porter-sandbox-volume"
               ]
             }
           ]
