@@ -291,6 +291,34 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
     4. In Porter, navigate to **Integrations** → **Azure**
     5. Update the **Password** field with the new value
 
+    ## Migrating from a Client Secret to Federated Identity Credentials
+
+    If you connected Azure using a client secret, you can switch to [federated identity credentials](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation) (workload identity) with no downtime. Once the migration completes, Porter no longer stores your client secret and you no longer need to rotate it every 365 days.
+
+    ### Prerequisites
+
+    Your existing Porter service principal needs the **Application.ReadWrite.All** Microsoft Graph application permission so it can attach a federated credential to itself. This permission is already included in the [automated setup script](#option-1%3A-automated-setup-recommended) and in the manual **Grant API Permissions** step above — no action is required if you followed either path.
+
+    If the migration fails with an "insufficient Graph permissions" error, grant the permission and complete admin consent in the Azure portal: **App registrations** → **azure-porter-restricted-sp** → **API permissions** → **Grant admin consent for Default Directory**, then retry.
+
+    ### Run the Migration
+
+    1. In Porter, navigate to **Integrations** → **Cloud accounts** and select your Azure account.
+    2. Click **Migrate to Workload Identity Federation** in the banner at the top of the page.
+    3. Confirm the migration. Porter runs the migration asynchronously and updates the banner as it progresses through `pending` → `running` → `cutting over` → `completed`.
+
+    Under the hood, Porter:
+
+    - Creates a federated identity credential on your existing App Registration, trusted by Porter's per-project workload identity.
+    - Switches every AKS cluster owned by the cloud account from client-secret authentication to workload identity. Clusters are cut over independently — a failure on one cluster doesn't block the others.
+    - Deletes the stored client secret from Porter once every cluster has been successfully cut over.
+
+    The migration is idempotent and resumable: if it's interrupted, Porter automatically picks up where it left off. Existing clusters keep authenticating with the client secret until the cutover for that cluster completes, so there is no service interruption.
+
+    ### After Migration
+
+    The federated identity credential lives on the same `azure-porter-restricted-sp` App Registration — there is no second service principal to manage. You can optionally delete any old client secrets from **App registrations** → **azure-porter-restricted-sp** → **Certificates & secrets**; Porter no longer uses them.
+
     ## Revoking Access
 
     To revoke Porter's access:
