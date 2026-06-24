@@ -59,7 +59,7 @@ Arguments:
 | `tags` | `dict[str, str] \| None` | Key-value labels for finding related sandboxes. |
 | `volume_mounts` | `dict[str, str] \| None` | Volume IDs keyed by absolute mount path inside the sandbox. |
 
-Returns a `Sandbox` handle.
+Returns a `Sandbox` handle. `create` returns once the request is recorded, which is before the container is necessarily running — the sandbox may still be in `queued` (waiting for capacity) or `creating`. Call `sandbox.refresh()` until `sandbox.phase == "running"` before calling `exec`.
 
 ### `get`
 
