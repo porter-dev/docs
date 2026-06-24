@@ -33,6 +33,12 @@ A sandbox moves through these phases:
 
 Only `running` sandboxes accept exec calls. Logs remain available after terminal phases so you can fetch output from completed or terminated sandboxes.
 
+## Queueing and capacity
+
+Sandbox create returns as soon as the request is durably recorded. If the cluster does not have capacity to launch the sandbox immediately, the sandbox stays in `queued` until capacity becomes available — create no longer fails on a transient capacity miss. Queued sandboxes are launched in creation order as slots free up, and the warm pool sizes itself against the current queue depth so backlogs drain without manual intervention.
+
+Because create is non-blocking, the returned sandbox may still be in the `queued` or `creating` phase. Poll `refresh()` (SDK) or `porter sandbox status` (CLI) until the phase reaches `running` before calling `exec`. Calling `exec` on a sandbox that is not yet `running` returns a "sandbox is not running" error rather than blocking.
+
 ## Names
 
 Names are the canonical way to refer to sandboxes and volumes in the SDK and CLI.
