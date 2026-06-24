@@ -1,0 +1,18 @@
+---
+title: "Week of May 25, 2026"
+description: "Doppler and Infisical secret manager integrations, plus Azure managed identity support for secure cloud access"
+---
+
+## New features
+
+### Doppler and Infisical integrations
+
+Sync secrets from [Doppler](/integrations/doppler) or [Infisical](/integrations/infisical) directly into your Porter applications as read-only environment groups. Enable the integration per cluster from the **Integrations** tab in the dashboard, then attach the synced environment group to any application.
+
+Secrets are pulled directly from the upstream secret manager at runtime, so values never persist in Porter's infrastructure and updates in Doppler or Infisical propagate to your apps automatically.
+
+### Azure managed identity for secure cloud access
+
+Azure workloads can now authenticate to Azure services using a managed identity instead of static credentials. Attach a user-assigned managed identity to a service and your application code can authenticate via the default Azure SDK credential chain — no client secrets in environment variables.
+
+See the [secure cloud access guide](/applications/configure/secure-cloud-access) for setup instructions.
