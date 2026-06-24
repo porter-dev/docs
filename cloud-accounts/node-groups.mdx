@@ -130,6 +130,30 @@ Create custom node groups for specialized workloads like GPU processing, high-me
 
 ---
 
+## Spot Instances
+
+Spot node groups run exclusively on spot capacity. Porter configures spot node groups with a strict capacity type, meaning they will only provision spot instances and will not fall back to on-demand instances if spot capacity is unavailable.
+
+<Warning>
+Because there is no on-demand fallback, applications running on spot node groups must tolerate spot interruptions. Configure proper [health checks](/applications/configure/zero-downtime-deployments#health-checks) and ensure workloads can be safely rescheduled when spot instances are reclaimed.
+</Warning>
+
+When to use spot:
+
+- Stateless, fault-tolerant workloads (e.g., batch jobs, background workers)
+- Development or staging environments where occasional interruptions are acceptable
+- Workloads with sufficient replicas to handle node terminations gracefully
+
+When not to use spot:
+
+- Stateful services without redundancy
+- Latency-sensitive workloads that cannot tolerate restarts
+- Long-running jobs that cannot checkpoint progress
+
+To run a workload on spot capacity, create a custom node group with the **Fixed Instance Type** option and select a spot-enabled instance type, then [assign your application](#assigning-workloads-to-node-groups) to that node group.
+
+---
+
 ## Assigning Workloads to Node Groups
 
 Once your custom node group is created, assign applications to run on it:
