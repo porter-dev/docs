@@ -35,7 +35,9 @@ Before deleting your cluster:
         This process may take up to 30 minutes.
       </Step>
       <Step title="Delete the IAM role">
-        After the cluster is deleted:
+        After the cluster is deleted, if you also want to disconnect the AWS account from Porter, [delete the cloud account](/cloud-accounts/deleting-a-cloud-account). Porter tears down the IAM roles it created and guides you through removing the `PorterRole` CloudFormation stack.
+
+        If you only want to revoke access manually without removing the cloud account from Porter:
 
         1. Navigate to **CloudFormation Stacks** in your AWS console
         2. Select the stack named `PorterRole`

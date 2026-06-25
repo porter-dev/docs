@@ -51,13 +51,15 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
 
     ## Revoking Access
 
-    To revoke Porter's access:
+    The cleanest way to remove an AWS account is to [delete the cloud account from Porter](/cloud-accounts/deleting-a-cloud-account). Porter tears down the IAM roles it created and walks you through removing `porter-access-manager`.
 
-    1. First, delete any clusters through the Porter dashboard
-    2. Navigate to **CloudFormation Stacks** in your AWS console
-    3. Select the stack named `PorterRole` and click **Delete**
+    If you only want to revoke access manually:
 
-    This removes the IAM role and prevents Porter from accessing your account.
+    1. Delete any clusters through the Porter dashboard.
+    2. Navigate to **CloudFormation Stacks** in your AWS console.
+    3. Select the stack named `PorterRole` and click **Delete**.
+
+    This removes the IAM role and prevents Porter from accessing your account. The cloud account will remain visible in Porter until you delete it from the dashboard.
   </Tab>
 
   <Tab title="GCP">

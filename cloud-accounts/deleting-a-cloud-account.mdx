@@ -1,0 +1,128 @@
+---
+title: "Deleting a cloud account"
+sidebarTitle: "Deleting a Cloud Account"
+description: "Permanently remove an AWS cloud account from Porter, tear down the IAM roles Porter created, and revoke Porter's access to your AWS account"
+---
+
+You can permanently remove an AWS cloud account from a Porter project. Porter tears down the IAM roles and policies it created in your AWS account, and you finish the deletion by removing the `porter-access-manager` role you originally provisioned with CloudFormation.
+
+<Info>
+Cloud account deletion is currently supported for **AWS** only. To stop using a GCP or Azure account with Porter, see the revoking access sections in [Connecting a cloud account](/cloud-accounts/connecting-a-cloud-account).
+</Info>
+
+## Before You Delete
+
+Porter will refuse to delete a cloud account that is still in use. Before you start, remove every Porter resource that references the account:
+
+- **Clusters** provisioned in the account ([Deleting a cluster](/cloud-accounts/deleting-a-cluster))
+- **Object storage** buckets Porter created in the account (such as build artifact buckets)
+- **Environment groups** with secrets backed by the account
+
+If any of these still exist, the dashboard surfaces them as blockers and the delete button stays disabled until they are removed.
+
+<Warning>
+Deleting a cloud account cannot be undone. To reconnect the same AWS account later, you have to redeploy the CloudFormation stack and add the account to Porter again from scratch.
+</Warning>
+
+---
+
+## Delete the Cloud Account
+
+<Steps>
+  <Step title="Open the cloud account">
+    In the Porter dashboard, navigate to **Integrations** → **Cloud accounts** and select the AWS account you want to remove.
+  </Step>
+  <Step title="Confirm there are no dependent resources">
+    Scroll to the **Delete cloud account** section. If any clusters, object storage buckets, or environment groups still reference the account, they are listed here and the **Delete cloud account** button is disabled.
+
+    Delete each listed resource, then return to this page.
+  </Step>
+  <Step title="Start the deletion">
+    Click **Delete cloud account** and confirm in the dialog. Porter immediately:
+
+    - Marks the account as `deletion_pending`.
+    - Stops accepting new clusters or workloads against it.
+    - Begins tearing down the IAM roles and policies it created in your AWS account (`porter-manager`, `porter-infra-manager`, `porter-control-plane-manager`, `porter-node-manager`, `porter-karpenter`, and related policies).
+
+    The account view switches to a **Deletion in progress** screen that shows the teardown steps as they complete.
+  </Step>
+  <Step title="Remove porter-access-manager">
+    Porter cannot delete the `porter-access-manager` role itself — that role lives in your account and is what gives Porter permission to do the teardown. Once Porter shows **IAM roles** and **IAM policies** as deleted, finish removing the account by deleting the role yourself:
+
+    1. Open the [AWS CloudFormation console](https://console.aws.amazon.com/cloudformation).
+    2. Find the stack you originally created when connecting Porter (typically named `PorterRole`).
+    3. Click **Delete**.
+
+    Deleting the stack removes `porter-access-manager` and the associated `porter-permissions-boundary` policy. As soon as Porter can no longer assume the role, it marks **Access revoked** as complete and removes the cloud account from your project.
+  </Step>
+</Steps>
+
+<Info>
+You can leave the **Deletion in progress** page at any time. Porter continues to retry the teardown in the background and finalizes the deletion automatically once `porter-access-manager` is gone.
+</Info>
+
+---
+
+## Deletion States
+
+While deletion is in progress, the cloud account moves through three stages:
+
+| Stage | What Porter does | What you do |
+|-------|------------------|-------------|
+| **IAM roles** | Deletes each Porter-managed IAM role in your AWS account. | Nothing. |
+| **IAM policies** | Deletes the standalone customer-managed policies Porter created (cluster autoscaler, EKS manager, EC2 and networking, load balancer, VPC manager, Karpenter). | Nothing. |
+| **Access revoked** | Waits until it can no longer assume `porter-access-manager`. | Delete the `PorterRole` CloudFormation stack to remove `porter-access-manager`. |
+
+If any teardown step fails (for example, because a Porter-managed role has been modified outside of Porter), the failure message is shown on the deletion screen and Porter keeps retrying. Contact support through the dashboard chat if a failure persists.
+
+---
+
+## Deleting via the API
+
+Cloud account deletion is also available through the Porter API. The endpoint returns `202 Accepted` immediately and the deletion proceeds asynchronously.
+
+```bash
+curl -X DELETE \
+  "https://api.porter.run/api/v2/projects/{project_id}/clouds/{cloud_account_id}" \
+  -H "Authorization: Bearer $PORTER_TOKEN"
+```
+
+Common responses:
+
+| Status | Meaning |
+|--------|---------|
+| `202 Accepted` | Deletion started. The account is now `deletion_pending`. |
+| `400 Bad Request` | The account is not an AWS account. Only AWS deletion is supported. |
+| `404 Not Found` | The cloud account does not exist in this project. |
+| `409 Conflict` | The account still has dependent clusters, object storage, or environment groups. |
+
+You can check for dependents before issuing the delete:
+
+```bash
+curl \
+  "https://api.porter.run/api/v2/projects/{project_id}/clouds/{cloud_account_id}/dependents" \
+  -H "Authorization: Bearer $PORTER_TOKEN"
+```
+
+The response lists active `clusters`, `object_storage` buckets, and `environment_groups` referencing the account. Empty arrays mean the account is safe to delete.
+
+Poll the cloud account to watch deletion progress — the `status.state` field reports `deletion_pending` until the account is fully removed, and `status.deletion` contains the per-step teardown state shown in the dashboard.
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The Delete button is disabled">
+    The dashboard lists the clusters, object storage buckets, or environment groups still tied to the account. Delete each one and refresh the page. If you see a resource you no longer recognize, check the [Deleting Dangling Resources](/other/deleting-dangling-resources) guide.
+  </Accordion>
+  <Accordion title="Deletion is stuck on 'Access revoked'">
+    Porter is waiting on you. Delete the `PorterRole` CloudFormation stack in your AWS account to remove `porter-access-manager`. Once Porter can no longer assume that role, deletion finalizes within a minute.
+  </Accordion>
+  <Accordion title="A teardown step is marked as failed">
+    Porter reports the underlying AWS error on the deletion screen. The most common cause is that someone modified or deleted a Porter-managed IAM role or policy outside of Porter. Porter keeps retrying — if the failure persists, contact support through the dashboard chat with your project ID and the failure message.
+  </Accordion>
+  <Accordion title="I deleted porter-access-manager before tearing down the IAM roles">
+    Porter can no longer assume into your account to clean up the roles it created. Delete the remaining Porter-managed roles and policies manually from the IAM console, then contact support to remove the cloud account record from your project.
+  </Accordion>
+</AccordionGroup>
