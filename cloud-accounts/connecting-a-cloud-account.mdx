@@ -279,7 +279,53 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
     | **Client Secret** | The `password` from your service principal |
     | **Tenant ID** | The `tenant` from your service principal |
 
+    ## Migrating from a Client Secret to Workload Identity Federation
+
+    If you previously connected Azure with an Application (Client) ID and client secret, you can migrate to [Workload Identity Federation](https://learn.microsoft.com/en-us/azure/active-directory/develop/workload-identity-federation) (WIF) so Porter no longer relies on a long-lived secret. Existing clusters keep working throughout the migration — Porter cuts over to federation atomically once it's verified.
+
+    Migration runs asynchronously in the background. The banner on the cloud account page reflects the live status, so you can close the migration dialog and come back later without losing progress.
+
+    ### Run the Migration
+
+    1. In Porter, navigate to **Integrations** → **Cloud accounts** and select your Azure account.
+    2. Click **Migrate to WIF** in the banner at the top of the page.
+    3. Follow the prompts in the dialog. Porter creates a federated identity credential on your existing App Registration that trusts Porter's OIDC issuer for this Azure account — no new service principal is created.
+
+    ### Banner States
+
+    The banner on the cloud account page is status-aware and always reopens the migration dialog:
+
+    | Banner | Meaning | Action |
+    |--------|---------|--------|
+    | **Migrate to WIF** (warning) | Your account is still using a client secret. | Click **Migrate to WIF** to start. |
+    | **Migration to Workload Identity Federation is in progress** (info) | A migration is running in the background. | Click **View progress** to reopen the dialog and watch live status. |
+    | **Migration failed** (error) | The App Registration is missing the `Application.ReadWrite.All` Microsoft Graph permission. | Click **Open Azure portal** to grant the permission, then click **Retry**. |
+
+    Once the migration completes, the banner disappears automatically and your Azure cloud account is marked as using federated identity.
+
+    ### Fixing a Failed Migration
+
+    If the banner reports a failed migration, grant the missing Graph permission and retry:
+
+    1. From the failure banner, click **Open Azure portal** to jump straight to the App Registration's API permissions page.
+    2. Click **Add a permission** → **Microsoft Graph** → **Application permissions** and select **Application.ReadWrite.All**.
+    3. Click **Grant admin consent for Default Directory**.
+    4. Back in Porter, click **Retry** in the banner.
+
+    ### After Migration
+
+    Once federation is active, Porter no longer uses your client secret. You can safely remove the secret from the App Registration in the Azure portal to eliminate the long-lived credential entirely:
+
+    1. In the Azure portal, search for **App registrations** and select your Porter service principal.
+    2. Open **Certificates & secrets** and delete the client secret previously used by Porter.
+
+    The federated identity credential remains on the same App Registration, so cluster management continues uninterrupted.
+
     ## Rotating Credentials
+
+    <Note>
+    If you've migrated to Workload Identity Federation, you can skip this section — federated credentials don't expire and there's nothing to rotate.
+    </Note>
 
     Azure requires client secrets to expire every 365 days. When a secret expires, Porter can't manage infrastructure or deploy updates (existing workloads continue running).
 
