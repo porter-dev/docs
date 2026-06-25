@@ -31,16 +31,24 @@ Keep both values handy — you'll paste them into Porter in the next step.
 
 ### Create the environment group in Porter
 
-1. On the Infisical integration page in Porter, click **Add Infisical env group**.
-2. Fill in the form:
-   - **Name (for Porter environment group)** — the name you'll use to reference this environment group inside Porter (e.g. `production-infisical`).
+Infisical environment groups are created from the same form as any other Porter environment group.
+
+1. From the Porter dashboard, navigate to the **Env Groups** tab and click **New Env Group**.
+2. Enter a **Name** — the name you'll use to reference this environment group inside Porter (e.g. `production-infisical`).
+3. For **Type**, select **Infisical**. (This option only appears once the Infisical integration is enabled on at least one cluster.)
+4. Fill in the Infisical configuration:
    - **Project slug** — the slug of the Infisical project to sync from.
    - **Env slug** — the environment to pull from (e.g. `dev`, `staging`, `prod`).
    - **Env path** — the secret path within the environment. Defaults to `/`.
    - **Service URL** — the Infisical API URL. Defaults to `https://app.infisical.com/api`. Set this to your self-hosted Infisical URL if you're not using Infisical Cloud.
    - **Client ID** — the client ID of the machine identity you created.
    - **Client Secret** — the client secret of the machine identity.
-3. Click **Add Infisical env group**.
+5. Select the **Target cluster** to sync the secrets into. If only one cluster has Infisical enabled, it's preselected.
+6. Click **Create environment group**.
+
+<Tip>
+You can also start from the Infisical integration page and click **Create an Infisical environment group** to deep-link into the create form with **Infisical** preselected.
+</Tip>
 
 <Frame>
   <img src="/images/integrations/infisical-add-env-group.webp" alt="Add a new Infisical integration modal in the Porter dashboard" />
