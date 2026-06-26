@@ -51,13 +51,25 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
 
     ## Revoking Access
 
-    To revoke Porter's access:
+    Disconnecting an AWS account from Porter is a two-step process: disconnect the account in Porter, then delete the IAM role in AWS.
 
-    1. First, delete any clusters through the Porter dashboard
-    2. Navigate to **CloudFormation Stacks** in your AWS console
-    3. Select the stack named `PorterRole` and click **Delete**
+    <Steps>
+      <Step title="Disconnect the account in Porter">
+        In Porter, navigate to **Integrations** → **Cloud accounts**, open the AWS account, scroll to the **Danger zone**, and click **Disconnect cloud account**.
 
-    This removes the IAM role and prevents Porter from accessing your account.
+        Porter blocks the disconnect until the account has no clusters, object storage buckets, or environment groups referencing it. The modal lists every blocker so you can clean them up first.
+
+        Type the account name to confirm and click **Disconnect**. Porter immediately stops using the account and removes it from the project.
+      </Step>
+      <Step title="Delete the IAM role in AWS">
+        Porter cannot delete the IAM role it asked you to create — it lives in your account and only you can remove it. After disconnecting:
+
+        1. Navigate to **CloudFormation Stacks** in your AWS console.
+        2. Select the stack named `PorterRole` and click **Delete**.
+
+        This removes the `porter-access-manager` IAM role and revokes Porter's ability to assume into your account.
+      </Step>
+    </Steps>
   </Tab>
 
   <Tab title="GCP">
@@ -127,12 +139,23 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
 
     ## Revoking Access
 
-    To disconnect Porter from your GCP project:
+    Disconnecting a GCP project from Porter is a two-step process: disconnect the account in Porter, then delete the federation resources in GCP.
 
-    1. First, delete any clusters through the Porter dashboard.
-    2. In the [GCP Console](https://console.cloud.google.com), navigate to **IAM & Admin** → **Workload Identity Federation** and delete the `porter-pool-*` Workload Identity Pool. This immediately invalidates all federated tokens.
+    <Steps>
+      <Step title="Disconnect the account in Porter">
+        In Porter, navigate to **Integrations** → **Cloud accounts**, open the GCP account, scroll to the **Danger zone**, and click **Disconnect cloud account**.
 
-    Optionally, also delete the `porter-manager-*` service account under **IAM & Admin** → **Service Accounts** for full cleanup.
+        Porter blocks the disconnect until the account has no clusters, object storage buckets, or environment groups referencing it. The modal lists every blocker so you can clean them up first.
+
+        Type the account name to confirm and click **Disconnect**. Porter immediately stops using the account and removes it from the project.
+      </Step>
+      <Step title="Delete the federation resources in GCP">
+        Porter cannot delete the Workload Identity Pool or service account it asked you to create — they live in your project and only you can remove them. After disconnecting:
+
+        1. In the [GCP Console](https://console.cloud.google.com), navigate to **IAM & Admin** → **Workload Identity Federation** and delete the `porter-pool-*` Workload Identity Pool. This immediately invalidates all federated tokens.
+        2. Optionally, delete the `porter-manager-*` service account under **IAM & Admin** → **Service Accounts** for full cleanup.
+      </Step>
+    </Steps>
   </Tab>
 
   <Tab title="Azure">
@@ -293,14 +316,24 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
 
     ## Revoking Access
 
-    To revoke Porter's access:
+    Disconnecting an Azure subscription from Porter is a two-step process: disconnect the account in Porter, then delete the app registration in Azure.
 
-    1. First, delete any clusters through the Porter dashboard
-    2. In the Azure portal, search for **App registrations**
-    3. Find and delete the Porter service principal
-    4. Optionally, delete the custom role definition
+    <Steps>
+      <Step title="Disconnect the account in Porter">
+        In Porter, navigate to **Integrations** → **Cloud accounts**, open the Azure account, scroll to the **Danger zone**, and click **Disconnect cloud account**.
 
-    This removes the service principal and prevents Porter from accessing your account.
+        Porter blocks the disconnect until the account has no clusters, object storage buckets, or environment groups referencing it. The modal lists every blocker so you can clean them up first.
+
+        Type the account name to confirm and click **Disconnect**. Porter immediately stops using the account and removes it from the project.
+      </Step>
+      <Step title="Delete the app registration in Azure">
+        Porter cannot delete the service principal it asked you to create — it lives in your tenant and only you can remove it. After disconnecting:
+
+        1. In the Azure portal, search for **App registrations**.
+        2. Find and delete the `azure-porter-restricted-sp` service principal.
+        3. Optionally, delete the `porter-aks-restricted` custom role definition.
+      </Step>
+    </Steps>
   </Tab>
 </Tabs>
 

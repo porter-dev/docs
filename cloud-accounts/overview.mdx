@@ -109,4 +109,4 @@ For detailed permission requirements and setup instructions, see [Connecting a C
 
 ### Can I revoke Porter's access?
 
-Yes. You can revoke Porter's access at any time by deleting the IAM role (AWS), service principal (Azure), or Workload Identity Pool (GCP). Note that Porter will no longer be able to manage or delete resources after access is revoked.
+Yes. Disconnect the account from **Integrations** → **Cloud accounts** in the Porter dashboard, then delete the IAM role (AWS), app registration (Azure), or Workload Identity Pool (GCP) in your cloud console. Porter blocks disconnection while any cluster, object storage bucket, or environment group still references the account, so clean those up first. See [Revoking access](/cloud-accounts/connecting-a-cloud-account#revoking-access) for the full per-provider steps.
