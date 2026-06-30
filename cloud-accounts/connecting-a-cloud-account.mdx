@@ -165,6 +165,10 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
         - Grants admin consent (if you have permissions)
         - Displays the credentials needed for Porter
 
+        <Warning>
+        Re-running this script (or `az ad sp create-for-rbac`) against an existing service principal **resets its client secret**, which immediately breaks authentication for **every** Porter cloud account using that service principal. To rotate the secret safely, add a new one instead (`az ad app credential reset --id <appId> --append`) and update it in all affected Porter accounts. To avoid a shared-secret blast radius, use a distinct service principal per environment.
+        </Warning>
+
         <Info>
         If the script fails to grant admin consent automatically, grant it manually in the Azure Portal: **App registrations** > **azure-porter-restricted-sp** > **API permissions** > **Grant admin consent for Default Directory**.
         </Info>
@@ -206,8 +210,6 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
         {
             "assignableScopes": ["/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"],
             "description": "Grants Porter access to manage resources for an AKS cluster.",
-            "id": "/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}/providers/Microsoft.Authorization/roleDefinitions/porter-aks-restricted",
-            "isCustom": true,
             "name": "porter-aks-restricted",
             "permissions": [
                 {
@@ -221,10 +223,7 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
                     ],
                     "notDataActions": []
                 }
-            ],
-            "roleName": "Contributor",
-            "roleType": "BuiltInRole",
-            "type": "Microsoft.Authorization/roleDefinitions"
+            ]
         }
         EOF
         ```
@@ -290,6 +289,10 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
     3. Generate a new client secret and copy the value
     4. In Porter, navigate to **Integrations** → **Azure**
     5. Update the **Password** field with the new value
+
+    <Warning>
+    Generate a **new** secret rather than deleting the existing one, so in-flight operations keep working during the swap. If this service principal is shared across multiple Porter cloud accounts or subscriptions, update the new secret in **all** of them. Do not re-run the setup script to rotate — `az ad sp create-for-rbac` resets the secret and disconnects every account using the service principal.
+    </Warning>
 
     ## Revoking Access
 
