@@ -35,14 +35,14 @@ CPU workloads.
 
     | Setting | Description |
     |---------|-------------|
-    | **Instance type** | Select a GPU-enabled instance type (see table below) |
+    | **Instance type** | Select a GPU-enabled instance type (see [Supported GPU instance types](#supported-gpu-instance-types)) |
     | **Minimum nodes** | Select minimum number of nodes that will be available at all times |
     | **Maximum nodes** | The upper limit for autoscaling based on demand |
 
     ![Fixed Node Group Configuration](/images/provisioning-infrastructure/cost-opt-1.png)
 
     <Warning>
-      GPU instances are significantly more expensive than standard instances.
+      GPU instances are significantly more expensive than standard instances. Larger P-family instances (such as `p5.48xlarge`, `p5e.48xlarge`, and `p5en.48xlarge`) also require an AWS service quota increase for **Running On-Demand P instances** before they can be provisioned.
     </Warning>
   </Step>
 
@@ -90,6 +90,27 @@ Once your GPU node group is ready, you can deploy applications that use GPU reso
     Save your changes and redeploy the application. Porter will schedule your workload on the GPU node group.
   </Step>
 </Steps>
+
+## Supported GPU instance types
+
+Porter supports the following NVIDIA-enabled EC2 instance types for fixed GPU node groups on AWS EKS clusters.
+
+| Family | Instance types | Typical use case |
+|--------|----------------|------------------|
+| **G4dn** (NVIDIA T4) | `g4dn.xlarge`, `g4dn.2xlarge`, `g4dn.4xlarge` | Cost-effective inference, small models, graphics workloads |
+| **G5** (NVIDIA A10G) | `g5.xlarge`, `g5.2xlarge`, `g5.4xlarge` | Mid-range inference, fine-tuning, small training jobs |
+| **G6** (NVIDIA L4) | `g6.xlarge`, `g6.2xlarge`, `g6.12xlarge` | Inference, video processing, graphics |
+| **G6e** (NVIDIA L40S) | `g6e.xlarge`, `g6e.2xlarge`, `g6e.4xlarge`, `g6e.8xlarge`, `g6e.12xlarge` | Generative AI inference, training of small-to-mid models |
+| **P4d** (NVIDIA A100 40GB) | `p4d.24xlarge` | Large-scale distributed training |
+| **P5** (NVIDIA H100) | `p5.4xlarge`, `p5.48xlarge` | Large model training and high-throughput inference |
+| **P5e** (NVIDIA H200) | `p5e.48xlarge` | Frontier model training with expanded GPU memory |
+| **P5en** (NVIDIA H200 + EFAv3) | `p5en.48xlarge` | Multi-node training requiring high-bandwidth networking |
+
+<Info>
+  The smaller `p5.4xlarge` SKU (1× H100) is useful when you need H100-class GPUs for single-node training or inference without the cost of a full `p5.48xlarge` (8× H100). Both `p5e.48xlarge` and `p5en.48xlarge` provide 8× H200 GPUs, with `p5en` adding EFAv3 networking for distributed workloads.
+</Info>
+
+When a GPU node group is provisioned, Porter automatically labels the nodes with `porter.run/has-gpu=true` and installs the NVIDIA device plugin so pods can request GPU resources through the standard `nvidia.com/gpu` resource.
 
 ## Troubleshooting
 
