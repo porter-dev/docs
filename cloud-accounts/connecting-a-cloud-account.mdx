@@ -105,6 +105,24 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
       </Step>
     </Steps>
 
+    ## Porter-Managed Infrastructure
+
+    Once your project is connected, Porter provisions and continuously reconciles infrastructure in it: the VPC, Cloud NAT and Cloud Router, the GKE cluster, its node pools, and the cluster load balancer.
+
+    <Warning>
+    Do not modify Porter-managed resources directly in the GCP Console or with `gcloud`. Out-of-band changes are detected as drift on the next cluster update: Porter will revert them, which can itself disrupt traffic. Changes to settings that GKE cannot update in place may cause the **cluster to be replaced entirely**, resulting in downtime and the loss of any manually created in-cluster resources.
+    </Warning>
+
+    Settings that can trigger reconciliation or cluster replacement when changed outside of Porter include:
+
+    - **Cloud NAT and Cloud Router** — port allocation (min ports per VM, dynamic port allocation), endpoint-independent mapping, TCP timeouts, NAT IP allocation mode and static NAT IPs, source subnetwork ranges
+    - **VPC** — the cluster VPC and subnet, primary and secondary CIDR ranges, Private Google Access and its associated routes and DNS
+    - **GKE control plane** — cluster version, private cluster settings (private nodes, endpoint access), master authorized networks and CIDR, workload identity pool, logging and system components, cluster autoscaling, KMS settings
+    - **GKE node pools** — machine type, disk, image type, autoscaling settings, node locations and versions, spot/preemptible flag, OAuth scopes, labels, taints, network tags, GPU settings, upgrade and management settings
+    - **Load balancer** — the external static IP
+
+    Settings like NAT port allocation and node pool configuration can be changed safely from the Porter dashboard. For any requirement not exposed there (for example, public node IPs to reduce egress cost), contact Porter support before changing it in GCP.
+
     ## Migrating from a Service Account JSON
 
     If you previously connected GCP using a service account JSON key, you can switch to Workload Identity Federation with no downtime:
