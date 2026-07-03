@@ -93,10 +93,20 @@ In unforeseen circumstances, some resources may not be deleted, and you may need
 
     ## Deleting the cluster resource group
 
-    Go to **Resource groups** in the Azure portal and delete the `PROJECT_ID-CLUSTER` resource group. This removes the AKS cluster and all of its underlying resources. The `MC_`-prefixed managed resource group that AKS created alongside the cluster is deleted automatically with it.
+    Go to **Resource groups** in the Azure portal and delete the `PROJECT_ID-CLUSTER` resource group. This removes the AKS cluster and all of its underlying resources. The `MC_`-prefixed managed resource group that AKS created alongside the cluster is deleted automatically with it — confirm it's gone once the deletion completes.
 
     ## Deleting the regional resource group
 
-    If you're removing Porter from the Azure subscription entirely — not just deleting a single cluster — also delete the `PROJECT_ID-REGION` resource group (for example, `123-eastus`), which holds resources shared across clusters in that region, such as the key vault.
+    If you're removing Porter from the Azure subscription entirely — not just deleting a single cluster — also delete the `PROJECT_ID-REGION` resource group (for example, `123-eastus`), which holds resources shared across clusters in that region, such as the container registry, key vault, and log storage.
+
+    ## Cleaning up directory and subscription-level leftovers
+
+    A few objects live outside the resource groups and survive their deletion. None of them incur cost, but you can remove them for a fully clean subscription:
+
+    1. In **Microsoft Entra ID** -> **Groups**, delete the `CLUSTER-admins` group.
+    2. In your subscription's **Access control (IAM)** -> **Role assignments**, remove any assignments listed as **Identity not found** — these are left over from the deleted cluster's managed identities.
+    3. The key vault from the regional resource group remains in a soft-deleted state, which reserves its name for the retention period. To free the name immediately, purge it under **Key vaults** -> **Manage deleted vaults**.
+
+    Finally, to revoke Porter's access to the Azure subscription, remove the federated credential Porter added to the app registration you connected it with, under **Microsoft Entra ID** -> **App registrations** -> your app -> **Certificates & secrets** -> **Federated credentials**. Note that this breaks Porter's ability to manage anything remaining in the subscription — see [Deleting a cluster](/cloud-accounts/deleting-a-cluster) for details.
   </Tab>
 </Tabs>
