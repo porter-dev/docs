@@ -43,13 +43,13 @@ Navigate to the **VPC** section in your AWS console to see the VPC's that are cu
 
 ## GCP[](#gcp "Direct link to heading")
 
-As with AWS, the instructions in the following sections need to be used in the order they're specified in; GCP will refuse to delete resources that other resources still depend on.
+As with AWS, the instructions in the following sections should be followed in the order they're specified in; GCP will refuse to delete resources that other resources still depend on.
 
 Porter names the resources it creates after your cluster (referred to as `CLUSTER` below) or with a `porter-` prefix followed by your Porter project ID (referred to as `PROJECT_ID` below). Only delete resources whose names contain `porter-` or your cluster's name.
 
 ### Deleting the GKE cluster[](#deleting-the-gke-cluster "Direct link to heading")
 
-Go to the **Kubernetes Engine** section of the GCP console, and delete the cluster in question, if it's visible. This also removes the cluster's node pools and their Compute Engine instances. Once the cluster is deleted, navigate to **Network Services** -> **Load Balancing** and delete any load balancers that were created by the cluster (these have auto-generated names, typically starting with `k8s-` or `a` followed by a long hash) — leftover load balancers will block deleting the VPC network later.
+Go to **Kubernetes Engine** in the GCP console, and delete the cluster in question, if it's visible. This also removes the cluster's node pools and their Compute Engine instances. Once the cluster is deleted, navigate to **Network Services** -> **Load Balancing** and delete any load balancers that were created by the cluster (these have auto-generated names, typically starting with `k8s-` or `a` followed by a long hash) — leftover load balancers will block deleting the VPC network later.
 
 ### Removing Cloud NAT & Cloud Router[](#removing-cloud-nat--cloud-router "Direct link to heading")
 
@@ -71,12 +71,16 @@ Navigate to **VPC network** -> **VPC networks** and delete `CLUSTER-vpc`; this a
 
 Navigate to **Compute Engine** -> **Disks** and delete any unattached disks with names starting with `pvc-` that belonged to the cluster. These are created for application volumes and are not always removed with the cluster.
 
-### Deleting container images, storage, and secrets[](#deleting-container-images-storage-and-secrets "Direct link to heading")
+### Deleting the logs bucket[](#deleting-the-logs-bucket "Direct link to heading")
+
+Each cluster has its own log storage bucket. Navigate to **Cloud Storage** -> **Buckets** and delete the bucket for your cluster — its name starts with `porter-PROJECT_ID-` and contains `porter-logs` (on newer clusters this is followed by a numeric cluster ID; on older clusters, by the cluster's name).
+
+### Deleting container images and secrets[](#deleting-container-images-and-secrets "Direct link to heading")
 
 The following resources are shared across all Porter clusters in the GCP project, so only delete them if you're removing Porter from the GCP project entirely — not just deleting a single cluster:
 
 1. Navigate to **Artifact Registry** -> **Repositories** and delete the `porter-PROJECT_ID` repository.
-2. Navigate to **Cloud Storage** -> **Buckets** and delete any buckets with names starting with `porter-PROJECT_ID-`.
+2. Navigate to **Cloud Storage** -> **Buckets** and delete any remaining buckets with names starting with `porter-PROJECT_ID-`.
 3. Navigate to **Secret Manager** and delete any secrets with names starting with `porter-env-groups-PROJECT_ID-`.
 
 Finally, to revoke Porter's access to the GCP project, go to **IAM & Admin** -> **Service Accounts** and delete the `porter-manager-` service account, then remove the `porter-pool-` pool under **IAM & Admin** -> **Workload Identity Federation**. Note that this breaks Porter's ability to manage anything remaining in the project — see [Deleting a cluster](/cloud-accounts/deleting-a-cluster) for details.
