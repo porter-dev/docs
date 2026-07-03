@@ -6,83 +6,97 @@ description: "Manually clean up orphaned AWS, GCP, or Azure resources like EKS c
 When you delete your project or clusters, Porter automatically destroys your resources so you don't get charged for any unused resources. 
 In unforeseen circumstances, some resources may not be deleted, and you may need to manually delete them. Whilst this does not happen often, the following is a guide with specific steps on how to ensure that all resources have been deleted for each cloud provider.
 
-## AWS[](#aws "Direct link to heading")
+<Tabs>
+  <Tab title="AWS">
+    Please note that the instructions in the following sections need to be used in the order they're specified in; not following the sequence will result in errors whilst trying to delete resources that may be dependent on other resources within your account.
 
-Please note that the instructions in the following sections need to be used in the order they're specified in; not following the sequence will result in errors whilst trying to delete resources that may be dependent on other resources within your account.
+    ## Deleting EKS
 
-### Deleting EKS[](#deleting-eks "Direct link to heading")
+    Go to the **EKS** section on your AWS console, and delete the cluster in question, if it's visible.
 
-Go to the **EKS** section on your AWS console, and delete the cluster in question, if it's visible.
+    ![EKS](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/86a228b3-68d5-4e42-912b-a34a51f6d600/large "Screen Shot 2021-03-26 at 4.16.01 PM.png")
 
-![EKS](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/86a228b3-68d5-4e42-912b-a34a51f6d600/large "Screen Shot 2021-03-26 at 4.16.01 PM.png")
+    ## Removing Auto Scaling Groups & Launch Configurations
 
-### Removing Auto Scaling Groups & Launch Configurations[](#removing-auto-scaling-groups--launch-configurations "Direct link to heading")
+    On the **EC2** dashboard, navigate to the **Auto Scaling Groups** section, and remove any auto scaling groups that contain your cluster's name. Once they're deleted, you need to delete any launch configurations that may be left over, containing your cluster's name.
 
-On the **EC2** dashboard, navigate to the **Auto Scaling Groups** section, and remove any auto scaling groups that contain your cluster's name. Once they're deleted, you need to delete any launch configurations that may be left over, containing your cluster's name.
+    ![Autoscaling group](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/33c10eca-b30b-44c3-8f43-3deae40da300/large "Screen Shot 2021-03-26 at 4.24.08 PM.png")
 
-![Autoscaling group](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/33c10eca-b30b-44c3-8f43-3deae40da300/large "Screen Shot 2021-03-26 at 4.24.08 PM.png")
+    ## Removing Load Balancers & Elastic IPs
 
-### Removing Load Balancers & Elastic IPs[](#removing-load-balancers--elastic-ips "Direct link to heading")
+    First, navigate to the **VPC** section in your AWS console to see the VPC's that are currently in use. Select the VPC that belongs to the cluster you've provisioned, and copy the VPC ID. Then go to the **Load Balancers** section on the **EC2** dashboard, and locate the load balancer for your cluster using the VPC ID you just copied as a filter - delete any load balancers found.
 
-First, navigate to the **VPC** section in your AWS console to see the VPC's that are currently in use. Select the VPC that belongs to the cluster you've provisioned, and copy the VPC ID. Then go to the **Load Balancers** section on the **EC2** dashboard, and locate the load balancer for your cluster using the VPC ID you just copied as a filter - delete any load balancers found.
+    ## Terminating EC2 nodes
 
-### Terminating EC2 nodes[](#terminating-ec2-nodes "Direct link to heading")
+    Deleting the EKS cluster and associated auto scaling groups and launch configurations will ensure your EC2 nodes are also terminated; you can navigate to the **Instances** section on the EC2 dashboard to confirm.
 
-Deleting the EKS cluster and associated auto scaling groups and launch configurations will ensure your EC2 nodes are also terminated; you can navigate to the **Instances** section on the EC2 dashboard to confirm.
+    ## Removing VPC Resources
 
-### Removing VPC Resources[](#removing-vpc-resources "Direct link to heading")
+    Navigate to the **VPC** section in your AWS console to see the VPC's that are currently in use. Select the VPC that belongs to the cluster you've provisioned, and copy the VPC ID.
 
-Navigate to the **VPC** section in your AWS console to see the VPC's that are currently in use. Select the VPC that belongs to the cluster you've provisioned, and copy the VPC ID.
+    1. Click on **NAT Gateways**, and use the VPC ID to filter out the NAT Gateway for your cluster; select it and then click on **Actions** \-> **Delete NAT Gateway**.![NAT gateway](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/29bcf96e-84ff-4d9d-d3b5-1e15a5554900/large "Screen Shot 2021-03-26 at 4.09.51 PM.png")
+    2. After ensuring the NAT Gateway was deleted, navigate to **Internet Gateways**, and use the VPC ID to locate the Internet Gateway for your cluster; select it and click on **Actions** \-> **Detach from VPC**. Once the gateway is detached, select **Actions** \-> **Delete Internet gateway**. If detaching the gateway throws an error about unmapped public IPs, go to the **Elastic IPs** section and release any elastic IPs associated with the VPC ID.
+    3. After all gateways have been deleted, go to the **Subnets** section, and remove all subnets associated with the cluster VPC, by clicking on **Actions** \-> **Delete subnet**.
+    4. Finally, you can delete the VPC by going to **Your VPCs** and deleting the VPC for your cluster, by selecting **Actions** \-> **Delete VPC**.
 
-1. Click on **NAT Gateways**, and use the VPC ID to filter out the NAT Gateway for your cluster; select it and then click on **Actions** \-> **Delete NAT Gateway**.![NAT gateway](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/29bcf96e-84ff-4d9d-d3b5-1e15a5554900/large "Screen Shot 2021-03-26 at 4.09.51 PM.png")
-2. After ensuring the NAT Gateway was deleted, navigate to **Internet Gateways**, and use the VPC ID to locate the Internet Gateway for your cluster; select it and click on **Actions** \-> **Detach from VPC**. Once the gateway is detached, select **Actions** \-> **Delete Internet gateway**. If detaching the gateway throws an error about unmapped public IPs, go to the **Elastic IPs** section and release any elastic IPs associated with the VPC ID.
-3. After all gateways have been deleted, go to the **Subnets** section, and remove all subnets associated with the cluster VPC, by clicking on **Actions** \-> **Delete subnet**.
-4. Finally, you can delete the VPC by going to **Your VPCs** and deleting the VPC for your cluster, by selecting **Actions** \-> **Delete VPC**.
+    ![Delete VPC](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/e74141e4-6a77-4a08-6ffb-541586499300/large "Screen Shot 2021-03-26 at 4.05.16 PM.png")
+  </Tab>
+  <Tab title="GCP">
+    The instructions in the following sections should be followed in the order they're specified in; GCP will refuse to delete resources that other resources still depend on.
 
-![Delete VPC](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/e74141e4-6a77-4a08-6ffb-541586499300/large "Screen Shot 2021-03-26 at 4.05.16 PM.png")
+    Porter names the resources it creates after your cluster (referred to as `CLUSTER` below) or with a `porter-` prefix followed by your Porter project ID (referred to as `PROJECT_ID` below). Only delete resources whose names contain `porter-` or your cluster's name.
 
-## GCP[](#gcp "Direct link to heading")
+    ## Deleting the GKE cluster
 
-As with AWS, the instructions in the following sections should be followed in the order they're specified in; GCP will refuse to delete resources that other resources still depend on.
+    Go to **Kubernetes Engine** in the GCP console, and delete the cluster in question, if it's visible. This also removes the cluster's node pools and their Compute Engine instances. Once the cluster is deleted, navigate to **Network Services** -> **Load Balancing** and delete any load balancers that were created by the cluster (these have auto-generated names, typically starting with `k8s-` or `a` followed by a long hash) — leftover load balancers will block deleting the VPC network later.
 
-Porter names the resources it creates after your cluster (referred to as `CLUSTER` below) or with a `porter-` prefix followed by your Porter project ID (referred to as `PROJECT_ID` below). Only delete resources whose names contain `porter-` or your cluster's name.
+    ## Removing Cloud NAT & Cloud Router
 
-### Deleting the GKE cluster[](#deleting-the-gke-cluster "Direct link to heading")
+    Navigate to **Network Services** -> **Cloud NAT** and delete the `CLUSTER-cloud-nat-router` gateway. Once it's deleted, go to **Network Connectivity** -> **Cloud Routers** and delete `CLUSTER-cloud-router`.
 
-Go to **Kubernetes Engine** in the GCP console, and delete the cluster in question, if it's visible. This also removes the cluster's node pools and their Compute Engine instances. Once the cluster is deleted, navigate to **Network Services** -> **Load Balancing** and delete any load balancers that were created by the cluster (these have auto-generated names, typically starting with `k8s-` or `a` followed by a long hash) — leftover load balancers will block deleting the VPC network later.
+    ## Releasing static IP addresses
 
-### Removing Cloud NAT & Cloud Router[](#removing-cloud-nat--cloud-router "Direct link to heading")
+    Navigate to **VPC network** -> **IP addresses** and release `CLUSTER-cloud-nat-ip` (there may be additional addresses named `CLUSTER-cloud-nat-ip-2`, `-3`, and so on) as well as `k8s-CLUSTER-lb`.
 
-Navigate to **Network Services** -> **Cloud NAT** and delete the `CLUSTER-cloud-nat-router` gateway. Once it's deleted, go to **Network Connectivity** -> **Cloud Routers** and delete `CLUSTER-cloud-router`.
+    ## Deleting Cloud DNS private zones
 
-### Releasing static IP addresses[](#releasing-static-ip-addresses "Direct link to heading")
+    Navigate to **Network Services** -> **Cloud DNS** and delete any private zones associated with your cluster, if present.
 
-Navigate to **VPC network** -> **IP addresses** and release `CLUSTER-cloud-nat-ip` (there may be additional addresses named `CLUSTER-cloud-nat-ip-2`, `-3`, and so on) as well as `k8s-CLUSTER-lb`.
+    ## Deleting the VPC network
 
-### Deleting Cloud DNS private zones[](#deleting-cloud-dns-private-zones "Direct link to heading")
+    Navigate to **VPC network** -> **VPC networks** and delete `CLUSTER-vpc`; this also removes the `CLUSTER-subnet` subnet and the `CLUSTER-cloud-firewall-rules` firewall rule. If GCP reports that the network is still in use, revisit the previous sections — a leftover load balancer, NAT gateway, or static address is still referencing it.
 
-Navigate to **Network Services** -> **Cloud DNS** and delete any private zones associated with your cluster, if present.
+    ## Deleting leftover persistent disks
 
-### Deleting the VPC network[](#deleting-the-vpc-network "Direct link to heading")
+    Navigate to **Compute Engine** -> **Disks** and delete any unattached disks with names starting with `pvc-` that belonged to the cluster. These are created for application volumes and are not always removed with the cluster.
 
-Navigate to **VPC network** -> **VPC networks** and delete `CLUSTER-vpc`; this also removes the `CLUSTER-subnet` subnet and the `CLUSTER-cloud-firewall-rules` firewall rule. If GCP reports that the network is still in use, revisit the previous sections — a leftover load balancer, NAT gateway, or static address is still referencing it.
+    ## Deleting the logs bucket
 
-### Deleting leftover persistent disks[](#deleting-leftover-persistent-disks "Direct link to heading")
+    Each cluster has its own log storage bucket. Navigate to **Cloud Storage** -> **Buckets** and delete the bucket for your cluster — its name starts with `porter-PROJECT_ID-` and contains `porter-logs` (on newer clusters this is followed by a numeric cluster ID; on older clusters, by the cluster's name).
 
-Navigate to **Compute Engine** -> **Disks** and delete any unattached disks with names starting with `pvc-` that belonged to the cluster. These are created for application volumes and are not always removed with the cluster.
+    ## Deleting container images and secrets
 
-### Deleting the logs bucket[](#deleting-the-logs-bucket "Direct link to heading")
+    The following resources are shared across all Porter clusters in the GCP project, so only delete them if you're removing Porter from the GCP project entirely — not just deleting a single cluster:
 
-Each cluster has its own log storage bucket. Navigate to **Cloud Storage** -> **Buckets** and delete the bucket for your cluster — its name starts with `porter-PROJECT_ID-` and contains `porter-logs` (on newer clusters this is followed by a numeric cluster ID; on older clusters, by the cluster's name).
+    1. Navigate to **Artifact Registry** -> **Repositories** and delete the `porter-PROJECT_ID` repository.
+    2. Navigate to **Cloud Storage** -> **Buckets** and delete any remaining buckets with names starting with `porter-PROJECT_ID-`.
+    3. Navigate to **Secret Manager** and delete any secrets with names starting with `porter-env-groups-PROJECT_ID-`.
 
-### Deleting container images and secrets[](#deleting-container-images-and-secrets "Direct link to heading")
+    Finally, to revoke Porter's access to the GCP project, go to **IAM & Admin** -> **Service Accounts** and delete the `porter-manager-` service account, then remove the `porter-pool-` pool under **IAM & Admin** -> **Workload Identity Federation**. Note that this breaks Porter's ability to manage anything remaining in the project — see [Deleting a cluster](/cloud-accounts/deleting-a-cluster) for details.
 
-The following resources are shared across all Porter clusters in the GCP project, so only delete them if you're removing Porter from the GCP project entirely — not just deleting a single cluster:
+    If you enabled disk encryption, the Cloud KMS key ring and key named `porter-PROJECT_ID-CLUSTER` cannot be deleted — GCP only allows destroying key versions, not key rings. These incur no compute cost and can be safely left in place.
+  </Tab>
+  <Tab title="Azure">
+    On Azure, Porter creates all resources inside resource groups, so cleanup is simpler: deleting a resource group also deletes everything in it.
 
-1. Navigate to **Artifact Registry** -> **Repositories** and delete the `porter-PROJECT_ID` repository.
-2. Navigate to **Cloud Storage** -> **Buckets** and delete any remaining buckets with names starting with `porter-PROJECT_ID-`.
-3. Navigate to **Secret Manager** and delete any secrets with names starting with `porter-env-groups-PROJECT_ID-`.
+    Porter names resource groups with your Porter project ID (referred to as `PROJECT_ID` below), followed by your cluster's name or its Azure region.
 
-Finally, to revoke Porter's access to the GCP project, go to **IAM & Admin** -> **Service Accounts** and delete the `porter-manager-` service account, then remove the `porter-pool-` pool under **IAM & Admin** -> **Workload Identity Federation**. Note that this breaks Porter's ability to manage anything remaining in the project — see [Deleting a cluster](/cloud-accounts/deleting-a-cluster) for details.
+    ## Deleting the cluster resource group
 
-If you enabled disk encryption, the Cloud KMS key ring and key named `porter-PROJECT_ID-CLUSTER` cannot be deleted — GCP only allows destroying key versions, not key rings. These incur no compute cost and can be safely left in place.
+    Go to **Resource groups** in the Azure portal and delete the `PROJECT_ID-CLUSTER` resource group. This removes the AKS cluster and all of its underlying resources. The `MC_`-prefixed managed resource group that AKS created alongside the cluster is deleted automatically with it.
+
+    ## Deleting the regional resource group
+
+    If you're removing Porter from the Azure subscription entirely — not just deleting a single cluster — also delete the `PROJECT_ID-REGION` resource group (for example, `123-eastus`), which holds resources shared across clusters in that region, such as the key vault.
+  </Tab>
+</Tabs>
