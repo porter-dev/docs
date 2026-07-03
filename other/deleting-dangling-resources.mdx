@@ -40,3 +40,45 @@ Navigate to the **VPC** section in your AWS console to see the VPC's that are cu
 4. Finally, you can delete the VPC by going to **Your VPCs** and deleting the VPC for your cluster, by selecting **Actions** \-> **Delete VPC**.
 
 ![Delete VPC](https://imagedelivery.net/l4LYM_vOYKe7O1NCT_Nc_g/e74141e4-6a77-4a08-6ffb-541586499300/large "Screen Shot 2021-03-26 at 4.05.16 PM.png")
+
+## GCP[](#gcp "Direct link to heading")
+
+As with AWS, the instructions in the following sections need to be used in the order they're specified in; GCP will refuse to delete resources that other resources still depend on.
+
+Porter names the resources it creates after your cluster (referred to as `CLUSTER` below) or with a `porter-` prefix followed by your Porter project ID (referred to as `PROJECT_ID` below). Only delete resources whose names contain `porter-` or your cluster's name.
+
+### Deleting the GKE cluster[](#deleting-the-gke-cluster "Direct link to heading")
+
+Go to the **Kubernetes Engine** section of the GCP console, and delete the cluster in question, if it's visible. This also removes the cluster's node pools and their Compute Engine instances. Once the cluster is deleted, navigate to **Network Services** -> **Load Balancing** and delete any load balancers that were created by the cluster (these have auto-generated names, typically starting with `k8s-` or `a` followed by a long hash) — leftover load balancers will block deleting the VPC network later.
+
+### Removing Cloud NAT & Cloud Router[](#removing-cloud-nat--cloud-router "Direct link to heading")
+
+Navigate to **Network Services** -> **Cloud NAT** and delete the `CLUSTER-cloud-nat-router` gateway. Once it's deleted, go to **Network Connectivity** -> **Cloud Routers** and delete `CLUSTER-cloud-router`.
+
+### Releasing static IP addresses[](#releasing-static-ip-addresses "Direct link to heading")
+
+Navigate to **VPC network** -> **IP addresses** and release `CLUSTER-cloud-nat-ip` (there may be additional addresses named `CLUSTER-cloud-nat-ip-2`, `-3`, and so on) as well as `k8s-CLUSTER-lb`.
+
+### Deleting Cloud DNS private zones[](#deleting-cloud-dns-private-zones "Direct link to heading")
+
+Navigate to **Network Services** -> **Cloud DNS** and delete any private zones associated with your cluster, if present.
+
+### Deleting the VPC network[](#deleting-the-vpc-network "Direct link to heading")
+
+Navigate to **VPC network** -> **VPC networks** and delete `CLUSTER-vpc`; this also removes the `CLUSTER-subnet` subnet and the `CLUSTER-cloud-firewall-rules` firewall rule. If GCP reports that the network is still in use, revisit the previous sections — a leftover load balancer, NAT gateway, or static address is still referencing it.
+
+### Deleting leftover persistent disks[](#deleting-leftover-persistent-disks "Direct link to heading")
+
+Navigate to **Compute Engine** -> **Disks** and delete any unattached disks with names starting with `pvc-` that belonged to the cluster. These are created for application volumes and are not always removed with the cluster.
+
+### Deleting container images, storage, and secrets[](#deleting-container-images-storage-and-secrets "Direct link to heading")
+
+The following resources are shared across all Porter clusters in the GCP project, so only delete them if you're removing Porter from the GCP project entirely — not just deleting a single cluster:
+
+1. Navigate to **Artifact Registry** -> **Repositories** and delete the `porter-PROJECT_ID` repository.
+2. Navigate to **Cloud Storage** -> **Buckets** and delete any buckets with names starting with `porter-PROJECT_ID-`.
+3. Navigate to **Secret Manager** and delete any secrets with names starting with `porter-env-groups-PROJECT_ID-`.
+
+Finally, to revoke Porter's access to the GCP project, go to **IAM & Admin** -> **Service Accounts** and delete the `porter-manager-` service account, then remove the `porter-pool-` pool under **IAM & Admin** -> **Workload Identity Federation**. Note that this breaks Porter's ability to manage anything remaining in the project — see [Deleting a cluster](/cloud-accounts/deleting-a-cluster) for details.
+
+If you enabled disk encryption, the Cloud KMS key ring and key named `porter-PROJECT_ID-CLUSTER` cannot be deleted — GCP only allows destroying key versions, not key rings. These incur no compute cost and can be safely left in place.
