@@ -434,14 +434,51 @@ create_federated_credential() {
     PROJECT_ID="${ROLE_NAME##*-}"
     FIC_NAME="porter-project-${PROJECT_ID}"
 
-    az ad app federated-credential create \
+    local existing_fic existing_issuer existing_subject
+    existing_fic=$(az ad app federated-credential show \
         --id "$APP_OBJECT_ID" \
-        --parameters "{
-            \"name\": \"${FIC_NAME}\",
-            \"issuer\": \"${OIDC_ISSUER}\",
-            \"subject\": \"${OIDC_SUBJECT}\",
-            \"audiences\": [\"api://AzureADTokenExchange\"]
-        }" >/dev/null
+        --federated-credential-id "$FIC_NAME" \
+        -o json 2>/dev/null || true)
+
+    if [ -n "$existing_fic" ]; then
+        existing_issuer=$(echo "$existing_fic" | jq -r '.issuer')
+        existing_subject=$(echo "$existing_fic" | jq -r '.subject')
+
+        if [ "$existing_issuer" = "$OIDC_ISSUER" ] && [ "$existing_subject" = "$OIDC_SUBJECT" ]; then
+            print_warning "Federated identity credential ${FIC_NAME} already exists with matching issuer and subject, reusing it"
+            return
+        else
+            print_warning "Federated identity credential ${FIC_NAME} already exists but its issuer/subject do not match:"
+            print_warning "  existing issuer:  ${existing_issuer}"
+            print_warning "  expected issuer:  ${OIDC_ISSUER}"
+            print_warning "  existing subject: ${existing_subject}"
+            print_warning "  expected subject: ${OIDC_SUBJECT}"
+            read -rp "Update it with the expected values? [y/N]: " UPDATE_FIC_CONFIRM
+            case "$UPDATE_FIC_CONFIRM" in
+                [yY]|[yY][eE][sS]) ;;
+                *) print_fatal "Aborting: federated identity credential ${FIC_NAME} was left unchanged. Re-run with a different --app-name to create a separate app registration, or delete the existing credential first." ;;
+            esac
+            az ad app federated-credential update \
+                --id "$APP_OBJECT_ID" \
+                --federated-credential-id "$FIC_NAME" \
+                --parameters "{
+                    \"name\": \"${FIC_NAME}\",
+                    \"issuer\": \"${OIDC_ISSUER}\",
+                    \"subject\": \"${OIDC_SUBJECT}\",
+                    \"audiences\": [\"api://AzureADTokenExchange\"]
+                }" >/dev/null
+            print_success "Federated identity credential updated"
+        fi
+    else
+        az ad app federated-credential create \
+            --id "$APP_OBJECT_ID" \
+            --parameters "{
+                \"name\": \"${FIC_NAME}\",
+                \"issuer\": \"${OIDC_ISSUER}\",
+                \"subject\": \"${OIDC_SUBJECT}\",
+                \"audiences\": [\"api://AzureADTokenExchange\"]
+            }" >/dev/null
+    fi
 
     if wait4_federated_credential; then
         print_success "Federated identity credential is active"
