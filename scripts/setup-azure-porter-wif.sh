@@ -136,6 +136,7 @@ enable_resource_providers() {
         "Microsoft.Compute"
         "Microsoft.ContainerRegistry"
         "Microsoft.ContainerService"
+        "Microsoft.Insights"
         "Microsoft.ManagedIdentity"
         "Microsoft.Network"
         "Microsoft.OperationalInsights"
