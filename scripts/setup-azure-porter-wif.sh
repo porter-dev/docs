@@ -410,7 +410,7 @@ wait4_federated_credential() {
             --data-urlencode 'client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer' \
             --data-urlencode "client_assertion=${jwt}" \
             --data-urlencode 'grant_type=client_credentials') || response=""
-        if [[ -n ${response} ]] && echo "${response}" | jq -e . >/dev/null 2>&1 && ! grep -qE "${pending}" <<<"${response}"; then
+        if [[ -n ${response} ]] && jq -e . <<<"${response}" && ! grep -qE "${pending}" <<<"${response}"; then
             if ((success++ > 6)); then
                 return 0 # Wait for 6 "successful" exchanges in a row
             fi
