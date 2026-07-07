@@ -397,8 +397,8 @@ get_oidc_issuer() {
 #
 # The `az ad app federated-credential create` command returns as soon as
 # the credential is persisted, but Azure's authorization service can take
-# additional time to replicate it; during that window token-exchange requests
-# fail with "no matching federated identity record" errors
+# additional time to replicate it. Expected failures during propagation include
+# the "no matching federated identity record" errors
 # (AADSTS70021 / AADSTS700211 / AADSTS700212 / AADSTS700213 / AADSTS70025).
 #
 # The probe sends a deliberately invalid assertion: Entra matches the FIC
@@ -407,6 +407,8 @@ get_oidc_issuer() {
 wait4_federated_credential() {
     print_status 'Waiting for the federated identity credential to become active...'
 
+    # AADSTS700027: invalid assertion signature — the success signal (see above)
+    local fic_matched='AADSTS700027'
     # AADSTS700016: app not found in tenant
     # AADSTS7000229: app has no service principal
     # AADSTS90002: tenant not found
@@ -437,7 +439,7 @@ wait4_federated_credential() {
             --data-urlencode 'client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer' \
             --data-urlencode "client_assertion=${jwt}" \
             --data-urlencode 'grant_type=client_credentials') || response=""
-        if grep -q "AADSTS700027" <<<"${response}"; then
+        if grep -q "${fic_matched}" <<<"${response}"; then
             if ((success++ > 6)); then
                 return 0 # Wait for 6 "successful" exchanges in a row
             fi
