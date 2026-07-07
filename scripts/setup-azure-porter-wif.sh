@@ -265,6 +265,17 @@ create_app_registration() {
     az ad sp create --id "$APP_ID" > /dev/null
     sleep 10
 
+    print_success "App registration created"
+}
+
+# Assign the custom role to the service principal at the subscription scope. Kept separate
+# from create_app_registration so it runs on every invocation: an existing app registration
+# short-circuits that function, but role assignments are deleted independently of the app
+# and must be reconciled each run. az role assignment create is idempotent, so re-running
+# against an already-assigned SP is a no-op.
+assign_custom_role() {
+    print_status "Ensuring $ROLE_NAME is assigned to the service principal..."
+
     # The role assignment can transiently fail right after a custom role is created/updated
     # because Azure RBAC is eventually consistent; retry until it converges.
     local attempt=0
@@ -283,7 +294,7 @@ create_app_registration() {
         sleep 10
     done
 
-    print_success "App registration created"
+    print_success "Role assignment ensured"
 }
 
 # Function to add API permissions
@@ -430,8 +441,9 @@ create_federated_credential() {
     print_status "Creating federated identity credential..."
 
     # OIDC_SUBJECT is an IAM role ARN ending in porter-azure-fic-<projectID>.
-    ROLE_NAME="${OIDC_SUBJECT##*/}"
-    PROJECT_ID="${ROLE_NAME##*-}"
+    # Local to this function so it never collides with the Azure custom-role ROLE_NAME global.
+    local fic_role_name="${OIDC_SUBJECT##*/}"
+    PROJECT_ID="${fic_role_name##*-}"
     FIC_NAME="porter-project-${PROJECT_ID}"
 
     local existing_fic existing_issuer existing_subject
@@ -566,6 +578,7 @@ main() {
     enable_resource_providers
     create_custom_role
     create_app_registration
+    assign_custom_role
     add_api_permissions
 
     # Try to grant admin consent, but don't fail if it doesn't work
