@@ -52,7 +52,17 @@ export PORTER_CLUSTER_ID="<cluster-id>"
 export PORTER_SANDBOX_API_KEY="<porter-api-token>"
 ```
 
-The SDK then routes through the Porter API at `dashboard.porter.run` automatically. Replace `<project-id>` and `<cluster-id>` with the project and cluster where sandboxes are enabled; you can find both by running `porter project list` and `porter cluster list` with the [Porter CLI](/cli/basic-usage), or copy the prefilled snippet from the cluster's Sandbox tab.
+The SDK then routes through the Porter API at `dashboard.porter.run` automatically. Replace `<project-id>` and `<cluster-id>` with the project and cluster where sandboxes are enabled. You can copy the prefilled snippet from the cluster's Sandbox tab, or look up the IDs with the [Porter CLI](/cli/basic-usage):
+
+```bash
+$ porter project list
+ID  NAME
+1   my-project (current project)
+
+$ porter cluster list
+ID  NAME              RESOURCE_NAME     SERVER
+2   my-sandbox-cluster ...
+```
 
 You can create an API token from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions.
 
