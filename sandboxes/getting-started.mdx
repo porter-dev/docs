@@ -44,7 +44,18 @@ Sandboxes are in a private beta. Please reach out to us at support@porter.run or
 
 The SDK connects to the in-cluster Sandbox API automatically when your application runs as a Porter Application in the same cluster where sandboxes are enabled.
 
-If you need to invoke sandboxes from outside that cluster, configure the SDK with a Porter API token. You can create an API token from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions.
+To invoke sandboxes from anywhere else, point the SDK at the Porter API and authenticate with a Porter API token:
+
+```bash
+export PORTER_SANDBOX_BASE_URL="https://dashboard.porter.run/api/v2/alpha/projects/<project-id>/clusters/<cluster-id>"
+export PORTER_SANDBOX_API_KEY="<porter-api-token>"
+```
+
+Replace `<project-id>` and `<cluster-id>` with the project and cluster where sandboxes are enabled. You can find both by running `porter project list` and `porter cluster list` with the [Porter CLI](/cli/basic-usage).
+
+You can create an API token from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions.
+
+Both SDKs read these environment variables automatically. You can also pass the same values directly to the client constructor (`base_url` and `api_key` in Python, `baseUrl` and `apiKey` in TypeScript).
 
 ## Python quickstart
 
