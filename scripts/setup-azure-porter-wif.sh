@@ -410,7 +410,7 @@ wait4_federated_credential() {
             --data-urlencode 'client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer' \
             --data-urlencode "client_assertion=${jwt}" \
             --data-urlencode 'grant_type=client_credentials') || response=""
-        if [[ -n ${response} ]] && ! grep -qE "${pending}" <<<"${response}"; then
+        if [[ -n ${response} ]] && jq -e . <<<"${response}" && ! grep -qE "${pending}" <<<"${response}"; then
             if ((success++ > 6)); then
                 return 0 # Wait for 6 "successful" exchanges in a row
             fi
@@ -445,8 +445,8 @@ create_federated_credential() {
         existing_subject=$(echo "$existing_fic" | jq -r '.subject')
 
         if [ "$existing_issuer" = "$OIDC_ISSUER" ] && [ "$existing_subject" = "$OIDC_SUBJECT" ]; then
-            print_warning "Federated identity credential ${FIC_NAME} already exists with matching issuer and subject, reusing it"
-            return
+            print_warning "Federated identity credential ${FIC_NAME} already exists with matching issuer and subject — re-probing to confirm it is active"
+            # fall through to wait4_federated_credential
         else
             print_warning "Federated identity credential ${FIC_NAME} already exists but its issuer/subject do not match:"
             print_warning "  existing issuer:  ${existing_issuer}"
