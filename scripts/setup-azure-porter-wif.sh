@@ -248,6 +248,12 @@ create_app_registration() {
         print_info "App registration already exists, reusing it..."
         APP_ID="$EXISTING"
         APP_OBJECT_ID=$(az ad app show --id "$APP_ID" --query id -o tsv)
+        # If the service principal is missing, role assignment and token exchange will fail.
+        if ! az ad sp show --id "$APP_ID" &> /dev/null; then
+            print_info "Service principal missing for the existing app registration; creating it..."
+            az ad sp create --id "$APP_ID" > /dev/null
+            sleep 10
+        fi
         print_success "Using existing app registration (Client ID: $APP_ID)"
         return
     fi
@@ -288,15 +294,23 @@ assign_custom_role() {
     # A fresh assignment can transiently fail right after a custom role is created/updated
     # because Azure RBAC is eventually consistent; retry until it converges.
     local attempt=0
+    local output
     while true; do
         attempt=$((attempt + 1))
-        if az role assignment create \
+        if output=$(az role assignment create \
             --assignee "$APP_ID" \
             --role "$ROLE_NAME" \
-            --scope "/subscriptions/${SUBSCRIPTION_ID}" > /dev/null 2>&1; then
+            --scope "/subscriptions/${SUBSCRIPTION_ID}" 2>&1); then
             break
         fi
+        # A permission denial never converges — fail immediately instead of retrying for
+        # two minutes. Match the stable ARM/Graph error codes, not message prose.
+        if grep -qE 'AuthorizationFailed|Authorization_RequestDenied' <<< "$output"; then
+            print_error "Not authorized to create role assignments on this subscription: $output"
+            print_fatal "Assigning $ROLE_NAME requires the Owner or User Access Administrator role on subscription $SUBSCRIPTION_ID"
+        fi
         if [ "$attempt" -ge 12 ]; then
+            print_error "Last error: $output"
             print_fatal "Failed to assign role $ROLE_NAME after $attempt attempts"
         fi
         print_info "Role assignment not ready yet (attempt $attempt); retrying in 10s..."
