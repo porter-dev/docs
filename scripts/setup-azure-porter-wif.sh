@@ -398,42 +398,52 @@ get_oidc_issuer() {
 # The `az ad app federated-credential create` command returns as soon as
 # the credential is persisted, but Azure's authorization service can take
 # additional time to replicate it; during that window token-exchange requests
-# fail with AADSTS70021 / AADSTS700211 / AADSTS700213 / AADSTS70025.
+# fail with "no matching federated identity record" errors
+# (AADSTS70021 / AADSTS700211 / AADSTS700212 / AADSTS700213 / AADSTS70025).
+#
+# The probe sends a deliberately invalid assertion: Entra matches the FIC
+# before verifying the signature, so AADSTS700027 ("invalid signature") proves
+# the FIC is replicated and matched.
 wait4_federated_credential() {
     print_status 'Waiting for the federated identity credential to become active...'
 
-    local now exp jwt_header jwt_payload jwt
-    now=$(date +%s)
-    exp=$((now + 300))
-    # Microsoft Entra requires the "kid" to be present so we use our own
-    # since the signature/key check happens after FIC matching which is
-    # what we're really testing.
-    jwt_header=$(printf '{"alg":"RS256","typ":"JWT","kid":"propagation-probe"}' | base64 | tr '+/' '-_' | tr -d '=\n')
-    jwt_payload=$(jq -nc \
-        --arg iss "${OIDC_ISSUER}" \
-        --arg sub "${OIDC_SUBJECT}" \
-        --argjson iat "${now}" \
-        --argjson exp "${exp}" \
-        '{iss:$iss, sub:$sub, aud:"api://AzureADTokenExchange", iat:$iat, exp:$exp}' |
-        base64 | tr '+/' '-_' | tr -d '=\n')
-    jwt="${jwt_header}.${jwt_payload}.invalid"
-
-    local pending='AADSTS70021|AADSTS700211|AADSTS700213|AADSTS70025'
+    # AADSTS700016: app not found in tenant
+    # AADSTS7000229: app has no service principal
+    # AADSTS90002: tenant not found
+    local hard_fail='AADSTS700016|AADSTS7000229|AADSTS90002'
+    local now jwt_header jwt_payload jwt
     local response
     local success=0
     local i=0
     while ((i++ < 60)); do
-        response=$(curl -sS -X POST \
+        # Microsoft Entra requires the "kid" to be present so we use our own
+        # since the signature/key check happens after FIC matching which is
+        # what we're really testing.
+        now=$(date +%s)
+        jwt_header=$(printf '{"alg":"RS256","typ":"JWT","kid":"propagation-probe"}' | base64 | tr '+/' '-_' | tr -d '=\n')
+        jwt_payload=$(jq -nc \
+            --arg iss "${OIDC_ISSUER}" \
+            --arg sub "${OIDC_SUBJECT}" \
+            --argjson iat "${now}" \
+            --argjson exp "$((now + 300))" \
+            '{iss:$iss, sub:$sub, aud:"api://AzureADTokenExchange", iat:$iat, exp:$exp}' |
+            base64 | tr '+/' '-_' | tr -d '=\n')
+        jwt="${jwt_header}.${jwt_payload}.invalid"
+
+        response=$(curl -sS --max-time 10 -X POST \
             "https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token" \
             --data-urlencode "client_id=${APP_ID}" \
             --data-urlencode 'scope=https://management.azure.com/.default' \
             --data-urlencode 'client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer' \
             --data-urlencode "client_assertion=${jwt}" \
             --data-urlencode 'grant_type=client_credentials') || response=""
-        if [[ -n ${response} ]] && jq empty <<<"${response}" 2>/dev/null && ! grep -qE "${pending}" <<<"${response}"; then
+        if grep -q "AADSTS700027" <<<"${response}"; then
             if ((success++ > 6)); then
                 return 0 # Wait for 6 "successful" exchanges in a row
             fi
+        elif grep -qE "${hard_fail}" <<<"${response}"; then
+            print_error "Token exchange failed with a non-recoverable error: ${response}"
+            return 1
         else
             success=0 # Restart counter.
         fi
