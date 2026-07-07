@@ -25,8 +25,8 @@ Constructor options:
 
 | Option | Type | Description |
 | ------ | ---- | ----------- |
-| `apiKey` | `string \| undefined` | Optional API key. Only required when invoking the Sandbox API from outside the sandbox-enabled cluster. Create one from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions. |
-| `baseUrl` | `string \| undefined` | Optional API base URL override. In-cluster Porter Applications use the in-cluster Sandbox API URL by default. |
+| `apiKey` | `string \| undefined` | Optional API key. Falls back to the `PORTER_SANDBOX_API_KEY` environment variable. Only required when invoking the Sandbox API from outside the sandbox-enabled cluster. Create one from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions. |
+| `baseUrl` | `string \| undefined` | Optional API base URL override. Falls back to the `PORTER_SANDBOX_BASE_URL` environment variable, then the in-cluster Sandbox API URL. To call from outside the cluster, set it to `https://dashboard.porter.run/api/v2/alpha/projects/<project-id>/clusters/<cluster-id>`. |
 | `timeoutMs` | `number \| undefined` | Request timeout in milliseconds. Defaults to 30 seconds. |
 
 Close the client when your process is done:
