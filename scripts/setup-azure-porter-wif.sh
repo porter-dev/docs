@@ -271,12 +271,21 @@ create_app_registration() {
 # Assign the custom role to the service principal at the subscription scope. Kept separate
 # from create_app_registration so it runs on every invocation: an existing app registration
 # short-circuits that function, but role assignments are deleted independently of the app
-# and must be reconciled each run. az role assignment create is idempotent, so re-running
-# against an already-assigned SP is a no-op.
+# and must be reconciled each run.
 assign_custom_role() {
     print_status "Ensuring $ROLE_NAME is assigned to the service principal..."
 
-    # The role assignment can transiently fail right after a custom role is created/updated
+    # Skip if the SP already holds the role
+    if [ -n "$(az role assignment list \
+        --assignee "$APP_ID" \
+        --role "$ROLE_NAME" \
+        --scope "/subscriptions/${SUBSCRIPTION_ID}" \
+        --query "[0].id" -o tsv 2>/dev/null)" ]; then
+        print_success "Role already assigned to the service principal"
+        return
+    fi
+
+    # A fresh assignment can transiently fail right after a custom role is created/updated
     # because Azure RBAC is eventually consistent; retry until it converges.
     local attempt=0
     while true; do
