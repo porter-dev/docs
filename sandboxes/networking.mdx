@@ -1,9 +1,9 @@
 ---
 title: "Sandbox Networking"
-description: "Serve sandboxes over HTTPS on your own domains with public and private sandbox ingress"
+description: "Serve sandboxes over HTTPS on your own domains with public and private networking"
 ---
 
-A sandbox that opens a port can be served over HTTPS on a hostname under your own domain. You configure a sandbox ingress on the cluster once, and every sandbox that exposes a port gets a URL under that ingress's domain, either minted automatically from the sandbox name or chosen by you at create time.
+A sandbox that opens a port can be served over HTTPS on a hostname under your own domain. You configure networking on the cluster once, and every sandbox that exposes a port gets a URL under your domain, either minted automatically from the sandbox name or chosen by you at create time.
 
 <Warning>
 Sandboxes are in a private beta. Please reach out to us at support@porter.run or over Slack if you are interested in joining.
@@ -11,18 +11,18 @@ Sandboxes are in a private beta. Please reach out to us at support@porter.run or
 
 ## How it works
 
-A sandbox ingress is a load balancer on your sandbox cluster with a wildcard HTTPS certificate for a domain you own (for example `sandbox.acme.com`). A cluster can have up to two:
+You bring a domain you own (for example `sandbox.acme.com`), and Porter provisions a load balancer and a wildcard HTTPS certificate for it on your sandbox cluster. A cluster supports two kinds of networking, each with its own domain:
 
-| Ingress | Load balancer | Who can reach it |
-| ------- | ------------- | ---------------- |
+| Networking | Load balancer | Who can reach sandboxes |
+| ---------- | ------------- | ----------------------- |
 | Public | Internet-facing | Anyone on the internet |
 | Private | Internal | Clients inside your VPC |
 
-Enable the public one, the private one, or both. Each sandbox that opens a port is served at a hostname one label under the domain of the ingress it routes through, such as `my-app.sandbox.acme.com`, with TLS handled by the ingress's wildcard certificate.
+Enable public networking, private networking, or both. Each sandbox that opens a port is served at a hostname one label under the configured domain, such as `my-app.sandbox.acme.com`, with TLS handled by the wildcard certificate.
 
 ## What sandboxes can reach
 
-Sandboxes run untrusted code, so their outbound traffic is isolated by default, whether or not a sandbox ingress is configured. A sandbox can resolve DNS and reach the public internet, and nothing else:
+Sandboxes run untrusted code, so their outbound traffic is isolated by default, whether or not networking is configured. A sandbox can resolve DNS and reach the public internet, and nothing else:
 
 | Destination | Reachable |
 | ----------- | --------- |
@@ -35,29 +35,29 @@ Sandboxes run untrusted code, so their outbound traffic is isolated by default, 
 
 Because private address space is blocked, this includes services behind a private load balancer. If a sandbox needs to call a service you run on the same cluster, expose that service on a public domain and call it by hostname; from inside a sandbox it's reached over the internet like any other endpoint.
 
-## Configure sandbox ingress on the cluster
+## Configure networking on the cluster
 
 <Steps>
-  <Step title="Open the sandbox ingress settings">
-    In the Porter Dashboard, go to the **Sandbox** tab for your sandbox-enabled cluster, then open **Settings**. The **Public** and **Private** sections under sandbox ingress each have their own toggle.
+  <Step title="Open the sandbox networking settings">
+    In the Porter Dashboard, go to the **Sandbox** tab for your sandbox-enabled cluster, then open **Settings**. The **Public** and **Private** networking sections each have their own toggle.
   </Step>
 
   <Step title="Set the domain">
-    Enable the ingress you want and enter the domain sandbox hostnames should be minted under, for example `sandbox.acme.com` for the public ingress or `internal.sandbox.acme.com` for the private one. Each ingress needs its own domain.
+    Enable the kind of networking you want and enter the domain sandbox hostnames should be minted under, for example `sandbox.acme.com` for public networking or `internal.sandbox.acme.com` for private. Each needs its own domain.
   </Step>
 
   <Step title="Connect your DNS provider">
     Porter issues the wildcard certificate through a Let's Encrypt DNS-01 challenge, which needs access to the DNS zone that contains your domain.
 
-    **Cloudflare**: create an API token and paste it into the ingress settings.
+    **Cloudflare**: create an API token and paste it into the networking settings.
 
     1. In the Cloudflare dashboard, go to your profile icon > **My Profile** > **API Tokens** (or directly at [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens)) and click **Create Token**.
     2. Use the **Edit zone DNS** template. It grants the one permission Porter needs: **Zone / DNS / Edit**.
     3. Under **Zone Resources**, scope the token to **Include / Specific zone** and select the zone that contains your sandbox domain (the zone `acme.com` for a domain like `sandbox.acme.com`).
     4. Continue to the summary, create the token, and copy it. Cloudflare shows the token value only once.
-    5. Paste it into the ingress's API token field in Porter and save.
+    5. Paste it into the section's API token field in Porter and save.
 
-    Each ingress stores its own token, so the public and private sections are credentialed separately (one token can be pasted into both).
+    Each networking section stores its own token, so public and private are credentialed separately (one token can be pasted into both).
 
     **AWS Route53**: no token needed. Porter authenticates through the cluster's pod identity.
   </Step>
@@ -65,7 +65,7 @@ Because private address space is blocked, this includes services behind a privat
   <Step title="Create the wildcard DNS record">
     Save the settings, then wait for the load balancer to provision. The settings page shows the record target and type once it's ready: create a DNS record for `*.<your domain>` (for example `*.sandbox.acme.com`) pointing at that address.
 
-    For the private ingress, the load balancer address only resolves to something reachable from inside your VPC. Point your own private DNS at it if your clients resolve through one; certificates are still issued automatically either way.
+    For private networking, the load balancer address only resolves to something reachable from inside your VPC. Point your own private DNS at it if your clients resolve through one; certificates are still issued automatically either way.
   </Step>
 </Steps>
 
@@ -91,7 +91,7 @@ const sandbox = await porter.sandboxes.create({
 ```
 </CodeGroup>
 
-With no domain specified, the sandbox is served at `<name>.<ingress domain>` (falling back to `<id>.<ingress domain>` when the sandbox has no name) through the default ingress: the public one when it's configured, otherwise the private one.
+With no domain specified, the sandbox is served at `<name>.<your domain>` (falling back to `<id>.<your domain>` when the sandbox has no name), publicly when public networking is configured on the cluster, otherwise privately.
 
 ## Choose the hostname and visibility
 
@@ -129,12 +129,12 @@ const sandbox = await porter.sandboxes.create({
 
 | Field | Description |
 | ----- | ----------- |
-| `domain` | Fully qualified hostname for the sandbox, one label under the target ingress's domain (`my-app.sandbox.acme.com` under `sandbox.acme.com`). Unlike sandbox names, domains don't have to be unique: successive sandboxes can reuse a hostname, though only one may be live on it at a time. |
-| `visibility` | `public` or `private`: which sandbox ingress serves the domain when the cluster has both. Omit to default to whichever is configured, public winning. Creating a sandbox that requests an ingress the cluster doesn't have configured is rejected. |
+| `domain` | Fully qualified hostname for the sandbox, one label under the domain configured for the chosen visibility (`my-app.sandbox.acme.com` under `sandbox.acme.com`). Unlike sandbox names, domains don't have to be unique: successive sandboxes can reuse a hostname, though only one may be live on it at a time. |
+| `visibility` | `public` or `private`: whether the sandbox is served publicly or inside your VPC when the cluster has both configured. Omit to default to whichever is configured, public winning. Creating a sandbox that requests a visibility the cluster doesn't have configured is rejected. |
 
 ## Find the sandbox URL
 
-The sandbox's status includes `host`, the hostname it's reachable at. It's empty when the sandbox exposes no port or the cluster has no sandbox ingress configured:
+The sandbox's status includes `host`, the hostname it's reachable at. It's empty when the sandbox exposes no port or the cluster has no networking configured:
 
 <CodeGroup>
 ```python Python
