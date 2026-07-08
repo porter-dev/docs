@@ -154,17 +154,17 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
   </Tab>
 
   <Tab title="Azure">
-    Porter connects to Azure using a service principal authenticated via [workload identity federation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation) to manage your infrastructure.
+    Porter connects to Azure using [workload identity federation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation). You create a [managed identity](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview) that trusts a Porter-managed OIDC issuer. Porter generates short-lived JWT tokens using this OIDC isser and exchanges them with Azure for short-lived Azure tokens.
 
     ## Prerequisites
 
-    - Permissions to create app registrations, role definitions, and role assignments in your Azure subscription
-    - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and [`jq`](https://jqlang.github.io/jq/) installed
+    - You must have permissions to create app registrations, role definitions, and role assignments in your Azure subscription
+    - You must have the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and [`jq`](https://jqlang.github.io/jq/) installed
 
     ## Connect Your Azure Subscription
 
     <Steps>
-      <Step title="Initiate an Azure cloud connection in Porter">
+      <Step title="Begin the Azure connection process in Porter">
         In the Porter dashboard, click **Connect a new account** and select **Azure**. Porter generates a one-time setup command with your OIDC subject and issuer already substituted. Keep this open — you'll paste it into your terminal in the next step.
       </Step>
       <Step title="Run the setup commands">
@@ -216,16 +216,17 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
           - User.ReadWrite.All
         - Grants admin consent for the Graph permissions
         - Adds a federated identity credential on the app registration trusting Porter's OIDC issuer (audience `api://AzureADTokenExchange`)
-        - Prints the Subscription ID, Application (Client) ID, and Tenant ID. Copy these for the next step
+        - Waits for Azure's [eventually consistent IAM service](https://devblogs.microsoft.com/identity/designing-for-eventual-consistency-for-microsoft-entra/) to propogate changes.
+        - Outputs the app registration's metadata: **Subscription ID**, **Application (Client) ID**, and **Tenant ID**
 
-        Setup takes a few minutes.
+        Setup can take a few minutes.
 
         <Info>
         If the script fails to grant admin consent automatically, grant it manually in the Azure Portal: **App registrations** > **azure-porter-federated-sp** > **API permissions** > **Grant admin consent for Default Directory**.
         </Info>
       </Step>
-      <Step title="Enter credentials in Porter">
-        Paste the **Subscription ID**, **Application (Client) ID**, and **Tenant ID** the script printed back into Porter to finish the connection.
+      <Step title="Enter app metadata into Porter">
+        Paste the outputted **Subscription ID**, **Application (Client) ID**, and **Tenant ID** back into the Porter dashboard to register the connection.
       </Step>
     </Steps>
 
@@ -233,11 +234,10 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
 
     To revoke Porter's access:
 
-    1. First, delete any clusters through the Porter dashboard
-    2. In the Azure portal, search for **App registrations** and delete **azure-porter-federated-sp**
-    3. Optionally, delete the custom role definition
+    1. In the Azure portal, search for **App registrations** and delete **azure-porter-federated-sp**
+    2. [Optional] Delete the custom role definition created by Porter
 
-    This removes the service principal and prevents Porter from accessing your account.
+    This ensures that Porter can no longer access your Azure subscription.
   </Tab>
 </Tabs>
 
