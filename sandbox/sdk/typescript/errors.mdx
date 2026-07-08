@@ -1,0 +1,62 @@
+---
+title: "TypeScript Sandbox SDK errors"
+description: "Error classes raised by the porter-sandbox TypeScript Sandbox SDK"
+---
+
+All SDK errors inherit from `SandboxError`.
+
+```typescript
+import {
+  AuthenticationError,
+  NotFoundError,
+  RateLimitError,
+  SandboxError,
+  ServerError,
+} from "porter-sandbox";
+```
+
+## Error classes
+
+| Error | Raised when |
+| ----- | ----------- |
+| `SandboxError` | Base class for SDK-raised API errors. |
+| `AuthenticationError` | The API rejects credentials. |
+| `NotFoundError` | A sandbox, volume, or other resource cannot be found. |
+| `RateLimitError` | The API returns a rate limit response. |
+| `ServerError` | The API returns a server-side error. |
+
+Each `SandboxError` includes:
+
+| Property | Type | Description |
+| -------- | ---- | ----------- |
+| `message` | `string` | Human-readable error message. |
+| `statusCode` | `number \| null` | HTTP status code, when available. |
+| `body` | `unknown` | Parsed response body, when available. |
+
+## Handle errors
+
+```typescript
+import { Porter, SandboxError } from "porter-sandbox";
+
+const porter = new Porter();
+const sandbox = await porter.sandboxes.create({ image: "python:3.12-slim" });
+
+try {
+  const result = await sandbox.exec(["python", "-c", "raise SystemExit(2)"]);
+
+  if (result.exit_code !== 0) {
+    console.error(result.stderr);
+  }
+} catch (error) {
+  if (error instanceof SandboxError) {
+    console.error(`Sandbox API error: ${error.message}`);
+  } else {
+    throw error;
+  }
+} finally {
+  await sandbox.terminate();
+  porter.close();
+}
+```
+
+Non-zero command exit codes are returned in the exec response. They are normal command results, not SDK exceptions.

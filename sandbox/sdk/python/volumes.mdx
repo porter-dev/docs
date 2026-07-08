@@ -1,0 +1,100 @@
+---
+title: "Python Sandbox SDK volumes"
+description: "Create, mount, list, and delete sandbox volumes with the Python Sandbox SDK"
+---
+
+Volumes provide persistent storage that can be mounted into Porter Sandboxes. Create a volume before launching the sandbox, then pass the volume ID in `volume_mounts`.
+
+<Warning>
+Sandboxes are in a private beta. Please reach out to us at support@porter.run or over Slack if you are interested in joining.
+</Warning>
+
+## Create and mount a volume
+
+```python
+from porter_sandbox import Porter
+
+with Porter() as porter:
+    volume = porter.volumes.create(name="agent-workspace")
+
+    sandbox = porter.sandboxes.create(
+        image="python:3.12-slim",
+        volume_mounts={"/workspace": volume.id},
+    )
+
+    try:
+        sandbox.exec(["python", "-c", "open('/workspace/result.txt', 'w').write('done')"])
+        result = sandbox.exec(["cat", "/workspace/result.txt"])
+        print(result.stdout)
+    finally:
+        sandbox.terminate()
+```
+
+`volume_mounts` is a dictionary keyed by the absolute mount path inside the sandbox. Each value is a volume ID.
+
+## List volumes
+
+```python
+with Porter() as porter:
+    response = porter.volumes.list()
+
+    for volume in response.volumes:
+        print(volume.id, volume.name, volume.phase, volume.attached_to)
+```
+
+## Get a volume by name
+
+Volume names are unique within the cluster. Use `get(name)` when you know a volume name:
+
+```python
+with Porter() as porter:
+    volume = porter.volumes.get("agent-workspace")
+    print(volume.id)
+```
+
+Volume names may contain lowercase letters, numbers, and hyphens, and must start and end with a letter or number. A volume name must be unique within the cluster for the lifetime of the volume. After the volume is deleted, the name can be used again.
+
+## Inspect a volume
+
+```python
+with Porter() as porter:
+    volume = porter.volumes.get("agent-workspace")
+    print(volume.name, volume.phase, volume.attached_to)
+```
+
+## Delete a volume
+
+Delete volumes by name:
+
+```python
+with Porter() as porter:
+    porter.volumes.delete("agent-workspace")
+```
+
+Deleting a volume fails while it is attached to a sandbox. Terminate any attached sandboxes before deleting the volume.
+
+## Async usage
+
+```python
+from porter_sandbox import AsyncPorter
+
+async with AsyncPorter() as porter:
+    volume = await porter.volumes.create(name="async-workspace")
+
+    sandbox = await porter.sandboxes.create(
+        image="python:3.12-slim",
+        volume_mounts={"/workspace": volume.id},
+    )
+
+    try:
+        result = await sandbox.exec(["sh", "-lc", "echo hello > /workspace/out.txt && cat /workspace/out.txt"])
+        print(result.stdout)
+    finally:
+        await sandbox.terminate()
+```
+
+## Next steps
+
+- [Python Sandbox SDK quickstart](/sandbox/sdk/python/quickstart)
+- [Python Sandbox SDK reference](/sandbox/sdk/python/reference)
+- [Python Sandbox SDK errors](/sandbox/sdk/python/errors)

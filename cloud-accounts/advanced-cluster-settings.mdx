@@ -1,5 +1,5 @@
 ---
-title: "Advanced cluster settings"
+title: "Advanced Cluster Settings"
 description: "Enable ECR scanning, GuardDuty, private clusters, KMS encryption, and custom networking options for your AWS and GCP Porter clusters"
 ---
 
@@ -47,19 +47,76 @@ When **ALB** is selected, the following additional settings become available. Se
 
 ### Private load balancer
 
-In addition to the default public cluster load balancer, you can provision an **internal load balancer** that only accepts traffic from inside your VPC (or networks peered to it). Use this when you want to expose services to internal clients — for example, an internal admin tool, a service consumed only by other VPCs, or a workload that must not be reachable from the public internet.
+In addition to the default public cluster load balancer, you can provision an **internal load balancer** that only accepts traffic from inside your VPC (or networks peered to it). Use this when you want to expose services to internal clients, for example an internal admin tool, a service consumed only by other VPCs, or a workload that must not be reachable from the public internet.
 
 | Setting | Description |
 |---------|-------------|
 | **Add private load balancer** | Provisions a private NLB alongside the existing public cluster load balancer. Only NLB private load balancers are supported. |
 
-Once enabled, you must configure DNS provider credentials so Porter can issue and renew TLS certificates for ingress hostnames attached to the private load balancer over ACME DNS-01. HTTP-01 challenges cannot reach a private load balancer, so DNS-01 is required.
+Once enabled, you must configure a DNS provider so Porter can issue and renew TLS certificates for ingress hostnames attached to the private load balancer. The following DNS providers are supported: **Cloudflare** and **AWS Route53**.
+
+<Tip>
+  We recommend serving private ingress from a dedicated internal zone (for example, `internal.example.com`) rather than a zone that also serves production domains. This avoids record conflicts with production DNS and keeps DNS access scoped to internal hostnames only.
+
+  If that isn't practical, you can still keep credentials off your production zone. See [Delegating certificate validation](#delegating-certificate-validation) below.
+</Tip>
+
+<Tabs>
+  <Tab title="Cloudflare">
 
 | Setting | Description |
 |---------|-------------|
-| **DNS credentials** | API token for your DNS provider. Cloudflare is currently the only supported provider. The token must have permission to create and delete `TXT` records on the zones used by your private ingress hostnames. |
+| **DNS credentials** | API token for Cloudflare. The token must have permission to create and delete `TXT` records on the zones used by your private ingress hostnames. |
 
-Save the credentials before updating the cluster. You can rotate the token later with **Edit credentials**, or remove the integration entirely with **Remove**. Note that removing credentials stops certificate issuance and renewal for private load balancer ingress.
+Save the credentials before updating the cluster. You can rotate the token later with **Edit credentials**, or remove the integration entirely with **Remove**. Removing credentials stops certificate issuance and renewal for private load balancer ingress.
+
+  </Tab>
+  <Tab title="Route53">
+
+When the cluster is on AWS, you can use Route53 instead of Cloudflare. Porter authenticates to Route53 through an [EKS Pod Identity](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html) scoped to a single hosted zone, so no API tokens are stored.
+
+| Setting | Description |
+|---------|-------------|
+| **Route53 domain** | The DNS zone the private ingress serves certificates for (for example, `internal.example.com`). At install time, Porter resolves the matching public Route53 hosted zone in the same AWS account and provisions a cert-manager pod identity scoped to that zone. |
+
+The domain must already exist as a public hosted zone in the cluster's AWS account, and the zone name must match the domain exactly. If only a parent zone is present (for example, `example.com` for a domain of `internal.example.com`), Porter cannot issue certificates for it, and the domain requires its own dedicated hosted zone.
+
+  </Tab>
+</Tabs>
+
+#### Delegating certificate validation
+
+By default, the DNS credentials you give Porter need write access to the zone that hosts your private hostnames. If those hostnames live under a zone that also serves production domains, those credentials can reach your production records too, which is more privilege than you may want to grant.
+
+You can avoid that by delegating just the validation records to a separate, lower-privilege zone. You add a `CNAME` from each validation record in your zone to the delegated zone, then scope the credentials to that zone only. Porter handles the rest with no extra configuration on its side.
+
+<Note>
+  On AWS Route53 this isn't necessary. Create a dedicated hosted zone for the subdomain and provide it as the **Route53 domain** (the Route53 option above); Porter scopes access to that zone directly.
+</Note>
+
+**1. Add the delegation `CNAME` records.** Pick a low-privilege zone to hold the validation records (for example, `acme.example-internal.com`). In the zone that hosts your private hostnames, add a `CNAME` for each validation record, pointing at a record in the delegated zone:
+
+```
+_acme-challenge.app.internal.example.com.  CNAME  _acme-challenge.acme.example-internal.com.
+```
+
+**2. Scope the credentials to the delegated zone.** Create an API token scoped to the **delegated zone only**, with:
+
+- `Zone.DNS` → Edit
+- `Zone.Zone` → Read
+
+The token does not need any access to your production zone.
+
+**3. Verify the delegation.** Confirm the `CNAME` resolves publicly:
+
+```bash
+dig +short CNAME _acme-challenge.app.internal.example.com
+# expected: _acme-challenge.acme.example-internal.com.
+```
+
+Certificates are issued automatically when you attach a hostname to a service through its [load balancer config](/applications/configuration-as-code/services/web-service#loadbalancerconfig). Porter then publishes each validation record into the delegated zone through the `CNAME`.
+
+If you need help setting this up, reach out to Porter support.
 
 ## Observability
 
@@ -136,6 +193,60 @@ Enable AWS Key Management Service (KMS) encryption for Kubernetes secrets stored
 | **Enable Endpoint Independent Mapping** | Recommended for most use cases. Affects Cloud NAT behavior. | Enabled |
 | **Enable Dynamic Port Allocation** | Allows GKE to dynamically allocate more ports to VMs that need them | Disabled |
 
+## Networking
+
+### Private load balancer
+
+In addition to the default public cluster load balancer, you can provision an **internal load balancer** on GKE that only accepts traffic from inside your VPC (or networks peered to it). Use this when you want to expose services to internal clients, for example an internal admin tool, a service consumed only by other VPCs, or a workload that must not be reachable from the public internet.
+
+| Setting | Description |
+|---------|-------------|
+| **Add private load balancer** | Provisions a GKE internal load balancer alongside the existing public cluster load balancer. |
+
+Once enabled, you must configure a DNS provider so Porter can issue and renew TLS certificates for ingress hostnames attached to the private load balancer. **Cloudflare** is supported as a DNS provider for private load balancer ingress.
+
+<Tip>
+  We recommend serving private ingress from a dedicated internal zone (for example, `internal.example.com`) rather than a zone that also serves production domains. This avoids record conflicts with production DNS and keeps DNS access scoped to internal hostnames only.
+
+  If that isn't practical, you can still keep credentials off your production zone. See [Delegating certificate validation](#delegating-certificate-validation-1) below.
+</Tip>
+
+| Setting | Description |
+|---------|-------------|
+| **DNS credentials** | API token for Cloudflare. The token must have permission to create and delete `TXT` records on the zones used by your private ingress hostnames. |
+
+Save the credentials before updating the cluster. You can rotate the token later with **Edit credentials**, or remove the integration entirely with **Remove**. Removing credentials stops certificate issuance and renewal for private load balancer ingress.
+
+#### Delegating certificate validation
+
+By default, the DNS credentials you give Porter need write access to the zone that hosts your private hostnames. If those hostnames live under a zone that also serves production domains, those credentials can reach your production records too, which is more privilege than you may want to grant.
+
+You can avoid that by delegating just the validation records to a separate, lower-privilege zone. You add a `CNAME` from each validation record in your zone to the delegated zone, then scope the credentials to that zone only. Porter handles the rest with no extra configuration on its side.
+
+**1. Add the delegation `CNAME` records.** Pick a low-privilege zone to hold the validation records (for example, `acme.example-internal.com`). In the zone that hosts your private hostnames, add a `CNAME` for each validation record, pointing at a record in the delegated zone:
+
+```
+_acme-challenge.app.internal.example.com.  CNAME  _acme-challenge.acme.example-internal.com.
+```
+
+**2. Scope the credentials to the delegated zone.** Create an API token scoped to the **delegated zone only**, with:
+
+- `Zone.DNS` → Edit
+- `Zone.Zone` → Read
+
+The token does not need any access to your production zone.
+
+**3. Verify the delegation.** Confirm the `CNAME` resolves publicly:
+
+```bash
+dig +short CNAME _acme-challenge.app.internal.example.com
+# expected: _acme-challenge.acme.example-internal.com.
+```
+
+Certificates are issued automatically when you attach a hostname to a service through its [load balancer config](/applications/configuration-as-code/services/web-service#loadbalancerconfig). Porter then publishes each validation record into the delegated zone through the `CNAME`.
+
+If you need help setting this up, reach out to Porter support.
+
 ## Observability Settings
 
 Configure observability features for the GKE cluster control plane.
@@ -147,4 +258,3 @@ Configure observability features for the GKE cluster control plane.
 
   </Tab>
 </Tabs>
-

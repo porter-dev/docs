@@ -18,4 +18,10 @@ Porter injects some default environment variables in all Porter-provisioned apps
 11. `PORTER_APP_SERVICE_NAME` - A portmanteau of the app name and service name: `<APP>-SERVICE`.
 12. `PORTER_DOMAINS` - A comma-separated list of the domains assigned to your service.
 
+The following environment variables are only injected into [preview environments](/preview-environments/overview):
+
+13. `PORTER_PR_BRANCH` - The git branch (head ref) of the pull request that created the preview environment.
+14. `PORTER_PR_NUMBER` - The number of the pull request that created the preview environment.
+15. `PORTER_PR_NAMESPACE` - The Kubernetes namespace of the preview environment. Use this when constructing in-cluster DNS names for services in the same preview, e.g. `<service>.$PORTER_PR_NAMESPACE.svc.cluster.local`. Prefer this over `PORTER_PR_BRANCH`, which is the raw branch name and is not a valid DNS label for long or non-conforming branch names.
+
 If you're looking at adding more metadata to logs or traces, these environment variables can be used to inject metadata about the origin of a log/trace into your observability tooling.

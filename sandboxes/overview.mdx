@@ -1,0 +1,94 @@
+---
+title: "Sandboxes Overview"
+description: "Run isolated container workloads on Porter"
+---
+
+Porter Sandboxes are isolated container workloads that your application can launch on demand. Use them when a workflow needs a fresh runtime environment for code interpretation, agent tools, batch fan-out, or other dynamic work that may need persistent storage through volumes.
+
+<Warning>
+Sandboxes are in a private beta. Please reach out to us at support@porter.run or over Slack if you are interested in joining.
+</Warning>
+
+## When to use sandboxes
+
+- **Untrusted code execution**: run code from end users or LLM agents in isolation
+- **Agentic tool use**: give an LLM a fresh execution environment per task
+- **Parallel batch work**: fan out many short jobs concurrently
+- **On-demand processing**: create a runtime for a request, job, or workflow step
+
+For long-running services with autoscaling, rollouts, and normal application lifecycle management, use [Applications](/applications/deploy/overview) instead.
+
+## Lifecycle
+
+A sandbox moves through these phases:
+
+| Phase | Description |
+| ----- | ----------- |
+| `queued` | The sandbox was accepted and is waiting for capacity. |
+| `creating` | Porter is preparing the runtime and starting the container. |
+| `running` | The sandbox is ready and can accept exec calls. |
+| `succeeded` | The sandbox command completed successfully. |
+| `failed` | The sandbox command or runtime failed. |
+| `terminated` | The sandbox was explicitly terminated through the API, SDK, or CLI. |
+
+Only `running` sandboxes accept exec calls. Logs remain available after terminal phases so you can fetch output from completed or terminated sandboxes.
+
+### Sandbox lifetime
+
+A sandbox lives as long as its main process: the image's default entrypoint, or the command you pass at create time. When that process exits with code `0` the sandbox moves to `succeeded`; a nonzero exit moves it to `failed`. Once the sandbox reaches either phase, exec calls fail.
+
+This means an image whose default command exits immediately reaches `succeeded` within a few seconds of starting. To keep a sandbox alive so you can exec into it, give it a long-running main process and terminate it when you're done:
+
+```bash
+porter sandbox create alpine:3.20 --name worker -- sleep 3600
+porter sandbox exec worker -- echo ok
+porter sandbox terminate worker
+```
+
+## Names
+
+Names are the canonical way to refer to sandboxes and volumes in the SDK and CLI.
+
+| Resource | Naming rule |
+| -------- | ----------- |
+| Sandbox | Sandbox names must be unique within a cluster and currently cannot be reused, even after the sandbox is terminated. Omit the name only for one-off sandboxes where you do not need stable lookup later. |
+| Volume | Volume names must be unique within a cluster for the lifetime of the volume. After a volume is deleted, its name can be used again. |
+
+## Build with the Sandbox SDK
+
+Your application creates and manages sandboxes with a Sandbox SDK. For now, we recommend deploying that application as a Porter Application in the same AWS cluster where you want to run sandboxes.
+
+- [Python Sandbox SDK quickstart](/sandbox/sdk/python/quickstart)
+- [TypeScript Sandbox SDK quickstart](/sandbox/sdk/typescript/quickstart)
+
+## Use the CLI for operations
+
+Use the sandbox CLI to inspect and operate on sandboxes from your terminal:
+
+- Create sandboxes from container images
+- List sandboxes by phase
+- Fetch logs
+- Exec into a running sandbox
+- Terminate one sandbox or many sandboxes at once
+- Create, list, inspect, and delete sandbox volumes
+
+See the [sandbox CLI guide](/sandboxes/cli).
+
+## Networking
+
+A sandbox that opens a port can be served over HTTPS on a hostname under your own domain, with public or private networking configured on the cluster. See [Sandbox Networking](/sandboxes/networking).
+
+## Persistent storage
+
+Volumes provide persistent storage that can be mounted into sandboxes at launch. Create a volume first, then pass `volume_mounts` when creating a sandbox.
+
+- [Python Sandbox SDK volumes](/sandbox/sdk/python/volumes)
+- [TypeScript Sandbox SDK volumes](/sandbox/sdk/typescript/volumes)
+- [Sandbox CLI volume commands](/sandboxes/cli#porter-sandbox-volume)
+
+## Next steps
+
+- [Sandboxes Getting Started](/sandboxes/getting-started)
+- [Sandbox Networking](/sandboxes/networking)
+- [Python Sandbox SDK quickstart](/sandbox/sdk/python/quickstart)
+- [TypeScript Sandbox SDK quickstart](/sandbox/sdk/typescript/quickstart)

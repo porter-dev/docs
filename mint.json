@@ -126,6 +126,38 @@
           ]
         },
         {
+          "group": "Sandboxes",
+          "pages": [
+            "sandboxes/overview",
+            "sandboxes/getting-started",
+            "sandboxes/networking",
+            {
+              "group": "Sandbox SDK",
+              "pages": [
+                {
+                  "group": "Python",
+                  "pages": [
+                    "sandbox/sdk/python/quickstart",
+                    "sandbox/sdk/python/volumes",
+                    "sandbox/sdk/python/reference",
+                    "sandbox/sdk/python/errors"
+                  ]
+                },
+                {
+                  "group": "TypeScript",
+                  "pages": [
+                    "sandbox/sdk/typescript/quickstart",
+                    "sandbox/sdk/typescript/volumes",
+                    "sandbox/sdk/typescript/reference",
+                    "sandbox/sdk/typescript/errors"
+                  ]
+                }
+              ]
+            },
+            "sandboxes/cli"
+          ]
+        },
+        {
           "group": "Add-ons",
           "pages": [
             "addons/overview",
