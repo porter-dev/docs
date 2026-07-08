@@ -62,6 +62,7 @@ Options:
 | `env` | `Record<string, string> \| undefined` | Environment variables to set in the sandbox. |
 | `tags` | `Record<string, string> \| undefined` | Key-value labels for finding related sandboxes. |
 | `volume_mounts` | `Record<string, string> \| undefined` | Volume IDs keyed by absolute mount path inside the sandbox. |
+| `networking` | `SandboxNetworkingSpec[] \| undefined` | Port to expose and, optionally, the domain and visibility to serve it on. Omit to expose nothing. See [Sandbox Networking](/sandboxes/networking). |
 
 Returns a `Sandbox` handle.
 

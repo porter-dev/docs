@@ -130,6 +130,7 @@
           "pages": [
             "sandboxes/overview",
             "sandboxes/getting-started",
+            "sandboxes/networking",
             {
               "group": "Sandbox SDK",
               "pages": [

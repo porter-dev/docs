@@ -58,6 +58,7 @@ Arguments:
 | `env` | `dict[str, str] \| None` | Environment variables to set in the sandbox. |
 | `tags` | `dict[str, str] \| None` | Key-value labels for finding related sandboxes. |
 | `volume_mounts` | `dict[str, str] \| None` | Volume IDs keyed by absolute mount path inside the sandbox. |
+| `networking` | `list[SandboxNetworkingSpec] \| None` | Port to expose and, optionally, the domain and visibility to serve it on. Omit to expose nothing. See [Sandbox Networking](/sandboxes/networking). |
 
 Returns a `Sandbox` handle.
 
