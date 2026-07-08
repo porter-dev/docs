@@ -47,6 +47,8 @@ Volume values can be volume names or volume IDs. The CLI resolves names first, t
 
 Sandbox names currently cannot be reused, even after the sandbox is terminated. Omit `--name` only for one-off sandboxes where you do not need stable lookup later.
 
+The sandbox runs as long as its main process. When the process exits, the sandbox moves to `succeeded` or `failed` and stops accepting exec calls, so pass a long-running command if you plan to exec into the sandbox. See [sandbox lifetime](/sandboxes/overview#sandbox-lifetime).
+
 <CodeGroup>
 ```bash Create Sandbox
 porter sandbox create alpine:3.20

@@ -14,6 +14,10 @@ Sandboxes are in a private beta. Please reach out to us at support@porter.run or
 - A Porter project
 - An AWS cluster where you want to run sandboxes. We recommend creating a new AWS cluster for sandboxes so sandbox workloads are isolated from your other running workloads.
 
+<Note>
+A dedicated cluster is not required, it's a defense-in-depth recommendation. Sandboxes often run untrusted code (end-user submissions, LLM agent output), and running them in their own cluster isolates that code from your main workloads as much as possible. Sharing a cluster with your other workloads is reasonable for development and testing; for production workloads that run untrusted code, we recommend the separate cluster.
+</Note>
+
 ## Enable sandboxes
 
 <Steps>
@@ -116,6 +120,63 @@ console.log(logs);
 await sandbox.terminate();
 porter.close();
 ```
+
+## Keep a sandbox alive for exec
+
+A sandbox lives as long as its main process: the image's default entrypoint, or the command you pass at create time. When that process exits, the sandbox moves to `succeeded` (exit code `0`) or `failed` (nonzero), and it stops accepting exec calls.
+
+An image whose default command exits immediately reaches `succeeded` within a few seconds of starting. If you want to create a sandbox first and exec into it later, give it a long-running main process, then terminate it when the work is done:
+
+<CodeGroup>
+```python Python
+sandbox = porter.sandboxes.create(
+    image="alpine:3.20",
+    name="worker",
+    command=["sleep", "3600"],
+)
+
+result = sandbox.exec(["echo", "ok"])
+print(result.stdout)
+
+sandbox.terminate()
+```
+
+```bash CLI
+porter sandbox create alpine:3.20 --name worker -- sleep 3600
+porter sandbox exec worker -- echo ok
+porter sandbox terminate worker
+```
+</CodeGroup>
+
+## Set environment variables
+
+Pass environment variables at create time. The SDKs take an `env` map, and the CLI takes a repeatable `--env KEY=VALUE` flag:
+
+<CodeGroup>
+```python Python
+sandbox = porter.sandboxes.create(
+    image="alpine:3.20",
+    env={"API_KEY": "secret", "LOG_LEVEL": "debug"},
+)
+```
+
+```typescript TypeScript
+const sandbox = await porter.sandboxes.create({
+  image: "alpine:3.20",
+  env: { API_KEY: "secret", LOG_LEVEL: "debug" },
+});
+```
+
+```bash CLI
+porter sandbox create alpine:3.20 --env API_KEY=secret --env LOG_LEVEL=debug
+```
+</CodeGroup>
+
+## Use custom images
+
+Sandboxes run any container image, so you can bake in the tools your workload needs (language runtimes, CLIs, agents) instead of installing them at runtime.
+
+Private images are supported. Push your image to the ECR registry in the AWS account associated with your sandbox cluster, and sandboxes on that cluster can pull it without extra credential configuration.
 
 ## Use tags to identify sandboxes
 

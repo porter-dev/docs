@@ -33,6 +33,18 @@ A sandbox moves through these phases:
 
 Only `running` sandboxes accept exec calls. Logs remain available after terminal phases so you can fetch output from completed or terminated sandboxes.
 
+### Sandbox lifetime
+
+A sandbox lives as long as its main process: the image's default entrypoint, or the command you pass at create time. When that process exits with code `0` the sandbox moves to `succeeded`; a nonzero exit moves it to `failed`. Once the sandbox reaches either phase, exec calls fail.
+
+This means an image whose default command exits immediately reaches `succeeded` within a few seconds of starting. To keep a sandbox alive so you can exec into it, give it a long-running main process and terminate it when you're done:
+
+```bash
+porter sandbox create alpine:3.20 --name worker -- sleep 3600
+porter sandbox exec worker -- echo ok
+porter sandbox terminate worker
+```
+
 ## Names
 
 Names are the canonical way to refer to sandboxes and volumes in the SDK and CLI.
