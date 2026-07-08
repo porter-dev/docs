@@ -49,8 +49,17 @@ Because private address space is blocked, this includes services behind a privat
   <Step title="Connect your DNS provider">
     Porter issues the wildcard certificate through a Let's Encrypt DNS-01 challenge, which needs access to the DNS zone that contains your domain.
 
-    - **Cloudflare**: paste an API token with permission to edit DNS records for the zone. Each ingress stores its own token, so the public and private sections are credentialed separately.
-    - **AWS Route53**: no token needed. Porter authenticates through the cluster's pod identity.
+    **Cloudflare**: create an API token and paste it into the ingress settings.
+
+    1. In the Cloudflare dashboard, go to your profile icon > **My Profile** > **API Tokens** (or directly at [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens)) and click **Create Token**.
+    2. Use the **Edit zone DNS** template. It grants the one permission Porter needs: **Zone / DNS / Edit**.
+    3. Under **Zone Resources**, scope the token to **Include / Specific zone** and select the zone that contains your sandbox domain (the zone `acme.com` for a domain like `sandbox.acme.com`).
+    4. Continue to the summary, create the token, and copy it. Cloudflare shows the token value only once.
+    5. Paste it into the ingress's API token field in Porter and save.
+
+    Each ingress stores its own token, so the public and private sections are credentialed separately (one token can be pasted into both).
+
+    **AWS Route53**: no token needed. Porter authenticates through the cluster's pod identity.
   </Step>
 
   <Step title="Create the wildcard DNS record">
