@@ -43,7 +43,7 @@ try {
 
 The SDK connects to the in-cluster Sandbox API automatically when this code runs as a Porter Application in the same cluster where sandboxes are enabled.
 
-If you need to invoke sandboxes from outside that cluster, set `PORTER_SANDBOX_BASE_URL` to `https://dashboard.porter.run/api/v2/alpha/projects/<project-id>/clusters/<cluster-id>` and `PORTER_SANDBOX_API_KEY` to a Porter API token. See [calling from outside the cluster](/sandboxes/getting-started#calling-from-outside-the-cluster) for details.
+If you need to invoke sandboxes from outside that cluster, set `PORTER_SANDBOX_API_KEY` to a Porter API token and `PORTER_CLUSTER_ID` to the target cluster. The SDK reads the project from the token and builds the external Porter API URL automatically; see [calling from outside the cluster](/sandboxes/getting-started#calling-from-outside-the-cluster) for details.
 
 Use sandbox names when you need to fetch, inspect, exec into, or terminate a sandbox later. Sandbox names must be unique within a cluster and currently cannot be reused, even after the sandbox is terminated.
 
