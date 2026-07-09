@@ -579,9 +579,9 @@ display_results() {
     echo "┌─────────────────────────────────────────────────────────────┐"
     echo "│                    AZURE CREDENTIALS                        │"
     echo "├─────────────────────────────────────────────────────────────┤"
-    printf "│ Subscription ID: %-43s │\n" "$SUBSCRIPTION_ID"
-    printf "│ Client ID:       %-43s │\n" "$APP_ID"
-    printf "│ Tenant ID:       %-43s │\n" "$TENANT_ID"
+    printf "│ Subscription ID: %-42s │\n" "$SUBSCRIPTION_ID"
+    printf "│ Client ID:       %-42s │\n" "$APP_ID"
+    printf "│ Tenant ID:       %-42s │\n" "$TENANT_ID"
     echo "└─────────────────────────────────────────────────────────────┘"
     echo ""
 
