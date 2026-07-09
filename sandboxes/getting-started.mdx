@@ -184,6 +184,49 @@ Sandboxes run any container image, so you can bake in the tools your workload ne
 
 Private images are supported. Push your image to the ECR registry in the AWS account associated with your sandbox cluster, and sandboxes on that cluster can pull it without extra credential configuration.
 
+## Run an agent inside a sandbox
+
+A sandbox can host an entire agent, not just execute tools for an agent that runs elsewhere. Two patterns are common:
+
+- **Sandbox as a tool**: your agent's control loop and model calls run in your application, and the agent uses the sandbox to execute code or commands as a tool. This is the exec flow shown above.
+- **Agent in the sandbox**: the whole agent, its control loop and its model calls, runs inside the sandbox. Bake your harness into a custom image, inject the model API key at create time, and run it as the sandbox's main process. Sandboxes reach the public internet by default, so an in-sandbox agent calls a hosted model API directly.
+
+The second pattern is a custom image plus an environment variable. The agent runs as the sandbox's main process, so the sandbox stays alive as long as the agent is running (see [Sandbox lifetime](/sandboxes/overview#sandbox-lifetime)):
+
+<CodeGroup>
+```python Python
+sandbox = porter.sandboxes.create(
+    image="ghcr.io/acme/agent:latest",
+    name="research-agent",
+    env={"ANTHROPIC_API_KEY": anthropic_api_key},
+)
+
+# Follow the agent's output while it runs.
+print(sandbox.logs(limit=100))
+
+# Terminate when you're done, or let the agent's process exit on its own.
+sandbox.terminate()
+```
+
+```typescript TypeScript
+const sandbox = await porter.sandboxes.create({
+  image: "ghcr.io/acme/agent:latest",
+  name: "research-agent",
+  env: { ANTHROPIC_API_KEY: anthropicApiKey },
+});
+
+// Follow the agent's output while it runs.
+console.log(await sandbox.logs({ limit: 100 }));
+
+// Terminate when you're done, or let the agent's process exit on its own.
+await sandbox.terminate();
+```
+
+```bash CLI
+porter sandbox create ghcr.io/acme/agent:latest --name research-agent --env ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
+```
+</CodeGroup>
+
 ## Use tags to identify sandboxes
 
 Tags make it easier to find sandboxes created by a workflow:
