@@ -54,3 +54,9 @@ When a new version of upstream Kubernetes is released, we closely track the corr
 
 4. When a cluster is upgraded, we upgrade system components, all app templates, the managed cluster control plane as well as all nodegroups. While this operation is meant to be non-disruptive, there are certain prerequisites on the customers' end to ensure zero downtime (see the section below for more details).
 
+## Node Patches
+Cluster nodes are typically a shared responsibility between Porter and the underlying cloud provider. Patches usually fall into two categories:
+
+1. Regular machine image patches issued by the underlying cloud provider. These are typically applied automatically by the cloud provider every few weeks, although this can be manually overriden by running a simple update on your cluster; at that point if a fresh machine image is present in the underlying cloud provider's image stores, every node will be refreshed.
+
+2. One-off patches pushed by Porter, in case of high / critical CVEs. In these cases, the underlying cloud provider releases a patched machine image, and Porter ensures it's deployed to every cluster. 
