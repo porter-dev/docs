@@ -198,7 +198,7 @@ The second pattern is a custom image plus an environment variable. The agent run
 sandbox = porter.sandboxes.create(
     image="ghcr.io/acme/agent:latest",
     name="research-agent",
-    env={"ANTHROPIC_API_KEY": anthropic_api_key},
+    env={"MODEL_API_KEY": model_api_key},
 )
 
 # Follow the agent's output while it runs.
@@ -212,7 +212,7 @@ sandbox.terminate()
 const sandbox = await porter.sandboxes.create({
   image: "ghcr.io/acme/agent:latest",
   name: "research-agent",
-  env: { ANTHROPIC_API_KEY: anthropicApiKey },
+  env: { MODEL_API_KEY: modelApiKey },
 });
 
 // Follow the agent's output while it runs.
@@ -223,7 +223,7 @@ await sandbox.terminate();
 ```
 
 ```bash CLI
-porter sandbox create ghcr.io/acme/agent:latest --name research-agent --env ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
+porter sandbox create ghcr.io/acme/agent:latest --name research-agent --env MODEL_API_KEY=$MODEL_API_KEY
 ```
 </CodeGroup>
 
