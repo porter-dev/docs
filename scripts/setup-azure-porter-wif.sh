@@ -22,7 +22,8 @@ print_success() {
 }
 
 print_warning() {
-    echo "${YELLOW}$1${NC}"
+    echo "${YELLOW}$1${NC}
+"
 }
 
 print_error() {
@@ -36,6 +37,11 @@ print_info() {
 print_fatal() {
     print_error "$@"
     return 1
+}
+
+# Formats a number of seconds as e.g. "4m32s".
+format_duration() {
+    printf '%dm%02ds' $(($1 / 60)) $(($1 % 60))
 }
 
 # Function to check prerequisites
@@ -404,8 +410,19 @@ get_oidc_issuer() {
 # The probe sends a deliberately invalid assertion: Entra matches the FIC
 # before verifying the signature, so AADSTS700027 ("invalid signature") proves
 # the FIC is replicated and matched.
+#
+# A few successful probes in a row are not enough: consecutive probes can keep
+# hitting the same already-replicated Entra backend while others still lag. So
+# we require both a streak of consecutive successes AND a minimum wall-clock
+# window of sustained success before declaring the credential active.
 wait4_federated_credential() {
+    local required_consecutive=10
+    local min_stable_seconds=90
+    local budget_seconds=1200
+
     print_status 'Waiting for the federated identity credential to become active...'
+    print_info "Azure replicates the credential globally and reports it as active inconsistently until replication settles."
+    print_info "This typically takes 2-10 minutes; the script proceeds once the credential has matched continuously for ${min_stable_seconds}s."
 
     # AADSTS700027: invalid assertion signature — the success signal (see above)
     local fic_matched='AADSTS700027'
@@ -414,10 +431,13 @@ wait4_federated_credential() {
     # AADSTS90002: tenant not found
     local hard_fail='AADSTS700016|AADSTS7000229|AADSTS90002'
     local now jwt_header jwt_payload jwt
-    local response
-    local success=0
-    local i=0
-    while ((i++ < 60)); do
+    local response=""
+    local started=$SECONDS
+    local deadline=$((started + budget_seconds))
+    local streak=0 streak_started=0
+    local last_report=$SECONDS
+    local elapsed status_line last_error_code
+    while ((SECONDS < deadline)); do
         # Microsoft Entra requires the "kid" to be present so we use our own
         # since the signature/key check happens after FIC matching which is
         # what we're really testing.
@@ -440,19 +460,46 @@ wait4_federated_credential() {
             --data-urlencode "client_assertion=${jwt}" \
             --data-urlencode 'grant_type=client_credentials') || response=""
         if grep -q "${fic_matched}" <<<"${response}"; then
-            if ((success++ > 6)); then
-                return 0 # Wait for 6 "successful" exchanges in a row
+            if ((streak == 0)); then
+                streak_started=$SECONDS
+            fi
+            streak=$((streak + 1))
+            if ((streak >= required_consecutive && SECONDS - streak_started >= min_stable_seconds)); then
+                if [ -t 1 ]; then echo; fi
+                print_success "Federated identity credential is active (matched continuously for $((SECONDS - streak_started))s; waited $(format_duration $((SECONDS - started))) total)"
+                return 0
             fi
         elif grep -qE "${hard_fail}" <<<"${response}"; then
+            if [ -t 1 ]; then echo; fi
             print_error "Token exchange failed with a non-recoverable error: ${response}"
-            return 1
+            return 2
+        elif [ -n "${response}" ]; then
+            streak=0 # A genuine "not matched" response restarts both stability gates.
+        fi
+        # An empty response means curl itself failed (network blip, timeout) —
+        # that is not evidence the credential regressed, so keep the streak.
+
+        elapsed=$((SECONDS - started))
+        if ((streak > 0)); then
+            status_line="$(format_duration "$elapsed") elapsed; stable for $((SECONDS - streak_started))s/${min_stable_seconds}s (${streak} consecutive successes)"
         else
-            success=0 # Restart counter.
+            status_line="$(format_duration "$elapsed") elapsed; waiting for the first successful match"
+        fi
+        if [ -t 1 ]; then
+            printf '\r\033[K  %s⏳ %s%s' "${BLUE}" "${status_line}" "${NC}"
+        elif ((SECONDS - last_report >= 90)); then
+            print_status "  ⏳ ${status_line} — Azure AD is eventually consistent; this can take several minutes"
+            last_report=$SECONDS
         fi
         sleep 3
-        print_status '  Checking again if the federated identity credential is active...'
     done
 
+    if [ -t 1 ]; then echo; fi
+    last_error_code=$(grep -oE 'AADSTS[0-9]+' <<<"${response}" | head -n 1) || true
+    print_error "Timed out after $(format_duration "$budget_seconds") waiting for the federated identity credential to be matched consistently."
+    if [ -n "${last_error_code}" ]; then
+        print_info "Last Entra error code: ${last_error_code}"
+    fi
     print_warning "Last token-exchange response: ${response}"
     return 1
 }
@@ -513,15 +560,14 @@ create_federated_credential() {
             }" >/dev/null
     fi
 
-    if wait4_federated_credential; then
-        print_success "Federated identity credential is active"
-    else
-        print_error "$(
-            printf 'Timed out waiting for the federated-credential %s to become active in Azure.\n' \
-                'This is not necessarily a fatal error and you should still attempt to connect your\n' \
-                'account to Porter though you may have to click the "Continue" button multiple times.' \
-                "${APP_OBJECT_ID}"
-        )"
+    local wait_status=0
+    wait4_federated_credential || wait_status=$?
+    if ((wait_status == 2)); then
+        print_fatal "Federated identity credential setup failed with a non-recoverable error (see above)."
+    elif ((wait_status != 0)); then
+        FIC_WAIT_TIMED_OUT=1
+        print_error "Timed out waiting for the federated identity credential on app ${APP_OBJECT_ID} to become active in Azure."
+        print_info 'This is not necessarily a fatal error: you can still attempt to connect your account to Porter, though you may have to click the "Continue" button multiple times.'
     fi
 }
 
@@ -533,9 +579,9 @@ display_results() {
     echo "┌─────────────────────────────────────────────────────────────┐"
     echo "│                    AZURE CREDENTIALS                        │"
     echo "├─────────────────────────────────────────────────────────────┤"
-    printf "│ Subscription ID: %-43s │\n" "$SUBSCRIPTION_ID"
-    printf "│ Client ID:       %-43s │\n" "$APP_ID"
-    printf "│ Tenant ID:       %-43s │\n" "$TENANT_ID"
+    printf "│ Subscription ID: %-42s │\n" "$SUBSCRIPTION_ID"
+    printf "│ Client ID:       %-42s │\n" "$APP_ID"
+    printf "│ Tenant ID:       %-42s │\n" "$TENANT_ID"
     echo "└─────────────────────────────────────────────────────────────┘"
     echo ""
 
@@ -611,7 +657,11 @@ main() {
     display_results
 
     echo ""
-    print_success "Azure WIF setup completed successfully!"
+    if [ -n "${FIC_WAIT_TIMED_OUT:-}" ]; then
+        print_warning "Azure WIF setup finished, but the federated identity credential was not yet confirmed active — if the Porter connection fails, wait a few minutes and retry."
+    else
+        print_success "Azure WIF setup completed successfully!"
+    fi
 }
 
 # Run main function
