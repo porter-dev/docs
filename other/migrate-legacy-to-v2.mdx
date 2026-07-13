@@ -1,0 +1,51 @@
+---
+title: "Migrate from legacy Porter to v2"
+description: "End-to-end guide to move from a legacy Porter project to Porter v2 by creating a fresh project, connecting your cloud account, and recreating your apps"
+---
+
+This guide walks you through migrating from legacy Porter to Porter v2 end to end. The approach is
+non-destructive: you build out a brand-new v2 project alongside your existing setup, validate
+everything there, and only switch traffic over once you're comfortable. Nothing on your current
+legacy project is touched while you build the new one out.
+
+# Step 1: Create a fresh project on Porter
+
+Head to the [Porter dashboard](https://dashboard.porter.run/) and create a new project. This will be
+the new v2 home for your apps, kept separate from your existing legacy project, so nothing on your
+current setup is touched while you build the new one out here.
+
+# Step 2: Connect your cloud account to the new project
+
+Next, link your preferred cloud account (AWS, GCP, or Azure) to the new project. Porter will
+provision a fresh cluster for you.
+
+<Warning>
+When you provision the new cluster, give it a name that's **different** from your existing/older
+cluster. This avoids any naming collisions during the transition.
+</Warning>
+
+Follow the [Connecting a cloud account](/cloud-accounts/connecting-a-cloud-account) guide for the
+full setup steps.
+
+# Step 3: Recreate your apps in the new project
+
+Once the new cluster is up, you can redeploy your applications into it — pointing at the same
+repos/images and bringing over your environment variables and settings.
+
+The [Deploy from a GitHub repository](/applications/deploy/deploy-from-github-repo) guide walks
+through deploying an app from GitHub.
+
+# One end-to-end walkthrough
+
+If you'd prefer a single walkthrough that covers all three steps — project creation, connecting your
+cloud account, and deploying your first app — in one place, the
+[Quickstart](/getting-started/quickstart) has everything.
+
+You can validate everything on the new project first, then switch traffic over when you're
+comfortable.
+
+# Support
+
+If you get stuck or have questions at any point in the migration — whether it's connecting your cloud
+account, recreating a specific app, or handling the cutover — just reach out to us and we'll jump in
+and help you through it.
