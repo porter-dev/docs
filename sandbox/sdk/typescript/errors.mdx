@@ -11,6 +11,7 @@ import {
   NotFoundError,
   RateLimitError,
   SandboxError,
+  SandboxTimeoutError,
   ServerError,
 } from "porter-sandbox";
 ```
@@ -24,6 +25,7 @@ import {
 | `NotFoundError` | A sandbox, volume, or other resource cannot be found. |
 | `RateLimitError` | The API returns a rate limit response. |
 | `ServerError` | The API returns a server-side error. |
+| `SandboxTimeoutError` | A request exceeds its timeout. Never retried, since the server may still be executing the request. |
 
 Each `SandboxError` includes:
 
