@@ -14,14 +14,59 @@ description: "Create, list, get, set, and unset environment group variables and 
 
 ## `porter env list`
 
-List all environment groups in the current project.
+List environment groups for the current project.
 
 **Usage:**
 ```bash
+porter env list [flags]
+```
+
+**Options:**
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--output` | `-o` | Output format: `table` (default) or `json` |
+
+When a cluster is set (via `porter config set-cluster`, the `--cluster` flag, or the `PORTER_CLUSTER` environment variable), the list is scoped to that cluster: environment groups whose sync targets include the cluster, plus any cluster-scoped environment groups. This matches what the dashboard shows on the cluster's environment groups page. Without a cluster context, all environment groups in the project are listed.
+
+The default table output shows each group's name, current version, and last updated time.
+
+<CodeGroup>
+```bash Table (default)
 porter env list
 ```
 
-Displays a table with each group's name, current version, and last updated time.
+```bash JSON output
+porter env list -o json
+```
+</CodeGroup>
+
+The `json` output returns two arrays — `environment_groups` and `cluster_scoped_environment_groups` — sharing one object shape:
+
+```json
+{
+  "environment_groups": [
+    {
+      "id": "2a54d3ab-08e2-4922-9368-a7e45ad87d23",
+      "name": "tessier-internal",
+      "current_version": 9,
+      "created_at": "2026-02-25T09:23:16.332254Z",
+      "updated_at": "2026-06-30T04:23:25.23501Z",
+      "sync_target_cluster_ids": [11]
+    }
+  ],
+  "cluster_scoped_environment_groups": [
+    {
+      "id": "",
+      "name": "billing-db",
+      "current_version": 202,
+      "created_at": "2025-10-27T16:00:48Z",
+      "updated_at": "2025-10-27T16:00:48Z",
+      "sync_target_cluster_ids": [11]
+    }
+  ]
+}
+```
 
 ---
 
