@@ -27,7 +27,7 @@ Constructor options:
 
 | Option | Type | Description |
 | ------ | ---- | ----------- |
-| `api_key` | `str \| None` | Optional API key. Falls back to the `PORTER_SANDBOX_API_KEY` environment variable. Only required when invoking the Sandbox API from outside the sandbox-enabled cluster. Create one from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions. |
+| `api_key` | `str \| None` | Optional API key. Falls back to the `PORTER_SANDBOX_API_KEY` environment variable. Only required when invoking the Sandbox API from outside the sandbox-enabled cluster. Create one from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions, and the token must have developer permissions to authenticate with the Sandbox API. |
 | `base_url` | `str \| None` | Optional API base URL override. Falls back to the `PORTER_SANDBOX_BASE_URL` environment variable. If neither is set, the SDK builds the external Porter API URL from the API token's project and `PORTER_CLUSTER_ID`, then falls back to the in-cluster Sandbox API URL when running in a Kubernetes cluster, and otherwise raises an error explaining what to set. |
 | `timeout` | `float \| None` | Request timeout in seconds. Defaults to 30 seconds. |
 
