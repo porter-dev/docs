@@ -45,8 +45,11 @@ You can filter by:
 - Resource type
 - Application
 - Cluster
+- Environment group
 
 Most filters support include and exclude modes. For example, you can include only `DELETE` requests or exclude a noisy application while reviewing the rest of the project.
+
+The **Environment group** filter lists distinct env groups that appear in the selected date range and matches audit entries by env group name. Env groups with the same name across different clusters are treated as a single option.
 
 Use the search field to search across matching audit entries. Search can match request paths, user email addresses, API token names, application names, and cluster names.
 
@@ -58,7 +61,7 @@ Filters, search, date range, and pagination are stored in the page URL. Copy the
 
 ## Export audit logs
 
-If audit log export is enabled for your project, the **Export** button appears above the table. Exports use the current date range and supported table filters, including actor, method, action, status code, resource type, application, cluster, and search.
+If audit log export is enabled for your project, the **Export** button appears above the table. Exports use the current date range and supported table filters, including actor, method, action, status code, resource type, application, cluster, environment group, and search.
 
 You can download matching entries as:
 
@@ -79,4 +82,4 @@ The dashboard applies `Method excludes GET` by default when opening audit logs f
 
 ### A filter combination returns no results
 
-Application and cluster include filters do not overlap. Each audit log entry is tied to a single resource, so filtering for both a specific application and a specific cluster can return no rows. Clear one of those filters or use an exclude filter instead.
+Application, cluster, and environment group include filters do not overlap. Each audit log entry is tied to a single resource, so combining include filters across these resource types can return no rows. Clear one of those filters or use an exclude filter instead.
