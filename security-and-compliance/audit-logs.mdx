@@ -26,9 +26,13 @@ The audit log table includes:
 - **Method:** the HTTP method, such as `POST`, `PATCH`, `PUT`, or `DELETE`.
 - **Status:** the HTTP response status code returned by Porter.
 - **Resource:** the Porter resource associated with the request, such as an application, cluster, datastore, environment group, project, cloud account, API token, integration, or user.
-- **Action:** a human-readable action name. Hover over the action to view the underlying request path.
+- **Action:** a human-readable action name. For requests made by the Porter CLI, the Action column shows the specific command that ran, such as `porter kubectl`, `porter helm`, `porter app run`, `porter logs`, `porter datastore connect`, or `porter update`. Requests without a reported command fall back to the generic action name. Hover over the action to view the underlying request path and, when available, the CLI command.
 
 Porter preserves readable actor names for deleted users and revoked API tokens so older entries remain useful during investigations.
+
+<Note>
+  The originating CLI command is captured for new entries only. Audit log entries recorded before this feature shipped continue to display the generic action name.
+</Note>
 
 ## Filter audit logs
 
@@ -59,6 +63,8 @@ Filters, search, date range, and pagination are stored in the page URL. Copy the
 ## Export audit logs
 
 If audit log export is enabled for your project, the **Export** button appears above the table. Exports use the current date range and supported table filters, including actor, method, action, status code, resource type, application, cluster, and search.
+
+Exports include the originating CLI command alongside the standard columns, so you can trace which command triggered each request in your compliance reviews.
 
 You can download matching entries as:
 
