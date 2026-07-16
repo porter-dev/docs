@@ -88,6 +88,19 @@ Create custom node groups for specialized workloads like GPU processing, high-me
 
         Set your **maximum CPU cores limit** to prevent unexpected scaling. This caps infrastructure costs while allowing flexibility in instance selection.
 
+        ### Restricting per-instance size
+
+        By default, Karpenter can satisfy a cost-optimized node group with instances of any size, including a single very large instance. Enable **Restrict per-instance CPU** on the node group form to bound the vCPUs of each instance Karpenter provisions.
+
+        Use this when you want to spread workloads across more, smaller nodes to shrink the blast radius of a single Spot interruption or node failure. Setting the minimum equal to the maximum pins the node group to instances of that exact vCPU size while still allowing Karpenter to diversify across instance families.
+
+        | Field | Description |
+        |-------|-------------|
+        | **Min vCPUs per instance** | Smallest instance vCPU count Karpenter may pick. Leave empty for no minimum. |
+        | **Max vCPUs per instance** | Largest instance vCPU count Karpenter may pick. Leave empty for no maximum. |
+
+        Min must be less than or equal to Max, and Min must not exceed the node group's **Max CPU** limit.
+
         ### Limitations
 
         The following configurations should use fixed instance types instead:
