@@ -26,9 +26,13 @@ The audit log table includes:
 - **Method:** the HTTP method, such as `POST`, `PATCH`, `PUT`, or `DELETE`.
 - **Status:** the HTTP response status code returned by Porter.
 - **Resource:** the Porter resource associated with the request, such as an application, cluster, datastore, environment group, project, cloud account, API token, integration, or user.
-- **Action:** a human-readable action name. Hover over the action to view the underlying request path.
+- **Action:** a human-readable action name. For requests made by the Porter CLI, the Action column shows the specific command that ran, such as `porter kubectl`, `porter helm`, `porter app run`, `porter logs`, `porter datastore connect`, or `porter update`. A terminal icon marks rows that carry a reported CLI command so you can scan for them quickly. Requests without a reported command fall back to the generic action name. Hover over the action to view the CLI command, the generic action, and the underlying request path.
 
 Porter preserves readable actor names for deleted users and revoked API tokens so older entries remain useful during investigations.
+
+<Note>
+  The originating CLI command is captured for new entries only. Audit log entries recorded before this feature shipped continue to display the generic action name.
+</Note>
 
 ## Filter audit logs
 
@@ -48,7 +52,7 @@ You can filter by:
 
 Most filters support include and exclude modes. For example, you can include only `DELETE` requests or exclude a noisy application while reviewing the rest of the project.
 
-Use the search field to search across matching audit entries. Search can match request paths, user email addresses, API token names, application names, and cluster names.
+Use the search field to search across matching audit entries. Search can match request paths, user email addresses, API token names, application names, cluster names, and the reported Porter CLI command. For example, type `kubectl` to surface entries triggered by `porter kubectl`.
 
 The volume chart above the table shows activity over the selected range. Select part of the chart to narrow the table to that time window.
 
@@ -59,6 +63,8 @@ Filters, search, date range, and pagination are stored in the page URL. Copy the
 ## Export audit logs
 
 If audit log export is enabled for your project, the **Export** button appears above the table. Exports use the current date range and supported table filters, including actor, method, action, status code, resource type, application, cluster, and search.
+
+Exports include the originating CLI command alongside the standard columns, so you can trace which command triggered each request in your compliance reviews.
 
 You can download matching entries as:
 
