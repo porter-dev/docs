@@ -26,7 +26,7 @@ The audit log table includes:
 - **Method:** the HTTP method, such as `POST`, `PATCH`, `PUT`, or `DELETE`.
 - **Status:** the HTTP response status code returned by Porter.
 - **Resource:** the Porter resource associated with the request, such as an application, cluster, datastore, environment group, project, cloud account, API token, integration, or user.
-- **Action:** a human-readable action name. For requests made by the Porter CLI, the Action column shows the specific command that ran, such as `porter kubectl`, `porter helm`, `porter app run`, `porter logs`, `porter datastore connect`, or `porter update`. Requests without a reported command fall back to the generic action name. Hover over the action to view the underlying request path and, when available, the CLI command.
+- **Action:** a human-readable action name. For requests made by the Porter CLI, the Action column shows the specific command that ran, such as `porter kubectl`, `porter helm`, `porter app run`, `porter logs`, `porter datastore connect`, or `porter update`. A terminal icon marks rows that carry a reported CLI command so you can scan for them quickly. Requests without a reported command fall back to the generic action name. Hover over the action to view the CLI command, the generic action, and the underlying request path.
 
 Porter preserves readable actor names for deleted users and revoked API tokens so older entries remain useful during investigations.
 
