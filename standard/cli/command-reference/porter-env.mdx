@@ -23,13 +23,13 @@ porter env list [flags]
 
 **Options:**
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--output` | `-o` | Output format: `table` (default) or `json` |
+| Flag | Description |
+|------|-------------|
+| `--json` | Print environment groups as JSON instead of a table |
 
 When a cluster is set (via `porter config set-cluster`, the `--cluster` flag, or the `PORTER_CLUSTER` environment variable), the list is scoped to that cluster: environment groups whose sync targets include the cluster, plus any cluster-scoped environment groups. This matches what the dashboard shows on the cluster's environment groups page. Without a cluster context, all environment groups in the project are listed.
 
-The default table output shows each group's name, current version, and last updated time.
+The default table output shows each group's name, current version, and last updated time, sorted alphabetically by name.
 
 <CodeGroup>
 ```bash Table (default)
@@ -37,11 +37,11 @@ porter env list
 ```
 
 ```bash JSON output
-porter env list -o json
+porter env list --json
 ```
 </CodeGroup>
 
-The `json` output returns two arrays — `environment_groups` and `cluster_scoped_environment_groups` — sharing one object shape:
+The `--json` output returns two arrays — `environment_groups` and `cluster_scoped_environment_groups` — sharing one object shape:
 
 ```json
 {
