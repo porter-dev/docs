@@ -1,0 +1,130 @@
+---
+title: 'porter registry'
+description: "List project-linked container registries and push local or freshly built images to them from the Porter CLI without running docker login"
+---
+
+`porter registry` contains commands for working with the container registries linked to your Porter project, including listing registries, browsing repositories and images, and pushing local images without running `docker login`.
+
+## Prerequisites
+
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
+- At least one container registry is linked to the project
+- A running local Docker daemon (required for `porter registry push`)
+
+If your project has more than one linked registry, either select one with `porter config set-registry` or pass `--registry <id>` on each command. Run `porter registry list` to see the available IDs.
+
+---
+
+## `porter registry push`
+
+Push a local image to a registry linked to the project. Credentials are exchanged automatically — no `docker login` is required — and the remote repository is created on the first push.
+
+**Usage:**
+```bash
+porter registry push <image> [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--dest` | Remote destination in `repo[:tag]` form. Defaults to the source image's repository and tag |
+| `--build` | Build the image from this context directory before pushing, instead of pushing an existing local image |
+| `--dockerfile` | Path to the Dockerfile for `--build`. Defaults to `Dockerfile` inside the build context |
+| `--json` | Print the pushed image reference as JSON for scripting |
+| `--registry` | ID of the registry to push to. Required in non-interactive environments when the project has multiple registries |
+
+When the project has more than one linked registry URL, the CLI prompts interactively for which one to use. In non-interactive environments the command errors and asks you to pass `--registry` — it will not silently pick one.
+
+With `--build`, the image is built from the given context directory on your machine before it is pushed, using the same build path Porter apps use. Set `DOCKER_BUILDKIT=1` to build with buildx, and use `PORTER_BUILDKIT_ARGS` to pass extra flags such as `--platform`. Builds target `linux/amd64` by default.
+
+`--json` suppresses progress output on stdout so the JSON payload stays parseable. The payload has a single `image` field containing the fully qualified pushed reference.
+
+<CodeGroup>
+```bash Push a local image
+porter registry push myimage:dev
+```
+
+```bash Override the remote repo and tag
+porter registry push myimage:dev --dest sandboxes/base:v1
+```
+
+```bash Build before pushing
+porter registry push myimage:dev \
+  --build ./app \
+  --dockerfile ./app/prod.Dockerfile
+```
+
+```bash Multi-arch build with buildx
+DOCKER_BUILDKIT=1 PORTER_BUILDKIT_ARGS="--platform linux/amd64,linux/arm64" \
+  porter registry push myimage:dev --build ./app
+```
+
+```bash Capture the pushed reference
+porter registry push myimage:dev --json | jq -r .image
+```
+</CodeGroup>
+
+<Info>
+Repository names are normalized to lowercase, with `_` and `.` replaced by `-`, to match how the server stores them.
+</Info>
+
+---
+
+## `porter registry list`
+
+List the container registries linked to the current project. The currently selected registry (from `porter config set-registry`) is highlighted.
+
+**Usage:**
+```bash
+porter registry list
+```
+
+Displays a table with each registry's ID, URL, and service (for example, `ecr`, `gcr`, `dockerhub`).
+
+---
+
+## `porter registry delete`
+
+Delete a linked registry from the project. Prompts for confirmation before removing.
+
+**Usage:**
+```bash
+porter registry delete <id>
+```
+
+Use the ID from `porter registry list`.
+
+---
+
+## `porter registry repo list`
+
+List the repositories inside the selected registry.
+
+**Usage:**
+```bash
+porter registry repo list
+```
+
+Uses the registry from `porter config set-registry`, or from `--registry <id>`.
+
+---
+
+## `porter registry image list`
+
+List the image tags in a repository along with their digests.
+
+**Usage:**
+```bash
+porter registry image list <repo-name>
+```
+
+Uses the registry from `porter config set-registry`, or from `--registry <id>`.
+
+---
+
+## Related
+
+- [porter config](/standard/cli/command-reference/porter-config) — Select the active project and registry
+- [Deploy from a Docker registry](/applications/deploy/deploy-from-docker-registry) — Deploy a pushed image as an app
