@@ -56,9 +56,11 @@ Arguments:
 | `command` | `list[str] \| None` | Optional entrypoint override. |
 | `args` | `list[str] \| None` | Optional arguments passed to the command. |
 | `env` | `dict[str, str] \| None` | Environment variables to set in the sandbox. |
+| `env_groups` | `list[str] \| None` | Names of [environment groups](/applications/configure/environment-groups) on the cluster whose variables are injected into the sandbox, resolved to their latest version at create time. On a key conflict a later group wins over an earlier one, and an explicit `env` entry wins over any group value. |
 | `tags` | `dict[str, str] \| None` | Key-value labels for finding related sandboxes. |
 | `volume_mounts` | `dict[str, str] \| None` | Volume IDs keyed by absolute mount path inside the sandbox. |
 | `networking` | `list[SandboxNetworkingSpec] \| None` | Port to expose and, optionally, the domain and visibility to serve it on. Omit to expose nothing. See [Sandbox Networking](/sandboxes/networking). |
+| `ttl_seconds` | `int \| None` | Maximum lifetime in seconds, counted from creation. The sandbox is terminated once it elapses. Omit for no limit. See [sandbox lifetime](/sandboxes/overview#sandbox-lifetime). |
 
 Returns a `Sandbox` handle.
 

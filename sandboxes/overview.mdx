@@ -45,6 +45,12 @@ porter sandbox exec worker -- echo ok
 porter sandbox terminate worker
 ```
 
+You can also bound a sandbox's lifetime up front with a TTL, so it cleans itself up even if its main process never exits. Pass `ttl_seconds` in the SDKs or `--ttl` on the CLI at create time. The TTL counts from creation; shortly after it elapses, Porter terminates the sandbox the same way an explicit terminate does, moving it to `terminated`:
+
+```bash
+porter sandbox create ubuntu:24.04 --name worker --ttl 2h -- sleep infinity
+```
+
 ## Names
 
 Names are the canonical way to refer to sandboxes and volumes in the SDK and CLI.

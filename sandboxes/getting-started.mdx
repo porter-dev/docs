@@ -178,6 +178,58 @@ porter sandbox create alpine:3.20 --env API_KEY=secret --env LOG_LEVEL=debug
 ```
 </CodeGroup>
 
+### Inject environment groups
+
+Instead of passing variables one at a time, you can inject an entire [environment group](/applications/configure/environment-groups) from the cluster at create time. Any kind of environment group works, including groups synced from Doppler, Infisical, or a datastore. The SDKs take an `env_groups` list, and the CLI takes a repeatable `--env-group` flag:
+
+<CodeGroup>
+```python Python
+sandbox = porter.sandboxes.create(
+    image="alpine:3.20",
+    env_groups=["my-env-group"],
+)
+```
+
+```typescript TypeScript
+const sandbox = await porter.sandboxes.create({
+  image: "alpine:3.20",
+  env_groups: ["my-env-group"],
+});
+```
+
+```bash CLI
+porter sandbox create alpine:3.20 --env-group my-env-group -- sleep 3600
+```
+</CodeGroup>
+
+Group values are resolved to the group's latest version at create time and do not update afterwards. On a key conflict, a later group wins over an earlier one, and an explicit `env` entry wins over any group value.
+
+## Limit sandbox lifetime with a TTL
+
+To guarantee a sandbox cleans itself up even if its main process never exits, set a TTL at create time. The SDKs take `ttl_seconds`, and the CLI takes a `--ttl` Go duration. The TTL counts from creation; once it elapses, Porter terminates the sandbox the same way an explicit terminate does:
+
+<CodeGroup>
+```python Python
+sandbox = porter.sandboxes.create(
+    image="ubuntu:24.04",
+    command=["sleep", "infinity"],
+    ttl_seconds=7200,
+)
+```
+
+```typescript TypeScript
+const sandbox = await porter.sandboxes.create({
+  image: "ubuntu:24.04",
+  command: ["sleep", "infinity"],
+  ttl_seconds: 7200,
+});
+```
+
+```bash CLI
+porter sandbox create ubuntu:24.04 --ttl 2h -- sleep infinity
+```
+</CodeGroup>
+
 ## Use custom images
 
 Sandboxes run any container image, so you can bake in the tools your workload needs (language runtimes, CLIs, agents) instead of installing them at runtime.

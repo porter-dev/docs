@@ -60,9 +60,11 @@ Options:
 | `command` | `string[] \| undefined` | Optional entrypoint override. |
 | `args` | `string[] \| undefined` | Optional arguments passed to the command. |
 | `env` | `Record<string, string> \| undefined` | Environment variables to set in the sandbox. |
+| `env_groups` | `string[] \| undefined` | Names of [environment groups](/applications/configure/environment-groups) on the cluster whose variables are injected into the sandbox, resolved to their latest version at create time. On a key conflict a later group wins over an earlier one, and an explicit `env` entry wins over any group value. |
 | `tags` | `Record<string, string> \| undefined` | Key-value labels for finding related sandboxes. |
 | `volume_mounts` | `Record<string, string> \| undefined` | Volume IDs keyed by absolute mount path inside the sandbox. |
 | `networking` | `SandboxNetworkingSpec[] \| undefined` | Port to expose and, optionally, the domain and visibility to serve it on. Omit to expose nothing. See [Sandbox Networking](/sandboxes/networking). |
+| `ttl_seconds` | `number \| undefined` | Maximum lifetime in seconds, counted from creation. The sandbox is terminated once it elapses. Omit for no limit. See [sandbox lifetime](/sandboxes/overview#sandbox-lifetime). |
 
 Returns a `Sandbox` handle.
 
