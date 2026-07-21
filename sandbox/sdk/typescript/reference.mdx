@@ -109,9 +109,29 @@ await sandbox.terminate();
 | Method | Description |
 | ------ | ----------- |
 | `refresh()` | Refetches status and updates `phase` and `tags`. |
-| `exec(command)` | Runs a command in the sandbox and returns stdout, stderr, and exit code. |
+| `exec(command, requestOptions?)` | Runs a command in the sandbox and returns stdout, stderr, and exit code. |
 | `logs(options?)` | Fetches structured log lines. |
 | `terminate()` | Terminates the sandbox. |
+
+### `exec` timeouts
+
+`exec` is long-running: the client sends no timeout by default, so the call waits for the command to exit. Pass `requestOptions.timeoutMs` to cap how long the client waits. When the timeout elapses, the SDK throws `SandboxTimeoutError` and does not retry, since the command may still be running server-side.
+
+```typescript
+import { SandboxTimeoutError } from "porter-sandbox";
+
+try {
+  const result = await sandbox.exec(["sleep", "120"], { timeoutMs: 30_000 });
+} catch (error) {
+  if (error instanceof SandboxTimeoutError) {
+    console.error("exec exceeded 30s; the command may still be running in the sandbox");
+  } else {
+    throw error;
+  }
+}
+```
+
+The client-wide `timeoutMs` on `Porter` still applies to every other request (30 seconds by default).
 
 ## Volumes
 

@@ -102,9 +102,24 @@ sandbox.terminate()
 | Method | Description |
 | ------ | ----------- |
 | `refresh()` | Refetches status and updates `phase` and `tags`. |
-| `exec(command)` | Runs a command in the sandbox and returns stdout, stderr, and exit code. |
+| `exec(command, timeout=None)` | Runs a command in the sandbox and returns stdout, stderr, and exit code. |
 | `logs(since=None, limit=None)` | Fetches structured log lines. |
 | `terminate()` | Terminates the sandbox. |
+
+### `exec` timeouts
+
+`exec` is long-running: the client sends no timeout by default, so the call waits for the command to exit. Pass `timeout` (seconds) to cap how long the client waits. When the timeout elapses, the SDK raises `SandboxTimeoutError` and does not retry, since the command may still be running server-side.
+
+```python
+from porter_sandbox import SandboxTimeoutError
+
+try:
+    result = sandbox.exec(["sleep", "120"], timeout=30.0)
+except SandboxTimeoutError:
+    print("exec exceeded 30s; the command may still be running in the sandbox")
+```
+
+The client-wide `timeout` on `Porter` still applies to every other request (30 seconds by default).
 
 ## Volumes
 
