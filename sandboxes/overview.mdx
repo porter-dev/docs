@@ -92,6 +92,17 @@ Volumes provide persistent storage that can be mounted into sandboxes at launch.
 - [TypeScript Sandbox SDK volumes](/sandbox/sdk/typescript/volumes)
 - [Sandbox CLI volume commands](/sandboxes/cli#porter-sandbox-volume)
 
+### Manage volumes from the dashboard
+
+Every cluster with sandboxes enabled has a **Sandbox file storage** card in the **Add-ons** page. Open it to see:
+
+- **Overview** — the shared EFS disk backing sandbox volumes, with its created date and metered storage used.
+- **Volumes** — the cluster's volumes, with name, phase, attached sandboxes, and created date. Filter by name or phase, click a row to open the volume detail page, and delete idle volumes from there.
+
+Volumes attached to a running sandbox cannot be deleted; terminate the sandbox first, then delete the volume once it detaches.
+
+When you mount the `sandbox-volumes` disk into an app service, the dashboard shows a confirmation dialog reminding you that volume contents are written by sandboxed workloads and must be treated as untrusted input. See [accessing volume data from apps](/sandbox/sdk/python/volumes#access-volume-data-from-apps) for the full pattern.
+
 ## Next steps
 
 - [Sandboxes Getting Started](/sandboxes/getting-started)
