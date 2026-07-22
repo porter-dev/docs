@@ -180,6 +180,12 @@ porter env list
 
 This displays a table with each group's name, current version, and last updated time.
 
+## Version History
+
+Every update to an environment group creates a new version. Porter retains the **10 most recent versions** of each environment group; older versions are pruned automatically along with their underlying secret data in your cloud provider's secret manager.
+
+Because applications resolve their environment values against a pinned version of the group, an app that has not redeployed in a long time can fall behind. If a synced application is still pinned to a version older than the 10 most recent, redeploying it will pull values from the current version instead.
+
 ## Reverting to a previous version
 
 Every update to an environment group creates a new version. If a recent change causes problems — for example, a bad value rolled out to every synced application — you can revert the group to any prior version.
