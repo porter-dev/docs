@@ -48,7 +48,7 @@ const porter = new Porter();
 const response = await porter.volumes.list();
 
 for (const volume of response.volumes) {
-  console.log(volume.id, volume.name, volume.phase, volume.attached_to);
+  console.log(volume.id, volume.name, volume.phase, volume.attached_to, volume.path);
 }
 
 porter.close();
@@ -82,6 +82,28 @@ const volume = await porter.volumes.get("agent-workspace");
 console.log(volume.name, volume.phase, volume.attached_to);
 porter.close();
 ```
+
+## Access volume data from apps
+
+Volumes live on a shared disk that apps on the same cluster can attach. Attach the disk named `sandbox-volumes` to a service in your app; it mounts at `/data/<app-name>/sandbox-volumes` and contains one subdirectory per volume.
+
+Each volume response includes a `path` field with the volume's subdirectory on that disk, so an app reads a volume's data at `/data/<app-name>/sandbox-volumes/<path>`:
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+const volume = await porter.volumes.get("agent-workspace");
+
+console.log(volume.path); // sandbox-vol-2f1c8b7e-...
+porter.close();
+```
+
+The disk is a live view: writes a sandbox makes to its mounted volume are visible to apps right away, and new volumes show up as new subdirectories without redeploying the app.
+
+<Warning>
+Volume contents are written by sandboxed workloads, which are often running untrusted code. Treat anything your app reads from this disk as untrusted input: hostile file contents, names, or sizes can exploit vulnerabilities in the code that processes them. Porter isolates the sandboxes themselves but does not inspect or sanitize what they write, so validating this data before acting on it is your application's responsibility.
+</Warning>
 
 ## Delete a volume
 
