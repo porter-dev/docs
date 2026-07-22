@@ -14,6 +14,10 @@ Sandboxes are in a private beta. Please reach out to us at support@porter.run or
 - A Porter project
 - An AWS cluster where you want to run sandboxes. We recommend creating a new AWS cluster for sandboxes so sandbox workloads are isolated from your other running workloads.
 
+<Note>
+A dedicated cluster is not required, it's a defense-in-depth recommendation. Sandboxes often run untrusted code (end-user submissions, LLM agent output), and running them in their own cluster isolates that code from your main workloads as much as possible. Sharing a cluster with your other workloads is reasonable for development and testing; for production workloads that run untrusted code, we recommend the separate cluster.
+</Note>
+
 ## Enable sandboxes
 
 <Steps>
@@ -44,7 +48,24 @@ Sandboxes are in a private beta. Please reach out to us at support@porter.run or
 
 The SDK connects to the in-cluster Sandbox API automatically when your application runs as a Porter Application in the same cluster where sandboxes are enabled.
 
-If you need to invoke sandboxes from outside that cluster, configure the SDK with a Porter API token. You can create an API token from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions.
+To invoke sandboxes from anywhere else, authenticate with a Porter API token and tell the SDK which cluster to target:
+
+```bash
+export PORTER_SANDBOX_API_KEY="<porter-api-token>"
+export PORTER_CLUSTER_ID="<cluster-id>"
+```
+
+The SDK reads the project from the token and routes through the Porter API at `dashboard.porter.run` automatically. Replace `<cluster-id>` with the cluster where sandboxes are enabled. You can copy the prefilled snippet from the cluster's Sandbox tab, or look up the ID with the [Porter CLI](/cli/basic-usage):
+
+```bash
+$ porter cluster list
+ID  NAME              RESOURCE_NAME     SERVER
+2   my-sandbox-cluster ...
+```
+
+You can create an API token from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions, and the token itself must have developer permissions to authenticate with the Sandbox API.
+
+To point the SDK at a specific URL instead, set `PORTER_SANDBOX_BASE_URL` or pass `base_url` (Python) / `baseUrl` (TypeScript) to the client constructor. These take precedence over everything above.
 
 ## Python quickstart
 
@@ -106,6 +127,158 @@ await sandbox.terminate();
 porter.close();
 ```
 
+## Keep a sandbox alive for exec
+
+A sandbox lives as long as its main process: the image's default entrypoint, or the command you pass at create time. When that process exits, the sandbox moves to `succeeded` (exit code `0`) or `failed` (nonzero), and it stops accepting exec calls.
+
+An image whose default command exits immediately reaches `succeeded` within a few seconds of starting. If you want to create a sandbox first and exec into it later, give it a long-running main process, then terminate it when the work is done:
+
+<CodeGroup>
+```python Python
+sandbox = porter.sandboxes.create(
+    image="alpine:3.20",
+    name="worker",
+    command=["sleep", "3600"],
+)
+
+result = sandbox.exec(["echo", "ok"])
+print(result.stdout)
+
+sandbox.terminate()
+```
+
+```bash CLI
+porter sandbox create alpine:3.20 --name worker -- sleep 3600
+porter sandbox exec worker -- echo ok
+porter sandbox terminate worker
+```
+</CodeGroup>
+
+## Set environment variables
+
+Pass environment variables at create time. The SDKs take an `env` map, and the CLI takes a repeatable `--env KEY=VALUE` flag:
+
+<CodeGroup>
+```python Python
+sandbox = porter.sandboxes.create(
+    image="alpine:3.20",
+    env={"API_KEY": "secret", "LOG_LEVEL": "debug"},
+)
+```
+
+```typescript TypeScript
+const sandbox = await porter.sandboxes.create({
+  image: "alpine:3.20",
+  env: { API_KEY: "secret", LOG_LEVEL: "debug" },
+});
+```
+
+```bash CLI
+porter sandbox create alpine:3.20 --env API_KEY=secret --env LOG_LEVEL=debug
+```
+</CodeGroup>
+
+### Inject environment groups
+
+Instead of passing variables one at a time, you can inject an entire [environment group](/applications/configure/environment-groups) from the cluster at create time. Any kind of environment group works, including groups synced from Doppler, Infisical, or a datastore. The SDKs take an `env_groups` list, and the CLI takes a repeatable `--env-group` flag:
+
+<CodeGroup>
+```python Python
+sandbox = porter.sandboxes.create(
+    image="alpine:3.20",
+    env_groups=["my-env-group"],
+)
+```
+
+```typescript TypeScript
+const sandbox = await porter.sandboxes.create({
+  image: "alpine:3.20",
+  env_groups: ["my-env-group"],
+});
+```
+
+```bash CLI
+porter sandbox create alpine:3.20 --env-group my-env-group -- sleep 3600
+```
+</CodeGroup>
+
+Group values are resolved to the group's latest version at create time and do not update afterwards. On a key conflict, a later group wins over an earlier one, and an explicit `env` entry wins over any group value.
+
+## Limit sandbox lifetime with a TTL
+
+To guarantee a sandbox cleans itself up even if its main process never exits, set a TTL at create time. The SDKs take `ttl_seconds`, and the CLI takes a `--ttl` Go duration. The TTL counts from creation; once it elapses, Porter terminates the sandbox the same way an explicit terminate does:
+
+<CodeGroup>
+```python Python
+sandbox = porter.sandboxes.create(
+    image="ubuntu:24.04",
+    command=["sleep", "infinity"],
+    ttl_seconds=7200,
+)
+```
+
+```typescript TypeScript
+const sandbox = await porter.sandboxes.create({
+  image: "ubuntu:24.04",
+  command: ["sleep", "infinity"],
+  ttl_seconds: 7200,
+});
+```
+
+```bash CLI
+porter sandbox create ubuntu:24.04 --ttl 2h -- sleep infinity
+```
+</CodeGroup>
+
+## Use custom images
+
+Sandboxes run any container image, so you can bake in the tools your workload needs (language runtimes, CLIs, agents) instead of installing them at runtime.
+
+Private images are supported. Push your image to the ECR registry in the AWS account associated with your sandbox cluster, and sandboxes on that cluster can pull it without extra credential configuration.
+
+## Run an agent inside a sandbox
+
+A sandbox can host an entire agent, not just execute tools for an agent that runs elsewhere. Two patterns are common:
+
+- **Sandbox as a tool**: your agent's control loop and model calls run in your application, and the agent uses the sandbox to execute code or commands as a tool. This is the exec flow shown above.
+- **Agent in the sandbox**: the whole agent, its control loop and its model calls, runs inside the sandbox. Bake your harness into a custom image, inject the model API key at create time, and run it as the sandbox's main process. Sandboxes reach the public internet by default, so an in-sandbox agent calls a hosted model API directly.
+
+The second pattern is a custom image plus an environment variable. The agent runs as the sandbox's main process, so the sandbox stays alive as long as the agent is running (see [Sandbox lifetime](/sandboxes/overview#sandbox-lifetime)):
+
+<CodeGroup>
+```python Python
+sandbox = porter.sandboxes.create(
+    image="ghcr.io/acme/agent:latest",
+    name="research-agent",
+    env={"MODEL_API_KEY": model_api_key},
+)
+
+# Follow the agent's output while it runs.
+print(sandbox.logs(limit=100))
+
+# Terminate when you're done, or let the agent's process exit on its own.
+sandbox.terminate()
+```
+
+```typescript TypeScript
+const sandbox = await porter.sandboxes.create({
+  image: "ghcr.io/acme/agent:latest",
+  name: "research-agent",
+  env: { MODEL_API_KEY: modelApiKey },
+});
+
+// Follow the agent's output while it runs.
+console.log(await sandbox.logs({ limit: 100 }));
+
+// Terminate when you're done, or let the agent's process exit on its own.
+await sandbox.terminate();
+```
+
+```bash CLI
+porter sandbox create ghcr.io/acme/agent:latest --name research-agent --env MODEL_API_KEY=$MODEL_API_KEY
+```
+</CodeGroup>
+
 ## Use tags to identify sandboxes
 
 Tags make it easier to find sandboxes created by a workflow:
@@ -119,6 +292,7 @@ sandbox = porter.sandboxes.create(
 
 ## Next steps
 
+- Use [Sandbox Networking](/sandboxes/networking) to serve sandboxes over HTTPS on your own domains.
 - Use [the sandbox CLI guide](/sandboxes/cli) to list, inspect logs, exec into, and terminate sandboxes.
 - Use the [Python Sandbox SDK quickstart](/sandbox/sdk/python/quickstart) for Python services.
 - Use the [TypeScript Sandbox SDK quickstart](/sandbox/sdk/typescript/quickstart) for Node.js and TypeScript services.

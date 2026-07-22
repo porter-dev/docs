@@ -88,6 +88,19 @@ Create custom node groups for specialized workloads like GPU processing, high-me
 
         Set your **maximum CPU cores limit** to prevent unexpected scaling. This caps infrastructure costs while allowing flexibility in instance selection.
 
+        ### Restricting per-instance size
+
+        By default, Karpenter can satisfy a cost-optimized node group with instances of any size, including a single very large instance. Enable **Restrict per-instance CPU** on the node group form to bound the vCPUs of each instance Karpenter provisions.
+
+        Use this when you want to spread workloads across more, smaller nodes to shrink the blast radius of a single Spot interruption or node failure. Setting the minimum equal to the maximum pins the node group to instances of that exact vCPU size while still allowing Karpenter to diversify across instance families.
+
+        | Field | Description |
+        |-------|-------------|
+        | **Min vCPUs per instance** | Smallest instance vCPU count Karpenter may pick. Leave empty for no minimum. |
+        | **Max vCPUs per instance** | Largest instance vCPU count Karpenter may pick. Leave empty for no maximum. |
+
+        Min must be less than or equal to Max, and Min must not exceed the node group's **Max CPU** limit.
+
         ### Limitations
 
         The following configurations should use fixed instance types instead:
@@ -127,6 +140,28 @@ Create custom node groups for specialized workloads like GPU processing, high-me
     Click **Save** to create the node group. Porter provisions the new nodes, which may take a few minutes.
   </Step>
 </Steps>
+
+---
+
+## Public node groups
+
+By default, nodes in a Porter-managed cluster are private: they sit in a private subnet (AWS) or have private IPs only (GCP) and reach the internet through a NAT gateway. You can opt a custom node group into public networking when workloads need to receive inbound traffic directly or when you want to avoid NAT egress costs.
+
+<Warning>
+Public nodes are reachable from the internet. Only enable this for workloads that need it, and rely on security groups, network policies, and firewall rules to limit exposure.
+</Warning>
+
+To enable public networking on a node group:
+
+1. From the node group form, locate the **Use public subnet** (AWS) or **Use public IP addresses** (GCP) toggle.
+2. Turn the toggle on and click **Update** or **Save**.
+
+| Cloud | Toggle | Effect |
+|-------|--------|--------|
+| AWS | Use public subnet | Nodes launch in a public subnet and receive public IPs. |
+| GCP | Use public IP addresses | Nodes receive public IPs and skip Cloud NAT for egress. |
+
+On GCP, this setting is immutable for the lifetime of a node pool. Flipping it triggers a replacement pool; existing nodes are cordoned and drained before the old pool is removed, so running workloads stay available during the switch.
 
 ---
 

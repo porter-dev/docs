@@ -25,8 +25,8 @@ Constructor options:
 
 | Option | Type | Description |
 | ------ | ---- | ----------- |
-| `apiKey` | `string \| undefined` | Optional API key. Only required when invoking the Sandbox API from outside the sandbox-enabled cluster. Create one from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions. |
-| `baseUrl` | `string \| undefined` | Optional API base URL override. In-cluster Porter Applications use the in-cluster Sandbox API URL by default. |
+| `apiKey` | `string \| undefined` | Optional API key. Falls back to the `PORTER_SANDBOX_API_KEY` environment variable. Only required when invoking the Sandbox API from outside the sandbox-enabled cluster. Create one from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions, and the token must have developer permissions to authenticate with the Sandbox API. |
+| `baseUrl` | `string \| undefined` | Optional API base URL override. Falls back to the `PORTER_SANDBOX_BASE_URL` environment variable. If neither is set, the SDK builds the external Porter API URL from the API token's project and `PORTER_CLUSTER_ID`, then falls back to the in-cluster Sandbox API URL when running in a Kubernetes cluster, and otherwise throws an error explaining what to set. |
 | `timeoutMs` | `number \| undefined` | Request timeout in milliseconds. Defaults to 30 seconds. |
 
 Close the client when your process is done:
@@ -60,8 +60,11 @@ Options:
 | `command` | `string[] \| undefined` | Optional entrypoint override. |
 | `args` | `string[] \| undefined` | Optional arguments passed to the command. |
 | `env` | `Record<string, string> \| undefined` | Environment variables to set in the sandbox. |
+| `env_groups` | `string[] \| undefined` | Names of [environment groups](/applications/configure/environment-groups) on the cluster whose variables are injected into the sandbox, resolved to their latest version at create time. On a key conflict a later group wins over an earlier one, and an explicit `env` entry wins over any group value. |
 | `tags` | `Record<string, string> \| undefined` | Key-value labels for finding related sandboxes. |
 | `volume_mounts` | `Record<string, string> \| undefined` | Volume IDs keyed by absolute mount path inside the sandbox. |
+| `networking` | `SandboxNetworkingSpec[] \| undefined` | Port to expose and, optionally, the domain and visibility to serve it on. Omit to expose nothing. See [Sandbox Networking](/sandboxes/networking). |
+| `ttl_seconds` | `number \| undefined` | Maximum lifetime in seconds, counted from creation. The sandbox is terminated once it elapses. Omit for no limit. See [sandbox lifetime](/sandboxes/overview#sandbox-lifetime). |
 
 Returns a `Sandbox` handle.
 
@@ -108,9 +111,29 @@ await sandbox.terminate();
 | Method | Description |
 | ------ | ----------- |
 | `refresh()` | Refetches status and updates `phase` and `tags`. |
-| `exec(command)` | Runs a command in the sandbox and returns stdout, stderr, and exit code. |
+| `exec(command, requestOptions?)` | Runs a command in the sandbox and returns stdout, stderr, and exit code. |
 | `logs(options?)` | Fetches structured log lines. |
 | `terminate()` | Terminates the sandbox. |
+
+### `exec` timeouts
+
+`exec` is long-running: the client sends no timeout by default, so the call waits for the command to exit. Pass `requestOptions.timeoutMs` to cap how long the client waits. When the timeout elapses, the SDK throws `SandboxTimeoutError` and does not retry, since the command may still be running server-side.
+
+```typescript
+import { SandboxTimeoutError } from "porter-sandbox";
+
+try {
+  const result = await sandbox.exec(["sleep", "120"], { timeoutMs: 30_000 });
+} catch (error) {
+  if (error instanceof SandboxTimeoutError) {
+    console.error("exec exceeded 30s; the command may still be running in the sandbox");
+  } else {
+    throw error;
+  }
+}
+```
+
+The client-wide `timeoutMs` on `Porter` still applies to every other request (30 seconds by default).
 
 ## Volumes
 

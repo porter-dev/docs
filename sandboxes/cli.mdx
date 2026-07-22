@@ -37,15 +37,23 @@ porter sandbox create <image> [-- <command> [args...]] [flags]
 | `--command` | Override the image entrypoint. Repeat for each argv element |
 | `--arg` | Argument passed to the command. Repeatable |
 | `-e, --env` | Environment variable in `KEY=VALUE` form. Repeatable |
+| `--env-group` | Environment group on the cluster whose variables are injected into the sandbox. Repeatable |
 | `--tag` | Tag in `key=value` form. Repeatable |
 | `--volume` | Volume mount in `mount_path=volume-ref` form, where `volume-ref` is a volume name or ID. Repeatable. The mount path must be absolute |
+| `--ttl` | Maximum sandbox lifetime as a Go duration, such as `30m` or `2h`. Defaults to no limit |
 | `-o, --output` | Output format: `text` or `json` |
 
 Use the positional form after `--` for common one-shot commands. Use `--command` and `--arg` when scripting individual argv elements.
 
 Volume values can be volume names or volume IDs. The CLI resolves names first, then falls back to treating the value as an ID.
 
+`--env-group` injects the variables of a named [environment group](/applications/configure/environment-groups) on the cluster. Values are resolved to the group's latest version at create time and do not update afterwards. On a key conflict, a later `--env-group` wins over an earlier one, and an explicit `--env` wins over any group value. Creation fails if a named group does not exist on the cluster or has not synced yet.
+
+`--ttl` bounds the sandbox's lifetime regardless of its main process: once the duration elapses, counted from creation, Porter terminates the sandbox the same way an explicit `terminate` does. See [sandbox lifetime](/sandboxes/overview#sandbox-lifetime).
+
 Sandbox names currently cannot be reused, even after the sandbox is terminated. Omit `--name` only for one-off sandboxes where you do not need stable lookup later.
+
+The sandbox runs as long as its main process. When the process exits, the sandbox moves to `succeeded` or `failed` and stops accepting exec calls, so pass a long-running command if you plan to exec into the sandbox. See [sandbox lifetime](/sandboxes/overview#sandbox-lifetime).
 
 <CodeGroup>
 ```bash Create Sandbox
@@ -62,6 +70,14 @@ porter sandbox create ghcr.io/example/tool:latest --env PORT=8080 --tag env=dev 
 
 ```bash With Volume
 porter sandbox create ubuntu:24.04 --volume /workspace=my-data -- bash -lc 'ls -la /workspace'
+```
+
+```bash With Env Group
+porter sandbox create alpine:3.20 --env-group my-env-group -- sleep 3600
+```
+
+```bash With TTL
+porter sandbox create alpine:3.20 --ttl 2h -- sleep 7200
 ```
 
 ```bash JSON Output
@@ -436,6 +452,8 @@ porter sandbox volume delete my-data
 | Workflow | Command |
 |----------|---------|
 | Create a named sandbox | `porter sandbox create alpine:3.20 --name web -- sleep 3600` |
+| Create a sandbox that cleans itself up | `porter sandbox create alpine:3.20 --ttl 2h -- sleep 7200` |
+| Create a sandbox with an env group | `porter sandbox create alpine:3.20 --env-group my-env-group -- sleep 3600` |
 | Create and mount a volume | `porter sandbox volume create my-data && porter sandbox create ubuntu:24.04 --volume /workspace=my-data -- bash` |
 | List running sandboxes | `porter sandbox list --phase running` |
 | Get running sandbox names for a script | `porter sandbox list -o json \| jq -r '.[] \| select(.phase == "running") \| .name'` |

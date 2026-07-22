@@ -130,6 +130,7 @@
           "pages": [
             "sandboxes/overview",
             "sandboxes/getting-started",
+            "sandboxes/networking",
             {
               "group": "Sandbox SDK",
               "pages": [
@@ -190,6 +191,7 @@
                 "standard/cli/command-reference/porter-job",
                 "standard/cli/command-reference/porter-datastore-connect",
                 "standard/cli/command-reference/porter-env",
+                "standard/cli/command-reference/porter-registry",
                 "standard/cli/command-reference/porter-target"
               ]
             }

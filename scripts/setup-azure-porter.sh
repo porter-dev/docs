@@ -103,6 +103,7 @@ enable_resource_providers() {
         "Microsoft.Compute"
         "Microsoft.ContainerRegistry"
         "Microsoft.ContainerService"
+        "Microsoft.Insights"
         "Microsoft.ManagedIdentity"
         "Microsoft.Network"
         "Microsoft.OperationalInsights"
@@ -120,16 +121,57 @@ enable_resource_providers() {
     print_success "Resource providers enabled"
 }
 
-# Function to create or update custom role
+# Function to create or reuse the custom role for this subscription
 create_custom_role() {
-    print_status "Managing custom porter-aks-restricted role..."
-    
-    # Create expected role definition
+    ROLE_NAME="porter-aks-restricted"
+    print_status "Managing custom $ROLE_NAME role..."
+
+    local base_name="porter-aks-restricted"
+    local scope="/subscriptions/${SUBSCRIPTION_ID}"
+
+    # Reuse the base role if it already covers this subscription.
+    if role_covers_subscription "$base_name" "$scope"; then
+        ROLE_NAME="$base_name"
+        print_success "Role $ROLE_NAME already covers this subscription, reusing it"
+        return
+    fi
+
+    local sub_specific="${base_name}-${SUBSCRIPTION_ID%%-*}"
+    if role_covers_subscription "$sub_specific" "$scope"; then
+        ROLE_NAME="$sub_specific"
+        print_success "Role $sub_specific already covers this subscription, reusing it"
+        return
+    fi
+
+    # Try the base name; if it is already taken in the tenant, fall back to a subscription-specific
+    # name rather than mutating the existing role (which would strip access from the subscriptions
+    # it currently covers).
+    if create_role_definition "$base_name" "$scope"; then
+        ROLE_NAME="$base_name"
+    else
+        print_warning "Role name $base_name is already in use in this tenant; creating $sub_specific instead"
+        create_role_definition "$sub_specific" "$scope" || exit 1
+        ROLE_NAME="$sub_specific"
+    fi
+}
+
+# Returns 0 if a custom role with the given name exists and is assignable to the given scope.
+role_covers_subscription() {
+    local name="$1" scope="$2"
+    az role definition list --custom-role-only true \
+        --query "[?roleName=='$name'].assignableScopes[]" -o tsv 2>/dev/null | grep -qx "$scope"
+}
+
+# Creates the porter custom role with the given name scoped to the given subscription.
+create_role_definition() {
+    local name="$1" scope="$2"
+    print_info "Creating role $name..."
+
     cat > /tmp/porter-role-expected.json << EOF
 {
-    "assignableScopes": ["/subscriptions/${SUBSCRIPTION_ID}"],
+    "assignableScopes": ["${scope}"],
     "description": "Grants Porter access to manage resources for an AKS cluster.",
-    "name": "porter-aks-restricted",
+    "name": "${name}",
     "permissions": [
         {
             "actions": ["*"],
@@ -145,87 +187,54 @@ create_custom_role() {
     ]
 }
 EOF
-    
-    # Check if role already exists
-    if [ "$(az role definition list --name "porter-aks-restricted" --query "length(@)" -o tsv)" != "0" ]; then
-        print_info "Role porter-aks-restricted already exists, checking if update is needed..."
-        
-        # Get existing role definition
-        az role definition list --name "porter-aks-restricted" --output json > /tmp/porter-role-existing.json
-        
-        # Extract relevant fields for comparison (normalize the structure)
-        jq -r '.[0] | {
-            assignableScopes: .assignableScopes,
-            description: .description,
-            permissions: (.permissions | map({
-                actions: .actions,
-                dataActions: .dataActions,
-                notActions: .notActions,
-                notDataActions: .notDataActions
-            }))
-        }' /tmp/porter-role-existing.json > /tmp/porter-role-existing-normalized.json
-        
-        # Normalize expected role for comparison
-        jq '{
-            assignableScopes: .assignableScopes,
-            description: .description,
-            permissions: (.permissions | map({
-                actions: .actions,
-                dataActions: .dataActions,
-                notActions: .notActions,
-                notDataActions: .notDataActions
-            }))
-        }' /tmp/porter-role-expected.json > /tmp/porter-role-expected-normalized.json
-        
-        # Compare normalized definitions
-        if cmp -s /tmp/porter-role-existing-normalized.json /tmp/porter-role-expected-normalized.json; then
-            print_success "Role is up to date, no changes needed"
-        else
-            print_warning "Role definition has diverged, updating..."
-            
-            # Get the role ID (GUID) for update
-            ROLE_ID=$(jq -r '.[0].id' /tmp/porter-role-existing.json)
-            
-            # Add the role ID to our expected definition for update
-            jq --arg role_id "$ROLE_ID" '.id = $role_id' /tmp/porter-role-expected.json > /tmp/porter-role-update.json
-            
-            # Update the role
-            if az role definition update --role-definition /tmp/porter-role-update.json; then
-                print_success "Role updated successfully"
-            else
-                print_error "Failed to update role"
-                exit 1
-            fi
-            
-            rm /tmp/porter-role-update.json
-        fi
-        
-        rm /tmp/porter-role-existing.json /tmp/porter-role-existing-normalized.json /tmp/porter-role-expected-normalized.json
-    else
-        print_info "Role does not exist, creating..."
-        
-        # Create the role
-        if az role definition create --role-definition /tmp/porter-role-expected.json; then
-            print_success "Custom role created"
-        else
-            print_error "Failed to create role"
-            exit 1
-        fi
+
+    local create_output
+    if create_output=$(az role definition create --role-definition /tmp/porter-role-expected.json 2>&1); then
+        rm -f /tmp/porter-role-expected.json
+        print_success "Custom role $name created"
+        return 0
     fi
-    
-    rm /tmp/porter-role-expected.json
+
+    rm -f /tmp/porter-role-expected.json
+
+    # Name collision: the role exists in the tenant but is scoped elsewhere
+    if grep -q "RoleDefinitionWithSameNameExists" <<< "$create_output"; then
+        return 2
+    fi
+
+    print_error "Failed to create role $name: $create_output"
+    exit 1
 }
 
 # Function to create service principal
 create_service_principal() {
     print_status "Creating service principal..."
     
-    # Create service principal and capture output
-    SP_OUTPUT=$(az ad sp create-for-rbac \
-        --name="azure-porter-restricted-sp" \
-        --role="porter-aks-restricted" \
-        --scopes="/subscriptions/${SUBSCRIPTION_ID}")
-    
+    print_warning "WARNING: this resets the client secret for the 'azure-porter-restricted-sp' service principal."
+    print_warning "If it is already connected to Porter (or shared across subscriptions/accounts), every"
+    print_warning "account using it will stop authenticating until you update the new secret everywhere."
+    print_warning "Press Ctrl-C within 10 seconds to abort..."
+    sleep 10
+
+    # Create service principal and capture output. The role assignment can transiently fail
+    # right after a custom role is created/updated; retry until it converges.
+    local attempt=0
+    while true; do
+        attempt=$((attempt + 1))
+        if SP_OUTPUT=$(az ad sp create-for-rbac \
+            --name="azure-porter-restricted-sp" \
+            --role="$ROLE_NAME" \
+            --scopes="/subscriptions/${SUBSCRIPTION_ID}"); then
+            break
+        fi
+        if [ "$attempt" -ge 12 ]; then
+            print_error "Failed to create service principal after $attempt attempts"
+            exit 1
+        fi
+        print_info "Role assignment not ready yet (attempt $attempt); retrying in 10s..."
+        sleep 10
+    done
+
     # Extract values from JSON output
     APP_ID=$(echo "$SP_OUTPUT" | jq -r '.appId')
     CLIENT_SECRET=$(echo "$SP_OUTPUT" | jq -r '.password')

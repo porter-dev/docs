@@ -27,8 +27,8 @@ Constructor options:
 
 | Option | Type | Description |
 | ------ | ---- | ----------- |
-| `api_key` | `str \| None` | Optional API key. Only required when invoking the Sandbox API from outside the sandbox-enabled cluster. Create one from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions. |
-| `base_url` | `str \| None` | Optional API base URL override. In-cluster Porter Applications use the in-cluster Sandbox API URL by default. |
+| `api_key` | `str \| None` | Optional API key. Falls back to the `PORTER_SANDBOX_API_KEY` environment variable. Only required when invoking the Sandbox API from outside the sandbox-enabled cluster. Create one from **Settings > API tokens** in the Porter Dashboard. Creating API tokens requires admin permissions, and the token must have developer permissions to authenticate with the Sandbox API. |
+| `base_url` | `str \| None` | Optional API base URL override. Falls back to the `PORTER_SANDBOX_BASE_URL` environment variable. If neither is set, the SDK builds the external Porter API URL from the API token's project and `PORTER_CLUSTER_ID`, then falls back to the in-cluster Sandbox API URL when running in a Kubernetes cluster, and otherwise raises an error explaining what to set. |
 | `timeout` | `float \| None` | Request timeout in seconds. Defaults to 30 seconds. |
 
 ## `porter.sandboxes`
@@ -56,8 +56,11 @@ Arguments:
 | `command` | `list[str] \| None` | Optional entrypoint override. |
 | `args` | `list[str] \| None` | Optional arguments passed to the command. |
 | `env` | `dict[str, str] \| None` | Environment variables to set in the sandbox. |
+| `env_groups` | `list[str] \| None` | Names of [environment groups](/applications/configure/environment-groups) on the cluster whose variables are injected into the sandbox, resolved to their latest version at create time. On a key conflict a later group wins over an earlier one, and an explicit `env` entry wins over any group value. |
 | `tags` | `dict[str, str] \| None` | Key-value labels for finding related sandboxes. |
 | `volume_mounts` | `dict[str, str] \| None` | Volume IDs keyed by absolute mount path inside the sandbox. |
+| `networking` | `list[SandboxNetworkingSpec] \| None` | Port to expose and, optionally, the domain and visibility to serve it on. Omit to expose nothing. See [Sandbox Networking](/sandboxes/networking). |
+| `ttl_seconds` | `int \| None` | Maximum lifetime in seconds, counted from creation. The sandbox is terminated once it elapses. Omit for no limit. See [sandbox lifetime](/sandboxes/overview#sandbox-lifetime). |
 
 Returns a `Sandbox` handle.
 
@@ -101,9 +104,24 @@ sandbox.terminate()
 | Method | Description |
 | ------ | ----------- |
 | `refresh()` | Refetches status and updates `phase` and `tags`. |
-| `exec(command)` | Runs a command in the sandbox and returns stdout, stderr, and exit code. |
+| `exec(command, timeout=None)` | Runs a command in the sandbox and returns stdout, stderr, and exit code. |
 | `logs(since=None, limit=None)` | Fetches structured log lines. |
 | `terminate()` | Terminates the sandbox. |
+
+### `exec` timeouts
+
+`exec` is long-running: the client sends no timeout by default, so the call waits for the command to exit. Pass `timeout` (seconds) to cap how long the client waits. When the timeout elapses, the SDK raises `SandboxTimeoutError` and does not retry, since the command may still be running server-side.
+
+```python
+from porter_sandbox import SandboxTimeoutError
+
+try:
+    result = sandbox.exec(["sleep", "120"], timeout=30.0)
+except SandboxTimeoutError:
+    print("exec exceeded 30s; the command may still be running in the sandbox")
+```
+
+The client-wide `timeout` on `Porter` still applies to every other request (30 seconds by default).
 
 ## Volumes
 

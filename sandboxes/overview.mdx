@@ -16,7 +16,7 @@ Sandboxes are in a private beta. Please reach out to us at support@porter.run or
 - **Parallel batch work**: fan out many short jobs concurrently
 - **On-demand processing**: create a runtime for a request, job, or workflow step
 
-For long-running services with ingress, autoscaling, rollouts, and normal application lifecycle management, use [Applications](/applications/deploy/overview) instead.
+For long-running services with autoscaling, rollouts, and normal application lifecycle management, use [Applications](/applications/deploy/overview) instead.
 
 ## Lifecycle
 
@@ -32,6 +32,24 @@ A sandbox moves through these phases:
 | `terminated` | The sandbox was explicitly terminated through the API, SDK, or CLI. |
 
 Only `running` sandboxes accept exec calls. Logs remain available after terminal phases so you can fetch output from completed or terminated sandboxes.
+
+### Sandbox lifetime
+
+A sandbox lives as long as its main process: the image's default entrypoint, or the command you pass at create time. When that process exits with code `0` the sandbox moves to `succeeded`; a nonzero exit moves it to `failed`. Once the sandbox reaches either phase, exec calls fail.
+
+This means an image whose default command exits immediately reaches `succeeded` within a few seconds of starting. To keep a sandbox alive so you can exec into it, give it a long-running main process and terminate it when you're done:
+
+```bash
+porter sandbox create alpine:3.20 --name worker -- sleep 3600
+porter sandbox exec worker -- echo ok
+porter sandbox terminate worker
+```
+
+You can also bound a sandbox's lifetime up front with a TTL, so it cleans itself up even if its main process never exits. Pass `ttl_seconds` in the SDKs or `--ttl` on the CLI at create time. The TTL counts from creation; shortly after it elapses, Porter terminates the sandbox the same way an explicit terminate does, moving it to `terminated`:
+
+```bash
+porter sandbox create ubuntu:24.04 --name worker --ttl 2h -- sleep infinity
+```
 
 ## Names
 
@@ -62,6 +80,10 @@ Use the sandbox CLI to inspect and operate on sandboxes from your terminal:
 
 See the [sandbox CLI guide](/sandboxes/cli).
 
+## Networking
+
+A sandbox that opens a port can be served over HTTPS on a hostname under your own domain, with public or private networking configured on the cluster. See [Sandbox Networking](/sandboxes/networking).
+
 ## Persistent storage
 
 Volumes provide persistent storage that can be mounted into sandboxes at launch. Create a volume first, then pass `volume_mounts` when creating a sandbox.
@@ -73,5 +95,6 @@ Volumes provide persistent storage that can be mounted into sandboxes at launch.
 ## Next steps
 
 - [Sandboxes Getting Started](/sandboxes/getting-started)
+- [Sandbox Networking](/sandboxes/networking)
 - [Python Sandbox SDK quickstart](/sandbox/sdk/python/quickstart)
 - [TypeScript Sandbox SDK quickstart](/sandbox/sdk/typescript/quickstart)

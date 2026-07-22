@@ -38,6 +38,11 @@ print_fatal() {
     return 1
 }
 
+# Formats a number of seconds as e.g. "4m32s".
+format_duration() {
+    printf '%dm%02ds' $(($1 / 60)) $(($1 % 60))
+}
+
 # Function to check prerequisites
 check_prerequisites() {
     print_status "Checking prerequisites..."
@@ -136,6 +141,7 @@ enable_resource_providers() {
         "Microsoft.Compute"
         "Microsoft.ContainerRegistry"
         "Microsoft.ContainerService"
+        "Microsoft.Insights"
         "Microsoft.ManagedIdentity"
         "Microsoft.Network"
         "Microsoft.OperationalInsights"
@@ -153,17 +159,57 @@ enable_resource_providers() {
     print_success "Resource providers enabled"
 }
 
-# Function to create or update custom role
+# Function to create or reuse the custom role for this subscription
 create_custom_role() {
     ROLE_NAME="porter-aks-restricted"
     print_status "Managing custom $ROLE_NAME role..."
 
-    # Create expected role definition
+    local base_name="porter-aks-restricted"
+    local scope="/subscriptions/${SUBSCRIPTION_ID}"
+
+    # Reuse the base role if it already covers this subscription.
+    if role_covers_subscription "$base_name" "$scope"; then
+        ROLE_NAME="$base_name"
+        print_success "Role $ROLE_NAME already covers this subscription, reusing it"
+        return
+    fi
+
+    local sub_specific="${base_name}-${SUBSCRIPTION_ID%%-*}"
+    if role_covers_subscription "$sub_specific" "$scope"; then
+        ROLE_NAME="$sub_specific"
+        print_success "Role $sub_specific already covers this subscription, reusing it"
+        return
+    fi
+
+    # Try the base name; if it is already taken in the tenant, fall back to a subscription-specific
+    # name rather than mutating the existing role (which would strip access from the subscriptions
+    # it currently covers).
+    if create_role_definition "$base_name" "$scope"; then
+        ROLE_NAME="$base_name"
+    else
+        print_warning "Role name $base_name is already in use in this tenant; creating $sub_specific instead"
+        create_role_definition "$sub_specific" "$scope" || exit 1
+        ROLE_NAME="$sub_specific"
+    fi
+}
+
+# Returns 0 if a custom role with the given name exists and is assignable to the given scope.
+role_covers_subscription() {
+    local name="$1" scope="$2"
+    az role definition list --custom-role-only true \
+        --query "[?roleName=='$name'].assignableScopes[]" -o tsv 2>/dev/null | grep -qx "$scope"
+}
+
+# Creates the porter custom role with the given name scoped to the given subscription.
+create_role_definition() {
+    local name="$1" scope="$2"
+    print_info "Creating role $name..."
+
     cat > /tmp/porter-role-expected.json << EOF
 {
-    "assignableScopes": ["/subscriptions/${SUBSCRIPTION_ID}"],
+    "assignableScopes": ["${scope}"],
     "description": "Grants Porter access to manage resources for an AKS cluster.",
-    "name": "${ROLE_NAME}",
+    "name": "${name}",
     "permissions": [
         {
             "actions": ["*"],
@@ -180,92 +226,28 @@ create_custom_role() {
 }
 EOF
 
-    # Check if role already exists
-    if [ "$(az role definition list --name "$ROLE_NAME" --query "length(@)" -o tsv)" != "0" ]; then
-        print_info "Role $ROLE_NAME already exists, checking if update is needed..."
-
-        # Get existing role definition
-        az role definition list --name "$ROLE_NAME" --output json > /tmp/porter-role-existing.json
-
-        # Extract relevant fields for comparison (normalize the structure)
-        jq -r '.[0] | {
-            assignableScopes: .assignableScopes,
-            description: .description,
-            permissions: (.permissions | map({
-                actions: .actions,
-                dataActions: .dataActions,
-                notActions: .notActions,
-                notDataActions: .notDataActions
-            }))
-        }' /tmp/porter-role-existing.json > /tmp/porter-role-existing-normalized.json
-
-        # Normalize expected role for comparison
-        jq '{
-            assignableScopes: .assignableScopes,
-            description: .description,
-            permissions: (.permissions | map({
-                actions: .actions,
-                dataActions: .dataActions,
-                notActions: .notActions,
-                notDataActions: .notDataActions
-            }))
-        }' /tmp/porter-role-expected.json > /tmp/porter-role-expected-normalized.json
-
-        # Compare normalized definitions
-        if cmp -s /tmp/porter-role-existing-normalized.json /tmp/porter-role-expected-normalized.json; then
-            print_success "Role is up to date, no changes needed"
-        else
-            print_warning "Role $ROLE_NAME already exists but does not match Porter's required permissions."
-            read -rp "Press Enter to update it, or type a new role name to create a separate one: " USER_ROLE_INPUT
-            if [ -n "$USER_ROLE_INPUT" ]; then
-                ROLE_NAME="$USER_ROLE_INPUT"
-                rm /tmp/porter-role-existing.json /tmp/porter-role-existing-normalized.json /tmp/porter-role-expected-normalized.json
-                jq --arg name "$ROLE_NAME" '.name = $name' /tmp/porter-role-expected.json > /tmp/porter-role-new.json
-                mv /tmp/porter-role-new.json /tmp/porter-role-expected.json
-                az role definition create --role-definition /tmp/porter-role-expected.json
-                rm /tmp/porter-role-expected.json
-                print_success "New role '$ROLE_NAME' created"
-                return
-            fi
-            print_warning "Updating..."
-
-            # Get the role ID (GUID) for update
-            ROLE_ID=$(jq -r '.[0].id' /tmp/porter-role-existing.json)
-
-            # Add the role ID to our expected definition for update
-            jq --arg role_id "$ROLE_ID" '.id = $role_id' /tmp/porter-role-expected.json > /tmp/porter-role-update.json
-
-            # Update the role
-            if az role definition update --role-definition /tmp/porter-role-update.json; then
-                print_success "Role updated successfully"
-            else
-                print_fatal "Failed to update role"
-            fi
-
-            rm /tmp/porter-role-update.json
-        fi
-
-        rm /tmp/porter-role-existing.json /tmp/porter-role-existing-normalized.json /tmp/porter-role-expected-normalized.json
-    else
-        print_info "Role does not exist, creating..."
-
-        # Create the role
-        if az role definition create --role-definition /tmp/porter-role-expected.json; then
-            print_success "Custom role created"
-        else
-            print_fatal "Failed to create role"
-        fi
+    local create_output
+    if create_output=$(az role definition create --role-definition /tmp/porter-role-expected.json 2>&1); then
+        rm -f /tmp/porter-role-expected.json
+        print_success "Custom role $name created"
+        return 0
     fi
 
-    rm /tmp/porter-role-expected.json
+    rm -f /tmp/porter-role-expected.json
+
+    # Name collision: the role exists in the tenant but is scoped elsewhere
+    if grep -q "RoleDefinitionWithSameNameExists" <<< "$create_output"; then
+        return 2
+    fi
+
+    print_error "Failed to create role $name: $create_output"
+    exit 1
 }
 
-# Function to create app registration and service principal
 create_app_registration() {
     TENANT_ID=$(az account show --query tenantId -o tsv)
 
     # Reuse existing app registration only on an exact display-name match
-    # (--display-name uses startsWith, so filter the results)
     EXISTING=$(az ad app list --display-name "$APP_NAME" -o json 2>/dev/null | jq -r --arg name "$APP_NAME" '[.[] | select(.displayName == $name)] | .[0].appId // empty')
     if [ -n "$EXISTING" ] && [ "$EXISTING" != "None" ]; then
         print_info "App registration already exists, reusing it..."
@@ -288,12 +270,45 @@ create_app_registration() {
     az ad sp create --id "$APP_ID" > /dev/null
     sleep 10
 
-    az role assignment create \
+    print_success "App registration created"
+}
+
+# Assign the custom role to the service principal at the subscription scope. Kept separate
+# from create_app_registration so it runs on every invocation: an existing app registration
+# short-circuits that function, but role assignments are deleted independently of the app
+# and must be reconciled each run.
+assign_custom_role() {
+    print_status "Ensuring $ROLE_NAME is assigned to the service principal..."
+
+    # Skip if the SP already holds the role
+    if [ -n "$(az role assignment list \
         --assignee "$APP_ID" \
         --role "$ROLE_NAME" \
-        --scope "/subscriptions/${SUBSCRIPTION_ID}" > /dev/null
+        --scope "/subscriptions/${SUBSCRIPTION_ID}" \
+        --query "[0].id" -o tsv 2>/dev/null)" ]; then
+        print_success "Role already assigned to the service principal"
+        return
+    fi
 
-    print_success "App registration created"
+    # A fresh assignment can transiently fail right after a custom role is created/updated
+    # because Azure RBAC is eventually consistent; retry until it converges.
+    local attempt=0
+    while true; do
+        attempt=$((attempt + 1))
+        if az role assignment create \
+            --assignee "$APP_ID" \
+            --role "$ROLE_NAME" \
+            --scope "/subscriptions/${SUBSCRIPTION_ID}" > /dev/null 2>&1; then
+            break
+        fi
+        if [ "$attempt" -ge 12 ]; then
+            print_fatal "Failed to assign role $ROLE_NAME after $attempt attempts"
+        fi
+        print_info "Role assignment not ready yet (attempt $attempt); retrying in 10s..."
+        sleep 10
+    done
+
+    print_success "Role assignment ensured"
 }
 
 # Function to add API permissions
@@ -387,50 +402,103 @@ get_oidc_issuer() {
 #
 # The `az ad app federated-credential create` command returns as soon as
 # the credential is persisted, but Azure's authorization service can take
-# additional time to replicate it; during that window token-exchange requests
-# fail with AADSTS70021 / AADSTS700211 / AADSTS700213 / AADSTS70025.
+# additional time to replicate it. Expected failures during propagation include
+# the "no matching federated identity record" errors
+# (AADSTS70021 / AADSTS700211 / AADSTS700212 / AADSTS700213 / AADSTS70025).
+#
+# The probe sends a deliberately invalid assertion: Entra matches the FIC
+# before verifying the signature, so AADSTS700027 ("invalid signature") proves
+# the FIC is replicated and matched.
+#
+# A few successful probes in a row are not enough: consecutive probes can keep
+# hitting the same already-replicated Entra backend while others still lag. So
+# we require both a streak of consecutive successes AND a minimum wall-clock
+# window of sustained success before declaring the credential active.
 wait4_federated_credential() {
+    local required_consecutive=10
+    local min_stable_seconds=90
+    local budget_seconds=1200
+
     print_status 'Waiting for the federated identity credential to become active...'
+    print_info "Azure replicates the credential globally and reports it as active inconsistently until replication settles."
+    print_info "This typically takes 2-10 minutes; the script proceeds once the credential has matched continuously for ${min_stable_seconds}s."
 
-    local now exp jwt_header jwt_payload jwt
-    now=$(date +%s)
-    exp=$((now + 300))
-    # Microsoft Entra requires the "kid" to be present so we use our own
-    # since the signature/key check happens after FIC matching which is
-    # what we're really testing.
-    jwt_header=$(printf '{"alg":"RS256","typ":"JWT","kid":"propagation-probe"}' | base64 | tr '+/' '-_' | tr -d '=\n')
-    jwt_payload=$(jq -nc \
-        --arg iss "${OIDC_ISSUER}" \
-        --arg sub "${OIDC_SUBJECT}" \
-        --argjson iat "${now}" \
-        --argjson exp "${exp}" \
-        '{iss:$iss, sub:$sub, aud:"api://AzureADTokenExchange", iat:$iat, exp:$exp}' |
-        base64 | tr '+/' '-_' | tr -d '=\n')
-    jwt="${jwt_header}.${jwt_payload}.invalid"
+    # AADSTS700027: invalid assertion signature — the success signal (see above)
+    local fic_matched='AADSTS700027'
+    # AADSTS700016: app not found in tenant
+    # AADSTS7000229: app has no service principal
+    # AADSTS90002: tenant not found
+    local hard_fail='AADSTS700016|AADSTS7000229|AADSTS90002'
+    local now jwt_header jwt_payload jwt
+    local response=""
+    local started=$SECONDS
+    local deadline=$((started + budget_seconds))
+    local streak=0 streak_started=0
+    local last_report=$SECONDS
+    local elapsed status_line last_error_code
+    while ((SECONDS < deadline)); do
+        # Microsoft Entra requires the "kid" to be present so we use our own
+        # since the signature/key check happens after FIC matching which is
+        # what we're really testing.
+        now=$(date +%s)
+        jwt_header=$(printf '{"alg":"RS256","typ":"JWT","kid":"propagation-probe"}' | base64 | tr '+/' '-_' | tr -d '=\n')
+        jwt_payload=$(jq -nc \
+            --arg iss "${OIDC_ISSUER}" \
+            --arg sub "${OIDC_SUBJECT}" \
+            --argjson iat "${now}" \
+            --argjson exp "$((now + 300))" \
+            '{iss:$iss, sub:$sub, aud:"api://AzureADTokenExchange", iat:$iat, exp:$exp}' |
+            base64 | tr '+/' '-_' | tr -d '=\n')
+        jwt="${jwt_header}.${jwt_payload}.invalid"
 
-    local pending='AADSTS70021|AADSTS700211|AADSTS700213|AADSTS70025'
-    local response
-    local success=0
-    local i=0
-    while ((i++ < 60)); do
-        response=$(curl -sS -X POST \
+        response=$(curl -sS --max-time 10 -X POST \
             "https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token" \
             --data-urlencode "client_id=${APP_ID}" \
             --data-urlencode 'scope=https://management.azure.com/.default' \
             --data-urlencode 'client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer' \
             --data-urlencode "client_assertion=${jwt}" \
             --data-urlencode 'grant_type=client_credentials') || response=""
-        if [[ -n ${response} ]] && ! grep -qE "${pending}" <<<"${response}"; then
-            if ((success++ > 3)); then
-                return 0 # Wait for 3 "successful" exchanges in a row
+        if grep -q "${fic_matched}" <<<"${response}"; then
+            if ((streak == 0)); then
+                streak_started=$SECONDS
             fi
+            streak=$((streak + 1))
+            if ((streak >= required_consecutive && SECONDS - streak_started >= min_stable_seconds)); then
+                if [ -t 1 ]; then echo; fi
+                print_success "Federated identity credential is active (matched continuously for $((SECONDS - streak_started))s; waited $(format_duration $((SECONDS - started))) total)"
+                return 0
+            fi
+        elif grep -qE "${hard_fail}" <<<"${response}"; then
+            if [ -t 1 ]; then echo; fi
+            print_error "Token exchange failed with a non-recoverable error: ${response}"
+            return 2
+        elif [ -n "${response}" ]; then
+            streak=0 # A genuine "not matched" response restarts both stability gates.
+        fi
+        # An empty response means curl itself failed (network blip, timeout) —
+        # that is not evidence the credential regressed, so keep the streak.
+
+        elapsed=$((SECONDS - started))
+        if ((streak > 0)); then
+            status_line="$(format_duration "$elapsed") elapsed; stable for $((SECONDS - streak_started))s/${min_stable_seconds}s (${streak} consecutive successes)"
         else
-            success=0 # Restart counter.
+            status_line="$(format_duration "$elapsed") elapsed; waiting for the first successful match"
+        fi
+        if [ -t 1 ]; then
+            printf '\r\033[K  %s⏳ %s%s' "${BLUE}" "${status_line}" "${NC}"
+        elif ((SECONDS - last_report >= 90)); then
+            print_status "  ⏳ ${status_line} — Azure AD is eventually consistent; this can take several minutes"
+            last_report=$SECONDS
         fi
         sleep 3
-        print_status '  Checking again if the federated identity credential is active...'
     done
 
+    if [ -t 1 ]; then echo; fi
+    last_error_code=$(grep -oE 'AADSTS[0-9]+' <<<"${response}" | head -n 1) || true
+    print_error "Timed out after $(format_duration "$budget_seconds") waiting for the federated identity credential to be matched consistently."
+    if [ -n "${last_error_code}" ]; then
+        print_info "Last Entra error code: ${last_error_code}"
+    fi
     print_warning "Last token-exchange response: ${response}"
     return 1
 }
@@ -440,28 +508,65 @@ create_federated_credential() {
     print_status "Creating federated identity credential..."
 
     # OIDC_SUBJECT is an IAM role ARN ending in porter-azure-fic-<projectID>.
-    ROLE_NAME="${OIDC_SUBJECT##*/}"
-    PROJECT_ID="${ROLE_NAME##*-}"
+    # Local to this function so it never collides with the Azure custom-role ROLE_NAME global.
+    local fic_role_name="${OIDC_SUBJECT##*/}"
+    PROJECT_ID="${fic_role_name##*-}"
     FIC_NAME="porter-project-${PROJECT_ID}"
 
-    az ad app federated-credential create \
+    local existing_fic existing_issuer existing_subject
+    existing_fic=$(az ad app federated-credential show \
         --id "$APP_OBJECT_ID" \
-        --parameters "{
-            \"name\": \"${FIC_NAME}\",
-            \"issuer\": \"${OIDC_ISSUER}\",
-            \"subject\": \"${OIDC_SUBJECT}\",
-            \"audiences\": [\"api://AzureADTokenExchange\"]
-        }" >/dev/null
+        --federated-credential-id "$FIC_NAME" \
+        -o json 2>/dev/null || true)
 
-    if wait4_federated_credential; then
-        print_success "Federated identity credential is active"
+    if [ -n "$existing_fic" ]; then
+        existing_issuer=$(echo "$existing_fic" | jq -r '.issuer')
+        existing_subject=$(echo "$existing_fic" | jq -r '.subject')
+
+        if [ "$existing_issuer" = "$OIDC_ISSUER" ] && [ "$existing_subject" = "$OIDC_SUBJECT" ]; then
+            print_warning "Federated identity credential ${FIC_NAME} already exists with matching issuer and subject — re-probing to confirm it is active"
+            # fall through to wait4_federated_credential
+        else
+            print_warning "Federated identity credential ${FIC_NAME} already exists but its issuer/subject do not match:"
+            print_warning "  existing issuer:  ${existing_issuer}"
+            print_warning "  expected issuer:  ${OIDC_ISSUER}"
+            print_warning "  existing subject: ${existing_subject}"
+            print_warning "  expected subject: ${OIDC_SUBJECT}"
+            read -rp "Update it with the expected values? [y/N]: " UPDATE_FIC_CONFIRM
+            case "$UPDATE_FIC_CONFIRM" in
+                [yY]|[yY][eE][sS]) ;;
+                *) print_fatal "Aborting: federated identity credential ${FIC_NAME} was left unchanged. Re-run with a different --app-name to create a separate app registration, or delete the existing credential first." ;;
+            esac
+            az ad app federated-credential update \
+                --id "$APP_OBJECT_ID" \
+                --federated-credential-id "$FIC_NAME" \
+                --parameters "{
+                    \"name\": \"${FIC_NAME}\",
+                    \"issuer\": \"${OIDC_ISSUER}\",
+                    \"subject\": \"${OIDC_SUBJECT}\",
+                    \"audiences\": [\"api://AzureADTokenExchange\"]
+                }" >/dev/null
+            print_success "Federated identity credential updated"
+        fi
     else
-        print_error "$(
-            printf 'Timed out waiting for the federated-credential %s to become active in Azure.\n' \
-                'This is not necessarily a fatal error and you should still attempt to connect your\n' \
-                'account to Porter though you may have to click the "Continue" button multiple times.' \
-                "${APP_OBJECT_ID}"
-        )"
+        az ad app federated-credential create \
+            --id "$APP_OBJECT_ID" \
+            --parameters "{
+                \"name\": \"${FIC_NAME}\",
+                \"issuer\": \"${OIDC_ISSUER}\",
+                \"subject\": \"${OIDC_SUBJECT}\",
+                \"audiences\": [\"api://AzureADTokenExchange\"]
+            }" >/dev/null
+    fi
+
+    local wait_status=0
+    wait4_federated_credential || wait_status=$?
+    if ((wait_status == 2)); then
+        print_fatal "Federated identity credential setup failed with a non-recoverable error (see above)."
+    elif ((wait_status != 0)); then
+        FIC_WAIT_TIMED_OUT=1
+        print_error "Timed out waiting for the federated identity credential on app ${APP_OBJECT_ID} to become active in Azure."
+        print_info 'This is not necessarily a fatal error: you can still attempt to connect your account to Porter, though you may have to click the "Continue" button multiple times.'
     fi
 }
 
@@ -473,19 +578,13 @@ display_results() {
     echo "┌─────────────────────────────────────────────────────────────┐"
     echo "│                    AZURE CREDENTIALS                        │"
     echo "├─────────────────────────────────────────────────────────────┤"
-    printf "│ Subscription ID: %-43s │\n" "$SUBSCRIPTION_ID"
-    printf "│ Client ID:       %-43s │\n" "$APP_ID"
-    printf "│ Tenant ID:       %-43s │\n" "$TENANT_ID"
+    printf "│ Subscription ID: %-42s │\n" "$SUBSCRIPTION_ID"
+    printf "│ Client ID:       %-42s │\n" "$APP_ID"
+    printf "│ Tenant ID:       %-42s │\n" "$TENANT_ID"
     echo "└─────────────────────────────────────────────────────────────┘"
     echo ""
 
-    print_info "Next steps:"
-    echo "1. Copy the above credentials to Porter dashboard"
-    echo "2. Request quota increases if needed:"
-    echo "   - Total Regional vCPUs: 40"
-    echo "   - Standard Basv2 Family vCPUs: 40"
-    echo "   Go to: Azure Portal > Subscriptions > Usage + quotas"
-    echo "3. Proceed with cluster provisioning in Porter"
+    print_info "Copy the above credentials back to the Porter dashboard to finish connecting your Azure account."
 }
 
 # Function to show usage
@@ -545,6 +644,7 @@ main() {
     enable_resource_providers
     create_custom_role
     create_app_registration
+    assign_custom_role
     add_api_permissions
 
     # Try to grant admin consent, but don't fail if it doesn't work
@@ -556,7 +656,11 @@ main() {
     display_results
 
     echo ""
-    print_success "Azure WIF setup completed successfully!"
+    if [ -n "${FIC_WAIT_TIMED_OUT:-}" ]; then
+        print_warning "Azure WIF setup finished, but the federated identity credential was not yet confirmed active — if the Porter connection fails, wait a few minutes and retry."
+    else
+        print_success "Azure WIF setup completed successfully!"
+    fi
 }
 
 # Run main function

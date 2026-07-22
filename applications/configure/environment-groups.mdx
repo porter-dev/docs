@@ -125,6 +125,25 @@ porter env unset --group production-secrets -s ROTATED_KEY
 ```
 </CodeGroup>
 
+## Version History
+
+Every update to an environment group creates a new version. You can view the full history of an environment group — including who made each change and when — from the **Versions** tab on the environment group's page.
+
+### Reverting to a Previous Version
+
+If a change introduces a bad value or you need to roll back to a known-good configuration, you can revert an environment group to any previous version from the **Versions** tab.
+
+1. Open the environment group from the **Env Groups** tab.
+2. Switch to the **Versions** tab.
+3. Find the version you want to restore and click **Revert to v\<n\>**.
+4. Review the diff between the current version and the target version, then confirm.
+
+Reverting does not rewrite history — it creates a **new version** containing the values from the version you selected. The previous versions remain in the history, so you can roll forward again if needed.
+
+<Info>
+All applications synced to the environment group are automatically redeployed with the reverted values, just like a normal update.
+</Info>
+
 ## Pulling Environment Variables Locally
 
 You can pull the contents of an environment group to your local machine for development:
@@ -166,6 +185,18 @@ This displays a table with each group's name, current version, and last updated 
 Every update to an environment group creates a new version. Porter retains the **10 most recent versions** of each environment group; older versions are pruned automatically along with their underlying secret data in your cloud provider's secret manager.
 
 Because applications resolve their environment values against a pinned version of the group, an app that has not redeployed in a long time can fall behind. If a synced application is still pinned to a version older than the 10 most recent, redeploying it will pull values from the current version instead.
+
+## Reverting to a previous version
+
+Every update to an environment group creates a new version. If a recent change causes problems — for example, a bad value rolled out to every synced application — you can revert the group to any prior version.
+
+Reverting re-applies the target version's variables, secrets, and files as a **new** version on top of the current one. The historical version itself is preserved, so the revert is fully auditable and can itself be reverted.
+
+<Info>
+Reverting an environment group automatically redeploys every application synced to it, just like a normal update. Apps pick up the restored values on their next rollout.
+</Info>
+
+Reverts are performed through the Porter dashboard from the environment group's version history. The action is admin-scoped — only project admins can revert a group to a previous version.
 
 ## Deleting an Environment Group
 
