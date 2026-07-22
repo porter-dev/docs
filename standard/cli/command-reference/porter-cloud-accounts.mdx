@@ -1,0 +1,203 @@
+---
+title: 'porter cloud-accounts'
+description: "Connect, list, and disconnect AWS, GCP, and Azure cloud accounts from the Porter CLI so Porter can provision and deploy into your own cloud"
+---
+
+`porter cloud-accounts` contains commands for connecting your AWS, GCP, and Azure cloud accounts to Porter and managing them from the CLI.
+
+Connecting a cloud account grants Porter scoped access to your cloud provider so it can provision clusters and deploy applications into your own infrastructure. For the dashboard-based workflow and provider setup details, see [Connecting a Cloud Account](/cloud-accounts/connecting-a-cloud-account).
+
+## Prerequisites
+
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project by running [porter config set-project](/standard/cli/command-reference/porter-config)
+- You have permission to create the required IAM role, service account, or app registration in the cloud account you want to connect
+
+---
+
+## `porter cloud-accounts list`
+
+List the cloud accounts connected to the current project.
+
+**Usage:**
+```bash
+porter cloud-accounts list [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--provider` | Filter by cloud provider. One of `aws`, `azure`, `gcp` |
+| `--status` | Filter by connection status. One of `connected`, `pending` |
+| `--sort` | Sort accounts by field. One of `connected`, `name`, `provider` (default: `connected`) |
+| `--json` | Print the cloud accounts as JSON |
+
+The default output is a table with the account's **Name**, **Provider**, **Provider ID** (AWS account ID, GCP project ID, or Azure subscription ID), **Status**, and **Created At**. When the output is piped to another command, it is printed as tab-separated values so it stays friendly to tools like `grep`, `cut`, and `awk`.
+
+<CodeGroup>
+```bash List All
+porter cloud-accounts list
+```
+
+```bash Filter by Provider and Status
+porter cloud-accounts list --provider aws --status connected
+```
+
+```bash JSON Output
+porter cloud-accounts list --sort name --json
+```
+</CodeGroup>
+
+---
+
+## `porter cloud-accounts connect`
+
+Connect a new cloud account to your Porter project. This is a parent command; run one of the provider-specific subcommands below.
+
+```bash
+porter cloud-accounts connect aws
+porter cloud-accounts connect gcp
+porter cloud-accounts connect azure
+```
+
+Each subcommand runs interactively by default, prompting for the identifiers it needs. Pass the corresponding flags to skip the prompts for use in scripts and CI.
+
+### `porter cloud-accounts connect aws`
+
+Connect a new AWS cloud account by creating a CloudFormation stack that grants Porter a scoped IAM role.
+
+**Usage:**
+```bash
+porter cloud-accounts connect aws [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--account-id` | AWS account ID to connect (skips the interactive prompt). Must be a 12-digit account ID |
+
+When you run the command, Porter generates a CloudFormation stack and prompts you to open the AWS console (or copy the URL) to deploy it. The CLI then waits for the connection to complete, polling for up to 10 minutes.
+
+<CodeGroup>
+```bash Interactive
+porter cloud-accounts connect aws
+```
+
+```bash Non-Interactive
+porter cloud-accounts connect aws --account-id 123456789012
+```
+</CodeGroup>
+
+### `porter cloud-accounts connect gcp`
+
+Connect a new GCP cloud account by running a setup command in Google Cloud Shell that grants Porter access via Workload Identity Federation.
+
+**Usage:**
+```bash
+porter cloud-accounts connect gcp [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--project-id` | GCP project ID to connect to (skips the interactive prompt) |
+
+Porter prompts you to open Google Cloud Shell (or copy the URL) and displays a setup command to run there. The CLI waits for the connection to complete. The setup command expires after a period of time; if it does, re-run the command to generate a fresh one.
+
+<CodeGroup>
+```bash Interactive
+porter cloud-accounts connect gcp
+```
+
+```bash Non-Interactive
+porter cloud-accounts connect gcp --project-id my-gcp-project
+```
+</CodeGroup>
+
+### `porter cloud-accounts connect azure`
+
+Connect a new Azure cloud account by granting Porter access to your subscription via Workload Identity Federation.
+
+**Usage:**
+```bash
+porter cloud-accounts connect azure [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--subscription-id` | Azure subscription ID to connect (skips the interactive prompt) |
+| `--client-id` | Application (client) ID of the Azure App Registration (skips the interactive prompt) |
+| `--tenant-id` | Azure tenant ID (skips the interactive prompt) |
+
+Run without flags to follow the interactive guide, which walks you through creating the Azure App Registration and then prompts for each credential. Provide the flags to skip the guide and connect directly — useful for scripting.
+
+<CodeGroup>
+```bash Interactive
+porter cloud-accounts connect azure
+```
+
+```bash Non-Interactive
+porter cloud-accounts connect azure \
+  --subscription-id 00000000-0000-0000-0000-000000000000 \
+  --client-id 11111111-1111-1111-1111-111111111111 \
+  --tenant-id 22222222-2222-2222-2222-222222222222
+```
+</CodeGroup>
+
+<Info>
+The `connect` subcommands are idempotent: if the account you specify is already connected to the project, Porter detects it and won't create a duplicate connection.
+</Info>
+
+---
+
+## `porter cloud-accounts disconnect`
+
+Disconnect a cloud account from the current project. Porter tears down the resources it provisioned and revokes its stored credentials.
+
+**Usage:**
+```bash
+porter cloud-accounts disconnect <account> [flags]
+```
+
+The `<account>` argument identifies the account by its **ID**, **name**, or **provider ID** (AWS account ID, GCP project ID, or Azure subscription ID). Use [porter cloud-accounts list](#porter-cloud-accounts-list) to find these values.
+
+**Options:**
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--yes` | `-y` | Skip the confirmation prompt |
+
+<Warning>
+A cloud account can only be disconnected once no clusters, object storage, or environment groups still reference it. If any of these resources remain, the CLI lists the blocking resources and cancels the disconnection. Delete them first, then retry.
+</Warning>
+
+After disconnecting, Porter prints provider-specific instructions for the manual cleanup you may want to perform in your own cloud account:
+
+- **AWS** — Delete the CloudFormation stack (`PorterRole` in `us-east-2`)
+- **GCP** — Delete the Workload Identity pool and service account
+- **Azure** — Delete the app registration
+
+On an interactive terminal, the CLI also offers to open the relevant provider console for you.
+
+<CodeGroup>
+```bash Disconnect by Name
+porter cloud-accounts disconnect my-aws-account
+```
+
+```bash Skip Confirmation
+porter cloud-accounts disconnect 123456789012 --yes
+```
+</CodeGroup>
+
+---
+
+## Related Commands
+
+- [porter cluster](/standard/cli/command-reference/porter-cluster) - List and view clusters provisioned in your cloud accounts
+- [porter config set-project](/standard/cli/command-reference/porter-config) - Set the active project
+- [porter auth login](/standard/cli/command-reference/porter-auth) - Authenticate the CLI
