@@ -94,7 +94,7 @@ Volumes provide persistent storage that can be mounted into sandboxes at launch.
 
 ### Manage volumes from the dashboard
 
-Every cluster with sandboxes enabled has a **Sandbox file storage** card in the **Add-ons** page. Open it to see:
+Every cluster with sandboxes enabled has a **Sandbox file storage** card in the **Add-ons** page, backed by a managed `sandbox-volumes` persistent-disk add-on that Porter creates and owns. The name is reserved — creating your own add-on named `sandbox-volumes` will fail with a validation error. Open the card to see:
 
 - **Overview** — the shared EFS disk backing sandbox volumes, with its created date and metered storage used.
 - **Volumes** — the cluster's volumes, with name, phase, attached sandboxes, and created date. Filter by name or phase, click a row to open the volume detail page, and delete idle volumes from there.
