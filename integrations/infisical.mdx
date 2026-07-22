@@ -75,6 +75,16 @@ For more on syncing, see [Environment groups](/applications/configure/environmen
 Infisical environment groups are **read-only** in Porter. Values are fetched from Infisical and cannot be edited from the Porter dashboard. To change a secret's value, update it in Infisical — the change will propagate to your cluster automatically.
 </Info>
 
+## Viewing version history
+
+Each time Porter detects a change in the underlying Infisical environment, it records a new version of the environment group. To inspect or compare past versions:
+
+1. Open the Infisical environment group in Porter.
+2. Switch to the **Versions** tab.
+3. Click **View variables** on a row to see the variables for that version, or **View secrets** to reveal the secret values that were synced at the time.
+
+Versions are read-only — you cannot revert from Porter, since the source of truth lives in Infisical. To roll back, restore the desired values in Infisical and the change will sync through on the next reconcile.
+
 ## Deleting an Infisical environment group
 
 To stop syncing an Infisical environment:
