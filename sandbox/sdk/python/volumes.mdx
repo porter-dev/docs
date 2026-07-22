@@ -39,7 +39,7 @@ with Porter() as porter:
     response = porter.volumes.list()
 
     for volume in response.volumes:
-        print(volume.id, volume.name, volume.phase, volume.attached_to)
+        print(volume.id, volume.name, volume.phase, volume.attached_to, volume.path)
 ```
 
 ## Get a volume by name
@@ -61,6 +61,24 @@ with Porter() as porter:
     volume = porter.volumes.get("agent-workspace")
     print(volume.name, volume.phase, volume.attached_to)
 ```
+
+## Access volume data from apps
+
+Volumes live on a shared disk that apps on the same cluster can attach. Attach the disk named `sandbox-volumes` to a service in your app; it mounts at `/data/<app-name>/sandbox-volumes` and contains one subdirectory per volume.
+
+Each volume response includes a `path` field with the volume's subdirectory on that disk, so an app reads a volume's data at `/data/<app-name>/sandbox-volumes/<path>`:
+
+```python
+with Porter() as porter:
+    volume = porter.volumes.get("agent-workspace")
+    print(volume.path)  # sandbox-vol-2f1c8b7e-...
+```
+
+The disk is a live view: writes a sandbox makes to its mounted volume are visible to apps right away, and new volumes show up as new subdirectories without redeploying the app.
+
+<Warning>
+Volume contents are written by sandboxed workloads, which are often running untrusted code. Treat anything your app reads from this disk as untrusted input: hostile file contents, names, or sizes can exploit vulnerabilities in the code that processes them. Porter isolates the sandboxes themselves but does not inspect or sanitize what they write, so validating this data before acting on it is your application's responsibility.
+</Warning>
 
 ## Delete a volume
 
