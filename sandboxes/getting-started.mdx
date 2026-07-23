@@ -234,7 +234,34 @@ porter sandbox create ubuntu:24.04 --ttl 2h -- sleep infinity
 
 Sandboxes run any container image, so you can bake in the tools your workload needs (language runtimes, CLIs, agents) instead of installing them at runtime.
 
+### Private images
+
 Private images are supported. Push your image to the ECR registry in the AWS account associated with your sandbox cluster, and sandboxes on that cluster can pull it without extra credential configuration.
+
+The easiest way to get an image there is [`porter registry push`](/standard/cli/command-reference/porter-registry#porter-registry-push), which exchanges registry credentials automatically and creates the remote repository on the first push:
+
+<CodeGroup>
+```bash Push a locally built image
+porter registry push myimage:dev --dest sandboxes/my-image:v1
+```
+
+```bash Build and push in one step
+porter registry push myimage:dev --build ./app --dest sandboxes/my-image:v1
+```
+</CodeGroup>
+
+With `--build`, the image is built from the given context directory on your machine before it is pushed, targeting `linux/amd64` by default. In CI or scripts, add `--json` to capture the fully qualified pushed reference and pass it straight to sandbox creation:
+
+```bash
+IMAGE=$(porter registry push myimage:dev --json | jq -r .image)
+porter sandbox create "$IMAGE" -- sleep infinity
+```
+
+See the [`porter registry push` reference](/standard/cli/command-reference/porter-registry#porter-registry-push) for all flags, including multi-arch builds and selecting between multiple linked registries.
+
+<Note>
+Sandboxes can only pull private images from the ECR registry in the sandbox cluster's AWS account. Images in other private registries (Docker Hub, GHCR, or ECR in a different account) need to be pushed to that registry first - `porter registry push` handles this in one step.
+</Note>
 
 ## Run an agent inside a sandbox
 
