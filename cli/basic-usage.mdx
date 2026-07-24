@@ -62,6 +62,39 @@ porter clusters list
 porter config set-cluster [CLUSTER_ID]
 ```
 
+### Create a Cluster
+
+Provision a new cluster in the current project. Porter picks the cloud provider from the cloud account you select and chooses a Kubernetes version and node groups for you.
+
+```bash
+porter clusters create [flags]
+```
+
+| Flag | Description |
+|------|-------------|
+| `--name` | Name for the new cluster. Prompted if omitted, with a generated suggestion. |
+| `--region` | Cloud region to provision into. Prompted if omitted. |
+| `--cloud-account-id` | Cloud account to provision into. Determines the cloud provider (AWS, GCP, or Azure). Prompted if omitted. |
+| `--yes` | Skip the cost confirmation prompt. Required in non-interactive terminals. |
+
+Run without flags for an interactive walkthrough, or pass every flag for non-interactive use:
+
+```bash
+# Interactive: prompts for name, cloud account, and region
+porter clusters create
+
+# Non-interactive
+porter clusters create \
+  --name my-cluster \
+  --region us-east-1 \
+  --cloud-account-id <account-id> \
+  --yes
+```
+
+<Info>
+Provisioning is asynchronous and can take up to an hour. The command prints the cluster's dashboard URL as soon as the request is accepted so you can track progress. Cluster creation incurs a base monthly cost that varies by provider; the confirmation prompt shows the estimate before you commit.
+</Info>
+
 ### View Current Configuration
 
 ```bash
