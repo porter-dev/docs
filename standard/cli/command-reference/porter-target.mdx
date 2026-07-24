@@ -44,6 +44,65 @@ Deployment targets allow you to deploy the same application to different environ
 
 ---
 
+## `porter target create`
+
+Create a new deployment target in the current cluster.
+
+**Usage:**
+```bash
+porter target create --name [name]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--name` | Name of the deployment target to create (required) |
+
+```bash Create Target
+porter target create --name staging
+```
+
+On success, the command prints the new target's ID:
+
+```
+Created target with name staging and id cc1b12a3-1481-4b98-910f-12bf8c13f5d4
+```
+
+---
+
+## `porter target delete`
+
+Delete a deployment target from the current cluster. Works for both standard and preview environment targets.
+
+**Usage:**
+```bash
+porter target delete --name [name] [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--name` | Name of the deployment target to delete (required) |
+| `-f`, `--force` | Skip the confirmation prompt |
+
+<CodeGroup>
+```bash Delete Target
+porter target delete --name staging
+```
+
+```bash Skip Confirmation
+porter target delete --name staging --force
+```
+</CodeGroup>
+
+<Warning>
+The default deployment target for a cluster can't be deleted. Attempting to delete it returns an error.
+</Warning>
+
+---
+
 ## Using Targets with Deployments
 
 Specify a target when deploying with `porter apply`:
