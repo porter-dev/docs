@@ -43,19 +43,22 @@ print_fatal() {
 # script text, not the user's terminal.
 #   usage: prompt "Prompt text: " VAR_NAME
 prompt() {
-    local _prompt="$1" _var="$2"
+    local prompt_text="$1" var_name="$2"
     # Probe by actually opening /dev/tty: a `-r` test only checks the device
     # node's permission bits (always rw), so it passes even in CI/cron where
     # there is no controlling terminal and the open would fail.
     if ! { true </dev/tty; } 2>/dev/null; then
-        print_error "This step needs interactive input, but no terminal is available."
-        print_error "Re-run in an interactive shell, or download and run the script directly:"
-        print_error "  curl -sSL <url> -o setup-azure-porter-wif.sh && bash setup-azure-porter-wif.sh <args>"
+        print_error "$(
+            printf '%s\n' \
+                'This step needs interactive input, but no terminal is available.' \
+                'Re-run in an interactive shell, or download and run the script directly:' \
+                '  curl -sSL <url> -o setup-azure-porter-wif.sh && bash setup-azure-porter-wif.sh <args>'
+        )"
         exit 1
     fi
-    # _var holds the name of the target variable by design (dynamic assignment).
+    # var_name holds the name of the target variable by design (dynamic assignment).
     # shellcheck disable=SC2229
-    read -rp "$_prompt" "$_var" </dev/tty
+    read -rp "$prompt_text" "$var_name" </dev/tty
 }
 
 # Formats a number of seconds as e.g. "4m32s".
