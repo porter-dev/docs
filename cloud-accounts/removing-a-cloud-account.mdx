@@ -1,0 +1,61 @@
+---
+title: "Removing a cloud account"
+sidebarTitle: "Removing a Cloud Account"
+description: "Disconnect a cloud account from Porter once its clusters, object storage, and environment groups have been cleaned up"
+---
+
+When you no longer want Porter to manage infrastructure in a cloud account, remove the cloud account from the Porter dashboard. Removing the account disconnects it from your Porter project and stops Porter from using its credentials.
+
+<Warning>
+Removing a cloud account does not delete any resources from your cloud provider. After removing the account in Porter, you should also revoke Porter's access in your cloud provider (IAM role on AWS, service account on GCP, or service principal on Azure) so the credentials can no longer be used.
+</Warning>
+
+## Before you remove
+
+Porter blocks removal while any of the following still reference the cloud account:
+
+- **Clusters** provisioned through the account
+- **Object storage** buckets attached to the account
+- **Environment groups** that sync to resources in the account
+
+Clean these up first:
+
+1. [Delete any clusters](/cloud-accounts/deleting-a-cluster) running in the account.
+2. Delete any object storage buckets linked to the account.
+3. Remove the account from the sync targets of any [environment groups](/applications/configure/environment-groups) that reference it.
+
+## Remove the cloud account
+
+<Steps>
+  <Step title="Open the cloud account">
+    Navigate to **Integrations** in the Porter dashboard and select the cloud account you want to remove.
+  </Step>
+  <Step title="Open the Danger Zone">
+    Scroll to the **Danger Zone** section at the bottom of the cloud account detail page and click **Remove cloud account**.
+  </Step>
+  <Step title="Confirm the removal">
+    In the confirmation dialog, type the cloud account's vanity name (or its provider ID, for example its AWS account ID, GCP project ID, or Azure subscription ID) exactly as shown. The **Remove** button stays disabled until the value matches.
+
+    Click **Remove** to disconnect the account from Porter.
+  </Step>
+</Steps>
+
+## If removal is blocked
+
+If Porter still finds active resources that reference the account, the dialog switches to a **Blocked by** view that lists each blocking resource grouped by type:
+
+- Clusters
+- Object storage buckets
+- Environment groups
+
+Each entry links to the resource so you can finish cleaning it up. Once every listed resource is deleted or unlinked, reopen the Danger Zone and try the removal again.
+
+## Revoke cloud provider access
+
+After the cloud account is removed from Porter, revoke the credentials in your cloud provider so they can no longer be used:
+
+- **AWS** — Delete the `PorterRole` CloudFormation stack. See the AWS section of [Connecting a cloud account](/cloud-accounts/connecting-a-cloud-account#revoking-access).
+- **GCP** — Delete the `porter-manager` service account from **IAM & Admin** → **Service Accounts**.
+- **Azure** — Delete the `azure-porter-restricted-sp` service principal from **App registrations**.
+
+For any infrastructure that remains in your cloud provider after the cluster and cloud account have been removed, see [Deleting dangling resources](/other/deleting-dangling-resources).
