@@ -30,7 +30,6 @@ porter cloud-accounts list [flags]
 |------|-------------|
 | `--provider` | Filter by cloud provider. One of `aws`, `azure`, `gcp` |
 | `--status` | Filter by connection status. One of `connected`, `pending` |
-| `--sort` | Sort accounts by field. One of `connected`, `name`, `provider` (default: `connected`) |
 | `--json` | Print the cloud accounts as JSON |
 
 The default output is a table with the account's **Name**, **Provider**, **Provider ID** (AWS account ID, GCP project ID, or Azure subscription ID), **Status**, and **Created At**. When the output is piped to another command, it is printed as tab-separated values so it stays friendly to tools like `grep`, `cut`, and `awk`.
@@ -45,7 +44,7 @@ porter cloud-accounts list --provider aws --status connected
 ```
 
 ```bash JSON Output
-porter cloud-accounts list --sort name --json
+porter cloud-accounts list --json
 ```
 </CodeGroup>
 
@@ -134,8 +133,6 @@ porter cloud-accounts connect azure [flags]
 | `--client-id` | Application (client) ID of the Azure App Registration (skips the interactive prompt) |
 | `--tenant-id` | Azure tenant ID (skips the interactive prompt) |
 
-Run without flags to follow the interactive guide, which walks you through creating the Azure App Registration and then prompts for each credential. Provide the flags to skip the guide and connect directly — useful for scripting.
-
 <CodeGroup>
 ```bash Interactive
 porter cloud-accounts connect azure
@@ -173,7 +170,7 @@ The `<account>` argument identifies the account by its **ID**, **name**, or **pr
 | `--yes` | `-y` | Skip the confirmation prompt |
 
 <Warning>
-A cloud account can only be disconnected once no clusters, object storage, or environment groups still reference it. If any of these resources remain, the CLI lists the blocking resources and cancels the disconnection. Delete them first, then retry.
+All resources must be deleted from a cloud account before it can be disconnected.
 </Warning>
 
 After disconnecting, Porter prints provider-specific instructions for the manual cleanup you may want to perform in your own cloud account:
