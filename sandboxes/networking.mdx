@@ -35,6 +35,46 @@ Sandboxes run untrusted code, so their outbound traffic is isolated by default, 
 
 Because private address space is blocked, this includes services behind a private load balancer. If a sandbox needs to call a service you run on the same cluster, expose that service on a public domain and call it by hostname; from inside a sandbox it's reached over the internet like any other endpoint.
 
+## Restrict outbound traffic with an egress allowlist
+
+By default a sandbox can reach anything on the public internet. Pass `egress` at create time to narrow that to a specific set of destinations; all other outbound traffic is denied. Enforcement happens transparently at the network layer, so any client and protocol works without proxy configuration.
+
+An entry in `allowed_destinations` is one of:
+
+| Kind | Example | Matches |
+| ---- | ------- | ------- |
+| Hostname | `api.stripe.com` | Exactly that host |
+| Wildcard | `*.github.com` | Any host one label under the domain, but not the domain itself |
+| IP literal | `203.0.113.10` | That address |
+| CIDR range | `203.0.113.0/24` | Any address in the range |
+
+<CodeGroup>
+```python Python
+sandbox = porter.sandboxes.create(
+    image="python:3.12-slim",
+    name="my-sandbox",
+    egress={
+        "allowed_destinations": [
+            "api.stripe.com",
+            "*.github.com",
+        ],
+    },
+)
+```
+
+```typescript TypeScript
+const sandbox = await porter.sandboxes.create({
+  image: "python:3.12-slim",
+  name: "my-sandbox",
+  egress: {
+    allowed_destinations: ["api.stripe.com", "*.github.com"],
+  },
+});
+```
+</CodeGroup>
+
+An empty `allowed_destinations` list denies all egress. Omit `egress` entirely to leave the sandbox's internet access unrestricted (the default described above still applies: in-cluster services, the cloud metadata endpoint, and private address space remain blocked either way).
+
 ## Configure networking on the cluster
 
 <Steps>
