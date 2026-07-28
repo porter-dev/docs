@@ -28,7 +28,7 @@ Sandboxes run untrusted code, so their outbound traffic is isolated by default, 
 | ----------- | --------- |
 | Public internet | Yes |
 | Cluster DNS | Yes |
-| In-cluster services and other pods (including other sandboxes) | No |
+| In-cluster services and other pods (including other sandboxes) | No (unless allowlisted, see below) |
 | Kubernetes API server and the sandbox control plane | No |
 | Cloud metadata endpoint (`169.254.169.254`) | No |
 | Private address space (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `100.64.0.0/10`) | No |
@@ -74,48 +74,6 @@ An empty list denies all egress. DNS resolution keeps working inside the sandbox
 CIDR entries are honored as written, including private address space, so an allowlist can deliberately grant a sandbox access to internal IPs that the default isolation blocks.
 
 A Service entry is how a restricted sandbox reaches another workload on its own cluster: an entry of the form `name.namespace.svc.cluster.local` allows traffic to that Service's backing pods and tracks them as they change, so a rolling deploy of the Service doesn't interrupt connectivity. Service entries aren't scoped to a port; any port on the backing pods is allowed.
-
-## Restrict outbound traffic with an egress allowlist
-
-By default a sandbox can reach anything on the public internet. Pass `egress` at create time to narrow that to a specific set of destinations; all other outbound traffic is denied. Enforcement happens transparently at the network layer, so any client and protocol works without proxy configuration.
-
-Enforcement is off until you turn it on for the cluster. In the Porter Dashboard, open the **Sandbox** tab for your sandbox-enabled cluster, go to **Settings**, and toggle **Enforce egress allowlists** on under **Egress controls**. Until it's on, `egress` on a sandbox is accepted but not enforced, and sandboxes keep their default unrestricted internet access.
-
-An entry in `allowed_destinations` is one of:
-
-| Kind | Example | Matches |
-| ---- | ------- | ------- |
-| Hostname | `api.stripe.com` | Exactly that host |
-| Wildcard | `*.github.com` | Any host one label under the domain, but not the domain itself |
-| IP literal | `203.0.113.10` | That address |
-| CIDR range | `203.0.113.0/24` | Any address in the range |
-
-<CodeGroup>
-```python Python
-sandbox = porter.sandboxes.create(
-    image="python:3.12-slim",
-    name="my-sandbox",
-    egress={
-        "allowed_destinations": [
-            "api.stripe.com",
-            "*.github.com",
-        ],
-    },
-)
-```
-
-```typescript TypeScript
-const sandbox = await porter.sandboxes.create({
-  image: "python:3.12-slim",
-  name: "my-sandbox",
-  egress: {
-    allowed_destinations: ["api.stripe.com", "*.github.com"],
-  },
-});
-```
-</CodeGroup>
-
-An empty `allowed_destinations` list denies all egress. Omit `egress` entirely to leave the sandbox's internet access unrestricted (the default described above still applies: in-cluster services, the cloud metadata endpoint, and private address space remain blocked either way).
 
 ## Configure networking on the cluster
 

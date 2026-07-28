@@ -64,7 +64,7 @@ Options:
 | `tags` | `Record<string, string> \| undefined` | Key-value labels for finding related sandboxes. |
 | `volume_mounts` | `Record<string, string> \| undefined` | Volume IDs keyed by absolute mount path inside the sandbox. |
 | `networking` | `SandboxNetworkingSpec[] \| undefined` | Port to expose and, optionally, the domain and visibility to serve it on. Omit to expose nothing. See [Sandbox Networking](/sandboxes/networking). |
-| `egress` | `SandboxEgressSpec \| undefined` | Restricts the sandbox's outbound traffic to a list of allowed destinations (hostnames, wildcards, IP literals, or CIDR ranges). Omit to leave internet access unrestricted. See [Restrict outbound traffic](/sandboxes/networking#restrict-outbound-traffic-with-an-egress-allowlist). |
+| `egress` | `SandboxEgressSpec \| undefined` | Restricts the sandbox's outbound traffic to a list of allowed destinations (hostnames, wildcards, IP literals, CIDR ranges, or in-cluster Service DNS names). Omit to leave internet access unrestricted. See [Restrict egress with an allowlist](/sandboxes/networking#restrict-egress-with-an-allowlist). |
 | `ttl_seconds` | `number \| undefined` | Maximum lifetime in seconds, counted from creation. The sandbox is terminated once it elapses. Omit for no limit. See [sandbox lifetime](/sandboxes/overview#sandbox-lifetime). |
 
 Returns a `Sandbox` handle.
