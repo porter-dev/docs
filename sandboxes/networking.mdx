@@ -68,7 +68,9 @@ An `allowed_destinations` entry is one of:
 | `203.0.113.7` | That IP address |
 | `203.0.113.0/24` | Any address in the CIDR range |
 
-An empty list denies all egress. The allowlist narrows the sandbox's internet access; it does not open access to anything the table above blocks, so private address space, in-cluster services, and the metadata endpoint stay unreachable no matter what the list contains. DNS resolution keeps working inside the sandbox so hostname entries can be resolved and enforced.
+An empty list denies all egress. DNS resolution keeps working inside the sandbox so hostname entries can be resolved and enforced.
+
+CIDR entries are honored as written, including private address space, so an allowlist can deliberately grant a sandbox access to internal IPs that the default isolation blocks.
 
 ## Configure networking on the cluster
 
