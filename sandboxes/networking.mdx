@@ -39,6 +39,8 @@ Because private address space is blocked, this includes services behind a privat
 
 By default a sandbox can reach anything on the public internet. Pass `egress` at create time to narrow that to a specific set of destinations; all other outbound traffic is denied. Enforcement happens transparently at the network layer, so any client and protocol works without proxy configuration.
 
+Enforcement is off until you turn it on for the cluster. In the Porter Dashboard, open the **Sandbox** tab for your sandbox-enabled cluster, go to **Settings**, and toggle **Enforce egress allowlists** on under **Egress controls**. Until it's on, `egress` on a sandbox is accepted but not enforced, and sandboxes keep their default unrestricted internet access.
+
 An entry in `allowed_destinations` is one of:
 
 | Kind | Example | Matches |
