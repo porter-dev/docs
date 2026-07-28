@@ -33,7 +33,7 @@ Sandboxes run untrusted code, so their outbound traffic is isolated by default, 
 | Cloud metadata endpoint (`169.254.169.254`) | No |
 | Private address space (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `100.64.0.0/10`) | No |
 
-Because private address space is blocked, this includes services behind a private load balancer. If a sandbox needs to call a service you run on the same cluster, expose that service on a public domain and call it by hostname; from inside a sandbox it's reached over the internet like any other endpoint.
+Because private address space is blocked, this includes services behind a private load balancer. If a sandbox needs to call a service you run on the same cluster, either expose that service on a public domain and call it over the internet, or give the sandbox an egress allowlist that includes the service's cluster-internal hostname (see below).
 
 ## Restrict egress with an allowlist
 
@@ -67,10 +67,13 @@ An `allowed_destinations` entry is one of:
 | `*.example.com` | Any host under the domain, but not the domain itself |
 | `203.0.113.7` | That IP address |
 | `203.0.113.0/24` | Any address in the CIDR range |
+| `payments.billing.svc.cluster.local` | The backing pods of the `payments` Service in the `billing` namespace on the sandbox's cluster |
 
 An empty list denies all egress. DNS resolution keeps working inside the sandbox so hostname entries can be resolved and enforced.
 
 CIDR entries are honored as written, including private address space, so an allowlist can deliberately grant a sandbox access to internal IPs that the default isolation blocks.
+
+A Service entry is how a restricted sandbox reaches another workload on its own cluster: an entry of the form `name.namespace.svc.cluster.local` allows traffic to that Service's backing pods and tracks them as they change, so a rolling deploy of the Service doesn't interrupt connectivity. Service entries aren't scoped to a port; any port on the backing pods is allowed.
 
 ## Configure networking on the cluster
 
