@@ -1,6 +1,6 @@
 ---
 title: "Sandbox Networking"
-description: "Serve sandboxes over HTTPS on your own domains with public and private networking"
+description: "Serve sandboxes over HTTPS on your own domains and restrict their outbound traffic with egress allowlists"
 ---
 
 A sandbox that opens a port can be served over HTTPS on a hostname under your own domain. You configure networking on the cluster once, and every sandbox that exposes a port gets a URL under your domain, either minted automatically from the sandbox name or chosen by you at create time.
@@ -34,6 +34,43 @@ Sandboxes run untrusted code, so their outbound traffic is isolated by default, 
 | Private address space (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `100.64.0.0/10`) | No |
 
 Because private address space is blocked, this includes services behind a private load balancer. If a sandbox needs to call a service you run on the same cluster, expose that service on a public domain and call it by hostname; from inside a sandbox it's reached over the internet like any other endpoint.
+
+## Restrict egress with an allowlist
+
+Beyond the default isolation, a sandbox can be limited to an explicit list of outbound destinations. Pass `egress` when creating a sandbox and it can only reach the destinations it lists; all other outbound traffic is blocked. Enforcement happens transparently at the network layer, so any protocol and client works without proxy configuration.
+
+Egress enforcement is off by default. To turn it on for a cluster, go to the **Sandbox** tab, open **Settings**, and enable **Enforce egress allowlists** under **Egress controls**. This installs network policy enforcement on the sandbox nodes. Sandboxes created without an `egress` entry keep unrestricted internet access even when enforcement is on.
+
+<CodeGroup>
+```python Python
+sandbox = porter.sandboxes.create(
+    image="ghcr.io/example/agent:latest",
+    name="restricted",
+    egress={"allowed_destinations": ["api.stripe.com", "*.github.com"]},
+)
+```
+
+```typescript TypeScript
+const sandbox = await porter.sandboxes.create({
+  image: "ghcr.io/example/agent:latest",
+  name: "restricted",
+  egress: { allowed_destinations: ["api.stripe.com", "*.github.com"] },
+});
+```
+</CodeGroup>
+
+An `allowed_destinations` entry is one of:
+
+| Entry | Matches |
+| ----- | ------- |
+| `api.example.com` | That exact hostname |
+| `*.example.com` | Any host under the domain, but not the domain itself |
+| `203.0.113.7` | That IP address |
+| `203.0.113.0/24` | Any address in the CIDR range |
+
+An empty list denies all egress. DNS resolution keeps working inside the sandbox so hostname entries can be resolved and enforced.
+
+CIDR entries are honored as written, including private address space, so an allowlist can deliberately grant a sandbox access to internal IPs that the default isolation blocks. In-cluster Kubernetes Services have a wrinkle: connections to a ClusterIP are rewritten to a backing pod IP before the allowlist is evaluated, so a service hostname or ClusterIP entry won't match. To reach an in-cluster service, list the IPs of its backing pods, and keep the entry current as those pods change.
 
 ## Configure networking on the cluster
 
