@@ -1,6 +1,6 @@
 ---
 title: "TypeScript Sandbox SDK volumes"
-description: "Create, mount, list, and delete sandbox volumes with the TypeScript Sandbox SDK"
+description: "Create, mount, browse, and read sandbox volumes with the TypeScript Sandbox SDK"
 ---
 
 Volumes provide persistent storage that can be mounted into Porter Sandboxes. Create a volume before launching the sandbox, then pass the volume ID in `volume_mounts`.
@@ -41,14 +41,15 @@ try {
 
 ## List volumes
 
+`list()` returns volume handles:
+
 ```typescript
 import { Porter } from "porter-sandbox";
 
 const porter = new Porter();
-const response = await porter.volumes.list();
 
-for (const volume of response.volumes) {
-  console.log(volume.id, volume.name, volume.phase, volume.attached_to, volume.path);
+for (const volume of await porter.volumes.list()) {
+  console.log(volume.id, volume.name, volume.phase, volume.attachedTo, volume.path);
 }
 
 porter.close();
@@ -79,15 +80,76 @@ import { Porter } from "porter-sandbox";
 const porter = new Porter();
 const volume = await porter.volumes.get("agent-workspace");
 
-console.log(volume.name, volume.phase, volume.attached_to);
+console.log(volume.name, volume.phase, volume.attachedTo, volume.createdAt);
 porter.close();
 ```
+
+## Browse volume contents
+
+`listdir` returns the entries directly inside a directory, directories first:
+
+```typescript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+const volume = await porter.volumes.get("agent-workspace");
+
+for (const file of await volume.listdir("/checkpoints")) {
+  console.log(file.path, file.isDirectory ? "dir" : file.sizeBytes);
+}
+
+porter.close();
+```
+
+`iterdir` walks the whole tree instead, descending into every subdirectory:
+
+```typescript
+for await (const file of volume.iterdir("/checkpoints")) {
+  console.log(file.path, file.sizeBytes);
+}
+```
+
+`search` walks the tree and returns only the entries whose name contains a substring, optionally rooted at a subdirectory:
+
+```typescript
+const configs = await volume.search("config.json");
+const checkpointConfigs = await volume.search("config.json", { path: "/checkpoints" });
+```
+
+## Read a file
+
+`readText` returns a whole file as a string, and `readFile` returns raw bytes:
+
+```typescript
+const config = await volume.readText("/checkpoints/config.json");
+const bytes = await volume.readFile("/checkpoints/weights.bin");
+```
+
+Both accept `offset` and `length` to read part of a file:
+
+```typescript
+const head = await volume.readText("/logs/train.log", { offset: 0, length: 512 });
+```
+
+For files too large to hold in memory, `stream` pages through the file in chunks (8 MiB by default):
+
+```typescript
+import { createWriteStream } from "node:fs";
+
+const out = createWriteStream("model.safetensors");
+for await (const chunk of volume.stream("/checkpoints/model.safetensors")) {
+  out.write(chunk);
+}
+out.end();
+```
+
+Reading a path that does not exist throws `NotFoundError`.
 
 ## Access volume data from apps
 
 Volumes live on a shared disk that apps on the same cluster can attach. Attach the disk named `sandbox-volumes` to a service in your app; it mounts at `/data/<app-name>/sandbox-volumes` and contains one subdirectory per volume.
 
-Each volume response includes a `path` field with the volume's subdirectory on that disk, so an app reads a volume's data at `/data/<app-name>/sandbox-volumes/<path>`:
+Each volume handle exposes a `path` with the volume's subdirectory on that disk, so an app reads a volume's data at `/data/<app-name>/sandbox-volumes/<path>`:
 
 ```typescript
 import { Porter } from "porter-sandbox";

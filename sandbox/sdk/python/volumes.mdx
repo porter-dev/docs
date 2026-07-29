@@ -1,6 +1,6 @@
 ---
 title: "Python Sandbox SDK volumes"
-description: "Create, mount, list, and delete sandbox volumes with the Python Sandbox SDK"
+description: "Create, mount, browse, and read sandbox volumes with the Python Sandbox SDK"
 ---
 
 Volumes provide persistent storage that can be mounted into Porter Sandboxes. Create a volume before launching the sandbox, then pass the volume ID in `volume_mounts`.
@@ -34,11 +34,11 @@ with Porter() as porter:
 
 ## List volumes
 
+`list()` returns volume handles:
+
 ```python
 with Porter() as porter:
-    response = porter.volumes.list()
-
-    for volume in response.volumes:
+    for volume in porter.volumes.list():
         print(volume.id, volume.name, volume.phase, volume.attached_to, volume.path)
 ```
 
@@ -59,14 +59,77 @@ Volume names may contain lowercase letters, numbers, and hyphens, and must start
 ```python
 with Porter() as porter:
     volume = porter.volumes.get("agent-workspace")
-    print(volume.name, volume.phase, volume.attached_to)
+    print(volume.name, volume.phase, volume.attached_to, volume.created_at)
+```
+
+## Browse volume contents
+
+`listdir` returns the entries directly inside a directory, directories first:
+
+```python
+with Porter() as porter:
+    volume = porter.volumes.get("agent-workspace")
+
+    for file in volume.listdir("/checkpoints"):
+        print(file.path, "dir" if file.is_directory else file.size_bytes)
+```
+
+`iterdir` walks the whole tree instead, descending into every subdirectory:
+
+```python
+for file in volume.iterdir("/checkpoints"):
+    print(file.path, file.size_bytes)
+```
+
+`search` walks the tree and returns only the entries whose name contains a substring, optionally rooted at a subdirectory:
+
+```python
+configs = volume.search("config.json")
+checkpoint_configs = volume.search("config.json", path="/checkpoints")
+```
+
+## Read a file
+
+`read_text` returns a whole file as a string, and `read_file` returns raw bytes:
+
+```python
+config = volume.read_text("/checkpoints/config.json")
+data = volume.read_file("/checkpoints/weights.bin")
+```
+
+Both accept `offset` and `length` to read part of a file:
+
+```python
+head = volume.read_text("/logs/train.log", offset=0, length=512)
+```
+
+For files too large to hold in memory, `stream` pages through the file in chunks (8 MiB by default):
+
+```python
+with open("model.safetensors", "wb") as out:
+    for chunk in volume.stream("/checkpoints/model.safetensors"):
+        out.write(chunk)
+```
+
+Reading a path that does not exist raises `NotFoundError`.
+
+Every method here has an async counterpart on `AsyncVolume`, returned by `AsyncPorter`:
+
+```python
+async with AsyncPorter() as porter:
+    volume = await porter.volumes.get("agent-workspace")
+
+    async for file in volume.iterdir("/checkpoints"):
+        print(file.path)
+
+    config = await volume.read_text("/checkpoints/config.json")
 ```
 
 ## Access volume data from apps
 
 Volumes live on a shared disk that apps on the same cluster can attach. Attach the disk named `sandbox-volumes` to a service in your app; it mounts at `/data/<app-name>/sandbox-volumes` and contains one subdirectory per volume.
 
-Each volume response includes a `path` field with the volume's subdirectory on that disk, so an app reads a volume's data at `/data/<app-name>/sandbox-volumes/<path>`:
+Each volume handle exposes a `path` with the volume's subdirectory on that disk, so an app reads a volume's data at `/data/<app-name>/sandbox-volumes/<path>`:
 
 ```python
 with Porter() as porter:

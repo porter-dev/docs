@@ -154,10 +154,23 @@ Volume methods:
 
 | Method | Description |
 | ------ | ----------- |
-| `porter.volumes.list()` | Lists volumes. |
-| `porter.volumes.create(body)` | Creates a volume. Pass a name when you need stable lookup later. |
-| `porter.volumes.get(name)` | Fetches a volume by name. |
+| `porter.volumes.list()` | Lists volumes as handles. |
+| `porter.volumes.create(body)` | Creates a volume and returns its handle. Pass a name when you need stable lookup later. |
+| `porter.volumes.get(name)` | Fetches a volume handle by name. |
 | `porter.volumes.delete(name)` | Deletes a volume by name. |
+
+`create`, `get`, and `list` return a `Volume` handle with `id`, `name`, `phase`, `path`, `attachedTo`, and `createdAt`, plus:
+
+| Method | Description |
+| ------ | ----------- |
+| `volume.listdir(path)` | Entries directly inside a directory. |
+| `volume.iterdir(path)` | Async iterator over the whole tree below a directory. |
+| `volume.search(query, { path })` | Entries whose name contains a substring. |
+| `volume.readFile(path, { offset, length })` | File contents as bytes, optionally a byte range. |
+| `volume.readText(path, { offset, length })` | File contents as a string. |
+| `volume.stream(path, { chunkSize })` | Async iterator over a file in chunks, for files too large to hold in memory. |
+| `volume.refresh()` | Refetches the underlying volume record. |
+| `volume.delete()` | Deletes this volume. |
 
 ## Low-level client
 
