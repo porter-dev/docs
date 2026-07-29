@@ -38,6 +38,29 @@ print_fatal() {
     return 1
 }
 
+# prompt reads a line of interactive input from the controlling terminal so it
+# works even when the script is piped (curl ... | bash), where stdin is the
+# script text, not the user's terminal.
+#   usage: prompt "Prompt text: " VAR_NAME
+prompt() {
+    local prompt_text="$1" var_name="$2"
+    # Probe by actually opening /dev/tty: a `-r` test only checks the device
+    # node's permission bits (always rw), so it passes even in CI/cron where
+    # there is no controlling terminal and the open would fail.
+    if ! { true </dev/tty; } 2>/dev/null; then
+        print_error "$(
+            printf '%s\n' \
+                'This step needs interactive input, but no terminal is available.' \
+                'Re-run in an interactive shell, or download and run the script directly:' \
+                '  curl -sSL <url> -o setup-azure-porter-wif.sh && bash setup-azure-porter-wif.sh <args>'
+        )"
+        exit 1
+    fi
+    # var_name holds the name of the target variable by design (dynamic assignment).
+    # shellcheck disable=SC2229
+    read -rp "$prompt_text" "$var_name" </dev/tty
+}
+
 # Formats a number of seconds as e.g. "4m32s".
 format_duration() {
     printf '%dm%02ds' $(($1 / 60)) $(($1 % 60))
@@ -71,7 +94,7 @@ get_subscription_id() {
         print_status "Available subscriptions:"
         az account list --query "[].{Name:name, SubscriptionId:id, State:state}" -o table
         echo ""
-        read -rp "Enter the subscription ID you want to use: " SUBSCRIPTION_ID
+        prompt "Enter the subscription ID you want to use: " SUBSCRIPTION_ID
 
         if [ -z "$SUBSCRIPTION_ID" ]; then
             print_fatal "Subscription ID is required"
@@ -118,7 +141,7 @@ get_oidc_subject() {
         echo ""
         print_info "Copy the OIDC subject shown in Porter during the Azure cloud account connection steps."
         echo ""
-        read -rp "Enter the OIDC subject (e.g. arn:aws:iam::123456789012:role/porter-azure-fic-42): " OIDC_SUBJECT
+        prompt "Enter the OIDC subject (e.g. arn:aws:iam::123456789012:role/porter-azure-fic-42): " OIDC_SUBJECT
 
         if [ -z "$OIDC_SUBJECT" ]; then
             print_fatal "OIDC subject is required"
@@ -532,7 +555,7 @@ create_federated_credential() {
             print_warning "  expected issuer:  ${OIDC_ISSUER}"
             print_warning "  existing subject: ${existing_subject}"
             print_warning "  expected subject: ${OIDC_SUBJECT}"
-            read -rp "Update it with the expected values? [y/N]: " UPDATE_FIC_CONFIRM
+            prompt "Update it with the expected values? [y/N]: " UPDATE_FIC_CONFIRM
             case "$UPDATE_FIC_CONFIRM" in
                 [yY]|[yY][eE][sS]) ;;
                 *) print_fatal "Aborting: federated identity credential ${FIC_NAME} was left unchanged. Re-run with a different --app-name to create a separate app registration, or delete the existing credential first." ;;
