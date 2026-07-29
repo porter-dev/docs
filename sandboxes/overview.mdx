@@ -101,6 +101,8 @@ Every cluster with sandboxes enabled has a **Sandbox file storage** card in the 
 
 Volumes attached to a running sandbox cannot be deleted; terminate the sandbox first, then delete the volume once it detaches.
 
+The volume detail page also has a **Files** tab for browsing what sandboxes have written to the volume. Navigate the directory tree and preview individual files inline; large files can be streamed in ranges. The preview renders in a sandboxed iframe with no network egress, since file contents come from untrusted workloads. The tab appears once your cluster's sandbox runtime supports file browsing.
+
 When you mount the `sandbox-volumes` disk into an app service, the dashboard shows a confirmation dialog reminding you that volume contents are written by sandboxed workloads and must be treated as untrusted input. See [accessing volume data from apps](/sandbox/sdk/python/volumes#access-volume-data-from-apps) for the full pattern.
 
 ## Next steps
