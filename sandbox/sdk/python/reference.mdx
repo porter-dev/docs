@@ -142,10 +142,25 @@ Volume methods:
 
 | Method | Description |
 | ------ | ----------- |
-| `porter.volumes.list()` | Lists volumes. |
-| `porter.volumes.create(name=None)` | Creates a volume. Pass a name when you need stable lookup later. |
-| `porter.volumes.get(name)` | Fetches a volume by name. |
+| `porter.volumes.list()` | Lists volumes as handles. |
+| `porter.volumes.create(name=None)` | Creates a volume and returns its handle. Pass a name when you need stable lookup later. |
+| `porter.volumes.get(name)` | Fetches a volume handle by name. |
 | `porter.volumes.delete(name)` | Deletes a volume by name. |
+
+`create`, `get`, and `list` return a `Volume` handle with `id`, `name`, `phase`, `path`, `attached_to`, and `created_at`, plus:
+
+| Method | Description |
+| ------ | ----------- |
+| `volume.listdir(path)` | Entries directly inside a directory. |
+| `volume.iterdir(path)` | Iterator over the whole tree below a directory. |
+| `volume.search(query, path="/")` | Entries whose name contains a substring. |
+| `volume.read_file(path, offset=None, length=None)` | File contents as bytes, optionally a byte range. |
+| `volume.read_text(path, offset=None, length=None)` | File contents as a string. |
+| `volume.stream(path, chunk_size=...)` | Iterator over a file in chunks, for files too large to hold in memory. |
+| `volume.refresh()` | Refetches the underlying volume record. |
+| `volume.delete()` | Deletes this volume. |
+
+`AsyncPorter` returns `AsyncVolume` handles with the same surface and async methods.
 
 ## Async client
 
