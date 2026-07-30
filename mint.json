@@ -131,6 +131,7 @@
             "sandboxes/overview",
             "sandboxes/getting-started",
             "sandboxes/networking",
+            "sandboxes/capacity",
             {
               "group": "Sandbox SDK",
               "pages": [

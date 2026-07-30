@@ -1,0 +1,81 @@
+---
+title: "Sandbox Capacity"
+description: "Raise the sandbox node group's CPU limit and tune the warm pod pool to run more sandboxes"
+---
+
+Two settings determine how many sandboxes a cluster can run and how fast they start: the **Max CPU** limit on the sandbox node group, which caps total compute, and the **warm pod pool**, which keeps pre-booted pods ready so sandboxes start quickly. This page covers both and how to size them together.
+
+<Warning>
+Sandboxes are in a private beta. Please reach out to us at support@porter.run or over Slack if you are interested in joining.
+</Warning>
+
+## How sandbox capacity works
+
+When you enable sandboxes, Porter creates a dedicated sandbox node group on the cluster. It's a cost-optimized (Karpenter) node group: nodes are provisioned on demand as sandboxes are created and removed when they're no longer needed, so there are no minimum or maximum node counts to manage. The one capacity setting is **Max CPU**, the maximum total CPU cores across all nodes in the group.
+
+The cluster keeps a pool of pre-booted warm pods on the sandbox node group, and every new sandbox claims one. This is what makes startup fast. When more sandboxes are created than there are warm pods available, the pool grows by the number of waiting sandboxes and Karpenter adds nodes to fit the new pods, up to the Max CPU limit. Bursts above the pool size are still served, but they wait for a fresh pod to boot instead of starting instantly.
+
+Once the node group is at its Max CPU limit, new sandboxes wait in the `queued` phase until running sandboxes terminate and free capacity. If sandboxes queue regularly, raise Max CPU.
+
+## Raise the node group's Max CPU
+
+<Steps>
+  <Step title="Navigate to Infrastructure">
+    From your Porter dashboard, click the **Infrastructure** tab in the left sidebar and select your sandbox-enabled cluster.
+  </Step>
+  <Step title="Open the sandbox node group">
+    Click **Overview** and expand the **Sandbox node group** under the node groups list to see the following settings:
+
+    | Setting | Description |
+    |---------|-------------|
+    | **Max CPU** | Maximum total CPU cores across all nodes in the node group. This is the capacity ceiling: raise it to run more concurrent sandboxes. Defaults to 20 cores. |
+    | **Capacity type** | On-demand or spot instances. |
+    | **Restrict per-instance CPU** | Optional bounds on the vCPUs of each instance Karpenter provisions, to spread sandboxes across more, smaller nodes. See [node groups](/cloud-accounts/node-groups#restricting-per-instance-size). |
+    | **Disk size** | Storage capacity for each node (default: 50GB). |
+  </Step>
+  <Step title="Update">
+    Set **Max CPU** to the new ceiling, then scroll to the bottom and click **Update**. The change applies without disrupting running sandboxes, and Karpenter provisions nodes up to the new limit as demand arrives.
+  </Step>
+</Steps>
+
+<Note>
+Two settings are fixed on sandbox node groups: cost optimization can't be turned off, because sandbox node groups require Karpenter, and instance selection is restricted to machine types with local NVMe disks, which sandboxes use for fast storage.
+</Note>
+
+## Tune the warm pod pool
+
+The warm pod pool is configured with the other sandbox settings, not on the node group. Changing it requires the admin role on the project.
+
+<Steps>
+  <Step title="Open the sandbox settings">
+    In the Porter Dashboard, go to the **Sandbox** tab for your sandbox-enabled cluster, then open **Settings** and find the **Warm pod pool** section.
+  </Step>
+  <Step title="Configure the pool">
+    | Setting | Description |
+    |---------|-------------|
+    | **Warm pool size** | Number of pre-booted pods the cluster keeps available. This is how many sandboxes can start instantly at once. It does not cap how many sandboxes can run. |
+    | **CPU** | CPU cores each warm pod gets (0.1 to 16). |
+    | **RAM** | Memory each warm pod gets, in MiB (64 to 32768). |
+  </Step>
+  <Step title="Save">
+    Click **Save**. Porter rolls the new pool out on the cluster, replacing existing warm pods with pods at the new size and resources.
+  </Step>
+</Steps>
+
+## Size the two settings together
+
+Warm pods reserve their CPU and memory on the sandbox node group even while idle, so the pool consumes Max CPU headroom. As a rule of thumb, keep
+
+```
+(warm pool size + expected concurrent sandboxes) × CPU per pod
+```
+
+comfortably under **Max CPU**, with some slack for per-node system overhead.
+
+The settings fail in different ways when they're out of balance. Raising the warm pool size without room under Max CPU leaves the extra warm pods waiting for nodes that never come, so starts don't get any faster. Raising Max CPU alone lets more sandboxes run, but the number that can start instantly is still the pool size.
+
+## Next steps
+
+- [Sandboxes Overview](/sandboxes/overview#lifecycle)
+- [Sandboxes Getting Started](/sandboxes/getting-started)
+- [Node groups](/cloud-accounts/node-groups)
