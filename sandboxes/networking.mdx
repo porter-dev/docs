@@ -28,7 +28,7 @@ Sandboxes run untrusted code, so their outbound traffic is isolated by default, 
 | ----------- | --------- |
 | Public internet | Yes |
 | Cluster DNS | Yes |
-| In-cluster services and other pods (including other sandboxes) | No |
+| In-cluster services and other pods (including other sandboxes) | No (unless allowlisted, see below) |
 | Kubernetes API server and the sandbox control plane | No |
 | Cloud metadata endpoint (`169.254.169.254`) | No |
 | Private address space (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `100.64.0.0/10`) | No |
