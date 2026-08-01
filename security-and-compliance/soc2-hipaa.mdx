@@ -4,3 +4,12 @@ description: "Enable instant SOC 2 and HIPAA compliance for your infrastructure 
 ---
 
 Porter supports one-click compliant infrastructure, which ensures SOC2/HIPAA compliance for all AWS infrastructure that is managed by Porter, including EKS, RDS, S3, and auxiliary services like Cloudwatch so all infra controls on compliance management platforms such as [Oneleet](https://www.oneleet.com/) and [Thoropass](https://www.thoropass.com/) pass instantly.
+
+## Checking when compliance was last verified
+
+The compliance dashboard shows a **Last checked** label in the footer of the vendor checks list. It displays how long ago Porter last reconciled the cluster against your enabled compliance profiles (for example, "Last checked 4 hours ago"). Hover the label to see the exact UTC timestamp.
+
+Use this label to confirm that the check results you are looking at reflect the current state of your infrastructure:
+
+- A clock icon indicates the results are recent.
+- A warning icon means the last reconcile was more than 24 hours ago and the results may be stale. If you have made infrastructure changes since then, wait for the next reconcile or trigger one by updating the cluster contract before relying on the dashboard for an audit.
