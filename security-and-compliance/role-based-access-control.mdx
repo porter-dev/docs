@@ -9,6 +9,15 @@ Porter supports setting basic authorization permissions via for other members in
 * **Developer:** read/write access to applications, jobs, environment groups, cluster data, and integrations.
 * **Viewer:** read access to applications, jobs, environment groups, and cluster data.
 
+## Security tab access[](#security-tab-access "Direct link to heading")
+
+The **Security** section in the sidebar contains three tabs: **Audit logs**, **Compliance**, and **Trust center**. Access depends on your project role:
+
+* **Admin:** access to all three tabs. Opening **Security** lands on **Audit logs** by default.
+* **Developer and Viewer:** access to **Compliance** and **Trust center** only. Opening **Security** lands on **Compliance** by default. Navigating directly to an audit log URL renders an unauthorized state, and no audit log data is fetched.
+
+To grant a teammate access to audit logs, change their role to **Admin** from the **Settings** tab. See [Changing collaborator permissions](#changing-collaborator-permissions).
+
 ## Adding Collaborators[](#adding-collaborators "Direct link to heading")
 
 To add a new collaborator to a Porter project, you must be logged in with an **Admin** role. As an admin, you will see a **Settings** tab in the sidebar. Navigate to **Settings** and input the email of the user you would like to add. This will generate an invitation link for the user, which expires in 24 hours. The user will get an email to join the Porter project, but if the email is not delivered, you can copy the invite link and send it to them directly.
