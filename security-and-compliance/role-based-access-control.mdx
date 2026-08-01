@@ -9,6 +9,12 @@ Porter supports setting basic authorization permissions via for other members in
 * **Developer:** read/write access to applications, jobs, environment groups, cluster data, and integrations.
 * **Viewer:** read access to applications, jobs, environment groups, and cluster data.
 
+## Managing API tokens
+
+API tokens are restricted to **Admin** users. Only admins can create, list, view, or revoke API tokens for a project, both from the dashboard and through the Porter API. Developer and viewer roles cannot access any API token endpoints.
+
+Note that the role assigned to a generated API token (for example, `Developer`) is independent from the role of the user creating it. The token's role controls what the token itself can do when used to call the Porter API.
+
 ## Adding Collaborators[](#adding-collaborators "Direct link to heading")
 
 To add a new collaborator to a Porter project, you must be logged in with an **Admin** role. As an admin, you will see a **Settings** tab in the sidebar. Navigate to **Settings** and input the email of the user you would like to add. This will generate an invitation link for the user, which expires in 24 hours. The user will get an email to join the Porter project, but if the email is not delivered, you can copy the invite link and send it to them directly.
