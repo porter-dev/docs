@@ -38,6 +38,30 @@ After logging in, Porter automatically sets your default project and cluster if 
 
 ---
 
+## `porter auth workos-login`
+
+Authenticate with your Porter account using WorkOS. This opens your browser to complete authentication through WorkOS AuthKit using the OAuth 2.0 Authorization Code flow with PKCE.
+
+Use this command if your organization has been configured to sign in to Porter via WorkOS (for example, with SSO). The standard `porter auth login` flow remains available for accounts that do not use WorkOS.
+
+**Usage:**
+```bash
+porter auth workos-login
+```
+
+**How it works:**
+
+1. The CLI starts a local HTTP server on `localhost:8080` to receive the OAuth callback.
+2. Your default browser opens to the WorkOS AuthKit sign-in page.
+3. After you sign in, WorkOS redirects back to `http://localhost:8080/callback`.
+4. The CLI exchanges the authorization code for an access token using PKCE, stores it in your CLI config, and configures your default project.
+
+<Info>
+Port `8080` on `localhost` must be available for the callback to succeed. If the port is in use, stop the conflicting process and try again.
+</Info>
+
+---
+
 ## `porter auth logout`
 
 Log out from Porter and clear your local credentials.
