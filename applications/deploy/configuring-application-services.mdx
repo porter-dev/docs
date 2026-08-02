@@ -46,7 +46,7 @@ Every service needs compute resources. Porter lets you configure exactly how muc
 
 ### CPU and memory
 
-CPU is measured in cores, configurable from 0.1 (one-tenth of a core) up to 8 cores. Memory is measured in megabytes, from 128 MB up to 16 GB. The defaults (0.5 cores and 1 GB of memory) work well for lightweight services. Increase these values for compute-intensive workloads or applications with large memory footprints.
+CPU is measured in cores, configurable from 0.1 (one-tenth of a core) up to 8 cores. Memory is measured in megabytes, from 128 MB up to 16 GB. New services default to 0.5 cores and 512 MB of memory, which works well for lightweight services. Increase these values for compute-intensive workloads or applications with large memory footprints. The upper bound on each slider reflects the capacity of your cluster's largest application node, so you can still scale a service up to use the full node if you need to. On sandbox projects, defaults are lower (0.1 cores and 250 MB) to fit the smaller cluster.
 
 ![Resource allocation sliders for CPU and RAM](/images/deploy/v2/cpu-ram-sliders.webp)
 
