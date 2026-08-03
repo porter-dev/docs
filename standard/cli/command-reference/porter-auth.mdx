@@ -36,6 +36,18 @@ porter auth login --token <YOUR_TOKEN>
 After logging in, Porter automatically sets your default project and cluster if you have access to any. You can view these with `porter config`.
 </Info>
 
+### Handling stale or rejected tokens
+
+`porter auth login` automatically recovers from invalid credentials:
+
+- **Stale on-disk token:** If your saved token is no longer valid, Porter clears it locally, prints a warning, and falls through to the browser login flow — no need to run `porter auth logout` first.
+- **Rejected `PORTER_TOKEN`:** If the server rejects a token sourced from the `PORTER_TOKEN` environment variable, login fails with a clear error prompting you to `unset PORTER_TOKEN` before retrying. This avoids silently overwriting a token your CI environment is providing.
+
+```bash
+unset PORTER_TOKEN
+porter auth login
+```
+
 ---
 
 ## `porter auth logout`
@@ -45,6 +57,18 @@ Log out from Porter and clear your local credentials.
 **Usage:**
 ```bash
 porter auth logout
+```
+
+`porter auth logout` no longer requires a valid session to run. It will:
+
+- Revoke your session server-side when possible.
+- Treat `401`, `403`, or `404` responses from the revoke endpoint as "already invalid" and still clear your local credentials, so an expired session can never strand you logged in locally.
+- Preserve local credentials on other server errors (for example, a transient `5xx`) so a temporary outage doesn't silently leave a valid refresh token behind a "successful" logout.
+- Warn you if `PORTER_TOKEN` is still set in your environment after logout, since that variable overrides on-disk credentials on the next command.
+
+```bash
+porter auth logout
+unset PORTER_TOKEN  # run this if the logout output warns it is still set
 ```
 
 <Tip>
