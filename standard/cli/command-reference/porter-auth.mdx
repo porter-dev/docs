@@ -40,9 +40,14 @@ After logging in, Porter automatically sets your default project and cluster if 
 
 ## `porter auth logout`
 
-Log out from Porter and clear your local credentials.
+Log out from Porter. This revokes your current session on the Porter API and clears your local credentials, so any cached access or refresh tokens stored on disk can no longer be used.
 
 **Usage:**
+```bash
+porter auth logout
+```
+
+**Example:**
 ```bash
 porter auth logout
 ```
@@ -50,3 +55,7 @@ porter auth logout
 <Tip>
 After logging out, you'll need to run `porter auth login` again before using other commands.
 </Tip>
+
+<Info>
+Use `porter auth logout` on shared or untrusted machines before stepping away. Simply deleting the local config file leaves your session valid on the server — only `porter auth logout` revokes it.
+</Info>
