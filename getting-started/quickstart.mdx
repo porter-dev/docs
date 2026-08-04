@@ -314,7 +314,7 @@ Once your cluster is ready, you'll see the Porter dashboard. Click **Create Appl
             runs-on: ubuntu-latest
             steps:
               - uses: actions/checkout@v4
-              - uses: porter-dev/setup-porter@v0.1.0
+              - uses: porter-dev/setup-porter@v0.2.0
               - run: porter apply
                 env:
                   PORTER_TOKEN: ${{ secrets.PORTER_APP_... }}

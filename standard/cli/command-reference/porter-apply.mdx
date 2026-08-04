@@ -214,7 +214,7 @@ jobs:
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Setup porter
-        uses: porter-dev/setup-porter@v0.1.0
+        uses: porter-dev/setup-porter@v0.2.0
 
       - name: Deploy stack
         run: porter apply
