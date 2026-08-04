@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Porter
-        uses: porter-dev/setup-porter@v0.1.1
+        uses: porter-dev/setup-porter@v0.2.0
 
       - name: Build Image from Dockerfile
         run: exec porter app build $PORTER_BASE_APP_NAME --build-method docker --build-context . --dockerfile ./Dockerfile --tag $GITHUB_SHA
@@ -47,7 +47,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Porter
-        uses: porter-dev/setup-porter@v0.1.1
+        uses: porter-dev/setup-porter@v0.2.0
 
       - name: Deploy App
         run: exec porter app update ${{ matrix.app }} --image-repository $PORTER_BASE_IMAGE_REPOSITORY_URI --tag $GITHUB_SHA
