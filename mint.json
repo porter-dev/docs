@@ -138,19 +138,19 @@
                 {
                   "group": "Python",
                   "pages": [
-                    "sandbox/sdk/python/quickstart",
-                    "sandbox/sdk/python/volumes",
-                    "sandbox/sdk/python/reference",
-                    "sandbox/sdk/python/errors"
+                    "sandboxes/sdk/python/quickstart",
+                    "sandboxes/sdk/python/volumes",
+                    "sandboxes/sdk/python/reference",
+                    "sandboxes/sdk/python/errors"
                   ]
                 },
                 {
                   "group": "TypeScript",
                   "pages": [
-                    "sandbox/sdk/typescript/quickstart",
-                    "sandbox/sdk/typescript/volumes",
-                    "sandbox/sdk/typescript/reference",
-                    "sandbox/sdk/typescript/errors"
+                    "sandboxes/sdk/typescript/quickstart",
+                    "sandboxes/sdk/typescript/volumes",
+                    "sandboxes/sdk/typescript/reference",
+                    "sandboxes/sdk/typescript/errors"
                   ]
                 }
               ]
@@ -275,7 +275,20 @@
     { "source": "/guides/fastapi/deploy-fastapi", "destination": "/applications/deploy/deploy-from-github-repo" },
     { "source": "/docs/advanced-nginx-settings", "destination": "/applications/configure/advanced-networking" },
     { "source": "/sandboxes/quickstart", "destination": "/sandboxes/getting-started" },
-    { "source": "/sandbox/quickstart", "destination": "/sandboxes/getting-started" }
+    { "source": "/sandbox/quickstart", "destination": "/sandboxes/getting-started" },
+    { "source": "/sandbox/overview", "destination": "/sandboxes/overview" },
+    { "source": "/sandbox/getting-started", "destination": "/sandboxes/getting-started" },
+    { "source": "/sandbox/networking", "destination": "/sandboxes/networking" },
+    { "source": "/sandbox/capacity", "destination": "/sandboxes/capacity" },
+    { "source": "/sandbox/cli", "destination": "/sandboxes/cli" },
+    { "source": "/sandbox/sdk/python/quickstart", "destination": "/sandboxes/sdk/python/quickstart" },
+    { "source": "/sandbox/sdk/python/volumes", "destination": "/sandboxes/sdk/python/volumes" },
+    { "source": "/sandbox/sdk/python/reference", "destination": "/sandboxes/sdk/python/reference" },
+    { "source": "/sandbox/sdk/python/errors", "destination": "/sandboxes/sdk/python/errors" },
+    { "source": "/sandbox/sdk/typescript/quickstart", "destination": "/sandboxes/sdk/typescript/quickstart" },
+    { "source": "/sandbox/sdk/typescript/volumes", "destination": "/sandboxes/sdk/typescript/volumes" },
+    { "source": "/sandbox/sdk/typescript/reference", "destination": "/sandboxes/sdk/typescript/reference" },
+    { "source": "/sandbox/sdk/typescript/errors", "destination": "/sandboxes/sdk/typescript/errors" }
   ],
   "footerSocials": {
     "twitter": "https://twitter.com/porterdotrun"
