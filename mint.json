@@ -273,7 +273,9 @@
     { "source": "/provision/changing-instance-types", "destination": "/cloud-accounts/node-groups" },
     { "source": "/cli/v1-and-v2", "destination": "/cli/basic-usage" },
     { "source": "/guides/fastapi/deploy-fastapi", "destination": "/applications/deploy/deploy-from-github-repo" },
-    { "source": "/docs/advanced-nginx-settings", "destination": "/applications/configure/advanced-networking" }
+    { "source": "/docs/advanced-nginx-settings", "destination": "/applications/configure/advanced-networking" },
+    { "source": "/sandboxes/quickstart", "destination": "/sandboxes/getting-started" },
+    { "source": "/sandbox/quickstart", "destination": "/sandboxes/getting-started" }
   ],
   "footerSocials": {
     "twitter": "https://twitter.com/porterdotrun"
