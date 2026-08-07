@@ -51,7 +51,7 @@ Arguments:
 
 | Argument | Type | Description |
 | -------- | ---- | ----------- |
-| `image` | `str` | Container image to run. |
+| `image` | `str` | Container image to run, referenced by tag or digest. |
 | `name` | `str \| None` | Optional cluster-unique sandbox name. Use lowercase letters, numbers, and hyphens; start and end with a letter or number. Names currently cannot be reused, even after termination. |
 | `command` | `list[str] \| None` | Optional entrypoint override. |
 | `args` | `list[str] \| None` | Optional arguments passed to the command. |
