@@ -234,6 +234,28 @@ porter sandbox create ubuntu:24.04 --ttl 2h -- sleep infinity
 
 Sandboxes run any container image, so you can bake in the tools your workload needs (language runtimes, CLIs, agents) instead of installing them at runtime.
 
+### Pin an image by digest
+
+Image references accept a tag or a digest (`repo@sha256:<digest>`). A tag can point to different content over time, so pin the digest when your sandboxes need to run the exact same image on every create:
+
+<CodeGroup>
+```python Python
+sandbox = porter.sandboxes.create(
+    image="python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+)
+```
+
+```typescript TypeScript
+const sandbox = await porter.sandboxes.create({
+  image: "python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36",
+});
+```
+
+```bash CLI
+porter sandbox create python@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36
+```
+</CodeGroup>
+
 ### Private images
 
 Private images are supported. Push your image to the ECR registry in the AWS account associated with your sandbox cluster, and sandboxes on that cluster can pull it without extra credential configuration.
