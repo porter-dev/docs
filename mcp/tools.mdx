@@ -1,0 +1,56 @@
+---
+title: "Tools"
+description: "The following tools are exposed by the MCP server so agents can interact with your Porter project."
+---
+
+All tools are read-only unless otherwise specified.
+
+### Projects & Discovery
+
+| Tool               | Description                                                    |
+| ------------------ | -------------------------------------------------------------- |
+| `get_projects`     | List the projects your account can access. Takes no arguments. |
+| `get_applications` | List applications in a project.                                |
+| `get_clusters`     | List clusters in a project.                                    |
+
+### Applications
+
+| Tool                        | Description                                                                              |
+| --------------------------- | ---------------------------------------------------------------------------------------- |
+| `get_application`           | Read an application's configuration. Excludes variables, secrets, or environment groups. |
+| `get_application_status`    | Read an application's current deployment status and conditions.                          |
+| `get_application_revisions` | List an application's revisions.                                                         |
+| `get_application_metrics`   | Read CPU, memory, and request metrics for an application.                                |
+| `get_app_logs`              | Read an application's logs. Bearer tokens and secret-shaped values are redacted.         |
+| `get_notifications`         | List a project's notifications.                                                          |
+
+### Clusters & Infrastructure
+
+| Tool                      | Description                                               |
+| ------------------------- | --------------------------------------------------------- |
+| `get_cluster_nodes`       | List the nodes in a cluster.                              |
+| `get_cluster_node_groups` | List the node groups in a cluster.                        |
+| `get_cluster_pods`        | List pods in a cluster, optionally filtered by namespace. |
+| `get_cluster_pod`         | Read a single pod's spec. Excludes environment variables. |
+| `get_load_balancers`      | List load balancers for a cluster.                        |
+| `get_node_group_metrics`  | Read metrics for a node group.                            |
+
+### Mutating tools
+
+<Warning>
+  These tools can modify or redeploy your applications and may have unintended
+  side effects. Review the agent's plan before approving any call to
+  `create_app`, `update_application`, or `redeploy_application`.
+</Warning>
+
+#### `create_app`
+
+Create a new application and open the Github pull request to build it.
+
+#### `update_application`
+
+Update an application's configuration. Supports running a dry run update to validate the changes.
+
+#### `redeploy_application`
+
+Trigger an immediate redeploy of an application.

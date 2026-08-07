@@ -1,0 +1,205 @@
+---
+title: "MCP Overview"
+description: "Connect AI agents to Porter's MCP server to inspect and manage your apps and clusters."
+---
+
+Porter's **remote MCP server** lets you connect AI agents to inspect and manage your apps and clusters. We only offer a remote server, so there's no local binary to install. Point your client at the URL below and authenticate in your browser.
+
+```
+https://mcp.porter.run
+```
+
+## Prerequisites
+
+- A Porter account with access to at least one project
+- An MCP-compatible client (Claude Code, Codex, Cursor, Windsurf, VS Code, Claude Desktop, OpenCode)
+
+Authentication uses OAuth 2.0 with browser-based authorization. When you connect a client for the first time, your browser opens so you can sign in to Porter and approve MCP access. This is a one-time setup step per client.
+
+## Connect a client
+
+<Tabs>
+<Tab title="Claude Code">
+
+1.  Add the server from the command line:
+
+    ```bash
+    claude mcp add --transport http porter https://mcp.porter.run
+    ```
+
+    Or add it to your project's `.mcp.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "porter": {
+          "type": "http",
+          "url": "https://mcp.porter.run"
+        }
+      }
+    }
+    ```
+
+2.  Run `claude` to start Claude Code.
+3.  Run `/mcp`, select **porter**, and authenticate in your browser when prompted.
+4.  Test the connection with a prompt such as `List my Porter projects.` and approve the tool execution if prompted.
+
+</Tab>
+<Tab title="Codex">
+
+5.  Add the server to `~/.codex/config.toml`:
+
+    ```toml
+    [mcp_servers.porter]
+    url = "https://mcp.porter.run"
+    ```
+
+6.  Trigger the OAuth flow:
+
+    ```bash
+    codex mcp login porter
+    ```
+
+7.  Test the connection with a prompt such as `List my Porter projects.` and approve the tool execution if prompted.
+
+</Tab>
+<Tab title="OpenCode">
+
+8.  Add the server with the CLI (interactive, walks you through remote setup):
+
+    ```bash
+    opencode mcp add
+    ```
+
+    Or add it to your `opencode.json` or `opencode.jsonc`:
+
+    ```json
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "mcp": {
+        "porter": {
+          "type": "remote",
+          "url": "https://mcp.porter.run"
+        }
+      }
+    }
+    ```
+
+9.  OpenCode handles the OAuth flow automatically. To trigger it manually:
+
+    ```bash
+    opencode mcp auth porter
+    ```
+
+10. Test the connection with a prompt such as `List my Porter projects.` and approve the tool execution if prompted.
+
+</Tab>
+<Tab title="Cursor">
+
+11. In your project root, create or edit the `.cursor/mcp.json` file.
+12. Add the server configuration:
+
+    ```json
+    {
+      "mcpServers": {
+        "porter": {
+          "url": "https://mcp.porter.run"
+        }
+      }
+    }
+    ```
+
+13. Save the file and restart Cursor.
+14. Open **Settings > Tools & MCP**, select **porter**, and click **Connect**.
+15. In Cursor Chat, test the connection with a prompt such as `List my Porter projects.` and approve the tool execution if prompted.
+
+</Tab>
+<Tab title="Windsurf">
+
+16. Open your Windsurf `mcp_config.json`.
+17. Point `serverUrl` at the Porter server:
+
+    ```json
+    {
+      "mcpServers": {
+        "porter": {
+          "serverUrl": "https://mcp.porter.run"
+        }
+      }
+    }
+    ```
+
+18. Save the file and restart Windsurf.
+19. Test the connection with a prompt such as `List my Porter projects.` and approve the tool execution if prompted.
+
+</Tab>
+<Tab title="VS Code / Copilot">
+
+20. In your workspace root, create or edit `.vscode/mcp.json`.
+21. Add the Porter server:
+
+    ```json
+    {
+      "servers": {
+        "porter": {
+          "type": "http",
+          "url": "https://mcp.porter.run"
+        }
+      }
+    }
+    ```
+
+22. Save the file and reload VS Code.
+23. Open the Command Palette, run **MCP: List Servers**, and confirm that **porter** appears.
+24. In Copilot Chat, test the connection with a prompt such as `List my Porter projects.` and approve the tool execution if prompted.
+
+</Tab>
+<Tab title="Claude Desktop">
+
+25. In Claude, go to **Customize → Connectors**, click **+**, then **Add custom connector**.
+26. Enter the Porter server URL:
+
+    ```
+    https://mcp.porter.run
+    ```
+
+27. Click **Add**, then authenticate via the browser OAuth flow.
+28. The connector becomes available in your conversations via the **+** menu under **Connectors**.
+
+   <Info>
+
+Claude connects to remote MCP servers from Anthropic's cloud, not your local machine, so the Porter server must be reachable over the public internet.
+
+   </Info>
+</Tab>
+</Tabs>
+
+## Capabilities
+
+After connecting, the agent will be able to work with Porter resources in natural language. Some use cases where it's helpful:
+
+- **View resources**: List projects, applications, and clusters, or check an app's deployment status and conditions.
+- **Inspect and troubleshoot**: Read application logs, metrics, and notifications; inspect cluster nodes, node groups, pods, and load balancers to investigate issues.
+- **Debug apps**: Trace a failing or slow deployment from logs and metrics back to its configuration, then update and redeploy to fix it.
+- **Rightsize apps**: Compare CPU, memory, and request metrics across applications and node groups, then adjust resource requests and limits to match actual usage.
+- **Migrate and replicate environments**: Move an application to another cluster, or stand up dev/stage/prod copies of an existing app's configuration.
+- **Manage applications**: Create applications, modify their configuration, and redeploy them.
+
+See the [tools reference](/mcp/tools) for the full tool list.
+
+## Risks
+
+<Warning>
+  MCP tools can perform destructive operations on your applications, including
+  creating, updating, and redeploying services. They can directly impact
+  production environments and cause downtime to services if not used with care.
+</Warning>
+
+The MCP server authenticates with OAuth, so the agent will inherit permissions from the user and operate on their behalf.
+
+Some considerations to keep in mind while using the MCP:
+
+- **Prefer using on non-production environments.** Point the agent at a staging or dev project to validate changes before applying them to production.
+- **Manually review the agent's plan before it runs**, especially against production resources.
+- **Use auto approval with care.** Disable auto-approval mode when applying changes to production resources.
+- **Watch for prompt injection.** The agent reads untrusted content (logs, notifications, GitHub PR bodies). A malicious actor can plant instructions in that content to trick the agent into calling a mutating tool, and the server can't distinguish a legitimate instruction from an injected one.
