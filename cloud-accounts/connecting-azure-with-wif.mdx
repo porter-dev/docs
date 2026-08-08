@@ -1,0 +1,107 @@
+---
+title: "Connecting Azure with Workload Identity Federation"
+description: "Connect your Azure subscription to Porter using Workload Identity Federation — no client secret required"
+---
+
+<Note>
+This connection method is currently in limited release behind a feature flag (`azure_wif_enabled`). If you don't see the option in the Porter dashboard, contact support@porter.run to request access.
+</Note>
+
+Porter can connect to your Azure subscription using [Workload Identity Federation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation) (WIF) instead of a long-lived client secret. WIF uses short-lived federated tokens exchanged at request time, so there's no secret to store, rotate, or accidentally leak.
+
+Use this flow if you want to:
+
+- Avoid managing client secret expiry (Azure forces rotation every 365 days)
+- Comply with policies that prohibit static credentials in third-party systems
+- Reduce the blast radius of a compromised credential
+
+If you've already connected Azure using a service principal with a client secret, see [Connecting a cloud account](/cloud-accounts/connecting-a-cloud-account) for that flow. Migration guidance will be published when WIF becomes generally available.
+
+## Prerequisites
+
+Before starting, make sure you have:
+
+- An Azure subscription where you can create app registrations and assign roles
+- Permission to grant admin consent in your Microsoft Entra tenant
+- The Azure CLI installed and authenticated (`az login`), or access to Azure Cloud Shell
+
+## Set up the federated app registration
+
+The federated app registration is the Azure-side identity that Porter authenticates as. It has no client secret — instead, it trusts Porter's identity provider to issue tokens on its behalf.
+
+1. **Create the custom role.** This is the same `porter-aks-restricted` role used by the service principal flow.
+
+    ```bash
+    PORTER_AZURE_SUBSCRIPTION_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+    envsubst << EOF | az role definition create --role-definition @-
+    {
+        "assignableScopes": ["/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"],
+        "description": "Grants Porter access to manage resources for an AKS cluster.",
+        "isCustom": true,
+        "name": "porter-aks-restricted",
+        "permissions": [
+            {
+                "actions": ["*"],
+                "notActions": [
+                    "Microsoft.Authorization/elevateAccess/Action",
+                    "Microsoft.Blueprint/blueprintAssignments/write",
+                    "Microsoft.Blueprint/blueprintAssignments/delete",
+                    "Microsoft.Compute/galleries/share/action"
+                ]
+            }
+        ]
+    }
+    EOF
+    ```
+
+2. **Create the app registration without a client secret.**
+
+    ```bash
+    az ad app create --display-name "azure-porter-wif"
+    APP_ID=$(az ad app list --display-name "azure-porter-wif" --query "[0].appId" -o tsv)
+    az ad sp create --id "$APP_ID"
+    ```
+
+3. **Assign the custom role to the service principal.**
+
+    ```bash
+    az role assignment create \
+      --assignee "$APP_ID" \
+      --role "porter-aks-restricted" \
+      --scope "/subscriptions/${PORTER_AZURE_SUBSCRIPTION_ID}"
+    ```
+
+4. **Grant Microsoft Graph API permissions** as described in [Connecting a cloud account](/cloud-accounts/connecting-a-cloud-account) (the permission set is identical to the service principal flow).
+
+5. **Add the federated credential.** Porter's support team will provide the issuer URL and subject identifier specific to your project. In the Azure portal:
+
+    1. Navigate to **App registrations** → **azure-porter-wif** → **Certificates & secrets** → **Federated credentials**
+    2. Click **Add credential** → **Other issuer**
+    3. Enter the issuer and subject values provided by Porter
+    4. Set **Audience** to `api://AzureADTokenExchange`
+
+## Connect Azure in Porter
+
+In Porter, navigate to **Integrations** → **Azure** (or follow the prompt during new project onboarding) and enter:
+
+| Field | Value |
+|-------|-------|
+| **Subscription ID** | Your Azure subscription ID |
+| **Application (Client) ID** | The `appId` from your app registration |
+| **Tenant ID** | Your Microsoft Entra tenant ID |
+
+There is no client secret field — Porter exchanges its own identity token for an Azure access token at request time.
+
+Click **Connect** to verify the credentials. Porter performs a test call against your subscription and surfaces any permission or trust configuration errors inline.
+
+## Troubleshooting
+
+**"AADSTS70021: No matching federated identity record found"**
+The subject or issuer on the federated credential doesn't match what Porter is sending. Re-check the values provided by Porter against the credential in the Azure portal.
+
+**"Authorization failed" when Porter tries to provision a cluster**
+The custom role or its scope is missing. Confirm the role assignment exists on the subscription and that all required resource providers are registered.
+
+**The Azure tab in Porter still shows a Client Secret field**
+The `azure_wif_enabled` feature flag is not active for your project. Contact support@porter.run to enable it.
