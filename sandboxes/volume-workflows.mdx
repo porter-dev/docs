@@ -1,0 +1,162 @@
+---
+title: "Volume workflows"
+description: "End-to-end patterns for moving data in and out of sandbox volumes"
+---
+
+A volume is persistent storage you can mount into sandboxes and read or write directly. The [SDK](/sandboxes/sdk/python/volumes) and [CLI](/sandboxes/cli#porter-sandbox-volume) pages document each operation on its own; this page ties them together into the patterns you'll actually reach for.
+
+<Warning>
+Sandboxes are in a private beta. Please reach out to us at support@porter.run or over Slack if you are interested in joining.
+</Warning>
+
+## Seed a volume, then process it in a sandbox
+
+Upload input data to a volume from your machine, mount it into a sandbox to process, and read the results back — without baking data into the image or streaming it through `exec`.
+
+First create the volume and upload the input from your machine with the CLI:
+
+```bash
+porter sandbox volume create training-data
+porter sandbox volume write training-data input/dataset.csv --file ./dataset.csv
+```
+
+Then mount the volume into a sandbox and run the job against it:
+
+<CodeGroup>
+```python Python
+from porter_sandbox import Porter
+
+with Porter() as porter:
+    volume = porter.volumes.get("training-data")
+    sandbox = porter.sandboxes.create(
+        image="ghcr.io/acme/trainer:latest",
+        volume_mounts={"/data": volume.id},
+    )
+    try:
+        sandbox.exec(["python", "process.py", "--in", "/data/input/dataset.csv", "--out", "/data/output/results.csv"])
+    finally:
+        sandbox.terminate()
+```
+
+```typescript TypeScript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+const volume = await porter.volumes.get("training-data");
+const sandbox = await porter.sandboxes.create({
+  image: "ghcr.io/acme/trainer:latest",
+  volume_mounts: { "/data": volume.id },
+});
+
+try {
+  await sandbox.exec(["python", "process.py", "--in", "/data/input/dataset.csv", "--out", "/data/output/results.csv"]);
+} finally {
+  await sandbox.terminate();
+  porter.close();
+}
+```
+</CodeGroup>
+
+The file uploaded to `input/dataset.csv` appears inside the sandbox at `/data/input/dataset.csv`, since the volume is mounted at `/data`. Once the sandbox writes its output, read it back from anywhere — the results outlive the sandbox:
+
+```bash
+porter sandbox volume read training-data output/results.csv > results.csv
+```
+
+## Persist state across sandboxes
+
+Because a volume outlives any sandbox that mounts it, one sandbox can write state that a later one picks up — a checkpoint, a warm cache, or a partial result. Mount the same volume into each sandbox in turn:
+
+<CodeGroup>
+```python Python
+with Porter() as porter:
+    volume = porter.volumes.get("checkpoints")
+
+    # First run writes a checkpoint, then exits.
+    first = porter.sandboxes.create(image="ghcr.io/acme/trainer:latest", volume_mounts={"/ckpt": volume.id})
+    try:
+        first.exec(["python", "train.py", "--save", "/ckpt/epoch-1"])
+    finally:
+        first.terminate()
+
+    # A later run resumes from it.
+    second = porter.sandboxes.create(image="ghcr.io/acme/trainer:latest", volume_mounts={"/ckpt": volume.id})
+    try:
+        second.exec(["python", "train.py", "--resume", "/ckpt/epoch-1"])
+    finally:
+        second.terminate()
+```
+
+```typescript TypeScript
+const porter = new Porter();
+const volume = await porter.volumes.get("checkpoints");
+
+// First run writes a checkpoint, then exits.
+const first = await porter.sandboxes.create({ image: "ghcr.io/acme/trainer:latest", volume_mounts: { "/ckpt": volume.id } });
+try {
+  await first.exec(["python", "train.py", "--save", "/ckpt/epoch-1"]);
+} finally {
+  await first.terminate();
+}
+
+// A later run resumes from it.
+const second = await porter.sandboxes.create({ image: "ghcr.io/acme/trainer:latest", volume_mounts: { "/ckpt": volume.id } });
+try {
+  await second.exec(["python", "train.py", "--resume", "/ckpt/epoch-1"]);
+} finally {
+  await second.terminate();
+  porter.close();
+}
+```
+</CodeGroup>
+
+The sequential handoff above — write, terminate, then mount again — works on any sandbox cluster. Mounting the same volume into several sandboxes that run *at the same time* (a fan-out sharing one warm cache) additionally requires the cluster to back sandbox volumes with shared storage; without it, a volume attaches to one sandbox at a time. If you need concurrent fan-out, confirm your cluster's setup with us first.
+
+<Note>
+Porter does not coordinate concurrent writes for you. When several sandboxes mount the same volume at once, have your workload partition the writes or arrange its own locking so they don't clobber each other.
+</Note>
+
+## Read sandbox output from a Porter app
+
+When the application that reads a volume runs as a Porter app in the same cluster, it does not need a sandbox at all: attach the shared `sandbox-volumes` disk and read the volume's files straight off it. A volume handle's `path` gives its subdirectory on that disk, so the app reads results at `/data/<app-name>/sandbox-volumes/<path>`. The disk is a live view, so files a sandbox writes show up right away.
+
+See [Access volume data from apps](/sandboxes/sdk/python/volumes#access-volume-data-from-apps) for the full setup.
+
+<Warning>
+Volume contents are written by sandboxed workloads, which often run untrusted code. Treat anything your app reads from a volume as untrusted input, and validate it before acting on it.
+</Warning>
+
+## Manage volume files without a running sandbox
+
+Reads and writes target the volume itself, not a sandbox, so you can stage inputs before a run and collect outputs after the sandbox exits — no mount required. This is what makes the seed step above work before any sandbox exists, and it lets a nightly job drop files onto a volume that the next sandbox will pick up:
+
+<CodeGroup>
+```python Python
+with Porter() as porter:
+    volume = porter.volumes.get("training-data")
+    volume.write_text("/config/run.yaml", "epochs: 10\n")   # stage an input
+    summary = volume.read_text("/output/summary.txt")        # collect an output
+```
+
+```typescript TypeScript
+const porter = new Porter();
+const volume = await porter.volumes.get("training-data");
+await volume.writeText("/config/run.yaml", "epochs: 10\n");   // stage an input
+const summary = await volume.readText("/output/summary.txt"); // collect an output
+porter.close();
+```
+
+```bash CLI
+porter sandbox volume write training-data config/run.yaml --file ./run.yaml
+porter sandbox volume read training-data output/summary.txt
+```
+</CodeGroup>
+
+Each write is atomic and capped at 1 GiB; write larger files from inside a sandbox that mounts the volume. See [writing files](/sandboxes/sdk/typescript/volumes#write-a-file) for the details.
+
+## Next steps
+
+- [Manage volumes in the dashboard](/sandboxes/volumes-dashboard)
+- [Python Sandbox SDK volumes](/sandboxes/sdk/python/volumes)
+- [TypeScript Sandbox SDK volumes](/sandboxes/sdk/typescript/volumes)
+- [Sandbox CLI volume commands](/sandboxes/cli#porter-sandbox-volume)
