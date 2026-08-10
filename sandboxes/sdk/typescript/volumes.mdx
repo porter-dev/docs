@@ -156,7 +156,7 @@ await volume.writeFile("/checkpoints/weights.bin", bytes);
 
 A write is atomic: the file appears at its path only after the last byte lands, so an interrupted or failed write leaves the previous contents in place rather than a truncated file. An uploaded file gets the same permissions a sandbox writing to its own mount would leave, so it is indistinguishable from a file the sandbox wrote.
 
-You can write to a volume whether or not a sandbox has it mounted — the volume itself is the target. A single write is capped at 1 GiB; a request made from outside the cluster with an API token must also finish within 30 seconds, so write very large files from an app running in the same cluster.
+You can write to a volume whether or not a sandbox has it mounted; the volume itself is the target. A single write is capped at 1 GiB; a request made from outside the cluster with an API token must also finish within 30 seconds, so write very large files from an app running in the same cluster.
 
 ## Move or rename a file
 
@@ -167,7 +167,7 @@ await volume.moveFile("/notes.txt", "/archive/notes.txt");
 await volume.moveFile("/models/v1", "/models/v2");
 ```
 
-The destination's parent directory must already exist, and nothing is overwritten — moving onto a path something already occupies fails and leaves the entry where it was.
+The destination's parent directory must already exist, and nothing is overwritten. Moving onto a path something already occupies fails and leaves the entry where it was.
 
 ## Access volume data from apps
 

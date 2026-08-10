@@ -3,7 +3,7 @@ title: "Manage volumes in the dashboard"
 description: "Browse, upload, and move sandbox volume files from the Porter Dashboard"
 ---
 
-Every sandbox volume has a file browser in the Porter Dashboard. Use it to inspect what sandboxes have written, upload files into a volume before a sandbox mounts it, and reorganize files — without dropping into the SDK or CLI.
+Every sandbox volume has a file browser in the Porter Dashboard. Use it to inspect what sandboxes have written, upload files into a volume before a sandbox mounts it, and reorganize files, without dropping into the SDK or CLI.
 
 <Warning>
 Sandboxes are in a private beta. Please reach out to us at support@porter.run or over Slack if you are interested in joining.
@@ -13,13 +13,13 @@ Sandboxes are in a private beta. Please reach out to us at support@porter.run or
 
 In the Porter Dashboard, open the **Add-ons** tab and select **Sandbox file storage** for your cluster to see every volume on it, then click a volume to open its detail page. The **Files** tab is selected by default.
 
-<Note>
-Browsing files needs a cluster running sandbox-api `0.1.41` or newer, and uploading and moving need `0.1.42` or newer. On a cluster that has not picked up the write routes yet, the file browser appears without the upload and move affordances; on older releases still, the Files tab is hidden entirely.
-</Note>
-
 ## Browse files
 
-The Files tab lists the volume's contents as a tree, directories first. The server walks the tree up to an entry budget; a directory it could not fully read is marked truncated — expand it to list the rest.
+The Files tab lists the volume's contents as a tree, directories first. The server walks the tree up to an entry budget; a directory it could not fully read is marked truncated. Expand it to list the rest.
+
+## Export files
+
+Click a file in the tree to open it in the viewer. Text files up to 1 MB show an inline preview you can copy, and any file up to 20 MB has a **Download** button that saves the whole file to your computer. Larger files cannot be downloaded from the dashboard; read them with the [SDK](/sandboxes/sdk/typescript/volumes#read-a-file) or [CLI](/sandboxes/cli#porter-sandbox-volume-read), which stream without that limit.
 
 ## Upload files
 
@@ -31,9 +31,9 @@ Drag files from your computer and drop them onto the tree. A file dropped onto a
 
 Uploads follow the same rules as [SDK](/sandboxes/sdk/typescript/volumes#write-a-file) and [CLI](/sandboxes/cli#porter-sandbox-volume-write) writes: each write is atomic, so an interrupted upload leaves the previous contents in place, and a single file is capped at 1 GiB. Write larger files from inside a sandbox that mounts the volume.
 
-## Move or rename files
+## Move files
 
-Drag a row onto a folder to move it there. A directory moves with everything under it, and nothing is overwritten — a move onto a path something already occupies is refused.
+Drag a row onto a folder to move it there. A directory moves with everything under it, and nothing is overwritten. A move onto a path something already occupies is refused.
 
 ## Related docs
 

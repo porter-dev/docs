@@ -11,7 +11,7 @@ Sandboxes are in a private beta. Please reach out to us at support@porter.run or
 
 ## Seed a volume, then process it in a sandbox
 
-Upload input data to a volume from your machine, mount it into a sandbox to process, and read the results back — without baking data into the image or streaming it through `exec`.
+Upload input data to a volume from your machine, mount it into a sandbox to process, and read the results back, without baking data into the image or streaming it through `exec`.
 
 First create the volume and upload the input from your machine with the CLI:
 
@@ -57,7 +57,7 @@ try {
 ```
 </CodeGroup>
 
-The file uploaded to `input/dataset.csv` appears inside the sandbox at `/data/input/dataset.csv`, since the volume is mounted at `/data`. Once the sandbox writes its output, read it back from anywhere — the results outlive the sandbox:
+The file uploaded to `input/dataset.csv` appears inside the sandbox at `/data/input/dataset.csv`, since the volume is mounted at `/data`. Once the sandbox writes its output, read it back from anywhere, since the results outlive the sandbox:
 
 ```bash
 porter sandbox volume read training-data output/results.csv > results.csv
@@ -65,7 +65,7 @@ porter sandbox volume read training-data output/results.csv > results.csv
 
 ## Persist state across sandboxes
 
-Because a volume outlives any sandbox that mounts it, one sandbox can write state that a later one picks up — a checkpoint, a warm cache, or a partial result. Mount the same volume into each sandbox in turn:
+Because a volume outlives any sandbox that mounts it, one sandbox can write state that a later one picks up: a checkpoint, a warm cache, or a partial result. Mount the same volume into each sandbox in turn:
 
 <CodeGroup>
 ```python Python
@@ -110,7 +110,7 @@ try {
 ```
 </CodeGroup>
 
-The sequential handoff above — write, terminate, then mount again — works on any sandbox cluster. Mounting the same volume into several sandboxes that run *at the same time* (a fan-out sharing one warm cache) additionally requires the cluster to back sandbox volumes with shared storage; without it, a volume attaches to one sandbox at a time. If you need concurrent fan-out, confirm your cluster's setup with us first.
+The sequential handoff above (write, terminate, then mount again) works on any sandbox cluster. Mounting the same volume into several sandboxes that run *at the same time* (a fan-out sharing one warm cache) additionally requires the cluster to back sandbox volumes with shared storage; without it, a volume attaches to one sandbox at a time. If you need concurrent fan-out, confirm your cluster's setup with us first.
 
 <Note>
 Porter does not coordinate concurrent writes for you. When several sandboxes mount the same volume at once, have your workload partition the writes or arrange its own locking so they don't clobber each other.
@@ -128,7 +128,7 @@ Volume contents are written by sandboxed workloads, which often run untrusted co
 
 ## Manage volume files without a running sandbox
 
-Reads and writes target the volume itself, not a sandbox, so you can stage inputs before a run and collect outputs after the sandbox exits — no mount required. This is what makes the seed step above work before any sandbox exists, and it lets a nightly job drop files onto a volume that the next sandbox will pick up:
+Reads and writes target the volume itself, not a sandbox, so you can stage inputs before a run and collect outputs after the sandbox exits, with no mount required. This is what makes the seed step above work before any sandbox exists, and it lets a nightly job drop files onto a volume that the next sandbox will pick up:
 
 <CodeGroup>
 ```python Python

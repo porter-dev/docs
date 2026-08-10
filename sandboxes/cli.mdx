@@ -431,7 +431,7 @@ porter sandbox volume get my-data -o json
 
 ### `porter sandbox volume files`
 
-Lists the files and directories under a path inside a volume. Omit the path to list from the volume root. The server walks the tree up to an entry budget; directories it could not fully read are marked truncated — list them directly to see more.
+Lists the files and directories under a path inside a volume. Omit the path to list from the volume root. The server walks the tree up to an entry budget; directories it could not fully read are marked truncated. List them directly to see more.
 
 **Usage:**
 ```bash
@@ -536,7 +536,7 @@ Moves a file or directory to a new path inside one volume. The destination is th
 porter sandbox volume move <name|id> <from> <to>
 ```
 
-The destination's parent directory must already exist, and nothing is replaced — the server refuses a move onto an occupied path. The volume root cannot be moved or overwritten.
+The destination's parent directory must already exist, and nothing is replaced. The server refuses a move onto an occupied path, and the volume root cannot be moved or overwritten.
 
 <CodeGroup>
 ```bash Rename a File
