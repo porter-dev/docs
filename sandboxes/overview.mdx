@@ -93,9 +93,14 @@ Volumes provide persistent storage that can be mounted into sandboxes at launch.
 - [TypeScript Sandbox SDK volumes](/sandboxes/sdk/typescript/volumes)
 - [Sandbox CLI volume commands](/sandboxes/cli#porter-sandbox-volume)
 
+## Monitoring
+
+To see how much CPU and memory a running sandbox is using, and how close it is to its limits, run [`porter sandbox metrics`](/sandboxes/cli#porter-sandbox-metrics). It reports p50 and p90 CPU and memory usage over a lookback window, with per-limit utilization, in table, plain, or JSON form.
+
 ## Next steps
 
 - [Sandboxes Getting Started](/sandboxes/getting-started)
 - [Sandbox Networking](/sandboxes/networking)
+- [Monitor sandbox CPU and memory usage](/sandboxes/cli#porter-sandbox-metrics)
 - [Python Sandbox SDK quickstart](/sandboxes/sdk/python/quickstart)
 - [TypeScript Sandbox SDK quickstart](/sandboxes/sdk/typescript/quickstart)

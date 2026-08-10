@@ -1,9 +1,9 @@
 ---
 title: "Sandboxes CLI"
-description: "Manage Porter Sandboxes from the Porter CLI"
+description: "Create, list, exec into, monitor CPU and memory usage, and terminate Porter Sandboxes from the Porter CLI"
 ---
 
-`porter sandbox` contains commands for listing, inspecting, executing commands in, and terminating sandboxes in the currently selected Porter project and cluster.
+`porter sandbox` contains commands for listing, inspecting, executing commands in, monitoring CPU and memory usage of, and terminating sandboxes in the currently selected Porter project and cluster.
 
 <Warning>
 Sandboxes are in a private beta. Please reach out to us at support@porter.run or over Slack if you are interested in joining.
@@ -260,6 +260,83 @@ porter sandbox logs abc123 --level error --no-timestamps
 porter sandbox logs abc123 --tail 200 | grep -i 'panic\|fatal'
 ```
 </CodeGroup>
+
+---
+
+## `porter sandbox metrics`
+
+Use this command to monitor a sandbox's resource usage: how much CPU and memory it is consuming and how close it is to its limits.
+
+It prints p50 and p90 CPU and memory usage over a lookback window for a running sandbox, alongside the sandbox's CPU and memory limits and each percentile's utilization as a percentage of that limit. Only `running` sandboxes report metrics.
+
+**Usage:**
+```bash
+porter sandbox metrics <sandbox> [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--since` | Lookback window as a Go duration, such as `30m` or `2h`. Bounded to `[3m, 24h]`. Defaults to `1h` |
+| `-o, --output` | Output format: `table`, `plain`, or `json`. Defaults to `table` on a TTY and `plain` when piped |
+
+CPU is reported in cores and memory in bytes. Utilization is each percentile divided by the sandbox's limit, as a percentage; it can exceed 100% because the limit is a throttling and OOM threshold, not a hard cap on the reported sample. Memory values include page cache and slightly overestimate resident memory.
+
+**Output formats:**
+
+| Format | Description |
+|--------|-------------|
+| `table` | Human-friendly box table with a `window:` footer. Used by default on a terminal |
+| `plain` | Tab-separated numeric rows with a header. Used by default when output is piped or redirected |
+| `json` | Single-line JSON record, recommended for scripts and agents |
+
+Plain output has one row per metric (`cpu_cores`, `mem_bytes`) with these columns:
+
+| Column | Description |
+|--------|-------------|
+| `metric` | Metric name |
+| `p50` | Median value over the window |
+| `p90` | 90th-percentile value over the window |
+| `limit` | The sandbox's limit for this metric |
+| `p50_util_pct` | `p50` as a percentage of `limit` |
+| `p90_util_pct` | `p90` as a percentage of `limit` |
+| `window_seconds` | Length of the lookback window in seconds |
+
+The JSON record carries the same values at full precision, plus a `has_data` boolean that is `false` when no samples were collected in the window.
+
+<CodeGroup>
+```bash Recent Metrics
+porter sandbox metrics web
+```
+
+```bash Last 30 Minutes
+porter sandbox metrics web --since 30m
+```
+
+```bash JSON Output
+porter sandbox metrics web -o json
+```
+
+```bash Script p90 CPU Utilization
+porter sandbox metrics web -o json | jq '.cpu_util_p90_pct'
+```
+</CodeGroup>
+
+The table output looks like this:
+
+```text
+┌──────────────┬────────────────────┬────────────────────┐
+│    METRIC    │        P50         │        P90         │
+├──────────────┼────────────────────┼────────────────────┤
+│ cpu cores    │ 0.001 cores (0.1%) │ 0.003 cores (0.3%) │
+│ cpu limit    │ 1.000 cores        │                    │
+│ memory       │ 1.27 GiB (63.6%)   │ 2.54 GiB (126.9%)  │
+│ memory limit │ 2.00 GiB           │                    │
+└──────────────┴────────────────────┴────────────────────┘
+
+window: 1h0m0s
+```
 
 ---
 
@@ -580,6 +657,7 @@ porter sandbox volume delete my-data
 | Get running sandbox names for a script | `porter sandbox list -o json \| jq -r '.[] \| select(.phase == "running") \| .name'` |
 | Run a smoke command | `porter sandbox exec <sandbox-name> -- python -c 'print("ok")'` |
 | Fetch recent errors | `porter sandbox logs <sandbox-name> --since 30m --level error` |
+| Check CPU and memory usage | `porter sandbox metrics <sandbox-name> --since 30m` |
 | Preview tagged cleanup | `porter sandbox terminate --all --tag run=<run-id> --dry-run` |
 | Clean up tagged sandboxes | `porter sandbox terminate --all --tag run=<run-id>` |
 
