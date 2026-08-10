@@ -145,29 +145,6 @@ For more information, see the [OpenCode MCP documentation](https://opencode.ai/d
 For more information, see the [Cursor MCP documentation](https://cursor.com/docs/mcp).
 
 </Tab>
-<Tab title="VS Code / Copilot">
-
-1. Create or edit `.vscode/mcp.json` in your workspace root:
-
-    ```json
-    {
-      "servers": {
-        "porter": {
-          "type": "http",
-          "url": "https://mcp.porter.run"
-        }
-      }
-    }
-    ```
-
-2. Reload the window.
-3. Run **MCP: List Servers** from the Command Palette and check that **porter** is listed.
-
-Sign-in happens in the browser the first time you use a Porter tool.
-
-For more information, see the [VS Code MCP documentation](https://code.visualstudio.com/docs/copilot/customization/mcp-servers).
-
-</Tab>
 <Tab title="Claude Desktop">
 
 1. Go to **Customize → Connectors**, click **+**, then **Add custom connector**. On Team or Enterprise, an Owner does this from **Organization settings → Connectors**.
@@ -272,11 +249,6 @@ That clears the stored OAuth tokens. Also remove the `porter` entry from `openco
 <Tab title="Cursor">
 
 Delete the `porter` entry from `.cursor/mcp.json` (or `~/.cursor/mcp.json`) and restart Cursor.
-
-</Tab>
-<Tab title="VS Code / Copilot">
-
-Delete the `porter` entry from `.vscode/mcp.json` and reload the window.
 
 </Tab>
 <Tab title="Claude Desktop">
