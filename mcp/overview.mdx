@@ -13,140 +13,173 @@ https://mcp.porter.run
 
 ## Connect your client
 
+### Quick install
+
+For the CLI clients, one command is enough:
+
+```bash
+# Claude Code
+claude mcp add --transport http porter https://mcp.porter.run
+
+# Codex
+codex mcp add porter --url https://mcp.porter.run
+
+# OpenCode, prompts for a name, a type, and the URL
+opencode mcp add
+```
+
+### Client configuration
+
 <Tabs>
 <Tab title="Claude Code">
 
-Add the server with one command:
+1. Add the server:
 
-```bash
-claude mcp add --transport http porter https://mcp.porter.run
-```
+    ```bash
+    claude mcp add --transport http porter https://mcp.porter.run
+    ```
 
-You can also put it in `.mcp.json` so everyone on the project gets it:
+    Or add it to `.mcp.json` to share it with the project:
 
-```json
-{
-  "mcpServers": {
-    "porter": {
-      "type": "http",
-      "url": "https://mcp.porter.run"
+    ```json
+    {
+      "mcpServers": {
+        "porter": {
+          "type": "http",
+          "url": "https://mcp.porter.run"
+        }
+      }
     }
-  }
-}
-```
+    ```
 
-Start Claude Code, run `/mcp`, select **porter**, and sign in through the browser.
+2. Start Claude Code and run `/mcp`.
+3. Select **porter** and sign in through the browser.
 
 For more information, see the [Claude Code MCP documentation](https://code.claude.com/docs/en/mcp).
 
 </Tab>
 <Tab title="Codex">
 
-Codex keeps MCP servers in `~/.codex/config.toml`. The URL is the only thing you need to set:
+1. Add the server:
 
-```toml
-[mcp_servers.porter]
-url = "https://mcp.porter.run"
-```
+    ```bash
+    codex mcp add porter --url https://mcp.porter.run
+    ```
 
-Then sign in:
+    Or add it to `~/.codex/config.toml` directly:
 
-```bash
-codex mcp login porter
-```
+    ```toml
+    [mcp_servers.porter]
+    url = "https://mcp.porter.run"
+    ```
 
-The ChatGPT desktop app, Codex CLI, and the IDE extension all read this file, so you only have to do this once.
+2. Sign in:
+
+    ```bash
+    codex mcp login porter
+    ```
+
+The ChatGPT desktop app, Codex CLI, and IDE extension share this file, so you only do this once.
 
 For more information, see the [Codex MCP documentation](https://developers.openai.com/codex/extend/mcp).
 
 </Tab>
 <Tab title="OpenCode">
 
-Add the server with the CLI:
+1. Run the setup command:
 
-```bash
-opencode mcp add
-```
+    ```bash
+    opencode mcp add
+    ```
 
-It asks for a name, a type, and a URL. Use `porter` as the name, choose **remote**, and paste the server URL:
+2. Enter `porter` as the name, choose **remote**, and paste the URL:
 
-```
-https://mcp.porter.run
-```
+    ```
+    https://mcp.porter.run
+    ```
 
-If you'd rather skip the prompts, add it to `opencode.json` or `opencode.jsonc` directly:
+    Or add it to `opencode.json` directly:
 
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "porter": {
-      "type": "remote",
-      "url": "https://mcp.porter.run"
+    ```json
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "mcp": {
+        "porter": {
+          "type": "remote",
+          "url": "https://mcp.porter.run"
+        }
+      }
     }
-  }
-}
-```
+    ```
 
-OpenCode starts the OAuth flow on its own the first time you use a Porter tool. To do it up front, run `opencode mcp auth porter`.
+3. Sign in:
+
+    ```bash
+    opencode mcp auth porter
+    ```
+
+OpenCode also starts the sign-in on its own the first time you use a Porter tool.
 
 For more information, see the [OpenCode MCP documentation](https://opencode.ai/docs/mcp-servers/).
 
 </Tab>
 <Tab title="Cursor">
 
-Create or edit `.cursor/mcp.json` in your project root:
+1. Create or edit `.cursor/mcp.json` in your project root:
 
-```json
-{
-  "mcpServers": {
-    "porter": {
-      "url": "https://mcp.porter.run"
+    ```json
+    {
+      "mcpServers": {
+        "porter": {
+          "url": "https://mcp.porter.run"
+        }
+      }
     }
-  }
-}
-```
+    ```
 
-Restart Cursor, open **Settings > Tools & MCP**, select **porter**, and click **Connect** to sign in.
+    Use `~/.cursor/mcp.json` instead to get Porter in every project.
 
-That file only applies to the current project. To use Porter in every project, put the same block in `~/.cursor/mcp.json` instead.
+2. Restart Cursor.
+3. Open **Settings > Tools & MCP**, select **porter**, and click **Connect**.
 
 For more information, see the [Cursor MCP documentation](https://cursor.com/docs/mcp).
 
 </Tab>
 <Tab title="VS Code / Copilot">
 
-Create or edit `.vscode/mcp.json` in your workspace root:
+1. Create or edit `.vscode/mcp.json` in your workspace root:
 
-```json
-{
-  "servers": {
-    "porter": {
-      "type": "http",
-      "url": "https://mcp.porter.run"
+    ```json
+    {
+      "servers": {
+        "porter": {
+          "type": "http",
+          "url": "https://mcp.porter.run"
+        }
+      }
     }
-  }
-}
-```
+    ```
 
-Reload the window, then run **MCP: List Servers** from the Command Palette and check that **porter** is listed. You'll sign in through the browser the first time you use it.
+2. Reload the window.
+3. Run **MCP: List Servers** from the Command Palette and check that **porter** is listed.
+
+Sign-in happens in the browser the first time you use a Porter tool.
 
 For more information, see the [VS Code MCP documentation](https://code.visualstudio.com/docs/copilot/customization/mcp-servers).
 
 </Tab>
 <Tab title="Claude Desktop">
 
-Claude Desktop uses custom connectors instead of a config file.
+1. Go to **Customize → Connectors**, click **+**, then **Add custom connector**. On Team or Enterprise, an Owner does this from **Organization settings → Connectors**.
+2. Paste the URL:
 
-On **Pro or Max**, go to **Customize → Connectors**, click **+**, then **Add custom connector**, and paste:
+    ```
+    https://mcp.porter.run
+    ```
 
-```
-https://mcp.porter.run
-```
+3. Click **Add** and approve access in the browser.
 
-Click **Add** and approve access in the browser. Porter then shows up under **Connectors** in the **+** menu in any conversation.
-
-On **Team or Enterprise**, an Owner has to add it first from **Organization settings → Connectors**. After that it shows up for everyone else under **Customize → Connectors**, and they just click **Connect**.
+Porter then shows up under **Connectors** in the **+** menu of any conversation. On Team or Enterprise, everyone else finds it already listed and clicks **Connect**.
 
 <Info>
 Claude connects to remote MCP servers from Anthropic's cloud, not from your machine. That's true in the desktop app too.
@@ -171,20 +204,15 @@ You ask for things in plain language, so it's easier to think in terms of tasks 
 Some examples:
 
 ```text
-Deploy nginx:latest to my staging cluster as a web service on port 80.
-```
+Help me deploy my code to Porter.
 
-```text
-Bump the memory limit on my api service to 2GB and redeploy it.
-```
+Why did my latest deploy fail?
 
-```text
-Why did the last deploy of my api service fail?
-```
+My web service keeps restarting, figure out why and fix it.
 
-```text
-Show me memory usage for every service in this project over the past day
-and tell me which ones are over-provisioned.
+Help me reduce cost for my apps.
+
+Create a staging copy of my production web service.
 ```
 
 The [tools reference](/mcp/tools) has the full list of tools.
@@ -224,7 +252,12 @@ claude mcp remove porter
 </Tab>
 <Tab title="Codex">
 
-Delete the `[mcp_servers.porter]` block from `~/.codex/config.toml`.
+```bash
+codex mcp logout porter
+codex mcp remove porter
+```
+
+`logout` clears the stored OAuth credentials and `remove` deletes the server entry.
 
 </Tab>
 <Tab title="OpenCode">
