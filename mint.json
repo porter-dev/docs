@@ -130,8 +130,13 @@
           "pages": [
             "sandboxes/overview",
             "sandboxes/getting-started",
-            "sandboxes/volume-workflows",
-            "sandboxes/volumes-dashboard",
+            {
+              "group": "Volumes",
+              "pages": [
+                "sandboxes/volume-workflows",
+                "sandboxes/volumes-dashboard"
+              ]
+            },
             "sandboxes/networking",
             "sandboxes/capacity",
             {
