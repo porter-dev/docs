@@ -92,7 +92,9 @@
             },
             {
               "group": "Environment Groups",
-              "pages": ["applications/configure/environment-groups"]
+              "pages": [
+                "applications/configure/environment-groups"
+              ]
             },
             {
               "group": "Configure",
@@ -122,10 +124,6 @@
               "pages": ["applications/debug/common-errors"]
             }
           ]
-        },
-        {
-          "group": "MCP",
-          "pages": ["mcp/overview", "mcp/tools"]
         },
         {
           "group": "Sandboxes",
@@ -173,7 +171,10 @@
         },
         {
           "group": "Integrations",
-          "pages": ["integrations/doppler", "integrations/infisical"]
+          "pages": [
+            "integrations/doppler",
+            "integrations/infisical"
+          ]
         },
         {
           "group": "Command Line Interface (CLI)",
@@ -197,6 +198,13 @@
                 "standard/cli/command-reference/porter-target"
               ]
             }
+          ]
+        },
+        {
+          "group": "MCP Server",
+          "pages": [
+            "mcp/overview",
+            "mcp/tools"
           ]
         },
         {
@@ -241,183 +249,54 @@
     }
   ],
   "redirects": [
-    {
-      "source": "/introduction",
-      "destination": "/getting-started/introduction"
-    },
-    {
-      "source": "/deploy/overview",
-      "destination": "/applications/deploy/overview"
-    },
-    {
-      "source": "/deploy/builds",
-      "destination": "/applications/deploy/builds"
-    },
-    {
-      "source": "/deploy/types-of-services",
-      "destination": "/applications/deploy/types-of-services"
-    },
-    {
-      "source": "/deploy/deploy-from-github-repo",
-      "destination": "/applications/deploy/deploy-from-github-repo"
-    },
-    {
-      "source": "/deploy/deploy-from-docker-registry",
-      "destination": "/applications/deploy/deploy-from-docker-registry"
-    },
-    {
-      "source": "/deploy/pre-deploy-jobs",
-      "destination": "/applications/deploy/pre-deploy-jobs"
-    },
-    {
-      "source": "/deploy/rollbacks",
-      "destination": "/applications/deploy/rollbacks"
-    },
-    {
-      "source": "/deploy/using-other-ci-tools",
-      "destination": "/applications/deploy/using-other-ci-tools"
-    },
-    {
-      "source": "/deploy/multiple-deploys-from-same-build",
-      "destination": "/applications/deploy/multiple-deploys-from-same-build"
-    },
-    {
-      "source": "/deploy/v2/deploy-from-github-repo",
-      "destination": "/applications/deploy/deploy-from-github-repo"
-    },
-    {
-      "source": "/deploy/v2/deploy-from-docker-registry",
-      "destination": "/applications/deploy/deploy-from-docker-registry"
-    },
-    {
-      "source": "/deploy/configuration-as-code/overview",
-      "destination": "/applications/configuration-as-code/overview"
-    },
-    {
-      "source": "/deploy/configuration-as-code/reference",
-      "destination": "/applications/configuration-as-code/reference"
-    },
-    {
-      "source": "/deploy/configuration-as-code/services/web-service",
-      "destination": "/applications/configuration-as-code/services/web-service"
-    },
-    {
-      "source": "/deploy/configuration-as-code/services/autoscaling",
-      "destination": "/applications/configuration-as-code/services/autoscaling"
-    },
-    {
-      "source": "/configure/basic-configuration",
-      "destination": "/applications/configure/basic-configuration"
-    },
-    {
-      "source": "/configure/custom-domains",
-      "destination": "/applications/configure/custom-domains"
-    },
-    {
-      "source": "/configure/autoscaling",
-      "destination": "/applications/configure/autoscaling"
-    },
-    {
-      "source": "/configure/temporal-autoscaling",
-      "destination": "/applications/configure/temporal-autoscaling"
-    },
-    {
-      "source": "/configure/zero-downtime-deployments",
-      "destination": "/applications/configure/zero-downtime-deployments"
-    },
-    {
-      "source": "/observability/monitoring",
-      "destination": "/applications/observability/monitoring"
-    },
-    {
-      "source": "/observability/logging",
-      "destination": "/applications/observability/logging"
-    },
-    {
-      "source": "/observability/custom-metrics-and-autoscaling",
-      "destination": "/applications/observability/custom-metrics-and-autoscaling"
-    },
-    {
-      "source": "/observability/app-metadata",
-      "destination": "/applications/observability/app-metadata"
-    },
-    {
-      "source": "/debug/common-errors",
-      "destination": "/applications/debug/common-errors"
-    },
-    {
-      "source": "/provision/overview",
-      "destination": "/cloud-accounts/overview"
-    },
-    {
-      "source": "/provision/provisioning-on-azure",
-      "destination": "/cloud-accounts/connecting-a-cloud-account#azure"
-    },
-    {
-      "source": "/provision/provisioning-on-gcp",
-      "destination": "/cloud-accounts/connecting-a-cloud-account#gcp"
-    },
-    {
-      "source": "/provision/changing-instance-types",
-      "destination": "/cloud-accounts/node-groups"
-    },
+    { "source": "/introduction", "destination": "/getting-started/introduction" },
+    { "source": "/deploy/overview", "destination": "/applications/deploy/overview" },
+    { "source": "/deploy/builds", "destination": "/applications/deploy/builds" },
+    { "source": "/deploy/types-of-services", "destination": "/applications/deploy/types-of-services" },
+    { "source": "/deploy/deploy-from-github-repo", "destination": "/applications/deploy/deploy-from-github-repo" },
+    { "source": "/deploy/deploy-from-docker-registry", "destination": "/applications/deploy/deploy-from-docker-registry" },
+    { "source": "/deploy/pre-deploy-jobs", "destination": "/applications/deploy/pre-deploy-jobs" },
+    { "source": "/deploy/rollbacks", "destination": "/applications/deploy/rollbacks" },
+    { "source": "/deploy/using-other-ci-tools", "destination": "/applications/deploy/using-other-ci-tools" },
+    { "source": "/deploy/multiple-deploys-from-same-build", "destination": "/applications/deploy/multiple-deploys-from-same-build" },
+    { "source": "/deploy/v2/deploy-from-github-repo", "destination": "/applications/deploy/deploy-from-github-repo" },
+    { "source": "/deploy/v2/deploy-from-docker-registry", "destination": "/applications/deploy/deploy-from-docker-registry" },
+    { "source": "/deploy/configuration-as-code/overview", "destination": "/applications/configuration-as-code/overview" },
+    { "source": "/deploy/configuration-as-code/reference", "destination": "/applications/configuration-as-code/reference" },
+    { "source": "/deploy/configuration-as-code/services/web-service", "destination": "/applications/configuration-as-code/services/web-service" },
+    { "source": "/deploy/configuration-as-code/services/autoscaling", "destination": "/applications/configuration-as-code/services/autoscaling" },
+    { "source": "/configure/basic-configuration", "destination": "/applications/configure/basic-configuration" },
+    { "source": "/configure/custom-domains", "destination": "/applications/configure/custom-domains" },
+    { "source": "/configure/autoscaling", "destination": "/applications/configure/autoscaling" },
+    { "source": "/configure/temporal-autoscaling", "destination": "/applications/configure/temporal-autoscaling" },
+    { "source": "/configure/zero-downtime-deployments", "destination": "/applications/configure/zero-downtime-deployments" },
+    { "source": "/observability/monitoring", "destination": "/applications/observability/monitoring" },
+    { "source": "/observability/logging", "destination": "/applications/observability/logging" },
+    { "source": "/observability/custom-metrics-and-autoscaling", "destination": "/applications/observability/custom-metrics-and-autoscaling" },
+    { "source": "/observability/app-metadata", "destination": "/applications/observability/app-metadata" },
+    { "source": "/debug/common-errors", "destination": "/applications/debug/common-errors" },
+    { "source": "/provision/overview", "destination": "/cloud-accounts/overview" },
+    { "source": "/provision/provisioning-on-azure", "destination": "/cloud-accounts/connecting-a-cloud-account#azure" },
+    { "source": "/provision/provisioning-on-gcp", "destination": "/cloud-accounts/connecting-a-cloud-account#gcp" },
+    { "source": "/provision/changing-instance-types", "destination": "/cloud-accounts/node-groups" },
     { "source": "/cli/v1-and-v2", "destination": "/cli/basic-usage" },
-    {
-      "source": "/guides/fastapi/deploy-fastapi",
-      "destination": "/applications/deploy/deploy-from-github-repo"
-    },
-    {
-      "source": "/docs/advanced-nginx-settings",
-      "destination": "/applications/configure/advanced-networking"
-    },
-    {
-      "source": "/sandboxes/quickstart",
-      "destination": "/sandboxes/getting-started"
-    },
-    {
-      "source": "/sandbox/quickstart",
-      "destination": "/sandboxes/getting-started"
-    },
+    { "source": "/guides/fastapi/deploy-fastapi", "destination": "/applications/deploy/deploy-from-github-repo" },
+    { "source": "/docs/advanced-nginx-settings", "destination": "/applications/configure/advanced-networking" },
+    { "source": "/sandboxes/quickstart", "destination": "/sandboxes/getting-started" },
+    { "source": "/sandbox/quickstart", "destination": "/sandboxes/getting-started" },
     { "source": "/sandbox/overview", "destination": "/sandboxes/overview" },
-    {
-      "source": "/sandbox/getting-started",
-      "destination": "/sandboxes/getting-started"
-    },
+    { "source": "/sandbox/getting-started", "destination": "/sandboxes/getting-started" },
     { "source": "/sandbox/networking", "destination": "/sandboxes/networking" },
     { "source": "/sandbox/capacity", "destination": "/sandboxes/capacity" },
     { "source": "/sandbox/cli", "destination": "/sandboxes/cli" },
-    {
-      "source": "/sandbox/sdk/python/quickstart",
-      "destination": "/sandboxes/sdk/python/quickstart"
-    },
-    {
-      "source": "/sandbox/sdk/python/volumes",
-      "destination": "/sandboxes/sdk/python/volumes"
-    },
-    {
-      "source": "/sandbox/sdk/python/reference",
-      "destination": "/sandboxes/sdk/python/reference"
-    },
-    {
-      "source": "/sandbox/sdk/python/errors",
-      "destination": "/sandboxes/sdk/python/errors"
-    },
-    {
-      "source": "/sandbox/sdk/typescript/quickstart",
-      "destination": "/sandboxes/sdk/typescript/quickstart"
-    },
-    {
-      "source": "/sandbox/sdk/typescript/volumes",
-      "destination": "/sandboxes/sdk/typescript/volumes"
-    },
-    {
-      "source": "/sandbox/sdk/typescript/reference",
-      "destination": "/sandboxes/sdk/typescript/reference"
-    },
-    {
-      "source": "/sandbox/sdk/typescript/errors",
-      "destination": "/sandboxes/sdk/typescript/errors"
-    }
+    { "source": "/sandbox/sdk/python/quickstart", "destination": "/sandboxes/sdk/python/quickstart" },
+    { "source": "/sandbox/sdk/python/volumes", "destination": "/sandboxes/sdk/python/volumes" },
+    { "source": "/sandbox/sdk/python/reference", "destination": "/sandboxes/sdk/python/reference" },
+    { "source": "/sandbox/sdk/python/errors", "destination": "/sandboxes/sdk/python/errors" },
+    { "source": "/sandbox/sdk/typescript/quickstart", "destination": "/sandboxes/sdk/typescript/quickstart" },
+    { "source": "/sandbox/sdk/typescript/volumes", "destination": "/sandboxes/sdk/typescript/volumes" },
+    { "source": "/sandbox/sdk/typescript/reference", "destination": "/sandboxes/sdk/typescript/reference" },
+    { "source": "/sandbox/sdk/typescript/errors", "destination": "/sandboxes/sdk/typescript/errors" }
   ],
   "footerSocials": {
     "twitter": "https://twitter.com/porterdotrun"

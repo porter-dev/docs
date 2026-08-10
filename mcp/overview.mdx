@@ -3,189 +3,195 @@ title: "MCP Overview"
 description: "Connect AI agents to Porter's MCP server to inspect and manage your apps and clusters."
 ---
 
-Porter's **remote MCP server** lets you connect AI agents to inspect and manage your apps and clusters. Point your client at the URL below and authenticate to get started.
+Porter hosts an MCP server at `https://mcp.porter.run`. Point an MCP client at that URL, sign in, and your agent can do the same things you'd do in the dashboard or the CLI: read logs, check why a deploy failed, change a service, redeploy it.
+
+You don't need to install or run anything locally. The server runs on Porter's side, so all your client needs is the URL and a browser to sign in.
 
 ```
 https://mcp.porter.run
 ```
 
-## Prerequisites
-
-- A Porter account with access to at least one project
-- An MCP-compatible client (Claude Code, Codex, Cursor, Windsurf, VS Code, Claude Desktop, OpenCode)
-
-Authentication uses OAuth 2.0 with browser-based authorization. When you connect a client for the first time, your browser opens so you can sign in to Porter and approve MCP access. This is a one-time setup step per client.
-
-## Connect a client
+## Connect your client
 
 <Tabs>
 <Tab title="Claude Code">
 
-1.  Add the server from the command line:
+Add the server with one command:
 
-    ```bash
-    claude mcp add --transport http porter https://mcp.porter.run
-    ```
+```bash
+claude mcp add --transport http porter https://mcp.porter.run
+```
 
-    Or add it to your project's `.mcp.json`:
+You can also put it in `.mcp.json` so everyone on the project gets it:
 
-    ```json
-    {
-      "mcpServers": {
-        "porter": {
-          "type": "http",
-          "url": "https://mcp.porter.run"
-        }
-      }
+```json
+{
+  "mcpServers": {
+    "porter": {
+      "type": "http",
+      "url": "https://mcp.porter.run"
     }
-    ```
+  }
+}
+```
 
-2.  Run `claude` to start Claude Code.
-3.  Run `/mcp`, select **porter**, and authenticate in your browser when prompted.
-4.  Test the connection with a prompt such as `List my Porter projects.` and approve the tool execution if prompted.
+Start Claude Code, run `/mcp`, select **porter**, and sign in through the browser.
+
+For more information, see the [Claude Code MCP documentation](https://code.claude.com/docs/en/mcp).
 
 </Tab>
 <Tab title="Codex">
 
-5.  Add the server to `~/.codex/config.toml`:
+Codex keeps MCP servers in `~/.codex/config.toml`. The URL is the only thing you need to set:
 
-    ```toml
-    [mcp_servers.porter]
-    url = "https://mcp.porter.run"
-    ```
+```toml
+[mcp_servers.porter]
+url = "https://mcp.porter.run"
+```
 
-6.  Trigger the OAuth flow:
+Then sign in:
 
-    ```bash
-    codex mcp login porter
-    ```
+```bash
+codex mcp login porter
+```
 
-7.  Test the connection with a prompt such as `List my Porter projects.` and approve the tool execution if prompted.
+The ChatGPT desktop app, Codex CLI, and the IDE extension all read this file, so you only have to do this once.
+
+For more information, see the [Codex MCP documentation](https://developers.openai.com/codex/extend/mcp).
 
 </Tab>
 <Tab title="OpenCode">
 
-8.  Add the server with the CLI (interactive, walks you through remote setup):
+Add the server with the CLI:
 
-    ```bash
-    opencode mcp add
-    ```
+```bash
+opencode mcp add
+```
 
-    Or add it to your `opencode.json` or `opencode.jsonc`:
+It asks for a name, a type, and a URL. Use `porter` as the name, choose **remote**, and paste the server URL:
 
-    ```json
-    {
-      "$schema": "https://opencode.ai/config.json",
-      "mcp": {
-        "porter": {
-          "type": "remote",
-          "url": "https://mcp.porter.run"
-        }
-      }
+```
+https://mcp.porter.run
+```
+
+If you'd rather skip the prompts, add it to `opencode.json` or `opencode.jsonc` directly:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "porter": {
+      "type": "remote",
+      "url": "https://mcp.porter.run"
     }
-    ```
+  }
+}
+```
 
-9.  OpenCode handles the OAuth flow automatically. To trigger it manually:
+OpenCode starts the OAuth flow on its own the first time you use a Porter tool. To do it up front, run `opencode mcp auth porter`.
 
-    ```bash
-    opencode mcp auth porter
-    ```
-
-10. Test the connection with a prompt such as `List my Porter projects.` and approve the tool execution if prompted.
+For more information, see the [OpenCode MCP documentation](https://opencode.ai/docs/mcp-servers/).
 
 </Tab>
 <Tab title="Cursor">
 
-11. In your project root, create or edit the `.cursor/mcp.json` file.
-12. Add the server configuration:
+Create or edit `.cursor/mcp.json` in your project root:
 
-    ```json
-    {
-      "mcpServers": {
-        "porter": {
-          "url": "https://mcp.porter.run"
-        }
-      }
+```json
+{
+  "mcpServers": {
+    "porter": {
+      "url": "https://mcp.porter.run"
     }
-    ```
+  }
+}
+```
 
-13. Save the file and restart Cursor.
-14. Open **Settings > Tools & MCP**, select **porter**, and click **Connect**.
-15. In Cursor Chat, test the connection with a prompt such as `List my Porter projects.` and approve the tool execution if prompted.
+Restart Cursor, open **Settings > Tools & MCP**, select **porter**, and click **Connect** to sign in.
 
-</Tab>
-<Tab title="Windsurf">
+That file only applies to the current project. To use Porter in every project, put the same block in `~/.cursor/mcp.json` instead.
 
-16. Open your Windsurf `mcp_config.json`.
-17. Point `serverUrl` at the Porter server:
-
-    ```json
-    {
-      "mcpServers": {
-        "porter": {
-          "serverUrl": "https://mcp.porter.run"
-        }
-      }
-    }
-    ```
-
-18. Save the file and restart Windsurf.
-19. Test the connection with a prompt such as `List my Porter projects.` and approve the tool execution if prompted.
+For more information, see the [Cursor MCP documentation](https://cursor.com/docs/mcp).
 
 </Tab>
 <Tab title="VS Code / Copilot">
 
-20. In your workspace root, create or edit `.vscode/mcp.json`.
-21. Add the Porter server:
+Create or edit `.vscode/mcp.json` in your workspace root:
 
-    ```json
-    {
-      "servers": {
-        "porter": {
-          "type": "http",
-          "url": "https://mcp.porter.run"
-        }
-      }
+```json
+{
+  "servers": {
+    "porter": {
+      "type": "http",
+      "url": "https://mcp.porter.run"
     }
-    ```
+  }
+}
+```
 
-22. Save the file and reload VS Code.
-23. Open the Command Palette, run **MCP: List Servers**, and confirm that **porter** appears.
-24. In Copilot Chat, test the connection with a prompt such as `List my Porter projects.` and approve the tool execution if prompted.
+Reload the window, then run **MCP: List Servers** from the Command Palette and check that **porter** is listed. You'll sign in through the browser the first time you use it.
+
+For more information, see the [VS Code MCP documentation](https://code.visualstudio.com/docs/copilot/customization/mcp-servers).
 
 </Tab>
 <Tab title="Claude Desktop">
 
-25. In Claude, go to **Customize → Connectors**, click **+**, then **Add custom connector**.
-26. Enter the Porter server URL:
+Claude Desktop uses custom connectors instead of a config file.
 
-    ```
-    https://mcp.porter.run
-    ```
+On **Pro or Max**, go to **Customize → Connectors**, click **+**, then **Add custom connector**, and paste:
 
-27. Click **Add**, then authenticate via the browser OAuth flow.
-28. The connector becomes available in your conversations via the **+** menu under **Connectors**.
+```
+https://mcp.porter.run
+```
 
-   <Info>
+Click **Add** and approve access in the browser. Porter then shows up under **Connectors** in the **+** menu in any conversation.
 
-Claude connects to remote MCP servers from Anthropic's cloud, not your local machine, so the Porter server must be reachable over the public internet.
+On **Team or Enterprise**, an Owner has to add it first from **Organization settings → Connectors**. After that it shows up for everyone else under **Customize → Connectors**, and they just click **Connect**.
 
-   </Info>
+<Info>
+Claude connects to remote MCP servers from Anthropic's cloud, not from your machine. That's true in the desktop app too.
+</Info>
+
+For more information, see the [Claude custom connectors documentation](https://support.anthropic.com/en/articles/11175166-about-custom-connectors-remote-mcp-servers).
+
 </Tab>
 </Tabs>
 
 ## Capabilities
 
-After connecting, the agent will be able to work with Porter resources in natural language. Some use cases where it's helpful:
+You ask for things in plain language, so it's easier to think in terms of tasks than tools:
 
-- **View resources**: List projects, applications, and clusters, or check an app's deployment status and conditions.
-- **Inspect and troubleshoot**: Read application logs, metrics, and notifications; inspect cluster nodes, node groups, pods, and load balancers to investigate issues.
-- **Debug apps**: Trace a failing or slow deployment from logs and metrics back to its configuration, then update and redeploy to fix it.
-- **Rightsize apps**: Compare CPU, memory, and request metrics across applications and node groups, then adjust resource requests and limits to match actual usage.
-- **Migrate and replicate environments**: Move an application to another cluster, or stand up dev/stage/prod copies of an existing app's configuration.
-- **Manage applications**: Create applications, modify their configuration, and redeploy them.
+- **Deploy an app.** Create an application and get it running without leaving your agent. If you're deploying a pre-built image, the agent can take it all the way. If you're deploying from a GitHub repo, the agent creates the app and opens a pull request with the build workflow, and you merge it to deploy your code.
+- **Update an app.** Change services, resources, or domains on an existing app and redeploy. Updates can be validated with a dry run first, so you can see the resulting config before anything deploys.
+- **Troubleshoot your app.** Read logs, metrics, and notifications, or check nodes, node groups, pods, and load balancers to find what's broken. From there you can go back to the config that caused it, fix it, and redeploy.
+- **Rightsize a service.** Compare requested CPU and memory against what the service actually uses, then adjust the requests.
+- **Copy an environment.** Create dev or staging versions of an existing app, or move one to a different cluster.
+- **Inspect resources.** List projects, apps, and clusters, or check the status of a deployment.
 
-See the [tools reference](/mcp/tools) for the full tool list.
+Some examples:
+
+```text
+Deploy nginx:latest to my staging cluster as a web service on port 80.
+```
+
+```text
+Bump the memory limit on my api service to 2GB and redeploy it.
+```
+
+```text
+Why did the last deploy of my api service fail?
+```
+
+```text
+Show me memory usage for every service in this project over the past day
+and tell me which ones are over-provisioned.
+```
+
+The [tools reference](/mcp/tools) has the full list of tools.
+
+## Limitations
+
+OAuth is currently the only auth method, so headless environments like CI pipelines and sandboxed agents are not supported.
 
 ## Risks
 
@@ -195,11 +201,54 @@ See the [tools reference](/mcp/tools) for the full tool list.
   production environments and cause downtime to services if not used with care.
 </Warning>
 
-The MCP server authenticates with OAuth, so the agent will inherit permissions from the user and operate on their behalf.
+The agent authenticates as you and inherits your Porter permissions.
 
-Some considerations to keep in mind while using the MCP:
+Recommendations:
 
-- **Prefer using on non-production environments.** Point the agent at a staging or dev project to validate changes before applying them to production.
-- **Manually review the agent's plan before it runs**, especially against production resources.
-- **Use auto approval with care.** Disable auto-approval mode when applying changes to production resources.
-- **Watch for prompt injection.** The agent reads untrusted content (logs, notifications, GitHub PR bodies). A malicious actor can plant instructions in that content to trick the agent into calling a mutating tool, and the server can't distinguish a legitimate instruction from an injected one.
+- **Use non-production environments first.** Validate changes in a dev or staging project before applying them to production.
+- **Review the agent's plan before approving it**, particularly for operations that modify production resources.
+- **Disable auto-approval against production.** It is reasonable on a test project and unsafe everywhere else.
+- **Account for prompt injection.** The agent reads your application logs, notifications, and pull request bodies, all of which can carry attacker-controlled text. The server cannot distinguish injected instructions from your own, so a compromised agent can call `create_app`, `update_application`, or `redeploy_application` and change or restart a running service. Read tools exclude environment variables and secrets, and redact token-shaped values in logs, so the exposure is to your application's configuration and availability rather than its credentials.
+
+## Revoke access
+
+You revoke access per client. Remove the stored credentials, then delete the server entry so it doesn't sign in again later.
+
+<Tabs>
+<Tab title="Claude Code">
+
+```bash
+claude mcp remove porter
+```
+
+</Tab>
+<Tab title="Codex">
+
+Delete the `[mcp_servers.porter]` block from `~/.codex/config.toml`.
+
+</Tab>
+<Tab title="OpenCode">
+
+```bash
+opencode mcp logout porter
+```
+
+That clears the stored OAuth tokens. Also remove the `porter` entry from `opencode.json` to get rid of the server entirely.
+
+</Tab>
+<Tab title="Cursor">
+
+Delete the `porter` entry from `.cursor/mcp.json` (or `~/.cursor/mcp.json`) and restart Cursor.
+
+</Tab>
+<Tab title="VS Code / Copilot">
+
+Delete the `porter` entry from `.vscode/mcp.json` and reload the window.
+
+</Tab>
+<Tab title="Claude Desktop">
+
+Go to **Customize → Connectors**, click the three dots next to Porter, and choose **Remove**. On Team and Enterprise plans, an Owner has to remove it for the whole organization from **Organization settings → Connectors**.
+
+</Tab>
+</Tabs>

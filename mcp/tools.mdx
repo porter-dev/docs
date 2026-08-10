@@ -5,6 +5,8 @@ description: "The following tools are exposed by the MCP server so agents can in
 
 All tools are read-only unless otherwise specified.
 
+Every tool except `get_projects` requires a project, given as either its ID or its exact name. Application arguments accept an app name or UUID, and cluster arguments accept a cluster ID, exact name, or vanity name. Start with `get_projects` to resolve the project, then `get_applications` or `get_clusters` from there.
+
 ### Projects & Discovery
 
 | Tool               | Description                                                    |
@@ -45,11 +47,19 @@ All tools are read-only unless otherwise specified.
 
 #### `create_app`
 
-Create a new application and open the Github pull request to build it.
+Create a new application. The behavior depends on which inputs you pass:
+
+| Input            | Behavior                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `image`          | Deploys the prebuilt image directly. No pull request.                                                                          |
+| `source` + `build` | Creates the app on a placeholder image and opens a GitHub Actions pull request. Nothing real serves until that PR is merged. |
+| `build` alone    | Returns a `local_build_command` to run `porter apply` from the local repository.                                               |
+
+`image` is mutually exclusive with `source` and `build`. Creation fails if an application with the same name already exists in the target project or cluster. Use `update_application` instead.
 
 #### `update_application`
 
-Update an application's configuration. Supports running a dry run update to validate the changes.
+Update an application's configuration. Defaults to a dry run, which validates the change and returns the resulting config without deploying. Set `dry_run: false` to deploy.
 
 #### `redeploy_application`
 
