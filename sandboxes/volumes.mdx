@@ -1,0 +1,185 @@
+---
+title: "Volumes"
+description: "Create, mount, and manage persistent sandbox volumes: read, write, upload, download, and move files from the SDK, CLI, or dashboard"
+---
+
+Volumes are persistent storage you can mount into Porter Sandboxes. Unlike a sandbox's own filesystem, which is discarded when the sandbox exits, a volume lives independently and keeps its contents across sandboxes. Use them for input data, checkpoints, caches, and results that need to outlive any single run.
+
+You can work with a volume three ways: the [Python](/sandboxes/sdk/python/volumes) and [TypeScript](/sandboxes/sdk/typescript/volumes) SDKs, the [CLI](/sandboxes/cli#porter-sandbox-volume), and the Porter Dashboard. This page covers the common tasks; the SDK and CLI pages document the full surface.
+
+<Warning>
+Sandboxes are in a private beta. Please reach out to us at support@porter.run or over Slack if you are interested in joining.
+</Warning>
+
+## Naming and lifecycle
+
+Volume names may contain lowercase letters, numbers, and hyphens, and must start and end with a letter or number. A name must be unique within the cluster for the lifetime of the volume, and can be reused after the volume is deleted.
+
+A volume starts in the `pending` phase and moves to `ready` once its underlying claim binds. Sandboxes that mount a volume wait for it to bind automatically, so you do not need a separate wait step.
+
+## Create and mount a volume
+
+Create a volume, then mount it into a sandbox by passing `volume_mounts` keyed by the absolute mount path inside the sandbox. Each value is a volume ID.
+
+<CodeGroup>
+```python Python
+from porter_sandbox import Porter
+
+with Porter() as porter:
+    volume = porter.volumes.create(name="agent-workspace")
+    sandbox = porter.sandboxes.create(
+        image="python:3.12-slim",
+        volume_mounts={"/workspace": volume.id},
+    )
+```
+
+```typescript TypeScript
+import { Porter } from "porter-sandbox";
+
+const porter = new Porter();
+const volume = await porter.volumes.create({ name: "agent-workspace" });
+const sandbox = await porter.sandboxes.create({
+  image: "python:3.12-slim",
+  volume_mounts: { "/workspace": volume.id },
+});
+```
+
+```bash CLI
+porter sandbox volume create agent-workspace
+porter sandbox create python:3.12-slim --volume /workspace=agent-workspace -- sleep infinity
+```
+</CodeGroup>
+
+## Work with files
+
+Reads and writes target the volume itself, so you can browse, read, and write a volume's files whether or not a sandbox has it mounted. This lets you stage inputs before a run and collect outputs after the sandbox exits.
+
+### Browse
+
+<CodeGroup>
+```python Python
+for file in volume.listdir("/checkpoints"):
+    print(file.path, "dir" if file.is_directory else file.size_bytes)
+```
+
+```typescript TypeScript
+for (const file of await volume.listdir("/checkpoints")) {
+  console.log(file.path, file.isDirectory ? "dir" : file.sizeBytes);
+}
+```
+
+```bash CLI
+porter sandbox volume files agent-workspace checkpoints
+```
+</CodeGroup>
+
+`iterdir` walks the whole tree and `search` filters entries by name. See the SDK volumes pages for both.
+
+### Read and download
+
+<CodeGroup>
+```python Python
+config = volume.read_text("/config/app.yaml")
+data = volume.read_file("/checkpoints/weights.bin")
+```
+
+```typescript TypeScript
+const config = await volume.readText("/config/app.yaml");
+const bytes = await volume.readFile("/checkpoints/weights.bin");
+```
+
+```bash CLI
+porter sandbox volume read agent-workspace config/app.yaml > app.yaml
+```
+</CodeGroup>
+
+Reads accept an offset and length for byte ranges, and the SDKs can `stream` files too large to hold in memory. From the dashboard, open a file and use **Download** for files up to 20 MB.
+
+### Write and upload
+
+<CodeGroup>
+```python Python
+volume.write_text("/config/app.yaml", "replicas: 3\n")
+volume.write_file("/checkpoints/weights.bin", data)
+```
+
+```typescript TypeScript
+await volume.writeText("/config/app.yaml", "replicas: 3\n");
+await volume.writeFile("/checkpoints/weights.bin", bytes);
+```
+
+```bash CLI
+porter sandbox volume write agent-workspace config/app.yaml --file ./app.yaml
+```
+</CodeGroup>
+
+Writes create parent directories as needed and replace any existing file. A write is atomic: the file appears at its path only after the last byte lands, so an interrupted write leaves the previous contents in place. A single write is capped at 1 GiB, and a request from outside the cluster must finish within 30 seconds; write larger files from inside a sandbox that mounts the volume.
+
+### Move or rename
+
+<CodeGroup>
+```python Python
+volume.move_file("/notes.txt", "/archive/notes.txt")
+```
+
+```typescript TypeScript
+await volume.moveFile("/notes.txt", "/archive/notes.txt");
+```
+
+```bash CLI
+porter sandbox volume move agent-workspace notes.txt archive/notes.txt
+```
+</CodeGroup>
+
+The destination is the entry's full new path, so one call both renames and relocates, and a directory moves with everything under it. The destination's parent directory must already exist, and nothing is overwritten.
+
+## Manage files in the dashboard
+
+In the Porter Dashboard, open the **Add-ons** tab and select **Sandbox file storage** for your cluster, then click a volume to open it. The **Files** tab shows the volume as a tree, where you can:
+
+- **Browse** the contents, expanding directories as you go.
+- **Upload** by dragging files onto the tree. A file dropped on a directory row lands there; one dropped on empty space lands in the volume root.
+- **Export** by opening a file and clicking **Download** (up to 20 MB; text files under 1 MB also preview inline).
+- **Move** by dragging a row onto a folder.
+
+<Frame>
+  ![Dragging a file onto the volume tree to upload it](/images/sandboxes/volume-upload.gif)
+</Frame>
+
+## Persist and share across sandboxes
+
+Because a volume outlives any sandbox that mounts it, one sandbox can write state that a later one resumes from: a checkpoint, a warm cache, or a partial result. Mount the same volume into each sandbox in turn. This sequential handoff works on any sandbox cluster.
+
+Mounting the same volume into several sandboxes that run at the same time additionally requires the cluster to back sandbox volumes with shared storage; without it, a volume attaches to one sandbox at a time. Porter does not coordinate concurrent writes, so if several sandboxes may write the same paths at once, partition the writes or arrange your own locking.
+
+## Access volume data from apps
+
+When the app that reads a volume runs as a Porter app in the same cluster, it can read the volume's files straight off the shared disk, with no sandbox required. Attach the disk named `sandbox-volumes` to a service; it mounts at `/data/<app-name>/sandbox-volumes` with one subdirectory per volume. A volume handle's `path` gives its subdirectory, so the app reads a volume's data at `/data/<app-name>/sandbox-volumes/<path>`. The disk is a live view, so files a sandbox writes show up right away.
+
+<Warning>
+Volume contents are written by sandboxed workloads, which often run untrusted code. Treat anything your app reads from a volume as untrusted input, and validate it before acting on it.
+</Warning>
+
+## Delete a volume
+
+<CodeGroup>
+```python Python
+porter.volumes.delete("agent-workspace")
+```
+
+```typescript TypeScript
+await porter.volumes.delete("agent-workspace");
+```
+
+```bash CLI
+porter sandbox volume delete agent-workspace
+```
+</CodeGroup>
+
+Deleting a volume fails while it is attached to a sandbox. Terminate any attached sandboxes first.
+
+## Reference
+
+- [Python Sandbox SDK volumes](/sandboxes/sdk/python/volumes) and [reference](/sandboxes/sdk/python/reference)
+- [TypeScript Sandbox SDK volumes](/sandboxes/sdk/typescript/volumes) and [reference](/sandboxes/sdk/typescript/reference)
+- [Sandbox CLI volume commands](/sandboxes/cli#porter-sandbox-volume)

@@ -170,6 +170,9 @@ Volume methods:
 | `volume.readFile(path, { offset, length })` | File contents as bytes, optionally a byte range. |
 | `volume.readText(path, { offset, length })` | File contents as a string. |
 | `volume.stream(path, { chunkSize })` | Async iterator over a file in chunks, for files too large to hold in memory. |
+| `volume.writeFile(path, content)` | Writes bytes to a file, creating parent directories and replacing any existing file. Atomic. |
+| `volume.writeText(path, content)` | Writes a string to a file. See `writeFile`. |
+| `volume.moveFile(from, to)` | Moves or renames a file or directory; `to` is the full new path. Fails if the destination is occupied. |
 | `volume.refresh()` | Refetches the underlying volume record. |
 | `volume.delete()` | Deletes this volume. |
 

@@ -158,6 +158,9 @@ Volume methods:
 | `volume.read_file(path, offset=None, length=None)` | File contents as bytes, optionally a byte range. |
 | `volume.read_text(path, offset=None, length=None)` | File contents as a string. |
 | `volume.stream(path, chunk_size=...)` | Iterator over a file in chunks, for files too large to hold in memory. |
+| `volume.write_file(path, content)` | Writes bytes to a file, creating parent directories and replacing any existing file. Atomic. |
+| `volume.write_text(path, content, encoding="utf-8")` | Writes a string to a file. See `write_file`. |
+| `volume.move_file(from_path, to_path)` | Moves or renames a file or directory; `to_path` is the full new path. Fails if the destination is occupied. |
 | `volume.refresh()` | Refetches the underlying volume record. |
 | `volume.delete()` | Deletes this volume. |
 

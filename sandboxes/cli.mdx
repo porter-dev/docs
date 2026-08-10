@@ -429,6 +429,125 @@ porter sandbox volume get my-data -o json
 ```
 </CodeGroup>
 
+### `porter sandbox volume files`
+
+Lists the files and directories under a path inside a volume. Omit the path to list from the volume root. The server walks the tree up to an entry budget; directories it could not fully read are marked truncated. List them directly to see more.
+
+**Usage:**
+```bash
+porter sandbox volume files <name|id> [path] [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--search` | Only show entries whose name contains this substring (case-insensitive) |
+| `--json` | Print the full nested listing as JSON instead of a table of paths |
+
+<CodeGroup>
+```bash List From Root
+porter sandbox volume files my-data
+```
+
+```bash List a Subdirectory
+porter sandbox volume files my-data models/checkpoints
+```
+
+```bash Filter by Name
+porter sandbox volume files my-data --search .bin
+```
+
+```bash JSON Output
+porter sandbox volume files my-data --json | jq '.entries[].name'
+```
+</CodeGroup>
+
+### `porter sandbox volume read`
+
+Streams a file's raw bytes from a volume to stdout. Redirect stdout to save the file locally, or use `--range` to read part of a large file.
+
+**Usage:**
+```bash
+porter sandbox volume read <name|id> <path> [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--range` | Single byte range to read (`start-end`, `start-`, or `-length`). Defaults to the whole file |
+
+Reading a path that does not exist fails with a not-found error.
+
+<CodeGroup>
+```bash Print a File
+porter sandbox volume read my-data config/app.yaml
+```
+
+```bash Save Locally
+porter sandbox volume read my-data models/model.bin > model.bin
+```
+
+```bash Read a Byte Range
+porter sandbox volume read my-data logs/app.log --range 0-4095
+```
+</CodeGroup>
+
+### `porter sandbox volume write`
+
+Uploads a file into a volume at a path relative to the volume root. Parent directories are created as needed, and an existing file at the path is replaced. Content comes from stdin unless `--file` names a local file.
+
+The write is staged to a temporary file and renamed into place, so a failed or interrupted upload leaves the previous contents alone rather than a truncated file. You can write to a volume whether or not a sandbox has it mounted.
+
+**Usage:**
+```bash
+porter sandbox volume write <name|id> <path> [flags]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--file` | Local file to upload. Defaults to reading stdin |
+
+A single write is capped at 1 GiB, and a request from outside the cluster must finish within 30 seconds; write very large files from inside a sandbox that mounts the volume.
+
+<CodeGroup>
+```bash Upload a Local File
+porter sandbox volume write my-data config/app.yaml --file ./app.yaml
+```
+
+```bash Redirect a File to stdin
+porter sandbox volume write my-data config/app.yaml < app.yaml
+```
+
+```bash Pipe Content
+echo hello | porter sandbox volume write my-data notes.txt
+```
+</CodeGroup>
+
+### `porter sandbox volume move`
+
+Moves a file or directory to a new path inside one volume. The destination is the entry's full new path, not a directory to drop it into, so a move renames and relocates in one call. A directory moves with everything under it.
+
+**Usage:**
+```bash
+porter sandbox volume move <name|id> <from> <to>
+```
+
+The destination's parent directory must already exist, and nothing is replaced. The server refuses a move onto an occupied path, and the volume root cannot be moved or overwritten.
+
+<CodeGroup>
+```bash Rename a File
+porter sandbox volume move my-data notes.txt archive/notes.txt
+```
+
+```bash Move a Directory
+porter sandbox volume move my-data models/v1 models/v2
+```
+</CodeGroup>
+
 ### `porter sandbox volume delete`
 
 Deletes a sandbox volume by name.
@@ -455,6 +574,8 @@ porter sandbox volume delete my-data
 | Create a sandbox that cleans itself up | `porter sandbox create alpine:3.20 --ttl 2h -- sleep 7200` |
 | Create a sandbox with an env group | `porter sandbox create alpine:3.20 --env-group my-env-group -- sleep 3600` |
 | Create and mount a volume | `porter sandbox volume create my-data && porter sandbox create ubuntu:24.04 --volume /workspace=my-data -- bash` |
+| Upload a local file to a volume | `porter sandbox volume write my-data config/app.yaml --file ./app.yaml` |
+| Read a file back from a volume | `porter sandbox volume read my-data config/app.yaml` |
 | List running sandboxes | `porter sandbox list --phase running` |
 | Get running sandbox names for a script | `porter sandbox list -o json \| jq -r '.[] \| select(.phase == "running") \| .name'` |
 | Run a smoke command | `porter sandbox exec <sandbox-name> -- python -c 'print("ok")'` |

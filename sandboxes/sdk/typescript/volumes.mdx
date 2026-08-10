@@ -1,6 +1,6 @@
 ---
 title: "TypeScript Sandbox SDK volumes"
-description: "Create, mount, browse, and read sandbox volumes with the TypeScript Sandbox SDK"
+description: "Create, mount, browse, read, and write sandbox volumes with the TypeScript Sandbox SDK"
 ---
 
 Volumes provide persistent storage that can be mounted into Porter Sandboxes. Create a volume before launching the sandbox, then pass the volume ID in `volume_mounts`.
@@ -144,6 +144,30 @@ out.end();
 ```
 
 Reading a path that does not exist throws `NotFoundError`.
+
+## Write a file
+
+`writeText` writes a string and `writeFile` writes raw bytes. Both create parent directories as needed and replace any existing file at the path:
+
+```typescript
+await volume.writeText("/config/app.yaml", "replicas: 3\n");
+await volume.writeFile("/checkpoints/weights.bin", bytes);
+```
+
+A write is atomic: the file appears at its path only after the last byte lands, so an interrupted or failed write leaves the previous contents in place rather than a truncated file. An uploaded file gets the same permissions a sandbox writing to its own mount would leave, so it is indistinguishable from a file the sandbox wrote.
+
+You can write to a volume whether or not a sandbox has it mounted; the volume itself is the target. A single write is capped at 1 GiB; a request made from outside the cluster with an API token must also finish within 30 seconds, so write very large files from an app running in the same cluster.
+
+## Move or rename a file
+
+`moveFile` moves a file or directory to a new path. The second argument is the entry's full new path, not a directory to drop it into, so one call both renames and relocates. A directory moves with everything under it:
+
+```typescript
+await volume.moveFile("/notes.txt", "/archive/notes.txt");
+await volume.moveFile("/models/v1", "/models/v2");
+```
+
+The destination's parent directory must already exist, and nothing is overwritten. Moving onto a path something already occupies fails and leaves the entry where it was.
 
 ## Access volume data from apps
 
