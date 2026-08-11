@@ -220,6 +220,10 @@ readinessCheck:
   initialDelaySeconds: 15
 ```
 
+<Warning>
+A failing readiness check does not stop traffic instantly. Requests keep arriving for at least 1 to 5 seconds while routing catches up, so keep serving during that window. See [Graceful Shutdown](/applications/configure/zero-downtime-deployments#web-services).
+</Warning>
+
 ### `startupCheck`
 
 `object`
