@@ -1,0 +1,259 @@
+---
+title: "MCP Overview"
+description: "Connect AI agents to Porter's MCP server to inspect and manage your apps and clusters."
+---
+
+Porter hosts an MCP server at `https://mcp.porter.run`. Point an MCP client at that URL, sign in, and your agent can do the same things you'd do in the dashboard or the CLI: read logs, check why a deploy failed, change a service, redeploy it.
+
+You don't need to install or run anything locally. The server runs on Porter's side, so all your client needs is the URL and a browser to sign in.
+
+```
+https://mcp.porter.run
+```
+
+## Connect your client
+
+### Quick install
+
+For the CLI clients, one command is enough:
+
+```bash
+# Claude Code
+claude mcp add --transport http porter https://mcp.porter.run
+
+# Codex
+codex mcp add porter --url https://mcp.porter.run
+
+# OpenCode, prompts for a name, a type, and the URL
+opencode mcp add
+```
+
+### Client configuration
+
+<Tabs>
+<Tab title="Claude Code">
+
+1. Add the server:
+
+    ```bash
+    claude mcp add --transport http porter https://mcp.porter.run
+    ```
+
+    Or add it to `.mcp.json` to share it with the project:
+
+    ```json
+    {
+      "mcpServers": {
+        "porter": {
+          "type": "http",
+          "url": "https://mcp.porter.run"
+        }
+      }
+    }
+    ```
+
+2. Start Claude Code and run `/mcp`.
+3. Select **porter** and sign in through the browser.
+
+For more information, see the [Claude Code MCP documentation](https://code.claude.com/docs/en/mcp).
+
+</Tab>
+<Tab title="Codex">
+
+1. Add the server:
+
+    ```bash
+    codex mcp add porter --url https://mcp.porter.run
+    ```
+
+    Or add it to `~/.codex/config.toml` directly:
+
+    ```toml
+    [mcp_servers.porter]
+    url = "https://mcp.porter.run"
+    ```
+
+2. Sign in:
+
+    ```bash
+    codex mcp login porter
+    ```
+
+The ChatGPT desktop app, Codex CLI, and IDE extension share this file, so you only do this once.
+
+For more information, see the [Codex MCP documentation](https://developers.openai.com/codex/extend/mcp).
+
+</Tab>
+<Tab title="OpenCode">
+
+1. Run the setup command:
+
+    ```bash
+    opencode mcp add
+    ```
+
+2. Enter `porter` as the name, choose **remote**, and paste the URL:
+
+    ```
+    https://mcp.porter.run
+    ```
+
+    Or add it to `opencode.json` directly:
+
+    ```json
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "mcp": {
+        "porter": {
+          "type": "remote",
+          "url": "https://mcp.porter.run"
+        }
+      }
+    }
+    ```
+
+3. Sign in:
+
+    ```bash
+    opencode mcp auth porter
+    ```
+
+OpenCode also starts the sign-in on its own the first time you use a Porter tool.
+
+For more information, see the [OpenCode MCP documentation](https://opencode.ai/docs/mcp-servers/).
+
+</Tab>
+<Tab title="Cursor">
+
+1. Create or edit `.cursor/mcp.json` in your project root:
+
+    ```json
+    {
+      "mcpServers": {
+        "porter": {
+          "url": "https://mcp.porter.run"
+        }
+      }
+    }
+    ```
+
+    Use `~/.cursor/mcp.json` instead to get Porter in every project.
+
+2. Restart Cursor.
+3. Open **Settings > Tools & MCP**, select **porter**, and click **Connect**.
+
+For more information, see the [Cursor MCP documentation](https://cursor.com/docs/mcp).
+
+</Tab>
+<Tab title="Claude Desktop">
+
+1. Go to **Customize → Connectors**, click **+**, then **Add custom connector**. On Team or Enterprise, an Owner does this from **Organization settings → Connectors**.
+2. Paste the URL:
+
+    ```
+    https://mcp.porter.run
+    ```
+
+3. Click **Add** and approve access in the browser.
+
+Porter then shows up under **Connectors** in the **+** menu of any conversation. On Team or Enterprise, everyone else finds it already listed and clicks **Connect**.
+
+<Info>
+Claude connects to remote MCP servers from Anthropic's cloud, not from your machine. That's true in the desktop app too.
+</Info>
+
+For more information, see the [Claude custom connectors documentation](https://support.anthropic.com/en/articles/11175166-about-custom-connectors-remote-mcp-servers).
+
+</Tab>
+</Tabs>
+
+## Capabilities
+
+You ask for things in plain language, so it's easier to think in terms of tasks than tools:
+
+- **Deploy an app.** Create an application and get it running without leaving your agent. If you're deploying a pre-built image, the agent can take it all the way. If you're deploying from a GitHub repo, the agent creates the app and opens a pull request with the build workflow, and you merge it to deploy your code.
+- **Update an app.** Change services, resources, or domains on an existing app and redeploy. Updates can be validated with a dry run first, so you can see the resulting config before anything deploys.
+- **Troubleshoot your app.** Read logs, metrics, and notifications, or check nodes, node groups, pods, and load balancers to find what's broken. From there you can go back to the config that caused it, fix it, and redeploy.
+- **Rightsize a service.** Compare requested CPU and memory against what the service actually uses, then adjust the requests.
+- **Copy an environment.** Create dev or staging versions of an existing app, or move one to a different cluster.
+- **Inspect resources.** List projects, apps, and clusters, or check the status of a deployment.
+
+Some examples:
+
+```text
+Help me deploy my code to Porter.
+
+Why did my latest deploy fail?
+
+My web service keeps restarting, figure out why and fix it.
+
+Help me reduce cost for my apps.
+
+Create a staging copy of my production web service.
+```
+
+The [tools reference](/mcp/tools) has the full list of tools.
+
+## Limitations
+
+OAuth is currently the only auth method, so headless environments like CI pipelines and sandboxed agents are not supported.
+
+## Risks
+
+<Warning>
+  MCP tools can perform destructive operations on your applications, including
+  creating, updating, and redeploying services. They can directly impact
+  production environments and cause downtime to services if not used with care.
+</Warning>
+
+The agent authenticates as you and inherits your Porter permissions.
+
+Recommendations:
+
+- **Use non-production environments first.** Validate changes in a dev or staging project before applying them to production.
+- **Review the agent's plan before approving it**, particularly for operations that modify production resources.
+- **Disable auto-approval against production.** It is reasonable on a test project and unsafe everywhere else.
+- **Account for prompt injection.** The agent reads your application logs, notifications, and pull request bodies, all of which can carry attacker-controlled text. The server cannot distinguish injected instructions from your own, so a compromised agent can call `create_app`, `update_application`, or `redeploy_application` and change or restart a running service. Read tools exclude environment variables and secrets, and redact token-shaped values in logs, so the exposure is to your application's configuration and availability rather than its credentials.
+
+## Revoke access
+
+You revoke access per client. Remove the stored credentials, then delete the server entry so it doesn't sign in again later.
+
+<Tabs>
+<Tab title="Claude Code">
+
+```bash
+claude mcp remove porter
+```
+
+</Tab>
+<Tab title="Codex">
+
+```bash
+codex mcp logout porter
+codex mcp remove porter
+```
+
+`logout` clears the stored OAuth credentials and `remove` deletes the server entry.
+
+</Tab>
+<Tab title="OpenCode">
+
+```bash
+opencode mcp logout porter
+```
+
+That clears the stored OAuth tokens. Also remove the `porter` entry from `opencode.json` to get rid of the server entirely.
+
+</Tab>
+<Tab title="Cursor">
+
+Delete the `porter` entry from `.cursor/mcp.json` (or `~/.cursor/mcp.json`) and restart Cursor.
+
+</Tab>
+<Tab title="Claude Desktop">
+
+Go to **Customize → Connectors**, click the three dots next to Porter, and choose **Remove**. On Team and Enterprise plans, an Owner has to remove it for the whole organization from **Organization settings → Connectors**.
+
+</Tab>
+</Tabs>

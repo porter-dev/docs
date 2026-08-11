@@ -201,6 +201,13 @@
           ]
         },
         {
+          "group": "MCP Server",
+          "pages": [
+            "mcp/overview",
+            "mcp/tools"
+          ]
+        },
+        {
           "group": "Preview Environments",
           "pages": [
             "preview-environments/overview",

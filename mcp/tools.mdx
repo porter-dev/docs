@@ -1,0 +1,66 @@
+---
+title: "Tools"
+description: "The following tools are exposed by the MCP server so agents can interact with your Porter project."
+---
+
+All tools are read-only unless otherwise specified.
+
+Every tool except `get_projects` requires a project, given as either its ID or its exact name. Application arguments accept an app name or UUID, and cluster arguments accept a cluster ID, exact name, or vanity name. Start with `get_projects` to resolve the project, then `get_applications` or `get_clusters` from there.
+
+### Projects & Discovery
+
+| Tool               | Description                                                    |
+| ------------------ | -------------------------------------------------------------- |
+| `get_projects`     | List the projects your account can access. Takes no arguments. |
+| `get_applications` | List applications in a project.                                |
+| `get_clusters`     | List clusters in a project.                                    |
+
+### Applications
+
+| Tool                        | Description                                                                              |
+| --------------------------- | ---------------------------------------------------------------------------------------- |
+| `get_application`           | Read an application's configuration. Excludes variables, secrets, or environment groups. |
+| `get_application_status`    | Read an application's current deployment status and conditions.                          |
+| `get_application_revisions` | List an application's revisions.                                                         |
+| `get_application_metrics`   | Read CPU, memory, and request metrics for an application.                                |
+| `get_app_logs`              | Read an application's logs. Bearer tokens and secret-shaped values are redacted.         |
+| `get_notifications`         | List a project's notifications.                                                          |
+
+### Clusters & Infrastructure
+
+| Tool                      | Description                                               |
+| ------------------------- | --------------------------------------------------------- |
+| `get_cluster_nodes`       | List the nodes in a cluster.                              |
+| `get_cluster_node_groups` | List the node groups in a cluster.                        |
+| `get_cluster_pods`        | List pods in a cluster, optionally filtered by namespace. |
+| `get_cluster_pod`         | Read a single pod's spec. Excludes environment variables. |
+| `get_load_balancers`      | List load balancers for a cluster.                        |
+| `get_node_group_metrics`  | Read metrics for a node group.                            |
+
+### Mutating tools
+
+<Warning>
+  These tools can modify or redeploy your applications and may have unintended
+  side effects. Review the agent's plan before approving any call to
+  `create_app`, `update_application`, or `redeploy_application`.
+</Warning>
+
+#### `create_app`
+
+Create a new application. The behavior depends on which inputs you pass:
+
+| Input            | Behavior                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `image`          | Deploys the prebuilt image directly. No pull request.                                                                          |
+| `source` + `build` | Creates the app on a placeholder image and opens a GitHub Actions pull request. Nothing real serves until that PR is merged. |
+| `build` alone    | Returns a `local_build_command` to run `porter apply` from the local repository.                                               |
+
+`image` is mutually exclusive with `source` and `build`. Creation fails if an application with the same name already exists in the target project or cluster. Use `update_application` instead.
+
+#### `update_application`
+
+Update an application's configuration. Defaults to a dry run, which validates the change and returns the resulting config without deploying. Set `dry_run: false` to deploy.
+
+#### `redeploy_application`
+
+Trigger an immediate redeploy of an application.
