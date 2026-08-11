@@ -1,0 +1,98 @@
+---
+title: "Forward Authentication"
+sidebarTitle: "Forward Auth"
+---
+
+<Note>
+  Forward Auth is a **beta** feature. To have it enabled for your project, reach out to support
+</Note>
+
+# Overview
+
+Forward Auth puts an OAuth sign-on in front of your application. When it is enabled on a service, every
+request must be authenticated through your sign-on provider before it ever reaches your application —
+unauthenticated users are redirected to log in first.
+
+This is handled by an [oauth2-proxy](https://oauth2-proxy.github.io/oauth2-proxy/) that runs in your
+cluster. You configure it in `Infrastructure -> Cluster -> Config` with with your provider credentials. Once configured, you can enable it for individual services.
+
+We recommend Forward Auth for **internal apps** and **vibe-coded apps** where you want a simple, robust login gate without building and maintaining authentication into the application itself.
+
+## Supported providers
+
+Forward Auth supports the following sign-on providers:
+
+- Google
+- GitHub
+- Okta
+- Microsoft Entra ID
+- ADFS
+- GitLab
+- Bitbucket
+- DigitalOcean
+- Facebook
+- Keycloak (OIDC)
+- LinkedIn
+- Login.gov
+- Nextcloud
+- Generic OIDC (for any provider that speaks OpenID Connect)
+
+<Tip>
+  Forward Auth is most useful when you point it at your own **identity provider** (for example your company's Google Workspace, Okta, or Entra ID tenant) rather than a generic public auth provider. Backing it with your IdP means only members of your organization can reach that app.
+</Tip>
+
+# Enabling Forward Auth on a cluster
+
+Once the feature has been enabled for your project by support, go to **Infrastructure → Config**. There
+you can enable Forward Auth, pick your sign-on provider, and enter its credentials:
+
+- **Provider** — the sign-on provider to authenticate against (see [Supported providers](#supported-providers)).
+- **Client ID** — the OAuth2 client ID from your provider.
+- **Client Secret** — the OAuth2 client secret.
+- **Issuer URL** — the issuer URL for your provider. (for example `https://accounts.google.com`)
+
+After saving, the cluster's proxy is configured and ready for services to use.
+
+# Enabling Forward Auth on an application
+
+With Forward Auth configured on the cluster, open an application and go to **Services → Networking**. A new
+**Forward Auth** toggle is available on web services. Enabling it makes that application authenticated —
+all incoming traffic is routed through the login flow before reaching your app.
+
+## Configuring it in `porter.yaml`
+
+You can also enable it declaratively in your `porter.yaml` by adding `forwardAuth: true` to a service:
+
+```yaml
+services:
+  - name: web
+    # ...
+    forwardAuth: true
+```
+
+<Warning>
+  Enabling Forward Auth means **all traffic to the application must be authenticated** before it reaches
+  your app. There is no unauthenticated path to the service while it is on.
+</Warning>
+
+# Identifying the user in your application
+
+Once a request is authenticated, the proxy forwards the authenticated user's identity to your
+application as request headers. Your app can read these to tell users apart — for example, to scope data
+per user or drive per-user behavior:
+
+- `X-Auth-Request-User` — the authenticated user's ID.
+- `X-Auth-Request-Email` — the authenticated user's email.
+
+Because these headers are only ever set by the in-cluster proxy after a successful login (and all traffic
+is forced through it), your application can trust them to identify the current user.
+
+For example, in an Express app:
+
+```js
+app.get("/me", (req, res) => {
+  const userId = req.header("X-Auth-Request-User");
+  const email = req.header("X-Auth-Request-Email");
+  res.json({ userId, email });
+});
+```
