@@ -1,0 +1,44 @@
+---
+title: "Restrict cluster forward auth by email domain"
+sidebarTitle: "Forward auth email domains"
+description: "Restrict Porter cluster OAuth2 Proxy forward auth to specific email domains so only users with approved corporate identities can authenticate."
+---
+
+Porter's cluster forward auth uses OAuth2 Proxy in front of internal ingress endpoints, delegating login to your OIDC identity provider. By default, any user who completes the OIDC flow is allowed through, regardless of the email address returned by the provider. You can tighten this by configuring an **email domain allowlist** — only users whose OIDC email claim ends in one of the listed domains can authenticate.
+
+Use this when you want to make sure that only members of your organization (or specific partner organizations) can reach internal services behind forward auth, even if the OIDC application itself is reachable by other tenants.
+
+## Prerequisites
+
+- A Porter cluster with forward auth (OAuth2 Proxy) already configured against an OIDC provider.
+- Cluster admin access in the Porter dashboard.
+
+## Configure the allowlist
+
+<Steps>
+  <Step title="Open the cluster's config tab">
+    From the Porter dashboard, select **Infrastructure** in the left sidebar, choose the cluster, then open the **Config** tab.
+  </Step>
+  <Step title="Enter the allowed domains">
+    In the **Email Domains** field, enter a comma-separated list of domains that are permitted to authenticate. Do not include the `@` symbol.
+
+    ```
+    example.com,partner.com
+    ```
+
+    Leave the field blank to keep the currently configured allowlist unchanged. Enter `*` to explicitly permit any domain.
+  </Step>
+  <Step title="Save the OIDC settings">
+    Select **Save OIDC Settings**. Porter reconciles the OAuth2 Proxy configuration and rolls out the change.
+  </Step>
+</Steps>
+
+## Behavior
+
+- When one or more domains are configured, OAuth2 Proxy rejects any authenticated session whose email does not match one of the listed domains. The user sees an authentication failure and is not forwarded upstream.
+- When the allowlist is empty, all domains are permitted (equivalent to `*`).
+- Domain matching is exact on the portion of the email after `@`. Subdomains are not implicitly included — add `sub.example.com` alongside `example.com` if you need both.
+
+<Note>
+  The allowlist relies on the email claim returned by your OIDC provider. If your provider does not return a verified email, or returns a non-corporate email for some accounts, an allowlist alone is not sufficient — restrict access at the provider (for example, with tenant restrictions or group-based access) as well.
+</Note>
