@@ -1,12 +1,20 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
+import { setTimeout as sleep } from 'node:timers/promises'
 import { fileURLToPath } from 'node:url'
 
+import {
+  gatesTable,
+  parseOptions,
+  positiveInteger,
+  runMain,
+  writeOutput
+} from './cli.mjs'
 import { parseCorpus, retrieve } from './retrieval.mjs'
-import { compareResults } from './score.mjs'
+import { compareResults, totalSnippetTokens } from './score.mjs'
 
 const DEFAULT_BEFORE_URL = 'https://docs.porter.run'
 
@@ -26,43 +34,17 @@ Options:
   --help              Show this help text.`
 
 const parseArgs = (argv) => {
-  const options = {
-    beforeUrl: DEFAULT_BEFORE_URL,
-    maxChunks: 4,
-    verifyVisibility: true
+  const options = parseOptions(argv, {
+    strings: ['before-url', 'after-url', 'max-chunks', 'json', 'markdown'],
+    booleans: ['help', 'skip-visibility']
+  })
+  return {
+    ...options,
+    beforeUrl: options.beforeUrl ?? DEFAULT_BEFORE_URL,
+    maxChunks: positiveInteger(options.maxChunks ?? 4, '--max-chunks'),
+    verifyVisibility: !options.skipVisibility
   }
-  for (let index = 0; index < argv.length; index += 1) {
-    const argument = argv[index]
-    if (argument === '--help') {
-      options.help = true
-      continue
-    }
-    if (argument === '--skip-visibility') {
-      options.verifyVisibility = false
-      continue
-    }
-    if (!argument.startsWith('--')) {
-      throw new Error(`Unexpected argument: ${argument}`)
-    }
-    const value = argv[index + 1]
-    if (!value || value.startsWith('--')) {
-      throw new Error(`Missing value for ${argument}`)
-    }
-    index += 1
-    const name = argument
-      .slice(2)
-      .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
-    options[name] = value
-  }
-  options.maxChunks = Number(options.maxChunks)
-  if (!Number.isInteger(options.maxChunks) || options.maxChunks < 1) {
-    throw new Error('--max-chunks must be a positive integer')
-  }
-  return options
 }
-
-const sleep = (milliseconds) =>
-  new Promise((resolve) => setTimeout(resolve, milliseconds))
 
 const request = async (url, { attempts = 3 } = {}) => {
   let lastError
@@ -83,51 +65,53 @@ const request = async (url, { attempts = 3 } = {}) => {
 
 const origin = (url) => url.replace(/\/$/, '')
 
-const corpusMetadata = (sourceUrl, corpus, chunks) => ({
-  id: `${origin(sourceUrl)}/llms-full.txt`,
+const llmsUrl = (url) => `${origin(url)}/llms-full.txt`
+
+const corpusMetadata = (id, corpus, chunks) => ({
+  id,
   state: 'fetched',
   fetchedAt: new Date().toISOString(),
   sha256: createHash('sha256').update(corpus).digest('hex'),
   pages: new Set(chunks.map(({ pageId }) => pageId)).size,
   chunks: chunks.length,
-  totalTokens: chunks.reduce(
-    (total, { contentTokens }) => total + contentTokens,
-    0
-  )
+  totalTokens: totalSnippetTokens(chunks)
 })
 
-const chunksForEntryPath = (chunks, entryPath) => {
-  const matching = chunks.filter(
-    ({ pageId }) => new URL(pageId).pathname === entryPath
-  )
-  if (matching.length === 0) {
-    throw new Error(`No llms-full.txt chunks found for ${entryPath}`)
+const responsesFor = (chunks, queries, maximumChunks) => {
+  const chunksByPath = new Map()
+  for (const chunk of chunks) {
+    const path = new URL(chunk.pageId).pathname
+    chunksByPath.set(path, [...(chunksByPath.get(path) ?? []), chunk])
   }
-  return matching
-}
-
-const responsesFor = (chunks, queries, maximumChunks) =>
-  Object.fromEntries(
-    queries.map((query) => [
-      query.id,
-      {
-        infoSnippets: retrieve(
-          chunksForEntryPath(chunks, query.entryPath),
-          query.prompt,
-          maximumChunks
-        ).map(
-          ({ pageId, breadcrumb, content, contentTokens, retrievalScore }) => ({
-            pageId,
-            breadcrumb,
-            content,
-            contentTokens,
-            retrievalScore
-          })
-        ),
-        codeSnippets: []
+  return Object.fromEntries(
+    queries.map((query) => {
+      const matching = chunksByPath.get(query.entryPath)
+      if (!matching) {
+        throw new Error(`No llms-full.txt chunks found for ${query.entryPath}`)
       }
-    ])
+      return [
+        query.id,
+        {
+          infoSnippets: retrieve(matching, query.prompt, maximumChunks).map(
+            ({
+              pageId,
+              breadcrumb,
+              content,
+              contentTokens,
+              retrievalScore
+            }) => ({
+              pageId,
+              breadcrumb,
+              content,
+              contentTokens,
+              retrievalScore
+            })
+          )
+        }
+      ]
+    })
   )
+}
 
 const decodeHtml = (value) =>
   value
@@ -174,10 +158,8 @@ const verifyVisibility = async (afterUrl, checks) => {
   )
 }
 
-const metric = (score, valueName, indexName) =>
-  score[indexName] === -1
-    ? `not found (${score[valueName]} penalty)`
-    : String(score[valueName])
+const metric = (value, index) =>
+  index === -1 ? `not found (${value} penalty)` : String(value)
 
 const renderReport = (evaluation) => {
   const lines = [
@@ -196,12 +178,7 @@ const renderReport = (evaluation) => {
     '',
     '## Gates',
     '',
-    '| Gate | Result | Detail |',
-    '| --- | --- | --- |',
-    ...evaluation.comparison.gates.map(
-      (gate) =>
-        `| ${gate.id} | ${gate.pass ? 'PASS' : 'FAIL'} | ${gate.detail} |`
-    ),
+    ...gatesTable(evaluation.comparison.gates),
     '',
     '## Query results',
     '',
@@ -209,7 +186,7 @@ const renderReport = (evaluation) => {
     '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |',
     ...evaluation.comparison.results.map(
       ({ query, before, after }) =>
-        `| ${query.group} | ${query.prompt} | ${query.entryPath} | ${before.firstAgentIndex === -1 ? 'not found' : before.firstAgentIndex + 1} | ${after.firstAgentIndex === -1 ? 'not found' : after.firstAgentIndex + 1} | ${metric(before, 'tokensToFirstAgentPath', 'firstAgentIndex')} | ${metric(after, 'tokensToFirstAgentPath', 'firstAgentIndex')} | ${after.completePath ? 'yes' : 'no'} |`
+        `| ${query.group} | ${query.prompt} | ${query.entryPath} | ${before.firstAgentIndex === -1 ? 'not found' : before.firstAgentIndex + 1} | ${after.firstAgentIndex === -1 ? 'not found' : after.firstAgentIndex + 1} | ${metric(before.tokensToFirstAgentPath, before.firstAgentIndex)} | ${metric(after.tokensToFirstAgentPath, after.firstAgentIndex)} | ${after.completePath ? 'yes' : 'no'} |`
     )
   ]
 
@@ -230,11 +207,6 @@ const renderReport = (evaluation) => {
   return `${lines.join('\n')}\n`
 }
 
-const writeOutput = async (path, content) => {
-  await mkdir(dirname(path), { recursive: true })
-  await writeFile(path, content)
-}
-
 const main = async () => {
   const options = parseArgs(process.argv.slice(2))
   if (options.help) {
@@ -252,24 +224,24 @@ const main = async () => {
   const visibilityChecks = JSON.parse(
     await readFile(join(directory, 'visibility.json'), 'utf8')
   )
-  const [beforeCorpus, afterCorpus] = await Promise.all([
-    request(`${origin(options.beforeUrl)}/llms-full.txt`),
-    request(`${origin(options.afterUrl)}/llms-full.txt`)
+  const [beforeCorpus, afterCorpus, visibility] = await Promise.all([
+    request(llmsUrl(options.beforeUrl)),
+    request(llmsUrl(options.afterUrl)),
+    options.verifyVisibility
+      ? verifyVisibility(options.afterUrl, visibilityChecks)
+      : undefined
   ])
   const beforeChunks = parseCorpus(beforeCorpus)
   const afterChunks = parseCorpus(afterCorpus)
   const beforeResponses = responsesFor(beforeChunks, queries, options.maxChunks)
   const afterResponses = responsesFor(afterChunks, queries, options.maxChunks)
   const comparison = compareResults(queries, beforeResponses, afterResponses)
-  const visibility = options.verifyVisibility
-    ? await verifyVisibility(options.afterUrl, visibilityChecks)
-    : undefined
   const visibilityPass = visibility?.every(({ pass }) => pass) ?? false
-  const visibilityStatus = options.verifyVisibility
-    ? visibilityPass
+  const visibilityStatus = !options.verifyVisibility
+    ? 'skipped (overall result cannot pass)'
+    : visibilityPass
       ? 'passed'
       : 'failed'
-    : 'skipped (overall result cannot pass)'
   const evaluation = {
     generatedAt: new Date().toISOString(),
     method: 'local-bm25',
@@ -278,12 +250,20 @@ const main = async () => {
     visibilityStatus,
     before: {
       sourceUrl: options.beforeUrl,
-      library: corpusMetadata(options.beforeUrl, beforeCorpus, beforeChunks),
+      library: corpusMetadata(
+        llmsUrl(options.beforeUrl),
+        beforeCorpus,
+        beforeChunks
+      ),
       responses: beforeResponses
     },
     after: {
       sourceUrl: options.afterUrl,
-      library: corpusMetadata(options.afterUrl, afterCorpus, afterChunks),
+      library: corpusMetadata(
+        llmsUrl(options.afterUrl),
+        afterCorpus,
+        afterChunks
+      ),
       responses: afterResponses
     },
     comparison,
@@ -298,7 +278,4 @@ const main = async () => {
   if (!evaluation.pass) process.exitCode = 1
 }
 
-main().catch((error) => {
-  process.stderr.write(`${error.stack ?? error.message}\n`)
-  process.exitCode = 1
-})
+runMain(main)

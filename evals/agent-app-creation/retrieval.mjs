@@ -22,26 +22,25 @@ const STOP_WORDS = new Set([
   'with'
 ])
 
-const canonicalToken = (token) => {
-  const aliases = {
-    applications: 'application',
-    apps: 'application',
-    customization: 'customize',
-    customized: 'customize',
-    customizing: 'customize',
-    created: 'create',
-    creates: 'create',
-    creating: 'create',
-    creation: 'create',
-    deployed: 'deploy',
-    deploying: 'deploy',
-    deployment: 'deploy',
-    deployments: 'deploy',
-    repositories: 'repository',
-    repos: 'repository'
-  }
-  return aliases[token] ?? token
+const TOKEN_ALIASES = {
+  applications: 'application',
+  apps: 'application',
+  customization: 'customize',
+  customized: 'customize',
+  customizing: 'customize',
+  created: 'create',
+  creates: 'create',
+  creating: 'create',
+  creation: 'create',
+  deployed: 'deploy',
+  deploying: 'deploy',
+  deployment: 'deploy',
+  deployments: 'deploy',
+  repositories: 'repository',
+  repos: 'repository'
 }
+
+const canonicalToken = (token) => TOKEN_ALIASES[token] ?? token
 
 const searchTokens = (text) =>
   (text.toLowerCase().match(/[a-z0-9_]+/g) ?? [])
@@ -187,8 +186,8 @@ const termFrequencies = (tokens) => {
 }
 
 export const rankChunks = (chunks, query) => {
-  const terms = [...new Set(searchTokens(query))]
   const querySequence = searchTokens(query)
+  const terms = [...new Set(querySequence)]
   const queryBigrams = querySequence
     .slice(0, -1)
     .map((token, index) => `${token} ${querySequence[index + 1]}`)
@@ -239,7 +238,7 @@ export const rankChunks = (chunks, query) => {
           (contentFrequency * (k1 + 1)) /
           (contentFrequency +
             k1 * (1 - b + b * (document.contentTokens.length / averageLength)))
-        const fieldFrequency = titleFrequency * 3 + sectionFrequency * 3
+        const fieldFrequency = (titleFrequency + sectionFrequency) * 3
         return (
           total +
           inverseDocumentFrequency * (normalizedFrequency + fieldFrequency)

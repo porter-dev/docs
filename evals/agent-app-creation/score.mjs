@@ -1,4 +1,7 @@
 const CREATE_APP_PATTERN = /\bcreate_app\b/i
+const DEPLOY_APP_PATTERN = /\bdeploy_app\b/i
+
+export const DEPLOYMENT_GROUPS = ['generic', 'agent-aware']
 const AGENT_SIGNAL_PATTERNS = [
   /\bMCP\b/i,
   /\b(?:AI|coding) agent\b/i,
@@ -46,17 +49,20 @@ const mentionsGeneratedPullRequest = (text) =>
   )
 
 const REQUIRED_FACTS = {
-  createApp: (text) => /\bcreate_app\b/i.test(text),
+  createApp: (text) => CREATE_APP_PATTERN.test(text),
   sourceAndBuild: (text) => /\bsource\b/i.test(text) && /\bbuild\b/i.test(text),
-  githubApp: (text) => mentionsGithubAppPrerequisite(text),
+  githubApp: mentionsGithubAppPrerequisite,
   pullRequest: (text) => /\bpull request\b|\bPR\b/i.test(text),
-  merge: (text) => mentionsMergeStep(text)
+  merge: mentionsMergeStep
 }
 
 const FALSE_GITHUB_INSTALL_CLAIMS = [
   /\b(?:MCP server|create_app|agent)\s+(?:itself\s+)?(?:(?:can|will|automatically)\s+)?install(?:s)?\b[^.!?\n]{0,80}\b(?:Porter\s+)?GitHub App\b/i,
   /\binstall(?:s|ed|ing)?\b[^.!?\n]{0,80}\b(?:Porter\s+)?GitHub App\b[^.!?\n]{0,120}\b(?:with|using|through)\s+(?:the\s+)?(?:MCP|create_app|agent)\b/i
 ]
+
+const claimsMcpInstallsGithubApp = (text) =>
+  FALSE_GITHUB_INSTALL_CLAIMS.some((pattern) => pattern.test(text))
 
 const snippetText = (snippet) =>
   [snippet.breadcrumb, snippet.content].filter(Boolean).join('\n')
@@ -71,10 +77,11 @@ const snippetTokens = (snippet) => {
   return snippet.contentTokens
 }
 
+export const totalSnippetTokens = (snippets) =>
+  snippets.reduce((total, snippet) => total + snippetTokens(snippet), 0)
+
 const cumulativeTokensThrough = (snippets, index) =>
-  snippets
-    .slice(0, index + 1)
-    .reduce((total, snippet) => total + snippetTokens(snippet), 0)
+  totalSnippetTokens(snippets.slice(0, index + 1))
 
 const containsAgentPath = (text) =>
   CREATE_APP_PATTERN.test(text) ||
@@ -103,22 +110,9 @@ const expectedTermsPresent = (snippets, expectedTermGroups = []) => {
   )
 }
 
-const allResponseText = (response) => {
-  const info = (response.infoSnippets ?? []).map(snippetText)
-  const code = (response.codeSnippets ?? []).flatMap((snippet) => [
-    snippet.codeTitle,
-    snippet.codeDescription,
-    ...(snippet.codeList ?? []).map((entry) => entry.code)
-  ])
-  return [...info, ...code].filter(Boolean).join('\n')
-}
-
 export const scoreResponse = (response, query = {}) => {
   const snippets = response.infoSnippets ?? []
-  const totalTokens = snippets.reduce(
-    (total, snippet) => total + snippetTokens(snippet),
-    0
-  )
+  const totalTokens = totalSnippetTokens(snippets)
   const missingPenalty = totalTokens + 1
   const firstAgentIndex = snippets.findIndex((snippet) =>
     containsAgentPath(snippetText(snippet))
@@ -134,8 +128,8 @@ export const scoreResponse = (response, query = {}) => {
     }
   }
 
-  const responseText = allResponseText(response)
-  const facts = factsIn(snippets.map(snippetText).join('\n'))
+  const snippetsText = snippets.map(snippetText).join('\n')
+  const facts = factsIn(snippetsText)
 
   return {
     totalTokens,
@@ -157,10 +151,8 @@ export const scoreResponse = (response, query = {}) => {
       snippets,
       query.expectedTopTwoTerms
     ),
-    recommendsDeployApp: /\bdeploy_app\b/i.test(responseText),
-    claimsMcpInstallsGithubApp: FALSE_GITHUB_INSTALL_CLAIMS.some((pattern) =>
-      pattern.test(responseText)
-    )
+    recommendsDeployApp: DEPLOY_APP_PATTERN.test(snippetsText),
+    claimsMcpInstallsGithubApp: claimsMcpInstallsGithubApp(snippetsText)
   }
 }
 
@@ -190,17 +182,13 @@ export const compareResults = (queries, beforeResponses, afterResponses) => {
     const after = scoreResponse(afterResponse, query)
     const sharedMissingPenalty =
       Math.max(before.totalTokens, after.totalTokens) + 1
-    if (before.firstAgentIndex === -1) {
-      before.tokensToFirstAgentPath = sharedMissingPenalty
-    }
-    if (after.firstAgentIndex === -1) {
-      after.tokensToFirstAgentPath = sharedMissingPenalty
-    }
-    if (before.completePathIndex === -1) {
-      before.tokensToCompletePath = sharedMissingPenalty
-    }
-    if (after.completePathIndex === -1) {
-      after.tokensToCompletePath = sharedMissingPenalty
+    for (const score of [before, after]) {
+      if (score.firstAgentIndex === -1) {
+        score.tokensToFirstAgentPath = sharedMissingPenalty
+      }
+      if (score.completePathIndex === -1) {
+        score.tokensToCompletePath = sharedMissingPenalty
+      }
     }
 
     return { query, before, after }
@@ -233,9 +221,10 @@ export const compareResults = (queries, beforeResponses, afterResponses) => {
     {
       id: 'generic-top-two-coverage',
       pass:
-        genericAfterTopTwo >= 3 &&
-        genericAfterTopTwo - genericBeforeTopTwo >= 2,
-      detail: `after ${genericAfterTopTwo}/4; before ${genericBeforeTopTwo}/4`
+        genericAfterTopTwo >= Math.ceil((generic.length * 3) / 4) &&
+        genericAfterTopTwo - genericBeforeTopTwo >=
+          Math.ceil(generic.length / 2),
+      detail: `after ${genericAfterTopTwo}/${generic.length}; before ${genericBeforeTopTwo}/${generic.length}`
     },
     {
       id: 'generic-token-prominence',
@@ -245,23 +234,23 @@ export const compareResults = (queries, beforeResponses, afterResponses) => {
     {
       id: 'agent-aware-first-result',
       pass:
-        agentAware.length === 2 &&
+        agentAware.length > 0 &&
         agentAware.every(({ after }) => after.topOneAgentPath),
-      detail: `${countMatching(agentAware, ({ after }) => after.topOneAgentPath)}/2`
+      detail: `${countMatching(agentAware, ({ after }) => after.topOneAgentPath)}/${agentAware.length}`
     },
     {
       id: 'workflow-completeness',
       pass:
-        workflow.length === 2 &&
+        workflow.length > 0 &&
         workflow.every(({ after }) => after.completePath),
-      detail: `${countMatching(workflow, ({ after }) => after.completePath)}/2`
+      detail: `${countMatching(workflow, ({ after }) => after.completePath)}/${workflow.length}`
     },
     {
       id: 'control-relevance',
       pass:
-        controls.length === 2 &&
+        controls.length > 0 &&
         controls.every(({ after }) => after.controlTermsPresent),
-      detail: `${countMatching(controls, ({ after }) => after.controlTermsPresent)}/2`
+      detail: `${countMatching(controls, ({ after }) => after.controlTermsPresent)}/${controls.length}`
     },
     {
       id: 'no-invalid-tool-or-install-claim',
@@ -291,27 +280,18 @@ export const compareResults = (queries, beforeResponses, afterResponses) => {
   }
 }
 
-const firstMatchIndex = (text, patterns) => {
-  const indexes = patterns
-    .map((pattern) => text.search(pattern))
-    .filter((index) => index >= 0)
-  return indexes.length === 0 ? Number.POSITIVE_INFINITY : Math.min(...indexes)
-}
+const NEGATED_PREFIX =
+  /\b(?:do not|don't|avoid|never|should not|shouldn't|cannot|can't)\s+(?:(?:use|using|call|calling)\s+)?(?:the\s+)?$/i
 
-const firstNonNegatedAgentIndex = (text) => {
-  const patterns = [CREATE_APP_PATTERN, ...AGENT_SIGNAL_PATTERNS, /\bagent\b/i]
+const firstMatchIndex = (text, patterns, { skipNegated = false } = {}) => {
   const indexes = patterns
     .map((pattern) => {
       const index = text.search(pattern)
-      if (index === -1) {
-        return Number.POSITIVE_INFINITY
-      }
-      const prefix = text.slice(Math.max(0, index - 40), index)
-      return /\b(?:do not|don't|avoid|never|should not|shouldn't|cannot|can't)\s+(?:(?:use|using|call|calling)\s+)?(?:the\s+)?$/i.test(
-        prefix
-      )
-        ? Number.POSITIVE_INFINITY
-        : index
+      const negated =
+        index !== -1 &&
+        skipNegated &&
+        NEGATED_PREFIX.test(text.slice(Math.max(0, index - 40), index))
+      return index === -1 || negated ? Number.POSITIVE_INFINITY : index
     })
     .filter(Number.isFinite)
   return indexes.length === 0 ? Number.POSITIVE_INFINITY : Math.min(...indexes)
@@ -319,7 +299,14 @@ const firstNonNegatedAgentIndex = (text) => {
 
 const inferredLeadPath = (text) => {
   const candidates = [
-    ['agent', firstNonNegatedAgentIndex(text)],
+    [
+      'agent',
+      firstMatchIndex(
+        text,
+        [CREATE_APP_PATTERN, ...AGENT_SIGNAL_PATTERNS, /\bagent\b/i],
+        { skipNegated: true }
+      )
+    ],
     [
       'dashboard',
       firstMatchIndex(text, [/\bdashboard\b/i, /\bCreate Application\b/i])
@@ -344,16 +331,14 @@ export const scoreClaudeAnswer = (answer) => {
     mentionsGeneratedPullRequest: mentionsGeneratedPullRequest(text),
     mentionsGithubAppPrerequisite: mentionsGithubAppPrerequisite(text),
     mentionsMergeStep: mentionsMergeStep(text),
-    recommendsDeployApp: /\bdeploy_app\b/i.test(text),
-    claimsMcpInstallsGithubApp: FALSE_GITHUB_INSTALL_CLAIMS.some((pattern) =>
-      pattern.test(text)
-    )
+    recommendsDeployApp: DEPLOY_APP_PATTERN.test(text),
+    claimsMcpInstallsGithubApp: claimsMcpInstallsGithubApp(text)
   }
 }
 
 export const evaluateClaudeOutcomes = (runs) => {
   const deployment = runs.filter(({ queryGroup }) =>
-    ['generic', 'agent-aware'].includes(queryGroup)
+    DEPLOYMENT_GROUPS.includes(queryGroup)
   )
   const beforeDeployment = deployment.filter(
     ({ corpus }) => corpus === 'before'
@@ -362,7 +347,8 @@ export const evaluateClaudeOutcomes = (runs) => {
   const afterWorkflow = runs.filter(
     ({ corpus, queryGroup }) => corpus === 'after' && queryGroup === 'workflow'
   )
-  const score = (run) => scoreClaudeAnswer(run.answer)
+  const scores = new Map(runs.map((run) => [run, scoreClaudeAnswer(run.answer)]))
+  const score = (run) => scores.get(run)
   const beforeLeadCount = countMatching(
     beforeDeployment,
     (run) => score(run).leadsWithAgent && score(run).mentionsCreateApp

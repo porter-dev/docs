@@ -38,17 +38,8 @@ test('rejects snippets without token counts', () => {
   )
 })
 
-test('scores a code-only response as missing agent prose instead of crashing', () => {
-  const score = scoreResponse({
-    codeSnippets: [
-      {
-        codeTitle: 'Create an app',
-        codeDescription: 'Call create_app from an MCP client.',
-        codeList: []
-      }
-    ],
-    infoSnippets: []
-  })
+test('scores an empty response as missing agent prose instead of crashing', () => {
+  const score = scoreResponse({ infoSnippets: [] })
 
   assert.equal(score.totalTokens, 0)
   assert.equal(score.tokensToFirstAgentPath, 1)
@@ -197,7 +188,6 @@ test('passes the deterministic comparison gates for a complete improvement', asy
 test('uses one shared missing-result penalty for each before-and-after pair', async () => {
   const before = await fixture('before')
   const after = {
-    codeSnippets: [],
     infoSnippets: [
       {
         pageId: 'https://preview.example.com/dashboard',

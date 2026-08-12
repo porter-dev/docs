@@ -38,7 +38,7 @@ node evals/agent-app-creation/claude-outcomes.mjs \
   --markdown /tmp/porter-agent-app-creation-claude.md
 ```
 
-This performs three trials for each generic and agent-aware query against both corpora, plus three trials for each proposed workflow query. Claude runs in safe mode with tools and project customizations disabled. The report records the estimated retrieved-document tokens and the model envelope's exact total input tokens (including fixed harness overhead), model, context-window size, and cost.
+By default this performs three trials (`--trials`) for each generic and agent-aware query against both corpora, plus three trials for each proposed workflow query, running up to four Claude processes at a time (`--concurrency`). Claude runs in safe mode with tools and project customizations disabled. The report records the estimated retrieved-document tokens and the model envelope's exact total input tokens (including fixed harness overhead); the JSON result additionally records the model, context-window size, and cost. Run either command with `--help` for the full option list.
 
 The outcome gate requires at least 15 of 18 proposed answers to lead with the agent path, an improvement of at least six answers over production, and at least five of six workflow answers to include all five required workflow facts. This remains a manual pull-request gate because model sampling can vary.
 

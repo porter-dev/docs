@@ -1,10 +1,22 @@
 #!/usr/bin/env node
 
 import { spawn } from 'node:child_process'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname } from 'node:path'
+import { readFile } from 'node:fs/promises'
 
-import { evaluateClaudeOutcomes, median, scoreClaudeAnswer } from './score.mjs'
+import {
+  gatesTable,
+  parseOptions,
+  positiveInteger,
+  runMain,
+  writeOutput
+} from './cli.mjs'
+import {
+  DEPLOYMENT_GROUPS,
+  evaluateClaudeOutcomes,
+  median,
+  scoreClaudeAnswer,
+  totalSnippetTokens
+} from './score.mjs'
 
 const SYSTEM_PROMPT =
   'Follow the user instruction exactly. Use only the supplied documentation context.'
@@ -16,36 +28,28 @@ const usage = `Usage:
     --markdown /tmp/porter-agent-app-creation-claude.md
 
 Options:
-  --trials N     Trials per query and corpus (default: 3).
-  --model NAME   Optional Claude model override.
-  --help         Show this help text.`
+  --trials N        Trials per query and corpus (default: 3).
+  --concurrency N   Concurrent Claude processes (default: 4).
+  --model NAME      Optional Claude model override.
+  --help            Show this help text.`
 
 const parseArgs = (argv) => {
-  const options = { trials: 3 }
-  for (let index = 0; index < argv.length; index += 1) {
-    const argument = argv[index]
-    if (argument === '--help') {
-      options.help = true
-      continue
-    }
-    if (!argument.startsWith('--')) {
-      throw new Error(`Unexpected argument: ${argument}`)
-    }
-    const value = argv[index + 1]
-    if (!value || value.startsWith('--')) {
-      throw new Error(`Missing value for ${argument}`)
-    }
-    index += 1
-    const name = argument
-      .slice(2)
-      .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
-    options[name] = value
+  const options = parseOptions(argv, {
+    strings: [
+      'evaluation',
+      'trials',
+      'concurrency',
+      'model',
+      'json',
+      'markdown'
+    ],
+    booleans: ['help']
+  })
+  return {
+    ...options,
+    trials: positiveInteger(options.trials ?? 3, '--trials'),
+    concurrency: positiveInteger(options.concurrency ?? 4, '--concurrency')
   }
-  options.trials = Number(options.trials)
-  if (!Number.isInteger(options.trials) || options.trials < 1) {
-    throw new Error('--trials must be a positive integer')
-  }
-  return options
 }
 
 const documentationContext = (response) =>
@@ -181,7 +185,7 @@ const runClaude = (prompt, model) =>
 const buildJobs = (evaluation, trials) => {
   const jobs = []
   for (const { query } of evaluation.comparison.results) {
-    const corpora = ['generic', 'agent-aware'].includes(query.group)
+    const corpora = DEPLOYMENT_GROUPS.includes(query.group)
       ? ['before', 'after']
       : query.group === 'workflow'
         ? ['after']
@@ -200,6 +204,21 @@ const buildJobs = (evaluation, trials) => {
   return jobs
 }
 
+const runJobs = (jobs, concurrency, worker) => {
+  const results = new Array(jobs.length)
+  const cursor = { next: 0 }
+  return Promise.all(
+    Array.from({ length: Math.min(concurrency, jobs.length) }, async () => {
+      for (;;) {
+        const index = cursor.next
+        if (index >= jobs.length) return
+        cursor.next += 1
+        results[index] = await worker(jobs[index])
+      }
+    })
+  ).then(() => results)
+}
+
 const renderReport = (outcome) => {
   const lines = [
     '# Claude outcome evaluation',
@@ -209,12 +228,7 @@ const renderReport = (outcome) => {
     `Median retrieved context: before ${outcome.usageSummary.before.medianRetrievedContextTokens} estimated tokens; after ${outcome.usageSummary.after.medianRetrievedContextTokens} estimated tokens`,
     `Median total model-envelope input (including harness overhead): before ${outcome.usageSummary.before.medianEnvelopeInputTokens} tokens; after ${outcome.usageSummary.after.medianEnvelopeInputTokens} tokens`,
     '',
-    '| Gate | Result | Detail |',
-    '| --- | --- | --- |',
-    ...outcome.gates.map(
-      (gate) =>
-        `| ${gate.id} | ${gate.pass ? 'PASS' : 'FAIL'} | ${gate.detail} |`
-    ),
+    ...gatesTable(outcome.gates),
     '',
     '| Corpus | Query | Trial | Retrieved context | Envelope input | Reported lead | Inferred lead | Source + build | Generated PR | GitHub App prerequisite | Merge step |',
     '| --- | --- | ---: | ---: | ---: | --- | --- | ---: | ---: | ---: | ---: |',
@@ -224,11 +238,6 @@ const renderReport = (outcome) => {
     })
   ]
   return `${lines.join('\n')}\n`
-}
-
-const writeOutput = async (path, content) => {
-  await mkdir(dirname(path), { recursive: true })
-  await writeFile(path, content)
 }
 
 const main = async () => {
@@ -242,29 +251,28 @@ const main = async () => {
   }
 
   const evaluation = JSON.parse(await readFile(options.evaluation, 'utf8'))
-  const runs = []
-  for (const job of buildJobs(evaluation, options.trials)) {
+  const jobs = buildJobs(evaluation, options.trials)
+  const runs = await runJobs(jobs, options.concurrency, async (job) => {
     process.stderr.write(`${job.corpus} ${job.query.id} trial ${job.trial}\n`)
     const { answer, model, usage } = await runClaude(
       evaluationPrompt(job.query, job.response),
       options.model
     )
-    runs.push({
+    return {
       corpus: job.corpus,
       queryId: job.query.id,
       queryGroup: job.query.group,
       trial: job.trial,
       model,
       usage,
-      retrievedContextTokens: (job.response.infoSnippets ?? []).reduce(
-        (total, snippet) => total + snippet.contentTokens,
-        0
+      retrievedContextTokens: totalSnippetTokens(
+        job.response.infoSnippets ?? []
       ),
       answer
-    })
-  }
+    }
+  })
   const deploymentRuns = runs.filter(({ queryGroup }) =>
-    ['generic', 'agent-aware'].includes(queryGroup)
+    DEPLOYMENT_GROUPS.includes(queryGroup)
   )
   const usageSummary = Object.fromEntries(
     ['before', 'after'].map((corpus) => {
@@ -302,7 +310,4 @@ const main = async () => {
   }
 }
 
-main().catch((error) => {
-  process.stderr.write(`${error.stack ?? error.message}\n`)
-  process.exitCode = 1
-})
+runMain(main)
