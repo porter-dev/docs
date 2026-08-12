@@ -1,0 +1,17 @@
+{
+  "codeSnippets": [],
+  "infoSnippets": [
+    {
+      "pageId": "https://docs.porter.run/getting-started/quickstart",
+      "breadcrumb": "Create your first application > Agent",
+      "content": "Connect your agent to the Porter MCP server and install the Porter GitHub App before starting. The agent calls create_app with source and build. Porter creates the application on a placeholder image and opens a pull request. Merge the PR to trigger the first real deployment.",
+      "contentTokens": 40
+    },
+    {
+      "pageId": "https://docs.porter.run/applications/deploy/deploy-from-github-repo",
+      "breadcrumb": "Customizing your deployment",
+      "content": "You can customize the build configuration and each application service.",
+      "contentTokens": 20
+    }
+  ]
+}

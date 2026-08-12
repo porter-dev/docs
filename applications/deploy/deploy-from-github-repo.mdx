@@ -3,67 +3,89 @@ title: "Deploy from a GitHub repository"
 description: "Connect a GitHub repository to Porter for automatic builds and deployments with framework detection, branch selection, and CI/CD triggers"
 ---
 
+import AgentCreateApp from "/snippets/agent-create-app.mdx";
+
 Porter connects to your GitHub repositories to build and deploy your applications. When you connect a repository, Porter detects your app's framework, identifies services, and configures sensible defaults.
 
 This guide covers deploying applications from GitHub. If you're deploying from a container registry instead, see [Deploy from a Docker registry](/applications/deploy/deploy-from-docker-registry).
+
+<Visibility for="agents">
+  Porter runs a hosted MCP server at https://mcp.porter.run. If you are connected to it, create the application with the `create_app` tool instead of following the dashboard steps on this page. Pass `source` and `build` to deploy from a GitHub repository; this creates the app on a placeholder image and opens a GitHub Actions pull request that the user merges to trigger the first real deploy. The Porter GitHub App must already be installed on the repository — the MCP server cannot install it.
+</Visibility>
 
 ---
 
 ## Quick deploy
 
-For most applications, Porter's automatic detection handles the heavy lifting. Here's how to get your application running:
+<Tabs>
+  <Tab title="Agent">
+    <AgentCreateApp />
+  </Tab>
+  <Tab title="Dashboard">
+    For most applications, Porter's automatic detection handles the heavy lifting. Here's how to get your application running:
 
-### Connect your repository
+    ### Connect your repository
 
-From the Porter dashboard, navigate to your project and click Create Application. Porter attempts to deploy from a GitHub repository by default.
+    From the Porter dashboard, navigate to your project and click Create Application. Porter attempts to deploy from a GitHub repository by default.
 
-![Source selection screen](/images/deploy/v2/github-source-selection.webp)
+    ![Source selection screen](/images/deploy/v2/github-source-selection.webp)
 
-If this is your first time deploying from GitHub, you'll need to connect your GitHub account. Click Connect repositories to link GitHub, then authorize access to proceed. You can choose to grant access to all repositories or select specific ones. Porter only needs read access to detect your code, and write access to set up automated deployments.
+    If this is your first time deploying from GitHub, [install the Porter GitHub App](/applications/deploy/connect-github). You can grant access to all repositories or select specific ones. Porter only needs read access to detect your code, and write access to set up automated deployments.
 
-![GitHub repository and branch selector](/images/deploy/v2/github-repo-branch-selector.webp)
+    ![GitHub repository and branch selector](/images/deploy/v2/github-repo-branch-selector.webp)
 
-Once connected, select the repository containing your application code. Porter auto-selects the repository's default branch (usually `main` or `master`) so you can start deploying immediately. If you need a different target for non‑production, use the Branch selector to switch to `dev`, `staging`, or any other branch.
+    Once connected, select the repository containing your application code. Porter auto-selects the repository's default branch (usually `main` or `master`) so you can start deploying immediately. If you need a different target for non‑production, use the Branch selector to switch to `dev`, `staging`, or any other branch.
 
-### Review detected applications
+    ### Review detected applications
 
-After you select a repository and branch, Porter scans your code. It identifies frameworks and languages, locates Dockerfiles, and determines the required services.
+    After you select a repository and branch, Porter scans your code. It identifies frameworks and languages, locates Dockerfiles, and determines the required services.
 
-![Detection in progress](/images/deploy/v2/detection-loading.webp)
+    ![Detection in progress](/images/deploy/v2/detection-loading.webp)
 
-Within a few seconds, you'll see a list of detected applications. Each card shows the app name (from your repo or directory), the detected framework or build method, and the path in your repository. If the detected build method isn't right for your application, click the configure button (gear icon) on the card to change it.
+    Within a few seconds, you'll see a list of detected applications. Each card shows the app name (from your repo or directory), the detected framework or build method, and the path in your repository. If the detected build method isn't right for your application, click the configure button (gear icon) on the card to change it.
 
-![Detected applications list](/images/deploy/v2/detected-apps-list.webp)
+    ![Detected applications list](/images/deploy/v2/detected-apps-list.webp)
 
-For a simple repository with a single application, you'll typically see one card. For monorepos containing multiple services, Porter detects each application separately. For example, a Node.js API in `/api`, a React frontend in `/web`, and a Python worker in `/jobs` each appear as distinct applications you can configure independently.
+    For a simple repository with a single application, you'll typically see one card. For monorepos containing multiple services, Porter detects each application separately. For example, a Node.js API in `/api`, a React frontend in `/web`, and a Python worker in `/jobs` each appear as distinct applications you can configure independently.
 
-#### Previously deployed apps in monorepos
+    #### Previously deployed apps in monorepos
 
-When you deploy from a monorepo that already has some services running on your cluster, Porter automatically identifies which detected applications are already deployed and hides them from the main list. This keeps the view focused on new applications you haven't deployed yet.
+    When you deploy from a monorepo that already has some services running on your cluster, Porter automatically identifies which detected applications are already deployed and hides them from the main list. This keeps the view focused on new applications you haven't deployed yet.
 
-A banner at the top summarizes what was detected. For example, if Porter finds 5 applications but 3 are already deployed, the banner indicates that 2 new applications were configured and 3 are already deployed.
+    A banner at the top summarizes what was detected. For example, if Porter finds 5 applications but 3 are already deployed, the banner indicates that 2 new applications were configured and 3 are already deployed.
 
-To view the already-deployed applications, expand the **Show N previously deployed app(s)** section below the application list. Each previously deployed app card shows its name, build path, and the name of the existing deployment it matches.
+    To view the already-deployed applications, expand the **Show N previously deployed app(s)** section below the application list. Each previously deployed app card shows its name, build path, and the name of the existing deployment it matches.
 
-If you want to re-create an already-deployed application (for example, to deploy a second instance with different configuration), click **Add** on its card. A confirmation dialog appears letting you know the build context is already deployed, and you can click **Create anyway** to add it to your new application list.
+    If you want to re-create an already-deployed application (for example, to deploy a second instance with different configuration), click **Add** on its card. A confirmation dialog appears letting you know the build context is already deployed, and you can click **Create anyway** to add it to your new application list.
 
-<Info>
-Porter matches detected applications to existing deployments using the build path and build method. If you change the build path of an existing application, Porter may not recognize it as already deployed.
-</Info>
+    <Info>
+    Porter matches detected applications to existing deployments using the build path and build method. If you change the build path of an existing application, Porter may not recognize it as already deployed.
+    </Info>
 
-If Porter didn't detect an application you expected, or if you want to add another manually, click Add Application. To edit a detected application, click the configure button (gear icon) on the card to make updates.
+    If Porter didn't detect an application you expected, or if you want to add another manually, click Add Application. To edit a detected application, click the configure button (gear icon) on the card to make updates.
 
-![Settings button on application card](/images/deploy/v2/app-card-settings-button.webp)
+    ![Settings button on application card](/images/deploy/v2/app-card-settings-button.webp)
 
-### Deploy
+    ### Deploy
 
-Once applications are detected, you can review each app's start command and port, and open each app's configuration page to see other pre‑configured values. When ready, deploy using the "Deploy X applications" button.
+    Once applications are detected, you can review each app's start command and port, and open each app's configuration page to see other pre‑configured values. When ready, deploy using the "Deploy X applications" button.
 
-Porter creates a GitHub Actions workflow in your repository that handles building and deploying your application on every push to your selected branch. Your first deployment starts as soon as you merge Porter's GitHub Actions pull request.
+    Porter creates a GitHub Actions workflow in your repository that handles building and deploying your application on every push to your selected branch. Your first deployment starts as soon as you merge Porter's GitHub Actions pull request.
 
-That's it for a basic deployment. Porter has configured your application with production-ready defaults: appropriate resource allocation, a web service listening on the detected port, and automatic builds on every commit.
+    That's it for a basic deployment. Porter has configured your application with production-ready defaults: appropriate resource allocation, a web service listening on the detected port, and automatic builds on every commit.
 
-The sections below cover customizing these defaults when you need more control.
+    The sections below cover customizing these defaults when you need more control.
+  </Tab>
+  <Tab title="CLI">
+    Deploy the application from a `porter.yaml` file:
+
+    ```bash
+    porter apply -f porter.yaml
+    ```
+
+    Learn how to define and deploy an application in the [configuration-as-code guide](/applications/configuration-as-code/overview).
+  </Tab>
+</Tabs>
 
 ---
 

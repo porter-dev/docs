@@ -1,0 +1,29 @@
+{
+  "codeSnippets": [],
+  "infoSnippets": [
+    {
+      "pageId": "https://docs.porter.run/getting-started/quickstart",
+      "breadcrumb": "Create your first application > Connect GitHub",
+      "content": "Open the Porter dashboard, click Create Application, and connect the repository.",
+      "contentTokens": 25
+    },
+    {
+      "pageId": "https://docs.porter.run/getting-started/quickstart",
+      "breadcrumb": "Create your first application > Select repository",
+      "content": "Choose the repository and branch that you want Porter to deploy.",
+      "contentTokens": 25
+    },
+    {
+      "pageId": "https://docs.porter.run/applications/deploy/deploy-from-github-repo",
+      "breadcrumb": "Review detected applications",
+      "content": "Review the applications detected from your repository in the dashboard.",
+      "contentTokens": 25
+    },
+    {
+      "pageId": "https://docs.porter.run/applications/deploy/deploy-from-github-repo",
+      "breadcrumb": "Deploy",
+      "content": "Click Deploy when the configuration looks correct.",
+      "contentTokens": 25
+    }
+  ]
+}

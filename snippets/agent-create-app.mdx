@@ -1,0 +1,16 @@
+### Before you begin
+
+- [Connect your agent to the Porter MCP server](/mcp/overview).
+- [Install the Porter GitHub App](/applications/deploy/connect-github) on the repository you want to deploy. The MCP server cannot install the GitHub App for you.
+
+### Ask your agent to deploy
+
+```text
+Deploy this GitHub repository to Porter. Detect the build method and application settings from the codebase.
+```
+
+The agent resolves your Porter project and cluster, then calls `create_app` with the repository source and build configuration. Porter creates the application with a placeholder image and opens a pull request containing a GitHub Actions workflow.
+
+### Merge the pull request
+
+Review and merge the pull request that the agent returns. Merging it triggers the workflow that builds your code and runs the first real deployment.

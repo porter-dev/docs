@@ -1,0 +1,26 @@
+---
+title: "Connect GitHub"
+description: "Install the Porter GitHub App so Porter can access a repository, detect its applications, and create deployment workflows"
+---
+
+<Visibility for="agents">
+  Before calling `create_app` with `source` and `build`, confirm that the Porter GitHub App is installed on the repository. The MCP server cannot install it. If it is not installed, ask the user to complete the dashboard and GitHub steps on this page.
+</Visibility>
+
+Porter needs its GitHub App installed on a repository before it can detect applications, build from source, or create a GitHub Actions deployment workflow. This prerequisite applies whether you create the application with an agent or in the dashboard.
+
+<Steps>
+  <Step title="Open the repository connection flow">
+    In the Porter dashboard, open your project and click **Create Application**, then click **Connect repositories**.
+  </Step>
+  <Step title="Install the Porter GitHub App">
+    GitHub opens the authorization and installation flow. Choose the GitHub account or organization that owns the repository and authorize the Porter GitHub App.
+
+    Depending on your GitHub organization settings, you may need to request the installation and wait for an organization administrator to approve it.
+  </Step>
+  <Step title="Choose repositories">
+    Grant Porter access to all repositories or select the specific repositories you want to deploy.
+  </Step>
+</Steps>
+
+After installation, return to Porter. You can now [deploy from the GitHub repository](/applications/deploy/deploy-from-github-repo) with an agent or the dashboard.

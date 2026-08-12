@@ -41,6 +41,7 @@
                 "group": "Deploy",
                 "pages": [
                   "applications/deploy/overview",
+                  "applications/deploy/connect-github",
                   "applications/deploy/types-of-services",
                   "applications/deploy/deploy-from-github-repo",
                   "applications/deploy/deploy-from-docker-registry",
