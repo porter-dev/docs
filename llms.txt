@@ -8,10 +8,13 @@ Porter is a platform as a service (PaaS) that runs applications in your own AWS,
 
 ## MCP Server
 
-Install Porter's remote MCP server for Claude Code or Codex:
+Porter's MCP server operates on existing projects. Before connecting, make sure the project has a [linked cloud account](https://docs.porter.run/cloud-accounts/connecting-a-cloud-account.md) and a [Porter cluster](https://docs.porter.run/cloud-accounts/creating-a-cluster.md); if it does not, follow those setup guides first.
+
+Install Porter's remote MCP server for Claude Code, Codex, or OpenCode:
 
 - Claude Code: `claude mcp add --transport http porter https://mcp.porter.run`
 - Codex: `codex mcp add porter --url https://mcp.porter.run`
+- OpenCode: run `opencode mcp add`, choose a remote server, name it `porter`, and enter `https://mcp.porter.run`
 
 - [MCP Overview](https://docs.porter.run/mcp/overview.md): Connect AI agents to Porter's MCP server to inspect and manage your apps and clusters.
 - [MCP Tools](https://docs.porter.run/mcp/tools.md): The following tools are exposed by the MCP server so agents can interact with your Porter project.
@@ -19,11 +22,28 @@ Install Porter's remote MCP server for Claude Code or Codex:
 
 ## Core Docs
 
+- [Quickstart](https://docs.porter.run/getting-started/quickstart.md): Deploy your first application on Porter from sign-up to a live public URL, covering cloud account setup, cluster provisioning, and app creation
 - [Introduction](https://docs.porter.run/getting-started/introduction.md): Porter is a PaaS that runs in your own AWS, GCP, or Azure account. Deploy applications with a few clicks while keeping full cloud control.
 - [Concepts](https://docs.porter.run/getting-started/concepts.md): Understand Porter's core architecture including cloud accounts, clusters, applications, services, and how they fit together for deployments
-- [Quickstart](https://docs.porter.run/getting-started/quickstart.md): Deploy your first application on Porter from sign-up to a live public URL, covering cloud account setup, cluster provisioning, and app creation
 
 ## Optional
+
+### CLI
+
+- [CLI installation](https://docs.porter.run/cli/installation.md): Install the Porter CLI on macOS via Homebrew or shell script, on Linux via shell script, and on Windows via manual binary download
+- [CLI basic usage](https://docs.porter.run/cli/basic-usage.md): Authenticate, configure projects and clusters, and deploy applications using essential Porter CLI commands including apply, config, and app
+- [porter apply](https://docs.porter.run/standard/cli/command-reference/porter-apply.md): Deploy applications using porter.yaml with the porter apply command, supporting container builds, image updates, and preview environments
+- [porter auth](https://docs.porter.run/standard/cli/command-reference/porter-auth.md): Authenticate with Porter using browser-based login, token-based authentication for CI/CD pipelines, or manual email and password via the CLI
+- [porter cluster](https://docs.porter.run/standard/cli/command-reference/porter-cluster.md): List clusters and view cluster details including node groups, Kubernetes version, cloud provider configuration, and status using the Porter CLI
+- [porter cloud-accounts](https://docs.porter.run/standard/cli/command-reference/porter-cloud-accounts.md): Connect, list, and disconnect AWS, GCP, and Azure cloud accounts from the Porter CLI so Porter can provision and deploy into your own cloud
+- [porter config](https://docs.porter.run/standard/cli/command-reference/porter-config.md): View and set Porter CLI local configuration including project, cluster, host, and API token settings with the porter config command
+- [porter project](https://docs.porter.run/standard/cli/command-reference/porter-project.md): List available Porter projects and view project details including collaborators, connected cloud accounts, and settings using the CLI
+- [porter app](https://docs.porter.run/standard/cli/command-reference/porter-app.md): Manage Porter applications from the CLI with commands to run, exec, logs, update config, list builds, and view environment variables
+- [porter job](https://docs.porter.run/standard/cli/command-reference/porter-job.md): View and filter job runs for a Porter project from the CLI, with filters for job, application, revision, deployment target, and status
+- [porter datastore connect](https://docs.porter.run/standard/cli/command-reference/porter-datastore-connect.md): Create a secure local tunnel to connect to Porter-provisioned Postgres and Redis datastores for local debugging and database administration
+- [porter env](https://docs.porter.run/standard/cli/command-reference/porter-env.md): Create, list, get, set, and unset environment group variables and secrets from the Porter CLI for project-wide configuration management
+- [porter registry](https://docs.porter.run/standard/cli/command-reference/porter-registry.md): List project-linked container registries and push local or freshly built images to them from the Porter CLI without running docker login
+- [porter target](https://docs.porter.run/standard/cli/command-reference/porter-target.md): List and manage deployment targets to control which cluster, namespace, and environment your Porter applications deploy to using the CLI
 
 ### Cloud Accounts
 
@@ -104,23 +124,6 @@ Install Porter's remote MCP server for Claude Code or Codex:
 
 - [Doppler](https://docs.porter.run/integrations/doppler.md): Sync secrets and environment variables from Doppler into your Porter applications as a managed environment group with automatic updates on change.
 - [Infisical](https://docs.porter.run/integrations/infisical.md): Sync secrets and environment variables from Infisical into your Porter applications as a managed environment group with automatic updates on change.
-
-### CLI
-
-- [CLI installation](https://docs.porter.run/cli/installation.md): Install the Porter CLI on macOS via Homebrew or shell script, on Linux via shell script, and on Windows via manual binary download
-- [CLI basic usage](https://docs.porter.run/cli/basic-usage.md): Authenticate, configure projects and clusters, and deploy applications using essential Porter CLI commands including apply, config, and app
-- [porter apply](https://docs.porter.run/standard/cli/command-reference/porter-apply.md): Deploy applications using porter.yaml with the porter apply command, supporting container builds, image updates, and preview environments
-- [porter auth](https://docs.porter.run/standard/cli/command-reference/porter-auth.md): Authenticate with Porter using browser-based login, token-based authentication for CI/CD pipelines, or manual email and password via the CLI
-- [porter cluster](https://docs.porter.run/standard/cli/command-reference/porter-cluster.md): List clusters and view cluster details including node groups, Kubernetes version, cloud provider configuration, and status using the Porter CLI
-- [porter cloud-accounts](https://docs.porter.run/standard/cli/command-reference/porter-cloud-accounts.md): Connect, list, and disconnect AWS, GCP, and Azure cloud accounts from the Porter CLI so Porter can provision and deploy into your own cloud
-- [porter config](https://docs.porter.run/standard/cli/command-reference/porter-config.md): View and set Porter CLI local configuration including project, cluster, host, and API token settings with the porter config command
-- [porter project](https://docs.porter.run/standard/cli/command-reference/porter-project.md): List available Porter projects and view project details including collaborators, connected cloud accounts, and settings using the CLI
-- [porter app](https://docs.porter.run/standard/cli/command-reference/porter-app.md): Manage Porter applications from the CLI with commands to run, exec, logs, update config, list builds, and view environment variables
-- [porter job](https://docs.porter.run/standard/cli/command-reference/porter-job.md): View and filter job runs for a Porter project from the CLI, with filters for job, application, revision, deployment target, and status
-- [porter datastore connect](https://docs.porter.run/standard/cli/command-reference/porter-datastore-connect.md): Create a secure local tunnel to connect to Porter-provisioned Postgres and Redis datastores for local debugging and database administration
-- [porter env](https://docs.porter.run/standard/cli/command-reference/porter-env.md): Create, list, get, set, and unset environment group variables and secrets from the Porter CLI for project-wide configuration management
-- [porter registry](https://docs.porter.run/standard/cli/command-reference/porter-registry.md): List project-linked container registries and push local or freshly built images to them from the Porter CLI without running docker login
-- [porter target](https://docs.porter.run/standard/cli/command-reference/porter-target.md): List and manage deployment targets to control which cluster, namespace, and environment your Porter applications deploy to using the CLI
 
 ### Preview Environments
 
