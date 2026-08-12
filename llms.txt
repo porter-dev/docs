@@ -1,0 +1,153 @@
+# Porter
+
+Porter is a platform as a service (PaaS) that runs applications in your own AWS, GCP, or Azure account while managing the underlying infrastructure.
+
+## Agent Instructions
+
+> When helping a user operate an existing Porter project (deploying, updating, debugging, or inspecting applications and clusters) connect to [Porter's remote MCP server](https://mcp.porter.run) first and use its tools before falling back to the Porter CLI, `porter.yaml`, or dashboard workflows. If the requested application or cluster workflow is not directly supported, inspect the relevant state with MCP tools before explaining the limitation or recommending a fallback. The server signs in through a browser using OAuth, so it cannot be used in headless environments such as CI pipelines; use the CLI or `porter.yaml` there.
+
+## MCP Server
+
+Install Porter's remote MCP server for Claude Code or Codex:
+
+- Claude Code: `claude mcp add --transport http porter https://mcp.porter.run`
+- Codex: `codex mcp add porter --url https://mcp.porter.run`
+
+- [MCP Overview](https://docs.porter.run/mcp/overview.md): Connect AI agents to Porter's MCP server to inspect and manage your apps and clusters.
+- [MCP Tools](https://docs.porter.run/mcp/tools.md): The following tools are exposed by the MCP server so agents can interact with your Porter project.
+- [Porter Dashboard](https://porter.run): Sign up for Porter or open the dashboard before connecting the MCP server.
+
+## Core Docs
+
+- [Introduction](https://docs.porter.run/getting-started/introduction.md): Porter is a PaaS that runs in your own AWS, GCP, or Azure account. Deploy applications with a few clicks while keeping full cloud control.
+- [Concepts](https://docs.porter.run/getting-started/concepts.md): Understand Porter's core architecture including cloud accounts, clusters, applications, services, and how they fit together for deployments
+- [Quickstart](https://docs.porter.run/getting-started/quickstart.md): Deploy your first application on Porter from sign-up to a live public URL, covering cloud account setup, cluster provisioning, and app creation
+
+## Optional
+
+### Cloud Accounts
+
+- [Cloud accounts](https://docs.porter.run/cloud-accounts/overview.md): Connect your AWS, GCP, or Azure account to Porter and provision managed Kubernetes clusters, node groups, and networking infrastructure
+- [Connecting a cloud account](https://docs.porter.run/cloud-accounts/connecting-a-cloud-account.md): Grant Porter access to your AWS, GCP, or Azure account using IAM role assumption or Workload Identity Federation to provision infrastructure
+- [Creating a cluster](https://docs.porter.run/cloud-accounts/creating-a-cluster.md): Provision a managed Kubernetes cluster in your AWS, GCP, or Azure cloud account by selecting a region, machine type, and initial instance count
+- [Node groups](https://docs.porter.run/cloud-accounts/node-groups.md): Configure node groups with custom instance types, enable cost optimization with smart instance selection, and manage compute capacity
+- [Cluster upgrades](https://docs.porter.run/cloud-accounts/cluster-upgrades.md): How Porter manages automated Kubernetes version upgrades for your cluster, including the shared responsibility model and prerequisites
+- [Advanced Cluster Settings](https://docs.porter.run/cloud-accounts/advanced-cluster-settings.md): Enable ECR scanning, GuardDuty, private clusters, KMS encryption, and custom networking options for your AWS, GCP, and Azure Porter clusters
+- [Cluster observability](https://docs.porter.run/cloud-accounts/cluster-observability.md): Monitor pod status, node resource usage, and cluster-wide infrastructure metrics in real time from the Porter Infrastructure dashboard
+- [Deleting a cluster](https://docs.porter.run/cloud-accounts/deleting-a-cluster.md): Remove a Porter-provisioned Kubernetes cluster and automatically clean up associated cloud resources like load balancers and node groups
+
+### Applications
+
+- [Deploying applications](https://docs.porter.run/applications/deploy/overview.md): Learn how applications and services work on Porter, then choose how to deploy your application
+- [Connect GitHub](https://docs.porter.run/applications/deploy/connect-github.md): Install the Porter GitHub App so Porter can access a repository, detect its applications, and create deployment workflows
+- [Types of services](https://docs.porter.run/applications/deploy/types-of-services.md): Understand the three Porter service types: web services for HTTP traffic, workers for background processing, and jobs for scheduled tasks
+- [Deploy from a GitHub repository](https://docs.porter.run/applications/deploy/deploy-from-github-repo.md): Connect a GitHub repository to Porter for automatic builds and deployments with framework detection, branch selection, and CI/CD triggers
+- [Deploy from a Docker registry](https://docs.porter.run/applications/deploy/deploy-from-docker-registry.md): Deploy pre-built container images from Amazon ECR, Google GAR, Azure ACR, Docker Hub, or any OCI registry to Porter without managing builds
+- [Configuring application services](https://docs.porter.run/applications/deploy/configuring-application-services.md): Set up web, worker, and job services with start commands, port mappings, resource allocation, and instance scaling from the Porter dashboard
+- [Building your application](https://docs.porter.run/applications/deploy/builds.md): How Porter builds applications from GitHub repositories using GitHub Actions, including build settings, Dockerfiles, and buildpacks
+- [Deploy multiple apps from one build](https://docs.porter.run/applications/deploy/multiple-deploys-from-same-build.md): Create a custom GitHub Actions workflow that builds a single container image and deploys it across multiple Porter applications efficiently
+- [Pre-deploy jobs](https://docs.porter.run/applications/deploy/pre-deploy-jobs.md): Run database migrations or setup tasks after each build but before deployment using pre-deploy jobs in the dashboard or porter.yaml
+- [Rollbacks](https://docs.porter.run/applications/deploy/rollbacks.md): Revert your Porter application to a previous successful deployment version from the Activity tab when an undesired change has been deployed
+- [Using other CI tools](https://docs.porter.run/applications/deploy/using-other-ci-tools.md): Deploy Porter applications from CircleCI, GitLab, Travis CI, or any CI tool using the Porter CLI Docker image and environment variables
+- [Cloning an application](https://docs.porter.run/applications/deploy/duplicating-apps.md): Clone an existing Porter application to the same cluster or a different one for staging environments, workload migration, or app renaming
+- [Configuration as code with porter.yaml](https://docs.porter.run/applications/configuration-as-code/overview.md): Define application services, builds, and deployment settings in a porter.yaml file for CI/CD pipelines and version-controlled infrastructure
+- [porter.yaml reference](https://docs.porter.run/applications/configuration-as-code/reference.md): Complete field reference for porter.yaml including build, image, services, environment variables, predeploy, and autoscaling options
+- [Deploying multiple apps with porter.yaml](https://docs.porter.run/applications/configuration-as-code/addons-porter-yaml.md): Define and deploy multiple Porter applications alongside datastores and custom Helm chart addons in a single porter.yaml file using porter apply
+- [Web services in porter.yaml](https://docs.porter.run/applications/configuration-as-code/services/web-service.md): Complete field reference for web services in porter.yaml including ports, custom domains, health checks, autoscaling, and path-based routing
+- [Worker services in porter.yaml](https://docs.porter.run/applications/configuration-as-code/services/worker-service.md): Complete field reference for worker services in porter.yaml including health checks, autoscaling, GPU allocation, and resource limits
+- [Job services in porter.yaml](https://docs.porter.run/applications/configuration-as-code/services/job-service.md): Complete field reference for job services in porter.yaml including cron schedules, timeout settings, concurrency controls, and resource limits
+- [Predeploy in porter.yaml](https://docs.porter.run/applications/configuration-as-code/services/predeploy.md): Configure predeploy jobs in porter.yaml to run database migrations or setup tasks after each build completes but before deployment begins
+- [Autoscaling in porter.yaml](https://docs.porter.run/applications/configuration-as-code/services/autoscaling.md): Configure horizontal pod autoscaling in porter.yaml with CPU and memory utilization thresholds, min/max replicas, and scaling behavior
+- [Connections in porter.yaml](https://docs.porter.run/applications/configuration-as-code/services/connections.md): Connect Porter services to AWS IAM roles, Azure managed identities, Google Cloud SQL instances, and persistent disks using porter.yaml connections.
+- [Environment groups](https://docs.porter.run/applications/configure/environment-groups.md): Share environment variables and secrets across multiple applications using project-wide groups synced to AWS, GCP, or Azure secret managers
+- [Basic configuration](https://docs.porter.run/applications/configure/basic-configuration.md): Set start commands, allocate CPU and RAM resources, and enable sleep mode for web, worker, and job services from the Porter dashboard
+- [Autoscaling](https://docs.porter.run/applications/configure/autoscaling.md): Scale your web and worker services automatically using CPU and memory thresholds, custom Prometheus metrics, or Temporal task queue depth
+- [Temporal autoscaling](https://docs.porter.run/applications/configure/temporal-autoscaling.md): Automatically scale Temporal worker services based on task queue backlog depth using a Temporal Cloud API key and Porter integration
+- [HTTPS certificates and custom domains](https://docs.porter.run/applications/configure/custom-domains.md): Configure custom domains with automatic Let's Encrypt SSL certificate issuance and renewal for Porter web services on AWS, GCP, and Azure
+- [Zero-downtime deployments](https://docs.porter.run/applications/configure/zero-downtime-deployments.md): Prevent downtime during redeployments by configuring health checks, readiness probes, and graceful shutdown behavior for your services
+- [Advanced networking](https://docs.porter.run/applications/configure/advanced-networking.md): Customize NGINX ingress annotations for your Porter web services including read/write timeouts, request body size limits, and WebSocket support
+- [Secure cloud access](https://docs.porter.run/applications/configure/secure-cloud-access.md): Grant Porter applications secure access to AWS, GCP, and Azure resources using workload identity, IAM roles, and IRSA—no static credentials required.
+- [Monitoring](https://docs.porter.run/applications/observability/monitoring.md): View CPU, RAM, network usage, and throughput metrics for your applications with 14-day retention using Prometheus inside your own cluster
+- [Logging](https://docs.porter.run/applications/observability/logging.md): Search and browse application logs retained for up to 7 days, stored securely in your own cluster infrastructure using Grafana Loki
+- [Alerts](https://docs.porter.run/applications/observability/alerts.md): Set up Slack, email, and PagerDuty notification groups to receive alerts for crash loops, out-of-memory errors, and non-zero exit codes
+- [App metadata environment variables](https://docs.porter.run/applications/observability/app-metadata.md): Reference for default environment variables Porter injects into every app, including CPU, RAM, replicas, pod IP, image tag, and domains
+- [Custom metrics autoscaling](https://docs.porter.run/applications/observability/custom-metrics-and-autoscaling.md): Scale your web services based on custom Prometheus metrics by configuring metrics scraping endpoints and KEDA-powered autoscaling rules
+- [DevOps Agent](https://docs.porter.run/applications/observability/devops-agent.md): Use the AI-powered DevOps Agent in the Porter dashboard to debug application issues with read-only access to your cluster in real time
+- [Common errors](https://docs.porter.run/applications/debug/common-errors.md): Troubleshoot application restarts caused by memory limits, failing health probes, incorrect start commands, and build failures on Porter
+
+### Sandboxes
+
+- [Sandboxes Overview](https://docs.porter.run/sandboxes/overview.md): Run isolated container workloads on Porter
+- [Sandboxes Getting Started](https://docs.porter.run/sandboxes/getting-started.md): Enable Porter Sandboxes on a cluster and launch your first sandbox with the Sandbox SDK
+- [Volumes](https://docs.porter.run/sandboxes/volumes.md): Create, mount, and manage persistent sandbox volumes: read, write, upload, download, and move files from the SDK, CLI, or dashboard
+- [Sandbox Networking](https://docs.porter.run/sandboxes/networking.md): Serve sandboxes over HTTPS on your own domains and restrict their outbound traffic with egress allowlists
+- [Sandbox Capacity](https://docs.porter.run/sandboxes/capacity.md): Raise the sandbox node group's CPU limit and tune the warm pod pool to run more sandboxes
+- [Python Sandbox SDK quickstart](https://docs.porter.run/sandboxes/sdk/python/quickstart.md): Create and manage Porter Sandboxes from Python
+- [Python Sandbox SDK volumes](https://docs.porter.run/sandboxes/sdk/python/volumes.md): Create, mount, browse, read, and write sandbox volumes with the Python Sandbox SDK
+- [Python Sandbox SDK reference](https://docs.porter.run/sandboxes/sdk/python/reference.md): Core classes and methods in the porter-sandbox Python Sandbox SDK
+- [Python Sandbox SDK errors](https://docs.porter.run/sandboxes/sdk/python/errors.md): Error classes raised by the porter-sandbox Python Sandbox SDK
+- [TypeScript Sandbox SDK quickstart](https://docs.porter.run/sandboxes/sdk/typescript/quickstart.md): Create and manage Porter Sandboxes from TypeScript
+- [TypeScript Sandbox SDK volumes](https://docs.porter.run/sandboxes/sdk/typescript/volumes.md): Create, mount, browse, read, and write sandbox volumes with the TypeScript Sandbox SDK
+- [TypeScript Sandbox SDK reference](https://docs.porter.run/sandboxes/sdk/typescript/reference.md): Core classes and methods in the porter-sandbox TypeScript Sandbox SDK
+- [TypeScript Sandbox SDK errors](https://docs.porter.run/sandboxes/sdk/typescript/errors.md): Error classes raised by the porter-sandbox TypeScript Sandbox SDK
+- [Sandboxes CLI](https://docs.porter.run/sandboxes/cli.md): Create, list, exec into, monitor CPU and memory usage, and terminate Porter Sandboxes from the Porter CLI
+
+### Add-ons
+
+- [Add-ons](https://docs.porter.run/addons/overview.md): Extend your Porter cluster with managed Postgres and Redis databases, persistent storage, third-party monitoring tools, and custom Helm charts
+- [Datastores](https://docs.porter.run/addons/datastores.md): Provision managed Postgres and Redis databases on AWS with automatic VPC peering, private subnet networking, and security group configuration
+- [Custom Helm Charts](https://docs.porter.run/addons/custom-helm-charts.md): Deploy external Helm charts to your Porter cluster via the dashboard or Helm CLI for third-party components not natively managed by Porter
+- [Third-party observability](https://docs.porter.run/addons/third-party-observability.md): Integrate Datadog, New Relic, Grafana, Langfuse, and Helicone with your Porter cluster for advanced application monitoring and observability
+- [Persistent storage](https://docs.porter.run/addons/storage.md): Provision Amazon EFS persistent disks that can be shared across multiple services for read-intensive and media processing workloads
+
+### Integrations
+
+- [Doppler](https://docs.porter.run/integrations/doppler.md): Sync secrets and environment variables from Doppler into your Porter applications as a managed environment group with automatic updates on change.
+- [Infisical](https://docs.porter.run/integrations/infisical.md): Sync secrets and environment variables from Infisical into your Porter applications as a managed environment group with automatic updates on change.
+
+### CLI
+
+- [CLI installation](https://docs.porter.run/cli/installation.md): Install the Porter CLI on macOS via Homebrew or shell script, on Linux via shell script, and on Windows via manual binary download
+- [CLI basic usage](https://docs.porter.run/cli/basic-usage.md): Authenticate, configure projects and clusters, and deploy applications using essential Porter CLI commands including apply, config, and app
+- [porter apply](https://docs.porter.run/standard/cli/command-reference/porter-apply.md): Deploy applications using porter.yaml with the porter apply command, supporting container builds, image updates, and preview environments
+- [porter auth](https://docs.porter.run/standard/cli/command-reference/porter-auth.md): Authenticate with Porter using browser-based login, token-based authentication for CI/CD pipelines, or manual email and password via the CLI
+- [porter cluster](https://docs.porter.run/standard/cli/command-reference/porter-cluster.md): List clusters and view cluster details including node groups, Kubernetes version, cloud provider configuration, and status using the Porter CLI
+- [porter cloud-accounts](https://docs.porter.run/standard/cli/command-reference/porter-cloud-accounts.md): Connect, list, and disconnect AWS, GCP, and Azure cloud accounts from the Porter CLI so Porter can provision and deploy into your own cloud
+- [porter config](https://docs.porter.run/standard/cli/command-reference/porter-config.md): View and set Porter CLI local configuration including project, cluster, host, and API token settings with the porter config command
+- [porter project](https://docs.porter.run/standard/cli/command-reference/porter-project.md): List available Porter projects and view project details including collaborators, connected cloud accounts, and settings using the CLI
+- [porter app](https://docs.porter.run/standard/cli/command-reference/porter-app.md): Manage Porter applications from the CLI with commands to run, exec, logs, update config, list builds, and view environment variables
+- [porter job](https://docs.porter.run/standard/cli/command-reference/porter-job.md): View and filter job runs for a Porter project from the CLI, with filters for job, application, revision, deployment target, and status
+- [porter datastore connect](https://docs.porter.run/standard/cli/command-reference/porter-datastore-connect.md): Create a secure local tunnel to connect to Porter-provisioned Postgres and Redis datastores for local debugging and database administration
+- [porter env](https://docs.porter.run/standard/cli/command-reference/porter-env.md): Create, list, get, set, and unset environment group variables and secrets from the Porter CLI for project-wide configuration management
+- [porter registry](https://docs.porter.run/standard/cli/command-reference/porter-registry.md): List project-linked container registries and push local or freshly built images to them from the Porter CLI without running docker login
+- [porter target](https://docs.porter.run/standard/cli/command-reference/porter-target.md): List and manage deployment targets to control which cluster, namespace, and environment your Porter applications deploy to using the CLI
+
+### Preview Environments
+
+- [Preview environments](https://docs.porter.run/preview-environments/overview.md): Automatically create isolated preview environments for every pull request with configurable templates, addons, and service overrides
+- [Preview environment overrides](https://docs.porter.run/preview-environments/defining-overrides.md): Override resource settings, environment variables, and configuration for preview environments using the Porter dashboard or porter.yaml
+- [Custom preview environment workflows](https://docs.porter.run/preview-environments/custom-workflows.md): Customize GitHub Actions workflows and use the Porter CLI to control how preview environments build, deploy, and filter by branch naming patterns
+
+### Security and Compliance
+
+- [Role-based access control](https://docs.porter.run/security-and-compliance/role-based-access-control.md): Assign admin, developer, or viewer roles to team members with SSO integration and just-in-time user provisioning for Porter projects
+- [Audit logs](https://docs.porter.run/security-and-compliance/audit-logs.md): Review project activity in Porter, filter audit log entries, and export matching results for security reviews
+- [Static egress IPs](https://docs.porter.run/security-and-compliance/static-egress-ip.md): Find your cluster's static egress IP addresses on AWS, Azure, or GCP using CLI commands or cloud console for third-party allowlisting
+- [Configuring AWS ALB on Porter](https://docs.porter.run/security-and-compliance/configuring-alb.md): Switch from NLB to AWS Application Load Balancer on Porter for IP allowlisting, WAFv2 integration, ACM certificates, and DNS validation
+- [Using Cloudflare DNS with Porter](https://docs.porter.run/security-and-compliance/cloudflare-dns.md): Configure Cloudflare DNS in proxy or non-proxy mode with Porter, including SSL settings, CNAME records, and TLS certificate handling
+- [SOC 2 and HIPAA compliance](https://docs.porter.run/security-and-compliance/soc2-hipaa.md): Enable instant SOC 2 and HIPAA compliance for your infrastructure on Porter with one click, compatible with compliance management platforms
+- [Porter IP ranges](https://docs.porter.run/security-and-compliance/porter-ip-ranges.md): Definitive list of Porter's current public IP addresses and CIDR ranges for allowlisting inbound connections from Porter to your services
+- [Tailscale VPN](https://docs.porter.run/security-and-compliance/tailscale.md): Set up Tailscale VPN integration on your Porter cluster for secure private access to kubectl, helm, app run, and datastore connect commands
+
+### Other Guides
+
+- [Running GPU workloads](https://docs.porter.run/other/gpu-workloads.md): Create fixed GPU node groups with NVIDIA-enabled instances and deploy GPU-accelerated machine learning or inference workloads on Porter
+- [Deleting dangling resources](https://docs.porter.run/other/deleting-dangling-resources.md): Manually clean up orphaned AWS, GCP, or Azure resources like EKS clusters, load balancers, and VPCs left behind after project deletion
+- [AWS VPC peering](https://docs.porter.run/other/aws-vpc-peering.md): Set up VPC peering between your Porter cluster and existing AWS VPCs to access RDS instances and other resources across accounts or regions
+- [Kubernetes 101](https://docs.porter.run/other/kubernetes-101.md): Learn core Kubernetes concepts for Porter including nodes, pods, resource allocation, cluster architecture, and namespaces explained simply
+- [Migrate from Heroku](https://docs.porter.run/other/migrate-from-heroku.md): Step-by-step guide to migrate from Heroku to Porter by converting your Procfile to porter.yaml and deploying to your own cloud account
+
+### Terms & Privacy
+
+- [Terms of service](https://docs.porter.run/terms-and-privacy/terms-of-service.md): Porter Technologies terms of service governing your use of the Porter platform, including account responsibilities and usage policies
+- [Privacy policy](https://docs.porter.run/terms-and-privacy/privacy-policy.md): Porter Technologies privacy policy covering data collection, usage, storage, and your rights when using the Porter platform and services
