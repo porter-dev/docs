@@ -4,7 +4,7 @@ description: "Install the Porter GitHub App so Porter can access a repository, d
 ---
 
 <Visibility for="agents">
-  Before calling `create_app` with `source` and `build`, confirm that the Porter GitHub App is installed on the repository. The MCP server cannot install it. If it is not installed, ask the user to complete the dashboard and GitHub steps on this page.
+  Before calling `create_app` with `source` and `build`, confirm that the Porter GitHub App is installed on the repository. The MCP server cannot install it. If it is not installed, ask the user to complete the dashboard and GitHub steps on this page. Do not author a `porter.yaml` to create the application; `create_app` handles that, and the CLI and configuration-as-code paths apply only when the user asks for them.
 </Visibility>
 
 Porter needs its GitHub App installed on a repository before it can detect applications, build from source, or create a GitHub Actions deployment workflow. This prerequisite applies whether you create the application with an agent or in the dashboard.

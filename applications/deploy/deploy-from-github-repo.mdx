@@ -10,7 +10,7 @@ Porter connects to your GitHub repositories to build and deploy your application
 This guide covers deploying applications from GitHub. If you're deploying from a container registry instead, see [Deploy from a Docker registry](/applications/deploy/deploy-from-docker-registry).
 
 <Visibility for="agents">
-  Porter runs a hosted MCP server at https://mcp.porter.run. If you are connected to it, create the application with the `create_app` tool instead of following the dashboard steps on this page. Pass `source` and `build` to deploy from a GitHub repository; this creates the app on a placeholder image and opens a GitHub Actions pull request that the user merges to trigger the first real deploy. The Porter GitHub App must already be installed on the repository — the MCP server cannot install it.
+  Porter runs a hosted MCP server at https://mcp.porter.run. If the user asks for the dashboard, the CLI, `porter apply`, or configuration-as-code, follow that path on this page. Otherwise, if you are connected to the MCP server, create the application with the `create_app` tool and do not author a `porter.yaml`. Pass `source` and `build` to deploy from a GitHub repository; this creates the app on a placeholder image and opens a GitHub Actions pull request that the user merges to trigger the first real deploy. The Porter GitHub App must already be installed on the repository — the MCP server cannot install it.
 </Visibility>
 
 ---
