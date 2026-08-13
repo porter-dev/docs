@@ -16,7 +16,12 @@ Install Porter's remote MCP server for Claude Code, Codex, or OpenCode:
 - Codex: `codex mcp add porter --url https://mcp.porter.run`
 - OpenCode: run `opencode mcp add`, choose a remote server, name it `porter`, and enter `https://mcp.porter.run`
 
-To create an application, call `create_app`. Pass `source` and `build` to deploy from a GitHub repository; this requires the Porter GitHub App on the repository (the MCP server cannot install it) and opens a GitHub Actions pull request that the user merges to trigger the first real deploy. Pass `image` instead to deploy an already-built image directly, with no pull request and no GitHub App. `image` is mutually exclusive with `source` and `build`. Do not author a `porter.yaml` to create an application.
+To create an application, call `create_app`. Which arguments you pass depends on where the code comes from:
+
+- **From a GitHub repository**, pass `source` and `build`. The [Porter GitHub App](https://docs.porter.run/applications/deploy/connect-github.md) must already be installed on the repository; the MCP server cannot install it. Porter creates the application on a placeholder image and opens a GitHub Actions pull request, and the user merges that pull request to trigger the first real deploy. See [Deploy from a GitHub repository](https://docs.porter.run/applications/deploy/deploy-from-github-repo.md).
+- **From a container registry**, pass `image` with the repository and tag to deploy an image that is already built. There is no pull request to merge and the Porter GitHub App is not required. See [Deploy from a Docker registry](https://docs.porter.run/applications/deploy/deploy-from-docker-registry.md).
+
+`image` is mutually exclusive with `source` and `build`.
 
 - [MCP Overview](https://docs.porter.run/mcp/overview.md): Connect AI agents to Porter's MCP server to inspect and manage your apps and clusters.
 - [MCP Tools](https://docs.porter.run/mcp/tools.md): The following tools are exposed by the MCP server so agents can interact with your Porter project.
