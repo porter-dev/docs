@@ -62,6 +62,40 @@ The warm pod pool is configured with the other sandbox settings, not on the node
   </Step>
 </Steps>
 
+## Custom sandbox sizes
+
+The warm pod pool's **CPU** and **RAM** settings are the default size every sandbox gets. A single sandbox can ask for a different size at create time, which is useful when most of your workloads fit the default but a few need more or less room.
+
+<CodeGroup>
+```bash CLI
+porter sandbox create python:3.12 --cpu 2 --memory 4Gi -- python train.py
+```
+
+```typescript TypeScript
+const sandbox = await porter.sandboxes.create({
+  image: "python:3.12",
+  command: ["python", "train.py"],
+  resources: { cpu: "2", memory: "4Gi" },
+});
+```
+
+```python Python
+sandbox = porter.sandboxes.create(
+    image="python:3.12",
+    command=["python", "train.py"],
+    resources={"cpu": "2", "memory": "4Gi"},
+)
+```
+</CodeGroup>
+
+CPU is in cores: pass a whole number (`2`), or an `m` suffix for a fraction, where `500m` is half a core. Memory takes a `Gi` or `Mi` suffix (`4Gi`, `512Mi`). If you only set one, the other will keep the default.
+
+A larger sandbox needs a node with room for it, so it may take longer to start than a default-sized one. The cluster places it on a node that can fit it if one exists, otherwise it will add a node to accomodate.
+
+A large sandbox also draws more of the node group's **Max CPU**, so a handful of them reduces how many others can run at once.
+
+Each cluster caps how large a single sandbox may be for sanity - the current limit is 256 cores & 1TB of memory. If for whatever reason you have a use-case where you need this increased, please reach out!
+
 ## Size the two settings together
 
 Warm pods reserve their CPU and memory on the sandbox node group even while idle, so the pool consumes Max CPU headroom. As a rule of thumb, keep
