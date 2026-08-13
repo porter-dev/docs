@@ -61,12 +61,28 @@ The termination grace period can be configured in the **Advanced** tab.
 
 ### Web Services
 
-Web services will continue to receive traffic until they exit, unless you configure the readiness probe to fail. The recommended graceful shutdown sequence is:
+Web services keep receiving traffic until they are taken out of the routing, which does not happen the moment they start shutting down. The recommended graceful shutdown sequence is:
 
-1. When `SIGTERM` is received, immediately return a `500`-level response on your health check endpoint to stop receiving new traffic.
-2. Close the server to prevent additional connections.
-3. Drain all existing connections before the grace period ends.
-4. Exit gracefully after connections are drained.
+1. When `SIGTERM` is received, immediately return a `500`-level response on your health check endpoint to mark the instance as unavailable.
+2. Keep accepting new requests for a short drain window while routing catches up (see below), and start draining the connections you already hold.
+3. Close the server to prevent additional connections once the drain window has passed.
+4. Drain all existing connections before the grace period ends, then exit gracefully.
+
+<Warning>
+Do not close your server the moment `SIGTERM` arrives. Traffic does not stop instantly, so an instance that stops accepting connections right away will refuse requests that are still on their way to it, which surfaces as `502`s.
+</Warning>
+
+#### Why traffic keeps arriving after SIGTERM
+
+When an instance is replaced, the orchestrator starts two things at around the same time: it sends `SIGTERM` to your process, and it begins taking the instance out of the routing. Neither one waits on the other, and neither one waits on your health check. Your `500`-level response marks the instance as unavailable, but it is not the switch that stops traffic.
+
+Removal from the routing takes effect only once the router picks up the change, at least 1 to 5 seconds later. Every request dispatched before that still arrives at the instance, including requests sent after your process has already received `SIGTERM`.
+
+Size your drain window to cover that gap. A window of 5 to 15 seconds is a reasonable starting point, and the termination grace period must be longer than the drain window plus your slowest request.
+
+<Info>
+For the underlying mechanics, see step 3 of [Pod termination flow](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination-flow) in the Kubernetes documentation.
+</Info>
 
 ### Workers
 
