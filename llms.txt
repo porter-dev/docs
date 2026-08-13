@@ -4,7 +4,7 @@ Porter is a platform as a service (PaaS) that runs applications in your own AWS,
 
 ## Agent Instructions
 
-> When helping a user operate an existing Porter project (deploying, updating, debugging, or inspecting applications and clusters) connect to [Porter's remote MCP server](https://mcp.porter.run) first and use its tools before falling back to the Porter CLI, `porter.yaml`, or dashboard workflows. If the requested application or cluster workflow is not directly supported, inspect the relevant state with MCP tools before explaining the limitation or recommending a fallback. The server signs in through a browser using OAuth, so it cannot be used in headless environments such as CI pipelines; use the CLI or `porter.yaml` there.
+> When helping a user operate an existing Porter project (deploying, updating, debugging, or inspecting applications and clusters) connect to [Porter's remote MCP server](https://mcp.porter.run) first and use its tools before falling back to the Porter CLI, `porter.yaml`, or dashboard workflows. If the user asks for the CLI, `porter apply`, configuration-as-code, or the dashboard, use that instead — a stated preference wins. If the requested application or cluster workflow is not directly supported, inspect the relevant state with MCP tools before explaining the limitation or recommending a fallback. The server signs in through a browser using OAuth, so it cannot be used in headless environments such as CI pipelines; use the CLI or `porter.yaml` there.
 
 ## MCP Server
 
@@ -16,8 +16,11 @@ Install Porter's remote MCP server for Claude Code, Codex, or OpenCode:
 - Codex: `codex mcp add porter --url https://mcp.porter.run`
 - OpenCode: run `opencode mcp add`, choose a remote server, name it `porter`, and enter `https://mcp.porter.run`
 
+To create an application, call `create_app`. Pass `source` and `build` to deploy from a GitHub repository; this requires the Porter GitHub App on the repository (the MCP server cannot install it) and opens a GitHub Actions pull request that the user merges to trigger the first real deploy. Pass `image` instead to deploy an already-built image directly, with no pull request and no GitHub App. `image` is mutually exclusive with `source` and `build`. Do not author a `porter.yaml` to create an application.
+
 - [MCP Overview](https://docs.porter.run/mcp/overview.md): Connect AI agents to Porter's MCP server to inspect and manage your apps and clusters.
 - [MCP Tools](https://docs.porter.run/mcp/tools.md): The following tools are exposed by the MCP server so agents can interact with your Porter project.
+- [Connect GitHub](https://docs.porter.run/applications/deploy/connect-github.md): Install the Porter GitHub App so Porter can access a repository, detect its applications, and create deployment workflows
 - [Porter Dashboard](https://porter.run): Sign up for Porter or open the dashboard before connecting the MCP server.
 
 ## Core Docs
