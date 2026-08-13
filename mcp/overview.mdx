@@ -21,17 +21,17 @@ https://mcp.porter.run
 
 ### Quick install
 
-One command installs the Porter CLI, registers this server with the agent clients it finds, and installs Porter's skills:
+Install the Porter CLI and configure agent support — MCP registration and skills — in one command:
 
 ```bash
 curl -fsSL https://agents.porter.run | sh
 ```
 
-Restart your client afterward. It opens the browser for sign-in the first time it calls a Porter tool.
+Restart your client afterward. It prompts for browser sign-in the first time it uses a Porter tool.
 
-Run from inside an agent session, the installer configures that client alone; `--clients=all` configures every client on the machine. Add `--help` for the rest, `--dry-run` to preview, and `--uninstall` to remove everything it added.
+Run inside an agent session, the installer configures that client alone. `--clients=all` covers every client on the machine, `--dry-run` previews, `--uninstall` reverses, and `--help` lists the rest.
 
-The skills it installs teach an agent a complete Porter workflow, beyond what the individual [tools](/mcp/tools) describe. Today that means `porter-deploy`, which takes a GitHub repository from nothing to a live URL and follows the generated workflow pull request through merge.
+Skills go beyond what the individual [tools](/mcp/tools) describe: `porter-deploy` takes a GitHub repository from nothing to a live URL, following the generated workflow pull request through merge.
 
 To register the server on its own, without the CLI or the skills:
 
