@@ -4,6 +4,7 @@ description: "Deploy your first application on Porter from sign-up to a live pub
 ---
 
 import AgentCreateApp from "/snippets/agent-create-app.mdx";
+import AgentHintCreateApp from "/snippets/agent-hint-create-app.mdx";
 
 This guide walks you through deploying your first application on Porter, from creating an account to seeing your app live at a public URL.
 
@@ -237,7 +238,7 @@ Porter provisions a Kubernetes cluster in your cloud account. The setup process 
 Once your cluster is ready, choose how you want to deploy your code.
 
 <Visibility for="agents">
-  Porter runs a hosted MCP server at https://mcp.porter.run. If the user asks for the dashboard, the CLI, `porter apply`, or configuration-as-code, follow that path on this page. Otherwise, if you are connected to the MCP server, create the application with the `create_app` tool and do not author a `porter.yaml`. Pass `source` and `build` to deploy from a GitHub repository; this creates the app on a placeholder image and opens a GitHub Actions pull request that the user merges to trigger the first real deploy. The Porter GitHub App must already be installed on the repository — the MCP server cannot install it.
+  <AgentHintCreateApp />
 </Visibility>
 
 <Tabs>
