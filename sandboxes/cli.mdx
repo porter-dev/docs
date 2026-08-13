@@ -41,7 +41,9 @@ porter sandbox create <image> [-- <command> [args...]] [flags]
 | `--tag` | Tag in `key=value` form. Repeatable |
 | `--volume` | Volume mount in `mount_path=volume-ref` form, where `volume-ref` is a volume name or ID. Repeatable. The mount path must be absolute |
 | `--ttl` | Maximum sandbox lifetime as a Go duration, such as `30m` or `2h`. Defaults to no limit |
-| `-o, --output` | Output format: `text` or `json` |
+| `--cpu` | CPU cores, such as `2` or `500m` for half a core. Defaults to the cluster's sandbox size |
+| `--memory` | Memory, such as `4Gi` or `512Mi`. Defaults to the cluster's sandbox size |
+| `--json` | Print the created sandbox as JSON |
 
 Use the positional form after `--` for common one-shot commands. Use `--command` and `--arg` when scripting individual argv elements.
 
@@ -50,6 +52,8 @@ Volume values can be volume names or volume IDs. The CLI resolves names first, t
 `--env-group` injects the variables of a named [environment group](/applications/configure/environment-groups) on the cluster. Values are resolved to the group's latest version at create time and do not update afterwards. On a key conflict, a later `--env-group` wins over an earlier one, and an explicit `--env` wins over any group value. Creation fails if a named group does not exist on the cluster or has not synced yet.
 
 `--ttl` bounds the sandbox's lifetime regardless of its main process: once the duration elapses, counted from creation, Porter terminates the sandbox the same way an explicit `terminate` does. See [sandbox lifetime](/sandboxes/overview#sandbox-lifetime).
+
+`--cpu` and `--memory` size an individual sandbox instead of using the cluster's default sandbox size. Pass one or both; the flag you omit keeps the default. CPU is in cores, either a whole number (`2`) or an `m` suffix for a fraction (`500m` is half a core), and memory takes a `Gi` or `Mi` suffix (`4Gi`, `512Mi`). See [custom sandbox sizes](/sandboxes/capacity#custom-sandbox-sizes).
 
 Sandbox names currently cannot be reused, even after the sandbox is terminated. Omit `--name` only for one-off sandboxes where you do not need stable lookup later.
 
@@ -80,8 +84,12 @@ porter sandbox create alpine:3.20 --env-group my-env-group -- sleep 3600
 porter sandbox create alpine:3.20 --ttl 2h -- sleep 7200
 ```
 
+```bash With a Custom Size
+porter sandbox create python:3.12 --cpu 2 --memory 4Gi -- python train.py
+```
+
 ```bash JSON Output
-porter sandbox create ubuntu:24.04 --volume /workspace=my-data --command bash --arg -lc --arg 'ls -la' -o json
+porter sandbox create ubuntu:24.04 --volume /workspace=my-data --command bash --arg -lc --arg 'ls -la' --json
 ```
 </CodeGroup>
 
@@ -102,7 +110,7 @@ porter sandbox list [flags]
 |------|-------------|
 | `--phase` | Filter by phase. Defaults to hiding `terminated` sandboxes. Use `all` to include every phase |
 | `--tag` | Filter by tag in `key=value` format. Repeat the flag to require multiple tags |
-| `-o, --output` | Output format: `table`, `plain`, or `json` |
+| `--json` | Print sandboxes as JSON |
 
 **Phases:**
 
@@ -116,15 +124,7 @@ porter sandbox list [flags]
 | `terminated` | Sandbox was explicitly terminated |
 | `all` | Includes every phase when used with `--phase` |
 
-**Output formats:**
-
-| Format | Description |
-|--------|-------------|
-| `table` | Colorized table for terminal output |
-| `plain` | Tab-separated rows with a header. Used by default when output is piped or redirected |
-| `json` | JSON array, recommended for scripts |
-
-Plain output includes these columns:
+Output includes these columns:
 
 | Column | Description |
 |--------|-------------|
@@ -154,11 +154,11 @@ porter sandbox list --tag workflow=agent-run --tag run=2026-06-17
 ```
 
 ```bash JSON Output
-porter sandbox list -o json
+porter sandbox list --json
 ```
 
 ```bash Script Running Names
-porter sandbox list -o json | jq -r '.[] | select(.phase == "running") | .name'
+porter sandbox list --json | jq -r '.[] | select(.phase == "running") | .name'
 ```
 </CodeGroup>
 
@@ -279,19 +279,11 @@ porter sandbox metrics <sandbox> [flags]
 | Flag | Description |
 |------|-------------|
 | `--since` | Lookback window as a Go duration, such as `30m` or `2h`. Bounded to `[3m, 24h]`. Defaults to `1h` |
-| `-o, --output` | Output format: `table`, `plain`, or `json`. Defaults to `table` on a TTY and `plain` when piped |
+| `--json` | Print the metrics summary as JSON |
 
 CPU is reported in cores and memory in bytes. Utilization is each percentile divided by the sandbox's limit, as a percentage; it can exceed 100% because the limit is a throttling and OOM threshold, not a hard cap on the reported sample. Memory values include page cache and slightly overestimate resident memory.
 
-**Output formats:**
-
-| Format | Description |
-|--------|-------------|
-| `table` | Human-friendly box table with a `window:` footer. Used by default on a terminal |
-| `plain` | Tab-separated numeric rows with a header. Used by default when output is piped or redirected |
-| `json` | Single-line JSON record, recommended for scripts and agents |
-
-Plain output has one row per metric (`cpu_cores`, `mem_bytes`) with these columns:
+The summary has one row per metric (`cpu_cores`, `mem_bytes`) with these columns:
 
 | Column | Description |
 |--------|-------------|
@@ -303,7 +295,7 @@ Plain output has one row per metric (`cpu_cores`, `mem_bytes`) with these column
 | `p90_util_pct` | `p90` as a percentage of `limit` |
 | `window_seconds` | Length of the lookback window in seconds |
 
-The JSON record carries the same values at full precision, plus a `has_data` boolean that is `false` when no samples were collected in the window.
+`--json` prints the same values at full precision on one line, plus a `has_data` boolean that is `false` when no samples were collected in the window.
 
 <CodeGroup>
 ```bash Recent Metrics
@@ -315,15 +307,15 @@ porter sandbox metrics web --since 30m
 ```
 
 ```bash JSON Output
-porter sandbox metrics web -o json
+porter sandbox metrics web --json
 ```
 
 ```bash Script p90 CPU Utilization
-porter sandbox metrics web -o json | jq '.cpu_util_p90_pct'
+porter sandbox metrics web --json | jq '.cpu_util_p90_pct'
 ```
 </CodeGroup>
 
-The table output looks like this:
+Output looks like this:
 
 ```text
 ┌──────────────┬────────────────────┬────────────────────┐
@@ -403,7 +395,7 @@ porter sandbox volume list [flags]
 
 | Flag | Description |
 |------|-------------|
-| `-o, --output` | Output format: `table`, `plain`, or `json` |
+| `--json` | Print volumes as JSON |
 
 **Volume phases:**
 
@@ -413,15 +405,7 @@ porter sandbox volume list [flags]
 | `ready` | The volume is ready to mount into sandboxes |
 | `failed` | The volume failed to provision |
 
-**Output formats:**
-
-| Format | Description |
-|--------|-------------|
-| `table` | Colorized table for terminal output |
-| `plain` | Tab-separated rows with a header. Used by default when output is piped or redirected |
-| `json` | JSON array, recommended for scripts |
-
-Plain output includes these columns:
+Output includes these columns:
 
 | Column | Description |
 |--------|-------------|
@@ -436,11 +420,11 @@ porter sandbox volume list
 ```
 
 ```bash JSON Output
-porter sandbox volume list -o json
+porter sandbox volume list --json
 ```
 
 ```bash Script Volume Names
-porter sandbox volume list -o json | jq -r '.[].name'
+porter sandbox volume list --json | jq -r '.[].name'
 ```
 
 ```bash Ready Volume Names
@@ -465,7 +449,7 @@ porter sandbox volume create [name] [flags]
 
 | Flag | Description |
 |------|-------------|
-| `-o, --output` | Output format: `text` or `json` |
+| `--json` | Print the created volume as JSON |
 
 <CodeGroup>
 ```bash Create Named Volume
@@ -477,7 +461,7 @@ porter sandbox volume create
 ```
 
 ```bash JSON Output
-porter sandbox volume create my-data -o json
+porter sandbox volume create my-data --json
 ```
 </CodeGroup>
 
@@ -494,7 +478,7 @@ porter sandbox volume get <name> [flags]
 
 | Flag | Description |
 |------|-------------|
-| `-o, --output` | Output format: `text` or `json` |
+| `--json` | Print the volume as JSON |
 
 <CodeGroup>
 ```bash Get by Name
@@ -502,7 +486,7 @@ porter sandbox volume get my-data
 ```
 
 ```bash JSON Output
-porter sandbox volume get my-data -o json
+porter sandbox volume get my-data --json
 ```
 </CodeGroup>
 
@@ -520,7 +504,7 @@ porter sandbox volume files <name|id> [path] [flags]
 | Flag | Description |
 |------|-------------|
 | `--search` | Only show entries whose name contains this substring (case-insensitive) |
-| `--json` | Print the full nested listing as JSON instead of a table of paths |
+| `--json` | Print the full nested listing as JSON |
 
 <CodeGroup>
 ```bash List From Root
@@ -654,7 +638,7 @@ porter sandbox volume delete my-data
 | Upload a local file to a volume | `porter sandbox volume write my-data config/app.yaml --file ./app.yaml` |
 | Read a file back from a volume | `porter sandbox volume read my-data config/app.yaml` |
 | List running sandboxes | `porter sandbox list --phase running` |
-| Get running sandbox names for a script | `porter sandbox list -o json \| jq -r '.[] \| select(.phase == "running") \| .name'` |
+| Get running sandbox names for a script | `porter sandbox list --json \| jq -r '.[] \| select(.phase == "running") \| .name'` |
 | Run a smoke command | `porter sandbox exec <sandbox-name> -- python -c 'print("ok")'` |
 | Fetch recent errors | `porter sandbox logs <sandbox-name> --since 30m --level error` |
 | Check CPU and memory usage | `porter sandbox metrics <sandbox-name> --since 30m` |

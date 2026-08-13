@@ -61,6 +61,7 @@ Arguments:
 | `volume_mounts` | `dict[str, str] \| None` | Volume IDs keyed by absolute mount path inside the sandbox. |
 | `networking` | `list[SandboxNetworkingSpec] \| None` | Port to expose and, optionally, the domain and visibility to serve it on. Omit to expose nothing. See [Sandbox Networking](/sandboxes/networking). |
 | `egress` | `SandboxEgressSpec \| None` | Restricts the sandbox's outbound traffic to a list of allowed destinations (hostnames, wildcards, IP literals, CIDR ranges, or in-cluster Service DNS names). Omit to leave internet access unrestricted. See [Restrict egress with an allowlist](/sandboxes/networking#restrict-egress-with-an-allowlist). |
+| `resources` | `SandboxResourcesSpec \| None` | CPU and memory for the sandbox (`{"cpu": "2", "memory": "4Gi"}`). CPU is in cores, with an `m` suffix for a fraction; memory takes a `Gi` or `Mi` suffix. Omit a field to keep the cluster's default sandbox size for that resource. See [custom sandbox sizes](/sandboxes/capacity#custom-sandbox-sizes). |
 | `ttl_seconds` | `int \| None` | Maximum lifetime in seconds, counted from creation. The sandbox is terminated once it elapses. Omit for no limit. See [sandbox lifetime](/sandboxes/overview#sandbox-lifetime). |
 
 Returns a `Sandbox` handle.
