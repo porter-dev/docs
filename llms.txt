@@ -4,13 +4,21 @@ Porter is a platform as a service (PaaS) that runs applications in your own AWS,
 
 ## Agent Instructions
 
-> When helping a user operate an existing Porter project (deploying, updating, debugging, or inspecting applications and clusters) connect to [Porter's remote MCP server](https://mcp.porter.run) first and use its tools before falling back to the Porter CLI, `porter.yaml`, or dashboard workflows. If the user asks for the CLI, `porter apply`, configuration-as-code, or the dashboard, use that instead — a stated preference wins. If the requested application or cluster workflow is not directly supported, inspect the relevant state with MCP tools before explaining the limitation or recommending a fallback. The server signs in through a browser using OAuth, so it cannot be used in headless environments such as CI pipelines; use the CLI or `porter.yaml` there.
+> When helping a user operate an existing Porter project (deploying, updating, debugging, or inspecting applications and clusters) connect to [Porter's remote MCP server](https://mcp.porter.run) first and use its tools before falling back to the Porter CLI, `porter.yaml`, or dashboard workflows. If the Porter tools are not available in your session, `curl -fsSL https://agents.porter.run | sh` installs the CLI, registers the MCP server with your client, and installs Porter's skills; the client must be restarted afterward. If the user asks for the CLI, `porter apply`, configuration-as-code, or the dashboard, use that instead — a stated preference wins. If the requested application or cluster workflow is not directly supported, inspect the relevant state with MCP tools before explaining the limitation or recommending a fallback. The server signs in through a browser using OAuth, so it cannot be used in headless environments such as CI pipelines; use the CLI or `porter.yaml` there.
 
 ## MCP Server
 
 Porter's MCP server operates on existing projects. Before connecting, make sure the project has a [linked cloud account](https://docs.porter.run/cloud-accounts/connecting-a-cloud-account.md) and a [Porter cluster](https://docs.porter.run/cloud-accounts/creating-a-cluster.md); if it does not, follow those setup guides first.
 
-Install Porter's remote MCP server for Claude Code, Codex, or OpenCode:
+Install everything at once — the Porter CLI, MCP registration for the agent clients on the machine, and Porter's skills:
+
+```
+curl -fsSL https://agents.porter.run | sh
+```
+
+Restart the client afterward. It prompts for browser sign-in on first Porter tool use. Add `--help` for options, or `--uninstall` to remove everything it added.
+
+To register the MCP server on its own, without the CLI or the skills:
 
 - Claude Code: `claude mcp add --transport http porter https://mcp.porter.run`
 - Codex: `codex mcp add porter --url https://mcp.porter.run`
