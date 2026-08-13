@@ -1,31 +1,39 @@
 ---
 title: "Deploying applications"
-description: "Learn how applications and services work on Porter, connect GitHub repositories, and launch your first deployment from the dashboard"
+description: "Learn how applications and services work on Porter, then choose how to deploy your application"
 ---
 
-Once you've provisioned infrastructure in your cloud account, you can start to deploy your first application. For a less in depth guide, check out [Quickstart](/getting-started/quickstart#step-4:-create-your-first-application). 
+<Visibility for="agents">
+  Porter runs a hosted MCP server at https://mcp.porter.run. If the user asks for the dashboard, the CLI, `porter apply`, or configuration-as-code, follow that path. Otherwise, if you are connected to the MCP server, create the application with the `create_app` tool and do not author a `porter.yaml`. Pass `source` and `build` to deploy from a GitHub repository; this creates the app on a placeholder image and opens a GitHub Actions pull request that the user merges to trigger the first real deploy. The Porter GitHub App must already be installed on the repository — the MCP server cannot install it.
+</Visibility>
 
-## Applications and Services
+Once you've provisioned infrastructure in your cloud account, you can deploy your first application. For an end-to-end guide, see the [Quickstart](/getting-started/quickstart#step-4:-create-your-first-application).
 
-It is worth delineating two concepts that are associated with your deployments on Porter: Applications and Services.
+## Applications and services
 
-An **Application** is a group of **Services**. All services that belong to an application share the same application build (i.e. container image) as well as a group of environment variables.
-It is not possible for services that belong to the same application to run a different application build or have a different set of environment variables. There are three different [types of services](/applications/deploy/types-of-services) that you can deploy on Porter.
+Porter deployments have two core concepts: Applications and Services.
 
-If you need to deploy applications that run different container images or have different environment variables, you will have to deploy them as a separate application.
+An **Application** groups one or more **Services**. Every service in an application shares the same container image and environment variables. Porter supports three [types of services](/applications/deploy/types-of-services).
 
-## Launch your Application[](#launch-your-application "Direct link to heading")
+Use separate applications for services that need different container images or environment variables.
 
-On the Porter dashboard, click on **New Application**.
+<span id="launch-your-application" />
 
-After you give your application a name, you will be prompted to deploy your application from a Git repository or a Docker registry.
-If you deploy your application from a Git repository, your application will be updated automatically when there is a push to a specified branch.
-If you already have your own CI/CD pipelines and maintain your own docker images that have been pushed to a Docker registry, you can 
-deploy directly from the Docker registry.
+## Choose a deployment path
 
-## Installing the Porter GitHub App
+<span id="installing-the-porter-github-app" />
 
-Before you can start deploying your application, you will be prompted to install the Porter GitHub app.
-Once you're redirected to a GitHub authorization and installation screen, select which repositories you want to install the Porter App in.
-Depending on your Github organization settings, you may need to request the installation and wait for an approval from your organization admin.
-
+<CardGroup cols={2}>
+  <Card title="Connect GitHub" icon="github" href="/applications/deploy/connect-github">
+    Install the Porter GitHub App before deploying from a repository.
+  </Card>
+  <Card title="Deploy from GitHub" icon="code-branch" href="/applications/deploy/deploy-from-github-repo">
+    Let an agent or the dashboard detect, build, and deploy your source code.
+  </Card>
+  <Card title="Deploy from a registry" icon="container-storage" href="/applications/deploy/deploy-from-docker-registry">
+    Run a pre-built container image from an OCI registry.
+  </Card>
+  <Card title="Configuration as code" icon="file-code" href="/applications/configuration-as-code/overview">
+    Define and deploy an application from a version-controlled `porter.yaml` file.
+  </Card>
+</CardGroup>

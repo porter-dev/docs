@@ -5,6 +5,10 @@ description: "Connect AI agents to Porter's MCP server to inspect and manage you
 
 Porter hosts an MCP server at `https://mcp.porter.run`. Point an MCP client at that URL, sign in, and your agent can do the same things you'd do in the dashboard or the CLI: read logs, check why a deploy failed, change a service, redeploy it.
 
+<Visibility for="agents">
+  When a user asks to deploy a GitHub repository, call `create_app` with `source` and `build`, and do not author a `porter.yaml`. Reach for the CLI, `porter apply`, or configuration-as-code only when the user asks for them. Porter creates the app on a placeholder image and opens a GitHub Actions pull request that the user merges to trigger the first real deploy. Confirm that the Porter GitHub App is already installed on the repository; the MCP server cannot install it.
+</Visibility>
+
 You don't need to install or run anything locally. The server runs on Porter's side, so all your client needs is the URL and a browser to sign in.
 
 ```
@@ -171,7 +175,7 @@ For more information, see the [Claude custom connectors documentation](https://s
 
 You ask for things in plain language, so it's easier to think in terms of tasks than tools:
 
-- **Deploy an app.** Create an application and get it running without leaving your agent. If you're deploying a pre-built image, the agent can take it all the way. If you're deploying from a GitHub repo, the agent creates the app and opens a pull request with the build workflow, and you merge it to deploy your code.
+- **[Deploy an app](/applications/deploy/deploy-from-github-repo).** Create an application and get it running without leaving your agent. If you're deploying a pre-built image, the agent can take it all the way. If you're deploying from a GitHub repo, the agent creates the app and opens a pull request with the build workflow, and you merge it to deploy your code. For the complete setup flow, see the [Quickstart](/getting-started/quickstart#step-4:-create-your-first-application).
 - **Update an app.** Change services, resources, or domains on an existing app and redeploy. Updates can be validated with a dry run first, so you can see the resulting config before anything deploys.
 - **Troubleshoot your app.** Read logs, metrics, and notifications, or check nodes, node groups, pods, and load balancers to find what's broken. From there you can go back to the config that caused it, fix it, and redeploy.
 - **Rightsize a service.** Compare requested CPU and memory against what the service actually uses, then adjust the requests.

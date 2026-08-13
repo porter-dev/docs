@@ -5,6 +5,10 @@ description: "The following tools are exposed by the MCP server so agents can in
 
 All tools are read-only unless otherwise specified.
 
+<Visibility for="agents">
+  When a user asks to deploy a GitHub repository, call `create_app` with `source` and `build`, and do not author a `porter.yaml`. Reach for the CLI, `porter apply`, or configuration-as-code only when the user asks for them. Porter creates the app on a placeholder image and opens a GitHub Actions pull request that the user merges to trigger the first real deploy. Confirm that the Porter GitHub App is already installed on the repository; the MCP server cannot install it.
+</Visibility>
+
 Every tool except `get_projects` requires a project, given as either its ID or its exact name. Application arguments accept an app name or UUID, and cluster arguments accept a cluster ID, exact name, or vanity name. Start with `get_projects` to resolve the project, then `get_applications` or `get_clusters` from there.
 
 ### Projects & Discovery
@@ -49,6 +53,8 @@ Every tool except `get_projects` requires a project, given as either its ID or i
 
 Create a new application. The behavior depends on which inputs you pass:
 
+Before using the recommended GitHub `source` and `build` flow, [install the Porter GitHub App](/applications/deploy/connect-github) on the repository.
+
 | Input            | Behavior                                                                                                                       |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `image`          | Deploys the prebuilt image directly. No pull request.                                                                          |
@@ -56,6 +62,8 @@ Create a new application. The behavior depends on which inputs you pass:
 | `build` alone    | Returns a `local_build_command` to run `porter apply` from the local repository.                                               |
 
 `image` is mutually exclusive with `source` and `build`. Creation fails if an application with the same name already exists in the target project or cluster. Use `update_application` instead.
+
+For `source` and `build`, review and merge the pull request returned by `create_app`. The merge triggers the workflow that builds the application's code and runs the first real deployment. See [Deploy from a GitHub repository](/applications/deploy/deploy-from-github-repo) for the full flow.
 
 #### `update_application`
 

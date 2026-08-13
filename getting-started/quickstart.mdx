@@ -3,6 +3,8 @@ title: "Quickstart"
 description: "Deploy your first application on Porter from sign-up to a live public URL, covering cloud account setup, cluster provisioning, and app creation"
 ---
 
+import AgentCreateApp from "/snippets/agent-create-app.mdx";
+
 This guide walks you through deploying your first application on Porter, from creating an account to seeing your app live at a public URL.
 
 ## Prerequisites
@@ -232,202 +234,159 @@ Porter provisions a Kubernetes cluster in your cloud account. The setup process 
 
 ## Step 4: Create your first application
 
-Once your cluster is ready, you'll see the Porter dashboard. Click **Create Application** to deploy your code.
+Once your cluster is ready, choose how you want to deploy your code.
 
-<Info>
-You can also create and manage apps with AI agents using the [MCP server](/mcp/overview).
-</Info>
+<Visibility for="agents">
+  Porter runs a hosted MCP server at https://mcp.porter.run. If the user asks for the dashboard, the CLI, `porter apply`, or configuration-as-code, follow that path on this page. Otherwise, if you are connected to the MCP server, create the application with the `create_app` tool and do not author a `porter.yaml`. Pass `source` and `build` to deploy from a GitHub repository; this creates the app on a placeholder image and opens a GitHub Actions pull request that the user merges to trigger the first real deploy. The Porter GitHub App must already be installed on the repository — the MCP server cannot install it.
+</Visibility>
 
 <Tabs>
-  <Tab title="Deploy from a GitHub repository">
-    Porter builds your application from source code and sets up automated deployments on every push.
-
-    <Steps>
-      <Step title="Connect GitHub">
-        If this is your first deployment, you'll need to connect your GitHub account:
-
-        ![Source selection screen](/images/deploy/v2/github-source-selection.webp)
-
-        1. Click **Connect repositories**
-        2. Authorize the Porter GitHub App
-        3. Choose which repositories Porter can access (all repositories or select specific ones)
-
-        Porter needs read access to detect your code structure and write access to create the deployment workflow.
-      </Step>
-      <Step title="Select your repository">
-        1. Choose the repository containing your application
-        2. Select the branch to deploy (defaults to `main` or `master`)
-
-        ![GitHub repository and branch selector](/images/deploy/v2/github-repo-branch-selector.webp)
-      </Step>
-      <Step title="Review detected applications">
-        Porter scans your repository and automatically detects:
-
-        - Frameworks and languages (Node.js, Python, Go, etc.)
-        - Dockerfiles
-        - Service types (web servers, workers, etc.)
-
-        ![Detected applications list](/images/deploy/v2/detected-apps-list.webp)
-
-        You'll see a card for each detected application showing the app name, detected framework, and repository path.
-
-        <Info>
-        For monorepos with multiple services, Porter detects each application separately. A Node.js API in `/api` and a React frontend in `/web` appear as distinct applications. If some services are already deployed on your cluster, Porter hides them by default so you can focus on new applications. Expand the **previously deployed** section to view or re-add them.
-        </Info>
-      </Step>
-      <Step title="Configure your application (optional)">
-        Click the **gear icon** on any application card to customize:
-
-        ![Settings button on application card](/images/deploy/v2/app-card-settings-button.webp)
-
-        - **Build method**: Docker (using your Dockerfile) or Buildpacks (automatic)
-        - **Start command**: The command to run your application
-        - **Port**: The port your application listens on
-
-        For most applications, Porter's detected defaults work without changes.
-      </Step>
-      <Step title="Deploy">
-        Click **Deploy** to start your deployment.
-      </Step>
-      <Step title="Merge the GitHub Actions PR">
-        <Warning>
-        This step is critical. Your application won't be available until you merge the PR.
-        </Warning>
-
-        Porter creates a pull request in your repository containing a GitHub Actions workflow file at `.github/workflows/porter.yml`. This workflow handles building and deploying your application on every push.
-
-        After clicking Deploy, you'll see:
-        - A **toast notification** with a "View PR" button that links directly to the pull request
-        - A **warning banner** on your app's page with a "Merge PR" link
-
-        ![Merge PR banner](/images/getting-started/step-4-github-merge-pr-banner.webp)
-
-        Click either link to open the pull request on GitHub, then merge it. After merging, click **Refresh** on the banner to update the status. GitHub Actions triggers automatically and your first deployment begins.
-
-        <Accordion title="What's in the workflow file?">
-        The workflow Porter creates looks like this:
-
-        ```yaml
-        on:
-          push:
-            branches:
-              - main
-        name: Deploy to Porter
-        jobs:
-          porter-deploy:
-            runs-on: ubuntu-latest
-            steps:
-              - uses: actions/checkout@v4
-              - uses: porter-dev/setup-porter@v0.2.0
-              - run: porter apply
-                env:
-                  PORTER_TOKEN: ${{ secrets.PORTER_APP_... }}
-        ```
-        </Accordion>
-      </Step>
-    </Steps>
+  <Tab title="Agent">
+    <AgentCreateApp />
   </Tab>
-  <Tab title="Deploy from a Docker registry">
-    This approach works well when you have an existing CI/CD pipeline or are deploying third-party images.
+  <Tab title="Dashboard">
+    In the Porter dashboard, click **Create Application**, then choose your source.
 
-    <Steps>
-      <Step title="Select container registry">
-        From the Create Application screen, click **Or, deploy from a container registry** in the top right.
+    <Tabs>
+      <Tab title="GitHub repository">
+        Porter builds your application from source code and sets up automated deployments on every push.
 
-        ![Container registry link](/images/deploy/v2/github-deploy-registry-link.webp)
-      </Step>
-      <Step title="Specify your image">
-        Enter your image details:
+        <Steps>
+          <Step title="Connect GitHub">
+            If this is your first deployment, [install the Porter GitHub App](/applications/deploy/connect-github):
 
-        - **Image repository**: The full path to your image
-          - Docker Hub: `docker.io/username/image` or `username/image`
-          - Amazon ECR: `123456789.dkr.ecr.us-east-1.amazonaws.com/my-app`
-          - Google Artifact Registry: `us-docker.pkg.dev/project-id/repo/image`
-          - Azure Container Registry: `myregistry.azurecr.io/my-app`
-        - **Tag**: The version to deploy (e.g., `latest`, `v1.2.3`, or a commit SHA)
+            ![Source selection screen](/images/deploy/v2/github-source-selection.webp)
 
-        ![Container registry inputs](/images/deploy/v2/container-registry-inputs.webp)
-      </Step>
-      <Step title="Configure your application">
-        Porter creates an application configuration with sensible defaults. Since Porter can't inspect your pre-built image, you'll need to specify:
+            1. Click **Connect repositories**
+            2. Authorize the Porter GitHub App
+            3. Choose which repositories Porter can access (all repositories or select specific ones)
 
-        - **Port**: The port your container listens on (for web services)
-        - **Start command**: Override the image's default CMD if needed
+            Porter needs read access to detect your code structure and write access to create the deployment workflow.
+          </Step>
+          <Step title="Select your repository">
+            1. Choose the repository containing your application
+            2. Select the branch to deploy (defaults to `main` or `master`)
 
-        Click the **gear icon** to adjust resources (CPU, RAM, instances) if the defaults don't fit your needs.
-      </Step>
-      <Step title="Deploy">
-        Click **Deploy** to pull your image and start running it.
+            ![GitHub repository and branch selector](/images/deploy/v2/github-repo-branch-selector.webp)
+          </Step>
+          <Step title="Review detected applications">
+            Porter scans your repository and automatically detects:
 
-        <Info>
-        To update your application later, push a new image tag and use the Porter CLI:
-        ```bash
-        porter app update-tag APP_NAME --tag NEW_TAG
-        ```
-        </Info>
-      </Step>
-    </Steps>
+            - Frameworks and languages (Node.js, Python, Go, etc.)
+            - Dockerfiles
+            - Service types (web servers, workers, etc.)
+
+            ![Detected applications list](/images/deploy/v2/detected-apps-list.webp)
+
+            You'll see a card for each detected application showing the app name, detected framework, and repository path.
+
+            <Info>
+            For monorepos with multiple services, Porter detects each application separately. A Node.js API in `/api` and a React frontend in `/web` appear as distinct applications. If some services are already deployed on your cluster, Porter hides them by default so you can focus on new applications. Expand the **previously deployed** section to view or re-add them.
+            </Info>
+          </Step>
+          <Step title="Configure your application (optional)">
+            Click the **gear icon** on any application card to customize:
+
+            ![Settings button on application card](/images/deploy/v2/app-card-settings-button.webp)
+
+            - **Build method**: Docker (using your Dockerfile) or Buildpacks (automatic)
+            - **Start command**: The command to run your application
+            - **Port**: The port your application listens on
+
+            For most applications, Porter's detected defaults work without changes.
+          </Step>
+          <Step title="Deploy">
+            Click **Deploy** to start your deployment.
+          </Step>
+          <Step title="Merge the GitHub Actions PR">
+            <Warning>
+            This step is critical. Your application won't be available until you merge the PR.
+            </Warning>
+
+            Porter creates a pull request in your repository containing a GitHub Actions workflow file at `.github/workflows/porter.yml`. This workflow handles building and deploying your application on every push.
+
+            After clicking Deploy, you'll see:
+            - A **toast notification** with a "View PR" button that links directly to the pull request
+            - A **warning banner** on your app's page with a "Merge PR" link
+
+            ![Merge PR banner](/images/getting-started/step-4-github-merge-pr-banner.webp)
+
+            Click either link to open the pull request on GitHub, then merge it. After merging, click **Refresh** on the banner to update the status. GitHub Actions triggers automatically and your first deployment begins.
+
+            <Accordion title="What's in the workflow file?">
+            The workflow Porter creates looks like this:
+
+            ```yaml
+            on:
+              push:
+                branches:
+                  - main
+            name: Deploy to Porter
+            jobs:
+              porter-deploy:
+                runs-on: ubuntu-latest
+                steps:
+                  - uses: actions/checkout@v4
+                  - uses: porter-dev/setup-porter@v0.2.0
+                  - run: porter apply
+                    env:
+                      PORTER_TOKEN: ${{ secrets.PORTER_APP_... }}
+            ```
+            </Accordion>
+          </Step>
+        </Steps>
+      </Tab>
+      <Tab title="Docker registry">
+        This approach works well when you have an existing CI/CD pipeline or are deploying third-party images.
+
+        <Steps>
+          <Step title="Select container registry">
+            From the Create Application screen, click **Or, deploy from a container registry** in the top right.
+
+            ![Container registry link](/images/deploy/v2/github-deploy-registry-link.webp)
+          </Step>
+          <Step title="Specify your image">
+            Enter your image details:
+
+            - **Image repository**: The full path to your image
+              - Docker Hub: `docker.io/username/image` or `username/image`
+              - Amazon ECR: `123456789.dkr.ecr.us-east-1.amazonaws.com/my-app`
+              - Google Artifact Registry: `us-docker.pkg.dev/project-id/repo/image`
+              - Azure Container Registry: `myregistry.azurecr.io/my-app`
+            - **Tag**: The version to deploy (e.g., `latest`, `v1.2.3`, or a commit SHA)
+
+            ![Container registry inputs](/images/deploy/v2/container-registry-inputs.webp)
+          </Step>
+          <Step title="Configure your application">
+            Porter creates an application configuration with sensible defaults. Since Porter can't inspect your pre-built image, you'll need to specify:
+
+            - **Port**: The port your container listens on (for web services)
+            - **Start command**: Override the image's default CMD if needed
+
+            Click the **gear icon** to adjust resources (CPU, RAM, instances) if the defaults don't fit your needs.
+          </Step>
+          <Step title="Deploy">
+            Click **Deploy** to pull your image and start running it.
+
+            <Info>
+            To update your application later, push a new image tag and use the Porter CLI:
+            ```bash
+            porter app update-tag APP_NAME --tag NEW_TAG
+            ```
+            </Info>
+          </Step>
+        </Steps>
+      </Tab>
+    </Tabs>
   </Tab>
-   <Tab title="Deploy from the CLI">
-    Use the Porter CLI to deploy your application with a `porter.yaml` configuration file.
+  <Tab title="CLI">
+    Deploy the application from a `porter.yaml` file:
 
-    <Steps>
-      <Step title="Install the CLI">
-        Install the Porter CLI using Homebrew (Mac) or the install script (Mac/Linux):
+    ```bash
+    porter apply -f porter.yaml
+    ```
 
-        ```bash
-        # Mac (Homebrew)
-        brew install porter-dev/porter/porter
-
-        # Mac/Linux (script)
-        /bin/bash -c "$(curl -fsSL https://install.porter.run)"
-        ```
-
-        See [CLI Installation](/cli/installation) for more details.
-      </Step>
-      <Step title="Login and configure">
-        Authenticate with Porter and select your project/cluster:
-
-        ```bash
-        porter auth login
-        ```
-
-        This opens your browser to complete authentication and automatically configures your default project and cluster. See [CLI Basic Usage](/cli/basic-usage) for more details.
-      </Step>
-      <Step title="Create a porter.yaml file">
-        Create a `porter.yaml` file in your repository root:
-
-        ```yaml
-        version: v2
-        name: my-app
-
-        build:
-          method: docker
-          dockerfile: ./Dockerfile
-
-        services:
-          - name: web
-            type: web
-            run: npm start
-            port: 3000
-            cpuCores: 0.5
-            ramMegabytes: 512
-        ```
-
-        This is the simplest initial configuration. See the [porter.yaml reference](/applications/configuration-as-code/reference) for all available options.
-      </Step>
-      <Step title="Deploy your application">
-        Run `porter apply` to build and deploy:
-
-        ```bash
-        porter apply -f porter.yaml
-        ```
-
-        Porter builds your container image and deploys it to your cluster.
-
-        See [`porter apply` reference](/standard/cli/command-reference/porter-apply) for all available flags.
-      </Step>
-    </Steps>
+    Learn how to define and deploy an application in the [configuration-as-code guide](/applications/configuration-as-code/overview).
   </Tab>
 </Tabs>
 

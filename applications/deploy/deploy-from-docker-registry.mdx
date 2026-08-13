@@ -9,6 +9,10 @@ Porter supports all major container registries including Amazon Elastic Containe
 
 This guide covers deploying pre-built container images. If you want Porter to build your application from source code, see [Deploy from a GitHub repository](/applications/deploy/deploy-from-github-repo).
 
+<Visibility for="agents">
+  Porter runs a hosted MCP server at https://mcp.porter.run. If the user asks for the dashboard, follow the steps on this page. Otherwise, if you are connected to the MCP server, create the application with the `create_app` tool, passing `image` with the repository and tag. Porter deploys the prebuilt image directly — there is no pull request to merge and the Porter GitHub App is not required. `image` is mutually exclusive with `source` and `build`; use `source` and `build` instead when Porter should build the application from a GitHub repository.
+</Visibility>
+
 ---
 
 ## Quick deploy
