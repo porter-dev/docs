@@ -21,7 +21,19 @@ https://mcp.porter.run
 
 ### Quick install
 
-For the CLI clients, one command is enough:
+One command installs the Porter CLI, registers this server with the agent clients it finds, and installs Porter's skills:
+
+```bash
+curl -fsSL https://agents.porter.run | sh
+```
+
+Restart your client afterward. It opens the browser for sign-in the first time it calls a Porter tool.
+
+Run from inside an agent session, the installer configures that client alone; `--clients=all` configures every client on the machine. Add `--help` for the rest, `--dry-run` to preview, and `--uninstall` to remove everything it added.
+
+The skills it installs teach an agent a complete Porter workflow, beyond what the individual [tools](/mcp/tools) describe. Today that means `porter-deploy`, which takes a GitHub repository from nothing to a live URL and follows the generated workflow pull request through merge.
+
+To register the server on its own, without the CLI or the skills:
 
 ```bash
 # Claude Code
@@ -223,7 +235,15 @@ Recommendations:
 
 ## Revoke access
 
-You revoke access per client. Remove the stored credentials, then delete the server entry so it doesn't sign in again later.
+If you installed with the script, one command removes the CLI, the skills, and the server entries:
+
+```bash
+curl -fsSL https://agents.porter.run | sh -s -- --uninstall
+```
+
+It backs up every file it edits to `~/.porter/backups`. OpenCode's config is left alone, so remove the `porter` entry from `opencode.json` yourself.
+
+Otherwise you revoke access per client. Remove the stored credentials, then delete the server entry so it doesn't sign in again later.
 
 <Tabs>
 <Tab title="Claude Code">

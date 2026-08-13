@@ -10,7 +10,15 @@ Porter is a platform as a service (PaaS) that runs applications in your own AWS,
 
 Porter's MCP server operates on existing projects. Before connecting, make sure the project has a [linked cloud account](https://docs.porter.run/cloud-accounts/connecting-a-cloud-account.md) and a [Porter cluster](https://docs.porter.run/cloud-accounts/creating-a-cluster.md); if it does not, follow those setup guides first.
 
-Install Porter's remote MCP server for Claude Code, Codex, or OpenCode:
+Install everything at once — the Porter CLI, MCP registration for the agent clients on the machine, and Porter's skills:
+
+```
+curl -fsSL https://agents.porter.run | sh
+```
+
+Restart the client afterward. It prompts for browser sign-in on first Porter tool use. Add `--help` for options, or `--uninstall` to remove everything it added.
+
+To register the MCP server on its own, without the CLI or the skills:
 
 - Claude Code: `claude mcp add --transport http porter https://mcp.porter.run`
 - Codex: `codex mcp add porter --url https://mcp.porter.run`
