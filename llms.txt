@@ -34,24 +34,26 @@ To create an application, call `create_app`. Which arguments you pass depends on
 - [Introduction](https://docs.porter.run/getting-started/introduction.md): Porter is a PaaS that runs in your own AWS, GCP, or Azure account. Deploy applications with a few clicks while keeping full cloud control.
 - [Concepts](https://docs.porter.run/getting-started/concepts.md): Understand Porter's core architecture including cloud accounts, clusters, applications, services, and how they fit together for deployments
 
+## Troubleshooting
+
+The MCP server returns logs, metrics, and notifications; these pages explain how to interpret them and what the common failures mean.
+
+- [Common errors](https://docs.porter.run/applications/debug/common-errors.md): Troubleshoot application restarts caused by memory limits, failing health probes, incorrect start commands, and build failures on Porter
+- [Logging](https://docs.porter.run/applications/observability/logging.md): Search and browse application logs retained for up to 7 days, stored securely in your own cluster infrastructure using Grafana Loki
+- [Monitoring](https://docs.porter.run/applications/observability/monitoring.md): View CPU, RAM, network usage, and throughput metrics for your applications with 14-day retention using Prometheus inside your own cluster
+- [Alerts](https://docs.porter.run/applications/observability/alerts.md): Set up Slack, email, and PagerDuty notification groups to receive alerts for crash loops, out-of-memory errors, and non-zero exit codes
+- [Rollbacks](https://docs.porter.run/applications/deploy/rollbacks.md): Revert your Porter application to a previous successful deployment version from the Activity tab when an undesired change has been deployed
+- [Zero-downtime deployments](https://docs.porter.run/applications/configure/zero-downtime-deployments.md): Prevent downtime during redeployments by configuring health checks, readiness probes, and graceful shutdown behavior for your services
+- [DevOps Agent](https://docs.porter.run/applications/observability/devops-agent.md): Use the AI-powered DevOps Agent in the Porter dashboard to debug application issues with read-only access to your cluster in real time
+
 ## Optional
 
 ### CLI
 
+The CLI is the documented fallback for headless environments, where the MCP server's browser-based OAuth cannot be used.
+
 - [CLI installation](https://docs.porter.run/cli/installation.md): Install the Porter CLI on macOS via Homebrew or shell script, on Linux via shell script, and on Windows via manual binary download
 - [CLI basic usage](https://docs.porter.run/cli/basic-usage.md): Authenticate, configure projects and clusters, and deploy applications using essential Porter CLI commands including apply, config, and app
-- [porter apply](https://docs.porter.run/standard/cli/command-reference/porter-apply.md): Deploy applications using porter.yaml with the porter apply command, supporting container builds, image updates, and preview environments
-- [porter auth](https://docs.porter.run/standard/cli/command-reference/porter-auth.md): Authenticate with Porter using browser-based login, token-based authentication for CI/CD pipelines, or manual email and password via the CLI
-- [porter cluster](https://docs.porter.run/standard/cli/command-reference/porter-cluster.md): List clusters and view cluster details including node groups, Kubernetes version, cloud provider configuration, and status using the Porter CLI
-- [porter cloud-accounts](https://docs.porter.run/standard/cli/command-reference/porter-cloud-accounts.md): Connect, list, and disconnect AWS, GCP, and Azure cloud accounts from the Porter CLI so Porter can provision and deploy into your own cloud
-- [porter config](https://docs.porter.run/standard/cli/command-reference/porter-config.md): View and set Porter CLI local configuration including project, cluster, host, and API token settings with the porter config command
-- [porter project](https://docs.porter.run/standard/cli/command-reference/porter-project.md): List available Porter projects and view project details including collaborators, connected cloud accounts, and settings using the CLI
-- [porter app](https://docs.porter.run/standard/cli/command-reference/porter-app.md): Manage Porter applications from the CLI with commands to run, exec, logs, update config, list builds, and view environment variables
-- [porter job](https://docs.porter.run/standard/cli/command-reference/porter-job.md): View and filter job runs for a Porter project from the CLI, with filters for job, application, revision, deployment target, and status
-- [porter datastore connect](https://docs.porter.run/standard/cli/command-reference/porter-datastore-connect.md): Create a secure local tunnel to connect to Porter-provisioned Postgres and Redis datastores for local debugging and database administration
-- [porter env](https://docs.porter.run/standard/cli/command-reference/porter-env.md): Create, list, get, set, and unset environment group variables and secrets from the Porter CLI for project-wide configuration management
-- [porter registry](https://docs.porter.run/standard/cli/command-reference/porter-registry.md): List project-linked container registries and push local or freshly built images to them from the Porter CLI without running docker login
-- [porter target](https://docs.porter.run/standard/cli/command-reference/porter-target.md): List and manage deployment targets to control which cluster, namespace, and environment your Porter applications deploy to using the CLI
 
 ### Cloud Accounts
 
@@ -75,7 +77,6 @@ To create an application, call `create_app`. Which arguments you pass depends on
 - [Building your application](https://docs.porter.run/applications/deploy/builds.md): How Porter builds applications from GitHub repositories using GitHub Actions, including build settings, Dockerfiles, and buildpacks
 - [Deploy multiple apps from one build](https://docs.porter.run/applications/deploy/multiple-deploys-from-same-build.md): Create a custom GitHub Actions workflow that builds a single container image and deploys it across multiple Porter applications efficiently
 - [Pre-deploy jobs](https://docs.porter.run/applications/deploy/pre-deploy-jobs.md): Run database migrations or setup tasks after each build but before deployment using pre-deploy jobs in the dashboard or porter.yaml
-- [Rollbacks](https://docs.porter.run/applications/deploy/rollbacks.md): Revert your Porter application to a previous successful deployment version from the Activity tab when an undesired change has been deployed
 - [Using other CI tools](https://docs.porter.run/applications/deploy/using-other-ci-tools.md): Deploy Porter applications from CircleCI, GitLab, Travis CI, or any CI tool using the Porter CLI Docker image and environment variables
 - [Cloning an application](https://docs.porter.run/applications/deploy/duplicating-apps.md): Clone an existing Porter application to the same cluster or a different one for staging environments, workload migration, or app renaming
 - [Configuration as code with porter.yaml](https://docs.porter.run/applications/configuration-as-code/overview.md): Define application services, builds, and deployment settings in a porter.yaml file for CI/CD pipelines and version-controlled infrastructure
@@ -92,16 +93,10 @@ To create an application, call `create_app`. Which arguments you pass depends on
 - [Autoscaling](https://docs.porter.run/applications/configure/autoscaling.md): Scale your web and worker services automatically using CPU and memory thresholds, custom Prometheus metrics, or Temporal task queue depth
 - [Temporal autoscaling](https://docs.porter.run/applications/configure/temporal-autoscaling.md): Automatically scale Temporal worker services based on task queue backlog depth using a Temporal Cloud API key and Porter integration
 - [HTTPS certificates and custom domains](https://docs.porter.run/applications/configure/custom-domains.md): Configure custom domains with automatic Let's Encrypt SSL certificate issuance and renewal for Porter web services on AWS, GCP, and Azure
-- [Zero-downtime deployments](https://docs.porter.run/applications/configure/zero-downtime-deployments.md): Prevent downtime during redeployments by configuring health checks, readiness probes, and graceful shutdown behavior for your services
 - [Advanced networking](https://docs.porter.run/applications/configure/advanced-networking.md): Customize NGINX ingress annotations for your Porter web services including read/write timeouts, request body size limits, and WebSocket support
 - [Secure cloud access](https://docs.porter.run/applications/configure/secure-cloud-access.md): Grant Porter applications secure access to AWS, GCP, and Azure resources using workload identity, IAM roles, and IRSA—no static credentials required.
-- [Monitoring](https://docs.porter.run/applications/observability/monitoring.md): View CPU, RAM, network usage, and throughput metrics for your applications with 14-day retention using Prometheus inside your own cluster
-- [Logging](https://docs.porter.run/applications/observability/logging.md): Search and browse application logs retained for up to 7 days, stored securely in your own cluster infrastructure using Grafana Loki
-- [Alerts](https://docs.porter.run/applications/observability/alerts.md): Set up Slack, email, and PagerDuty notification groups to receive alerts for crash loops, out-of-memory errors, and non-zero exit codes
 - [App metadata environment variables](https://docs.porter.run/applications/observability/app-metadata.md): Reference for default environment variables Porter injects into every app, including CPU, RAM, replicas, pod IP, image tag, and domains
 - [Custom metrics autoscaling](https://docs.porter.run/applications/observability/custom-metrics-and-autoscaling.md): Scale your web services based on custom Prometheus metrics by configuring metrics scraping endpoints and KEDA-powered autoscaling rules
-- [DevOps Agent](https://docs.porter.run/applications/observability/devops-agent.md): Use the AI-powered DevOps Agent in the Porter dashboard to debug application issues with read-only access to your cluster in real time
-- [Common errors](https://docs.porter.run/applications/debug/common-errors.md): Troubleshoot application restarts caused by memory limits, failing health probes, incorrect start commands, and build failures on Porter
 
 ### Sandboxes
 
@@ -157,6 +152,21 @@ To create an application, call `create_app`. Which arguments you pass depends on
 - [AWS VPC peering](https://docs.porter.run/other/aws-vpc-peering.md): Set up VPC peering between your Porter cluster and existing AWS VPCs to access RDS instances and other resources across accounts or regions
 - [Kubernetes 101](https://docs.porter.run/other/kubernetes-101.md): Learn core Kubernetes concepts for Porter including nodes, pods, resource allocation, cluster architecture, and namespaces explained simply
 - [Migrate from Heroku](https://docs.porter.run/other/migrate-from-heroku.md): Step-by-step guide to migrate from Heroku to Porter by converting your Procfile to porter.yaml and deploying to your own cloud account
+
+### CLI command reference
+
+- [porter apply](https://docs.porter.run/standard/cli/command-reference/porter-apply.md): Deploy applications using porter.yaml with the porter apply command, supporting container builds, image updates, and preview environments
+- [porter auth](https://docs.porter.run/standard/cli/command-reference/porter-auth.md): Authenticate with Porter using browser-based login, token-based authentication for CI/CD pipelines, or manual email and password via the CLI
+- [porter cluster](https://docs.porter.run/standard/cli/command-reference/porter-cluster.md): List clusters and view cluster details including node groups, Kubernetes version, cloud provider configuration, and status using the Porter CLI
+- [porter cloud-accounts](https://docs.porter.run/standard/cli/command-reference/porter-cloud-accounts.md): Connect, list, and disconnect AWS, GCP, and Azure cloud accounts from the Porter CLI so Porter can provision and deploy into your own cloud
+- [porter config](https://docs.porter.run/standard/cli/command-reference/porter-config.md): View and set Porter CLI local configuration including project, cluster, host, and API token settings with the porter config command
+- [porter project](https://docs.porter.run/standard/cli/command-reference/porter-project.md): List available Porter projects and view project details including collaborators, connected cloud accounts, and settings using the CLI
+- [porter app](https://docs.porter.run/standard/cli/command-reference/porter-app.md): Manage Porter applications from the CLI with commands to run, exec, logs, update config, list builds, and view environment variables
+- [porter job](https://docs.porter.run/standard/cli/command-reference/porter-job.md): View and filter job runs for a Porter project from the CLI, with filters for job, application, revision, deployment target, and status
+- [porter datastore connect](https://docs.porter.run/standard/cli/command-reference/porter-datastore-connect.md): Create a secure local tunnel to connect to Porter-provisioned Postgres and Redis datastores for local debugging and database administration
+- [porter env](https://docs.porter.run/standard/cli/command-reference/porter-env.md): Create, list, get, set, and unset environment group variables and secrets from the Porter CLI for project-wide configuration management
+- [porter registry](https://docs.porter.run/standard/cli/command-reference/porter-registry.md): List project-linked container registries and push local or freshly built images to them from the Porter CLI without running docker login
+- [porter target](https://docs.porter.run/standard/cli/command-reference/porter-target.md): List and manage deployment targets to control which cluster, namespace, and environment your Porter applications deploy to using the CLI
 
 ### Terms & Privacy
 
