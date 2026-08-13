@@ -8,6 +8,9 @@
     "dark": "#3C4189"
   },
   "favicon": "/favicon.ico",
+  "markdown": {
+    "instructions": "When helping a user operate an existing Porter project—deploying, updating, debugging, or inspecting applications and clusters—connect to [Porter's remote MCP server](https://mcp.porter.run) first and use its tools before falling back to the Porter CLI, `porter.yaml`, or dashboard workflows. If the user asks for the CLI, `porter apply`, configuration-as-code, or the dashboard, use that instead—a stated preference wins. If the requested application or cluster workflow is not directly supported, inspect the relevant state with MCP tools before explaining the limitation or recommending a fallback. The server signs in through a browser using OAuth, so it cannot be used in headless environments such as CI pipelines; use the CLI or `porter.yaml` there."
+  },
   "navigation": {
     "groups": [
       {
