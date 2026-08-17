@@ -1,0 +1,107 @@
+---
+title: 'Streaming sandbox logs'
+description: "Tail live log output from a sandbox over Server-Sent Events from the API or the Porter CLI."
+---
+
+<Note>
+  Sandboxes are gated by a feature flag. If the **Sandboxes** section is not visible in your project, contact Porter support to enable it.
+</Note>
+
+Porter sandboxes emit structured log lines (`info`, `warning`, `error`) that you can either fetch in a single batch or tail continuously. Streaming is useful when you are watching a long-running job, debugging a hung exec, or piping live output into another tool.
+
+## When to use streaming logs
+
+Use streaming when you need to:
+
+- Watch a sandbox in real time as it processes work.
+- Debug a sandbox whose final state you can't predict (long-running scripts, retries, background workers).
+- Pipe live log output into `grep`, `jq`, or another consumer.
+
+For one-shot inspection of recent activity, use the batched `porter sandbox logs` command instead — it returns and exits.
+
+## Stream from the CLI
+
+Tail logs for a sandbox with `porter sandbox logs`:
+
+```bash
+porter sandbox logs <sandbox-id>
+```
+
+By default the CLI prints recent log lines and exits. Common flags:
+
+| Flag | Description |
+| --- | --- |
+| `--since <duration>` | Lookback window for the initial batch. Accepts Go durations like `15m`, `1h30m`. Defaults to `1h`. |
+| `--tail <n>` | Limit output to the most recent `n` lines (alias for `--limit`). |
+| `--level <level>` | Filter to one severity: `info`, `warning`, or `error`. |
+| `--no-timestamps` | Suppress the leading RFC3339 timestamp on each line. |
+
+Examples:
+
+```bash
+# Recent activity in the last 15 minutes, capped at 100 lines
+porter sandbox logs abc123 --since 15m --tail 100
+
+# Only errors, without timestamps, piped into grep
+porter sandbox logs abc123 --level error --no-timestamps | grep -i panic
+```
+
+## Stream from the API
+
+The API exposes a Server-Sent Events (SSE) endpoint that pushes log lines as they arrive:
+
+```
+GET /api/projects/{project_id}/clusters/{cluster_id}/sandboxes/{id}/logs/stream
+```
+
+Query parameters:
+
+| Parameter | Description |
+| --- | --- |
+| `since` | Go duration string (e.g. `30m`, `2h`). Controls the backfill window on the first poll. Defaults to `1h`. Must be positive. |
+
+The endpoint validates the sandbox exists before opening the stream — missing sandboxes return `404` rather than an empty stream. After that, the server polls every five seconds and emits one SSE `data:` event per new log line. Each event payload is a JSON object:
+
+```json
+{
+  "timestamp": "2026-06-18T17:10:48Z",
+  "line": "starting worker",
+  "level": "info"
+}
+```
+
+`level` is one of `info`, `warning`, or `error`. If the server hits repeated errors querying the underlying log store, it emits a final `error`-level synthetic line describing the failure and closes the stream.
+
+### Example: curl
+
+```bash
+curl -N \
+  -H "Authorization: Bearer $PORTER_TOKEN" \
+  "https://api.porter.run/api/projects/$PROJECT_ID/clusters/$CLUSTER_ID/sandboxes/$SANDBOX_ID/logs/stream?since=30m"
+```
+
+The `-N` flag disables curl's output buffering so events appear as they are emitted.
+
+### Example: JavaScript (EventSource)
+
+```javascript
+const url = `/api/projects/${projectId}/clusters/${clusterId}/sandboxes/${sandboxId}/logs/stream?since=30m`;
+const source = new EventSource(url, { withCredentials: true });
+
+source.onmessage = (event) => {
+  const { timestamp, line, level } = JSON.parse(event.data);
+  console.log(`[${level}] ${timestamp} ${line}`);
+};
+
+source.onerror = () => {
+  source.close();
+};
+```
+
+## Behavior and limits
+
+- **Polling interval:** the server polls the log store every five seconds. Streamed output may lag real-time activity by up to that window.
+- **Cursor advancement:** each poll queries a window slightly wider than the tick interval and de-duplicates against the last emitted timestamp, so a delayed tick can't drop lines.
+- **Per-poll cap:** up to 100 lines are emitted per poll. Bursts above that rate may be truncated on a single tick but will catch up on subsequent ticks.
+- **Backfill bound:** the `since` parameter only controls the initial poll. Once the stream is steady-state it always uses the internal overlap window.
+- **Error tolerance:** transient log-store errors are retried. After three consecutive failures the stream emits a synthetic error line and closes.
