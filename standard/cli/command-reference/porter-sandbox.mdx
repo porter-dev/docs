@@ -1,0 +1,86 @@
+---
+title: 'porter sandbox'
+description: "Manage Porter sandboxes from the CLI: list active sandboxes and terminate them individually or in bulk with tag filters and dry-run previews."
+---
+
+`porter sandbox` contains commands for managing sandboxes on a Porter cluster.
+
+<Info>
+Sandboxes are an alpha feature gated behind the `sandboxes_enabled` project flag. If your project does not have the flag enabled, every `porter sandbox` subcommand exits with an error. Contact Porter support to request access.
+</Info>
+
+## Prerequisites
+
+- You've logged in to the Porter CLI after running [porter auth login](/standard/cli/command-reference/porter-auth)
+- You're connected to the correct project and cluster by running [porter config set-project](/standard/cli/command-reference/porter-config) and `porter config set-cluster`
+- The `sandboxes_enabled` flag is on for your project
+
+---
+
+## `porter sandbox terminate`
+
+Terminate a sandbox by ID, or every actionable sandbox in the current project and cluster with `--all`. Sandboxes already in the `terminated` phase are skipped — their records still exist but the workload is gone, so a delete would be a no-op.
+
+Use `--dry-run` to preview the impact without making changes. This is recommended before running `--all` in shared clusters.
+
+**Usage:**
+```bash
+porter sandbox terminate [SANDBOX_ID] [flags]
+```
+
+You must pass either a `SANDBOX_ID` or `--all`, but not both.
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--all` | Terminate every actionable sandbox in the current project and cluster. Mutually exclusive with passing a sandbox ID. |
+| `--dry-run` | Print what would be terminated without calling the API. Safe to run at any time. |
+| `--tag` | Only consider sandboxes matching every tag (`key=value`). Repeatable. Requires `--all`. |
+
+<CodeGroup>
+```bash Single Sandbox
+porter sandbox terminate abc123
+```
+
+```bash Preview All
+porter sandbox terminate --all --dry-run
+```
+
+```bash Terminate All
+porter sandbox terminate --all
+```
+
+```bash Filter by Tag
+porter sandbox terminate --all --tag test=loggen
+```
+
+```bash Pipe from List
+porter sandbox list -o json | jq -r '.[].id' | xargs -n1 porter sandbox terminate
+```
+</CodeGroup>
+
+<Warning>
+`--all` has no interactive confirmation — passing the flag is itself the confirmation. Run with `--dry-run` first when terminating shared clusters.
+</Warning>
+
+### Behavior
+
+- **Single ID:** Sends a single delete request. Prints `Terminated <id>.` on success. A 404 is reported as "not found" and exits non-zero.
+- **`--all`:** Lists every sandbox in the project and cluster (optionally filtered by `--tag`), skips records already in the `terminated` phase, and deletes the rest. A 404 during `--all` is treated as success (`Already terminated <id>.`) so concurrent callers do not punish each other. At the end, prints a `Terminated N of M sandboxes.` summary.
+- **`--dry-run`:** Prints the list of sandboxes that would be terminated and exits without calling the API. Zero delete requests are sent.
+
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | All terminations succeeded (or `--dry-run` completed). |
+| `1` | At least one sandbox failed to terminate, the API was unreachable, or the project is not authorized. |
+| `2` | Usage error — for example, passing both an ID and `--all`, passing neither, an invalid `--tag` value, or `--tag` without `--all`. |
+
+---
+
+## Related Commands
+
+- [porter auth login](/standard/cli/command-reference/porter-auth) — authenticate the CLI before managing sandboxes
+- [porter config](/standard/cli/command-reference/porter-config) — set the active project and cluster
