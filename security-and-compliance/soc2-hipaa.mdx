@@ -4,3 +4,18 @@ description: "Enable instant SOC 2 and HIPAA compliance for your infrastructure 
 ---
 
 Porter supports one-click compliant infrastructure, which ensures SOC2/HIPAA compliance for all AWS infrastructure that is managed by Porter, including EKS, RDS, S3, and auxiliary services like Cloudwatch so all infra controls on compliance management platforms such as [Oneleet](https://www.oneleet.com/) and [Thoropass](https://www.thoropass.com/) pass instantly.
+
+## Compliance check owners
+
+Each vendor compliance check on the compliance dashboard is tagged with an **Owner**, which identifies the party responsible for maintaining or remediating that check. Use the Owner column to quickly see which controls Porter handles for you and which require action from your team, your cloud provider, or your identity provider.
+
+| Owner | Meaning |
+| --- | --- |
+| **Porter** | Porter manages this control automatically as part of your managed infrastructure. No customer action is required. |
+| **Customer** | Your team is responsible for satisfying this control (for example, code review policies or internal processes). |
+| **AWS** | The control is satisfied at the AWS account level (for example, account-wide settings configured outside Porter's managed resources). |
+| **Your IdP** | Your identity provider owns this control (for example, employee provisioning and deprovisioning). |
+
+Owner labels appear as a pill in the Owner column next to each check and are included in the dashboard search, so you can filter checks by typing an owner name (such as `porter` or `aws`) into the search bar.
+
+Owners are sourced from the vendor's control mapping (Vanta, Oneleet, Thoropass) and surfaced consistently across SOC 2 and HIPAA frameworks.
