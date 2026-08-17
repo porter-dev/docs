@@ -69,6 +69,10 @@ To point the SDK at a specific URL instead, set `PORTER_SANDBOX_BASE_URL` or pas
 
 ## Python quickstart
 
+<Note>
+**Authentication**: when your code runs as a Porter Application in the same cluster where sandboxes are enabled, the SDK authenticates automatically and the quickstarts below work as-is. To run them from anywhere else (a local machine, CI, another cluster), first set `PORTER_SANDBOX_API_KEY` and `PORTER_CLUSTER_ID` as described in [Calling from outside the cluster](#calling-from-outside-the-cluster).
+</Note>
+
 Install the SDK in your application image:
 
 ```bash
@@ -338,6 +342,12 @@ sandbox = porter.sandboxes.create(
     tags={"workflow": "agent-run", "run": "2026-06-17"},
 )
 ```
+
+## Troubleshooting
+
+- **`exec` fails because the sandbox already exited**: a sandbox only accepts `exec` while its main process is running. An image whose default command exits immediately moves to `succeeded` within a few seconds and stops accepting exec calls. Give the sandbox a long-running main process so you can exec into it — see [Keep a sandbox alive for exec](#keep-a-sandbox-alive-for-exec).
+- **Authentication errors when running outside the cluster**: make sure `PORTER_SANDBOX_API_KEY` (a Porter API token with developer permissions) and `PORTER_CLUSTER_ID` are set — see [Calling from outside the cluster](#calling-from-outside-the-cluster).
+- **Full error reference**: every error class the SDKs raise is documented in the [Python SDK errors](/sandboxes/sdk/python/errors) and [TypeScript SDK errors](/sandboxes/sdk/typescript/errors) pages.
 
 ## Next steps
 
