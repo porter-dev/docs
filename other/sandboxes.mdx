@@ -1,0 +1,106 @@
+---
+title: 'Sandboxes'
+description: "Inspect, stream logs from, and terminate short-lived sandbox workloads running on your cluster"
+---
+
+<Note>
+  Sandboxes are currently behind a feature flag. Contact Porter support if you would like access enabled for your project.
+</Note>
+
+Sandboxes are short-lived workloads that run on a dedicated sandbox node group inside your cluster. The Porter dashboard provides a **Sandboxes** tab where you can browse the sandboxes currently or recently running on a cluster, open any one of them for a detail view, stream its logs, and terminate it if you no longer need it.
+
+This page covers what the dashboard surface does and how to enable it. Creating sandboxes is performed programmatically by services that integrate with the sandbox API; this page focuses on the operator-facing dashboard.
+
+## When to use sandboxes
+
+Use sandboxes when you need to run an image as a one-off, isolated workload — for example:
+
+- An AI agent or job that needs a clean, ephemeral environment per run
+- An untrusted or user-provided image that you do not want sharing capacity with your application pods
+- A scheduled task that should be inspected as an individual unit rather than as a pod inside a longer-lived deployment
+
+Sandboxes run on a separate sandbox node group derived from your application node group, so they do not compete with your applications for capacity.
+
+## Prerequisites
+
+- An AWS / EKS cluster
+- The sandboxes feature enabled for your project (contact Porter support)
+- Project admin or developer role to enable sandboxes on a cluster
+
+## Enabling sandboxes on a cluster
+
+Once the project-level flag is on, the **Sandboxes** tab appears in the sidebar. Open it for the first time and you will see an empty state:
+
+1. Open **Sandboxes** in the sidebar.
+2. Click **Enable sandboxes**.
+3. Porter updates the cluster contract with `sandboxesEnabled: true` and provisions the sandbox node group. This typically takes a few minutes.
+
+If you do not have permission to mutate project resources, the empty state will instead ask you to contact a project admin or developer.
+
+## Browsing sandboxes
+
+The sandboxes list shows every sandbox on the selected cluster with its ID, image, status, and creation time. The list is paginated, and statuses update automatically while a sandbox is in a non-terminal phase.
+
+Each sandbox has one of the following phases:
+
+| Phase | Meaning |
+| --- | --- |
+| `queued` | Accepted by the control plane, waiting to be scheduled |
+| `creating` | Pod is being created |
+| `running` | Sandbox is executing |
+| `succeeded` | Sandbox exited with status code `0` |
+| `failed` | Sandbox exited with a non-zero status code |
+| `terminated` | Sandbox was terminated (by a user or by the control plane) |
+
+`succeeded`, `failed`, and `terminated` are terminal — the sandbox will not transition out of these phases.
+
+## Sandbox detail view
+
+Click a sandbox to open its detail view. The detail view shows:
+
+- The sandbox ID (copy-able), image, status badge, and tags
+- The created-at time and, if the sandbox is running, a live-updating "running for" duration
+- The exit code (once the sandbox reaches a terminal phase)
+- A **Logs** panel that streams stdout/stderr
+- A **Terminate** button (hidden once the sandbox is in a terminal phase)
+
+While the sandbox is in a non-terminal phase, the dashboard polls the control plane every 2 seconds for status updates and every 5 seconds for new log lines. Polling stops automatically once the sandbox reaches a terminal phase.
+
+### Filtering logs by time window
+
+The logs panel includes a **Since** selector. Choose how far back you want to load:
+
+- Last 15 minutes
+- Last 1 hour (default)
+- Last 6 hours
+- Last 24 hours
+- Last 7 days
+
+The selector reloads the log buffer from the chosen point in time. Use a shorter window for noisy sandboxes and a longer one when investigating a sandbox that has been running for a while.
+
+### Searching logs
+
+Use the search input above the log panel to filter the visible lines. Search is a case-insensitive substring match against the rendered text of each line, so ANSI color codes do not interfere with matches and phrases that span color boundaries still match.
+
+### Refreshing manually
+
+Click the refresh icon next to the **Since** selector to force a refetch outside of the normal polling cadence — useful if you suspect log delivery is lagging.
+
+## Terminating a sandbox
+
+To stop a running sandbox:
+
+1. Open the sandbox detail view.
+2. Click **Terminate**.
+3. Confirm in the dialog.
+
+Termination is idempotent on the backend, so clicking **Terminate** on a sandbox that has already exited is safe — the dashboard will refetch and show the authoritative phase. After a successful request you are returned to the sandboxes list.
+
+## Tags
+
+Sandboxes are created with arbitrary string tags by the system that submitted them. The detail view header renders each tag as a small badge so you can quickly identify what the sandbox belongs to (for example, a job ID, a tenant ID, or a workflow name). Tags are read-only from the dashboard.
+
+## Limits
+
+- The dashboard buffers up to 5,000 log lines per sandbox in the detail view. Beyond that, older lines are trimmed from memory.
+- Logs are pulled from the cluster's sandbox-api control plane and follow the same retention as the underlying log backend.
