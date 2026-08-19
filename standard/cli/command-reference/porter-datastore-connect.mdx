@@ -23,25 +23,49 @@ porter datastore connect [DATASTORE_NAME] [flags]
 
 | Flag | Description |
 |------|-------------|
-| `--port` | Local port for the tunnel (default: 8122) |
+| `-p, --port` | Local port for the tunnel (default: 8122) |
+| `-e, --endpoint-type` | Endpoint to connect to: `primary` (read-write, default) or `replica` (read-only) |
+| `--show-credentials` | Show the datastore username, password, and example connection commands in the output (hidden by default) |
 
 ---
 
 ## Examples
 
 <CodeGroup>
-```bash Connect to Datastore
+```bash Connect to datastore
 porter datastore connect my-postgres
 ```
 
-```bash Custom Port
+```bash Custom port
 porter datastore connect my-postgres --port 5433
+```
+
+```bash Read-only replica
+porter datastore connect my-postgres --endpoint-type replica
+```
+
+```bash Show credentials
+porter datastore connect my-postgres --show-credentials
 ```
 </CodeGroup>
 
 ---
 
-## Connecting to Your Datastore
+## Hiding credentials
+
+By default, `porter datastore connect` hides the datastore username and password from the terminal output to prevent accidental credential leakage (for example, via screenshots, shared terminals, or pasted logs). The tunnel host, port, and database name are still printed so you can connect with a client that already has the credentials configured.
+
+When you need to view the credentials — for example, to copy them into a database client for the first time — pass `--show-credentials`:
+
+```bash
+porter datastore connect my-postgres --show-credentials
+```
+
+With `--show-credentials`, the output also includes an example `psql` or `redis-cli` command pre-filled with the connection details.
+
+---
+
+## Connecting to your datastore
 
 While the tunnel is running, connect using your preferred client in a separate terminal:
 
@@ -60,5 +84,5 @@ The tunnel stays open until you press `CTRL-C`. Keep the terminal open while you
 </Info>
 
 <Warning>
-The connection credentials are displayed when the tunnel starts. Make sure to note the password if you need it for your client.
+Credentials shown with `--show-credentials` are sensitive. Avoid running the command in shared sessions, recorded terminals, or screen-shared environments where the output could be captured.
 </Warning>
