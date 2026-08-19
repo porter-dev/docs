@@ -32,6 +32,16 @@ More documentation around zero-downtime deployments may be found [here](/applica
 
 3. Maintaining a constant stream of communication around upgrade timelines and statuses.
 
+## Default Kubernetes version
+
+New clusters provisioned through Porter are created with **Kubernetes v1.35** by default. This applies to all supported cloud providers (AWS EKS, Google Cloud GKE, and Azure AKS).
+
+You can select a different Kubernetes version when creating a cluster from the Porter dashboard. Supported versions range from v1.27 to v1.35.
+
+<Info>
+  We recommend keeping the default version unless you have a specific compatibility requirement. Existing clusters are upgraded to newer versions on the schedule described below — you do not need to recreate a cluster to move forward.
+</Info>
+
 ## Upgrade Calendar
 
 Kubernetes follows a release cycle where there are - approximately - three minor version releases a year. Every release is followed by a period where public clouds integrate the new version into their managed Kubernetes offerings and run tests to ensure compatibility with the underlying cloud. Our upgrade calendar is thus dependent on both release cycles. To account for that, we carry out cluster upgrades twice a year, where we "leapfrog" over versions to ensure customer clusters are running the _latest stable_ version of Kubernetes. These are typically carried out once towards the end of Q1/beginning of Q2 and then later towards the end of Q3. 
