@@ -229,6 +229,39 @@ jobs:
           PORTER_DEPLOYMENT_TARGET_ID: your-deployment-target-id
 ```
 
+## Exit codes
+
+When used with `--wait`, `porter apply` returns the following exit codes so CI pipelines can distinguish between outcomes:
+
+| Exit code | Meaning |
+|-----------|---------|
+| `0` | Deployment succeeded |
+| `1` | Deployment failed (install, predeploy, deployment, or wait timeout) |
+| `3` | Deployment was canceled because a newer revision was started before this one finished |
+
+Exit code `3` is emitted only when a revision is **superseded** by a newer deploy — for example, when another commit triggers a new deploy while the current one is still rolling out. Treating this as a non-failure in CI lets you avoid surfacing alerts for deploys that were intentionally replaced.
+
+<Info>
+Exit code `3` for superseded deploys is rolled out per project. If it is not yet enabled for your project, a superseded `porter apply --wait` will continue to exit `0`. Contact Porter support to enable it.
+</Info>
+
+### Example: handle a superseded deploy in CI
+
+```bash
+porter apply -f porter.yaml --wait
+status=$?
+
+if [ "$status" -eq 0 ]; then
+  echo "Deploy succeeded"
+elif [ "$status" -eq 3 ]; then
+  echo "Deploy was superseded by a newer revision — skipping failure alert"
+  exit 0
+else
+  echo "Deploy failed"
+  exit "$status"
+fi
+```
+
 ## Related Commands
 
 - [porter app update](/standard/cli/command-reference/porter-app#porter-update) - Update an app without building
