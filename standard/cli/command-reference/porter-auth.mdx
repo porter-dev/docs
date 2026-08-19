@@ -36,11 +36,33 @@ porter auth login --token <YOUR_TOKEN>
 After logging in, Porter automatically sets your default project and cluster if you have access to any. You can view these with `porter config`.
 </Info>
 
+### Default login method (v2)
+
+New CLI installs default to the **v2** login method, which uses a refreshable session and stores credentials in your operating system's keyring instead of `~/.porter/porter.yaml`. Sessions refresh automatically while you use the CLI, so you no longer need to re-run `porter auth login` as often.
+
+- **First-time users**: no action required — `porter auth login` uses v2 automatically.
+- **Existing users upgrading**: your config is migrated to v2 on the next CLI run. Any legacy plaintext token in `porter.yaml` is cleared and replaced by a session stored in the keyring.
+- **Legacy hosts**: set `login_method: v1` in `~/.porter/porter.yaml` to keep the previous JWT-based flow.
+
+### Token and environment overrides
+
+Explicit token authentication still takes precedence over the v2 default — useful for CI/CD pipelines and service accounts:
+
+- The `--token` flag on any command
+- The `PORTER_TOKEN` environment variable
+
+When either is set, the CLI uses that token directly and skips the browser-based session flow. If `PORTER_TOKEN` is set but the server rejects it, the CLI tells you to `unset PORTER_TOKEN` before retrying.
+
+```bash CI/CD example
+export PORTER_TOKEN="$PORTER_DEPLOY_TOKEN"
+porter apply -f porter.yaml
+```
+
 ---
 
 ## `porter auth logout`
 
-Log out from Porter and clear your local credentials.
+Log out from Porter and clear your local credentials. For v2 sessions, this also clears the session stored in your OS keyring.
 
 **Usage:**
 ```bash
