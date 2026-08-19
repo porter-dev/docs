@@ -66,6 +66,8 @@ Configure a combined health check that applies to liveness, readiness, and start
 | `command` | string | Command to run for health check |
 | `timeoutSeconds` | integer | Command timeout (min: 1) |
 | `initialDelaySeconds` | integer | Initial delay before checking (min: 0) |
+| `periodSeconds` | integer | How often to perform the health check (min: 1) |
+| `failureThreshold` | integer | Consecutive failures before the container is considered unhealthy (min: 1) |
 
 ```yaml
 healthCheck:
@@ -73,7 +75,13 @@ healthCheck:
   command: ./healthcheck.sh
   timeoutSeconds: 5
   initialDelaySeconds: 15
+  periodSeconds: 10
+  failureThreshold: 3
 ```
+
+<Info>
+`periodSeconds` and `failureThreshold` are optional. When omitted, Kubernetes defaults are used (`periodSeconds: 10`, `failureThreshold: 3`). Tune these for long-running jobs that may need more time between checks or a higher tolerance for transient failures.
+</Info>
 
 <Warning>
 Cannot be used together with `livenessCheck`, `readinessCheck`, or `startupCheck`. Use either the combined `healthCheck` or the individual checks.
@@ -103,6 +111,8 @@ livenessCheck:
   command: ./livez.sh
   timeoutSeconds: 5
   initialDelaySeconds: 15
+  periodSeconds: 10
+  failureThreshold: 3
 ```
 
 ### `readinessCheck`
@@ -119,6 +129,8 @@ readinessCheck:
   command: ./readyz.sh
   timeoutSeconds: 5
   initialDelaySeconds: 5
+  periodSeconds: 5
+  failureThreshold: 3
 ```
 
 ### `startupCheck`
@@ -135,7 +147,13 @@ startupCheck:
   command: ./startupz.sh
   timeoutSeconds: 10
   initialDelaySeconds: 0
+  periodSeconds: 10
+  failureThreshold: 30
 ```
+
+<Note>
+`periodSeconds` and `failureThreshold` are supported on each of `livenessCheck`, `readinessCheck`, and `startupCheck` and follow the same minimum-of-1 validation as the combined `healthCheck`.
+</Note>
 
 ---
 

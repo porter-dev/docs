@@ -148,6 +148,12 @@ The **initial delay** gives your application time to start up before health chec
 
 The **timeout** determines how long Porter waits for a response before considering the check failed.
 
+The **period** controls how often the health check runs, in seconds. Lower values catch failures faster at the cost of additional load on your application.
+
+The **failure threshold** is the number of consecutive failed checks before Porter considers the container unhealthy and restarts it. Increase this for applications that may experience transient slowness, or decrease it for faster failure detection. Both fields must be at least `1`; leave them blank to use the Kubernetes defaults (`period: 10`, `failure threshold: 3`).
+
+When using **Advanced** health checks, `period` and `failure threshold` can be configured independently for each of the liveness, readiness, and startup probes.
+
 For best practices on combining health checks with graceful shutdown, see [Zero-Downtime Deployments](/applications/configure/zero-downtime-deployments).
 
 ### Metrics scraping
