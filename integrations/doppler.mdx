@@ -67,6 +67,16 @@ For more on syncing, see [Environment groups](/applications/configure/environmen
 Doppler environment groups are **read-only** in Porter. Values are fetched from Doppler and cannot be edited from the Porter dashboard. To change a secret's value, update it in Doppler — the change will propagate to your cluster automatically.
 </Info>
 
+## Viewing version history
+
+Each time Porter detects a change in the underlying Doppler config, it records a new version of the environment group. To inspect or compare past versions:
+
+1. Open the Doppler environment group in Porter.
+2. Switch to the **Versions** tab.
+3. Click **View variables** on a row to see the variables for that version, or **View secrets** to reveal the secret values that were synced at the time.
+
+Versions are read-only — you cannot revert from Porter, since the source of truth lives in Doppler. To roll back, restore the desired values in Doppler and the change will sync through on the next reconcile.
+
 ## Rotating the service token
 
 If you regenerate a service token in Doppler, update Porter so it can keep syncing:
