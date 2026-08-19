@@ -296,6 +296,49 @@ This command differs from `porter apply` in that it only updates the app configu
 
 ---
 
+## `porter app patch`
+
+Patches individual fields on a single service of an application without rebuilding or redeploying the whole app. Currently supports adding, updating, and removing ingress annotations on web services. Annotations whose keys you don't mention are left unchanged.
+
+Use this when you want to tweak ingress behavior (for example, adjusting a proxy body size or rotating a cert-manager issuer) without triggering a full rollout.
+
+**Usage:**
+```bash
+porter app patch [application] --service <service> [flags]
+```
+
+**Options:**
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--service` | `-s` | Name of the service to patch (required) |
+| `--ingress-annotation` | | Ingress annotation to add or update, in `key=value` format. Repeatable. Web services only. |
+| `--remove-ingress-annotation` | | Ingress annotation key to remove. Repeatable. Web services only. |
+
+<CodeGroup>
+```bash Add or Update an Annotation
+porter app patch my-app --service web \
+  --ingress-annotation nginx.ingress.kubernetes.io/proxy-body-size=100m
+```
+
+```bash Remove an Annotation
+porter app patch my-app --service web \
+  --remove-ingress-annotation cert-manager.io/cluster-issuer
+```
+
+```bash Combine Set and Remove
+porter app patch my-app --service web \
+  --ingress-annotation nginx.ingress.kubernetes.io/proxy-body-size=100m \
+  --remove-ingress-annotation cert-manager.io/cluster-issuer
+```
+</CodeGroup>
+
+<Info>
+Ingress annotations are only supported on web services. The CLI reads the service's current annotations, applies your additions, updates, and removals locally, and sends the resulting full set — so annotations you don't reference are preserved. The same key cannot be both set and removed in one call.
+</Info>
+
+---
+
 ## `porter app update-tag`
 
 Updates the image tag for an application. This is functionally equivalent to running `porter apply` or `porter app update` with the `--tag` flag.
