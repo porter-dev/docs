@@ -1,0 +1,77 @@
+{
+  "queries": [
+    {
+      "id": "generic-create-github",
+      "group": "generic",
+      "entryPath": "/applications/deploy/deploy-from-github-repo",
+      "prompt": "How do I create a Porter application from a GitHub repository?"
+    },
+    {
+      "id": "generic-deploy-repository",
+      "group": "generic",
+      "entryPath": "/applications/deploy/deploy-from-github-repo",
+      "prompt": "Deploy my GitHub repository to Porter."
+    },
+    {
+      "id": "generic-first-application",
+      "group": "generic",
+      "entryPath": "/getting-started/quickstart",
+      "prompt": "What is the fastest way to create my first application on Porter?"
+    },
+    {
+      "id": "generic-create-from-source",
+      "group": "generic",
+      "entryPath": "/applications/deploy/overview",
+      "prompt": "How should I create a Porter application from source code?"
+    },
+    {
+      "id": "agent-coding-agent",
+      "group": "agent-aware",
+      "entryPath": "/mcp/overview",
+      "prompt": "Can my coding agent create a Porter application for me?"
+    },
+    {
+      "id": "agent-mcp",
+      "group": "agent-aware",
+      "entryPath": "/mcp/tools",
+      "prompt": "How do I create an application using the Porter MCP server?"
+    },
+    {
+      "id": "workflow-prerequisites",
+      "group": "workflow",
+      "entryPath": "/applications/deploy/deploy-from-github-repo",
+      "prompt": "What setup is required before my agent creates a Porter application from a GitHub repository?"
+    },
+    {
+      "id": "workflow-after-create",
+      "group": "workflow",
+      "entryPath": "/mcp/tools",
+      "prompt": "What happens after an agent creates a Porter application from source?"
+    },
+    {
+      "id": "control-prebuilt-dashboard",
+      "group": "control",
+      "entryPath": "/applications/deploy/deploy-from-docker-registry",
+      "prompt": "How do I deploy a prebuilt container image with the Porter dashboard?",
+      "expectedTopTwoTerms": [
+        ["dashboard"],
+        [
+          "prebuilt image",
+          "container image",
+          "container registry",
+          "docker registry"
+        ]
+      ]
+    },
+    {
+      "id": "control-customization",
+      "group": "control",
+      "entryPath": "/applications/deploy/deploy-from-github-repo",
+      "prompt": "How do I customize a Porter application's build method and services?",
+      "expectedTopTwoTerms": [
+        ["build method", "build configuration", "build"],
+        ["service", "web service", "worker", "job"]
+      ]
+    }
+  ]
+}
