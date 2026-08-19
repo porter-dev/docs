@@ -17,16 +17,13 @@ Deploy Helm charts through the Porter dashboard for a managed experience with vi
     Navigate to **Add-ons** in your Porter dashboard and select **Helm Chart**.
   </Step>
   <Step title="Configure the chart">
-    Enter the Helm repository URL and select the chart you want to deploy.
-  </Step>
-  <Step title="Select version">
-    Choose the chart version you want to install.
+    Enter the Helm repository URL, chart name, and chart version.
   </Step>
   <Step title="Customize values (optional)">
-    Modify any values from the chart's default configuration as needed.
+    Modify any values from the chart's default configuration as needed using the YAML editor.
   </Step>
-  <Step title="Deploy">
-    Click **Deploy** to install the chart to your cluster.
+  <Step title="Review and deploy">
+    Click **Review changes** to open a diff view comparing your current configuration with the new one. From the review dialog, you can either deploy the changes or discard them.
   </Step>
 </Steps>
 
@@ -38,9 +35,17 @@ Since custom Helm charts install external components into your cluster, they fal
 
 Once deployed, you can:
 - View the chart status in the Add-ons tab
-- Update values and redeploy
+- Update values and review a diff of your changes before redeploying
 - Upgrade to newer chart versions
 - Delete the chart when no longer needed
+
+### Reviewing changes before deploy
+
+When you modify a deployed Helm chart's configuration, clicking **Review changes** opens a side-by-side diff that compares the current revision with your pending updates. This includes changes to chart settings (repository URL, chart name, version) and custom values YAML.
+
+From the review dialog you can:
+- **Deploy changes** — apply the new configuration to your cluster
+- **Discard changes** — revert the form to the last deployed state
 
 ---
 
