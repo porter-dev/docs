@@ -21,7 +21,9 @@ Before you begin, ensure that you have the following on hand:
     </Info>
     Navigate to the [API Tokens](https://dashboard.porter.run/settings/members) page
     in the `Settings` tab to generate a new token with the `Developer` role. You
-    must have admin permissions to create API tokens.
+    must have admin permissions to create API tokens. Token names must be unique
+    within a project; if a name is already in use by an active token, creation
+    will fail and you will be prompted to choose a different name.
   </Step>
 </Steps>
 
@@ -123,7 +125,7 @@ If your Github workflow file has the `PORTER_DEPLOYMENT_TARGET_ID` field, you ca
 
 You will have to generate a new API token for `PORTER_TOKEN`:
 
-1. Navigate to the [API Tokens](https://dashboard.porter.run/settings/members) page in the `Settings` tab to generate a new token with the `Developer` role. You must have admin permissions to create API tokens.
+1. Navigate to the [API Tokens](https://dashboard.porter.run/settings/members) page in the `Settings` tab to generate a new token with the `Developer` role. You must have admin permissions to create API tokens. Each token name must be unique within the project; if the name you choose is already in use by an active token, the dashboard will surface a conflict error and you will need to pick a different name.
 2. [Create a new Github secret](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets) with this value
 3. Reference the secret key name as the value for `PORTER_TOKEN`
 
