@@ -61,6 +61,36 @@ Click **Metrics >** on any node group to view historical instance counts over ti
 
 ---
 
+## Cluster metrics
+
+The **Cluster metrics** view charts the health of Porter's own in-cluster components. Use it when a system application is misbehaving — for example, when Prometheus is OOMing or filling its disk — to compare live usage against the pod's requests and limits over time.
+
+Open the view from the Infrastructure dashboard and pick a system application from the metrics picker.
+
+### Ingress NGINX
+
+Charts the ingress controller that fronts your web services:
+
+- **CPU** and **Memory** usage, with request and limit overlays
+- **Request rate**, **latency**, and **status code** breakdowns
+
+Use these charts to correlate an ingress incident (5xx spikes, elevated latency) with resource pressure on the controller pods.
+
+### Prometheus
+
+Charts the in-cluster Prometheus stack that serves the metrics on this page:
+
+- **prometheus-server**: CPU, Memory, and Storage (on-disk TSDB size, blocks plus WAL)
+- **kube-state-metrics**: CPU and Memory
+
+CPU and Memory carry request and limit overlays. Storage plots Prometheus's self-reported TSDB size rather than PVC utilization, so there is no capacity ceiling drawn on the chart — watch the trend rather than a fill line.
+
+<Note>
+These charts are served by the Prometheus instance they chart. Gaps during a Prometheus outage are expected and are themselves the signal that the stack is down.
+</Note>
+
+---
+
 ## Integrating External Monitoring
 
 For application-level monitoring and alerting, integrate with external observability platforms:
