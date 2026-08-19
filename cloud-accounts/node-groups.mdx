@@ -54,6 +54,20 @@ You can modify the instance type for any node group from the Infrastructure sett
   <Card title="GCP Instance Types" icon="google" href="https://cloud.google.com/compute/all-pricing#general_purpose" />
 </CardGroup>
 
+### GCP machine families
+
+GKE clusters on Porter support the following general-purpose machine families. Use `e2-highcpu` for CPU-bound workloads (web servers, batch processing) that don't need much memory — it offers the lowest per-vCPU cost in the E2 family.
+
+| Family | Best for | Example sizes |
+|--------|----------|---------------|
+| `e2-standard` | Balanced CPU and memory | `e2-standard-2` through `e2-standard-32` |
+| `e2-highmem` | Memory-bound workloads (caches, in-memory databases) | `e2-highmem-2` through `e2-highmem-16` |
+| `e2-highcpu` | CPU-bound workloads with low memory needs | `e2-highcpu-2` through `e2-highcpu-32` |
+| `c3-standard` / `c3-highcpu` / `c3-highmem` | Compute-optimized workloads | `c3-standard-4` and larger |
+| `g2-standard` | GPU workloads | `g2-standard-4` |
+
+E2 machine types are available in all GCP regions Porter supports.
+
 ### Why is my instance type not available?
 
 Instance types may not be available if:
