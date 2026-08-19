@@ -51,13 +51,30 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
 
     ## Revoking Access
 
-    To revoke Porter's access:
+    Disconnecting an AWS cloud account is a two-step process: Porter tears down the IAM roles and policies it created in your account, then you delete the customer-owned `porter-access-manager` role that trusts Porter.
 
-    1. First, delete any clusters through the Porter dashboard
-    2. Navigate to **CloudFormation Stacks** in your AWS console
-    3. Select the stack named `PorterRole` and click **Delete**
+    <Steps>
+      <Step title="Delete dependent resources">
+        Before you can disconnect, delete any clusters, object storage, and environment groups that are still using this cloud account. The dashboard lists any remaining dependents and blocks the **Delete** button until they're gone.
+      </Step>
+      <Step title="Disconnect from the Porter dashboard">
+        Navigate to **Cloud accounts**, open the AWS account you want to remove, and scroll to the **Danger zone**. Click **Delete**, type the account name to confirm, then click **Disconnect**.
 
-    This removes the IAM role and prevents Porter from accessing your account.
+        Porter synchronously removes the IAM roles and policies it provisioned in your AWS account (including `porter-manager`, `porter-infra-manager`, and related Porter-managed roles and policies). When the deletion finishes, the cloud account is gone from Porter and Porter can no longer assume any role in your AWS account.
+      </Step>
+      <Step title="Delete the porter-access-manager role">
+        The `porter-access-manager` IAM role is owned by you — it was created by the CloudFormation stack and is not removed by Porter. After disconnecting, delete it yourself to fully revoke the trust relationship:
+
+        1. Open the **AWS IAM console** (the dashboard provides a direct link in the success dialog).
+        2. Find the role named `porter-access-manager` (ARN: `arn:aws:iam::<your-account-id>:role/porter-access-manager`).
+        3. Follow the AWS instructions for [deleting an IAM role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_manage_delete.html).
+        4. Optionally, delete the CloudFormation stack that created it (typically named `PorterRole`) from the **CloudFormation** console.
+      </Step>
+    </Steps>
+
+    <Info>
+    Disconnecting runs synchronously, so the dashboard reports success or failure immediately. If the call fails partway through, it's safe to retry — teardown is idempotent.
+    </Info>
   </Tab>
 
   <Tab title="GCP">
