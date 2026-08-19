@@ -131,12 +131,33 @@ Provisions an Amazon Elasticache replication group with:
 
 ## Monitoring
 
-You can monitor the performance of your database from the Porter dashboard. Metrics are available in the "Metrics" tab when opening a datastore.
-The metrics that are currently displayed are:
+You can monitor the performance of your database from the Porter dashboard. Metrics are available in the **Metrics** tab when opening a datastore.
 
-- CPU utilization
-- RAM utilization
-- Storage capacity
+The Metrics tab displays four panels:
+
+- **CPU** utilization
+- **Memory** (RAM) utilization
+- **Disk** (storage) capacity
+- **Connections**
+
+Each panel includes a time-series chart along with at-a-glance indicators:
+
+| Indicator | Description |
+| :--- | :--- |
+| **Current value** | The most recent reading for the metric. |
+| **% vs. prior** | Comparison of the second half of the window against the first half. Green indicates improvement; orange or red indicates an unfavorable trend, with severity based on magnitude. |
+| **Status dot** | Reflects the current value against per-metric thresholds. White means normal, amber means approaching capacity, and red means critical. |
+| **Stats row** | Aggregate values computed across the visible window (for example, average, p95, peak, and minimum for CPU and Memory; used, free, and growth for Disk). |
+
+Status thresholds are fixed per metric:
+
+| Metric | Amber (warn) | Red (critical) |
+| :--- | :--- | :--- |
+| CPU | 80% | 95% |
+| Memory | 75% | 90% |
+| Disk | 80% | 95% |
+
+Stats that are not yet available (such as Connections data) render as `—`.
 
 ---
 
