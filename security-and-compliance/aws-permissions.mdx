@@ -86,6 +86,41 @@ Porter Node Manager is the role used by EKS worker nodes. This role also include
 This is the role used to manage non-EKS resources such as RDS, Elasticache, S3, etc.
 <ShowPermissions policyToShow={"policy_porter_infra_manager_inline_json"} allPolicies={awsPermissions} />
 
+## Role tags
+
+Every Porter-provisioned IAM role is tagged at creation and reconciliation time. The tags act as trust markers that Porter's permissions boundary can condition on, and they let you write your own SCPs, IAM policies, or audit queries that target Porter-managed roles.
+
+| Tag key                            | Value  | Meaning                                                                                                                                                                              |
+| ---------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `porter.run/managed`               | `true` | Applied to every IAM role and supporting AWS resource that Porter manages. Safe to use as a filter for "Porter owns this".                                                           |
+| `porter.run/externally-assumable`  | `true` | Applied to roles whose trust policy allows assumption from Porter's control plane outside your AWS account: `porter-access-manager`, `porter-manager`, and `porter-infra-manager`.   |
+| `porter.run/in-cluster`            | `true` | Applied to roles that are only assumable from inside your workload cluster via EKS Pod Identity or an EC2 instance profile (for example `porter-controlplane-manager`, `porter-node-manager`, `porter-telemetry-manager`, `porter-agent-compliance-manager`, `porter-karpenter`, and the External Secrets pod identity role). |
+
+The `porter.run/externally-assumable` and `porter.run/in-cluster` tags are mutually exclusive — every Porter-managed IAM role carries exactly one of them in addition to `porter.run/managed`.
+
+### Example: scope an SCP to externally-assumable roles
+
+You can use these tags to write organization-wide guardrails. The following SCP fragment denies `kms:Decrypt` whenever the calling principal is one of Porter's externally-assumable roles:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DenyKMSDecryptFromExternallyAssumable",
+            "Effect": "Deny",
+            "Action": "kms:Decrypt",
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalTag/porter.run/externally-assumable": "true"
+                }
+            }
+        }
+    ]
+}
+```
+
 ## Policies
 
 On top of the roles above, the following policies are created which may be attached to one, or many of the roles above.
