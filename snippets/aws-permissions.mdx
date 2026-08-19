@@ -573,6 +573,20 @@ export const awsPermissions = {
         "Effect": "Allow",
         "Resource": "*",
         "Sid": "AmazonEKSWorkerNodePolicy"
+      },
+      {
+        "Action": [
+          "cloudwatch:DeleteAlarms",
+          "cloudwatch:DescribeAlarms",
+          "cloudwatch:GetMetricData",
+          "cloudwatch:GetMetricStatistics",
+          "cloudwatch:PutMetricAlarm",
+          "cloudwatch:TagResource",
+          "logs:DescribeLogGroups"
+        ],
+        "Effect": "Allow",
+        "Resource": "*",
+        "Sid": "CloudWatchObservability"
       }
     ],
     "Version": "2012-10-17"
