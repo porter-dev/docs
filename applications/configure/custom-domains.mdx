@@ -73,3 +73,17 @@ Once the DNS record changes have been propagated, you will be able to attach the
 Click on **Add Custom Domain**, input the custom domain you have just pointed to the load balancer, then hit deploy.
 
 In a few minutes, you will be able to view the application on the custom domain, secured with an SSL certificate.
+
+## Retrying a failed certificate
+
+If certificate issuance fails for a custom domain (for example, because DNS had not propagated yet when the first attempt ran), the domain row in your application header shows a warning icon next to the hostname.
+
+To retry issuance without redeploying the application:
+
+1. Open the application and locate the failed domain in the header.
+2. Hover or focus the domain. The warning icon swaps to a retry icon.
+3. Click the domain to trigger a new certificate request.
+
+The row shows a spinner while the request is in flight, then updates to the new certificate state — typically `pending` while cert-manager attempts issuance again, followed by the healthy state once the certificate is issued. The same retry control is available on preview environment domains.
+
+<Info>Make sure the DNS record for the domain points at your load balancer before retrying. If DNS is still misconfigured, the next attempt will fail for the same reason.</Info>
