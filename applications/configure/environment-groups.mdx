@@ -19,6 +19,10 @@ Environment group secrets are automatically synced to the secret manager of ever
 
 No secret data is stored on Porter's infrastructure. Secrets only exist in memory on Porter's servers momentarily during creation and updates.
 
+<Info>
+**Azure Key Vault authentication.** Inside the cluster, secrets are read from Azure Key Vault by the [External Secrets Operator](https://external-secrets.io/). On AKS clusters that have [Workload Identity](/applications/configure/secure-cloud-access#azure) enabled and use a federated cloud account, Porter authenticates External Secrets to Key Vault via Workload Identity Federation — no client secret is stored on the cluster, and the legacy service principal secret is removed automatically on the next sync. On all other AKS clusters, Porter falls back to a service principal secret stored in the `porter-env-group` namespace. No configuration is required either way.
+</Info>
+
 If you already manage your secrets in a third-party secret manager, you can sync them into Porter as a read-only environment group instead. See the [Doppler](/integrations/doppler) and [Infisical](/integrations/infisical) integrations.
 
 ## Creating an Environment Group
