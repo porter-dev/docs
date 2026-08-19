@@ -13,7 +13,18 @@ description: "List available clusters, view cluster configuration details, and m
 
 ### `porter cluster list`[](#porter-cluster-list "Direct link to heading")
 
-This lists all clusters under a certain project.
+This lists all clusters under a certain project. The default output renders a formatted table with each cluster's name, provider, region, status, and creation date, with the name hyperlinked to its dashboard page in supported terminals.
+
+**Flags:**
+
+| Flag | Description |
+|------|-------------|
+| `--json` | Print clusters as JSON instead of a table. Useful for piping into tools like `jq` in scripts. |
+
+**Example:**
+```bash
+porter cluster list --json | jq '.[].name'
+```
 
 ### `porter cluster namespace list`[](#porter-cluster-namespace-list "Direct link to heading")
 
