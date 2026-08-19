@@ -10,6 +10,8 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
   <Tab title="AWS">
     Porter uses AWS IAM role assumption via the `AssumeRole` [operation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html) to access your account. You create a role in your AWS account and declare that you trust Porter to assume it. This eliminates static credentials and makes access easy to revoke.
 
+    Porter scopes the trust on the customer-side role with a unique [IAM External ID](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html) generated for your cloud account. The External ID closes the [confused deputy](https://docs.aws.amazon.com/IAM/latest/UserGuide/confused-deputy.html) gap: even if another party learned the ARN of Porter's role, they could not assume your role without the External ID Porter holds for your account. The value is injected into the CloudFormation template Porter generates, so you don't need to manage it by hand.
+
     ## Create the IAM Role
 
     <Steps>
@@ -19,7 +21,12 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
         Enter this ID in Porter and click **Grant Permissions**.
       </Step>
       <Step title="Create the CloudFormation stack">
-        Porter opens the AWS CloudFormation console in a new tab to create a stack that provisions the `porter-manager` IAM role.
+        Porter opens the AWS CloudFormation console in a new tab to create a stack that provisions the `porter-manager` IAM role. The stack URL is pre-filled with two parameters Porter generated for your account:
+
+        - **TrustArnParameter** — the ARN of the Porter role that is allowed to assume the new role.
+        - **ExternalIdParameter** — the unique External ID that must be presented on every `AssumeRole` call.
+
+        Leave both parameters at their pre-filled values. Changing them will break the connection.
 
         <Warning>
         If the popup is blocked, check your browser settings and allow popups from Porter.
@@ -27,9 +34,30 @@ Before Porter can create a cluster, you need to grant it access to your cloud ac
 
         Scroll to the bottom of the CloudFormation page, check the **I acknowledge that AWS CloudFormation might create IAM resources** box, and click **Create Stack**.
 
-        Wait for the stack creation to complete (this takes a few minutes).
+        Wait for the stack creation to complete (this takes a few minutes). Porter polls AWS in the background and marks the account **Connected** as soon as it can assume the role with the External ID.
       </Step>
     </Steps>
+
+    The resulting trust policy on `porter-manager` looks like this:
+
+    ```json
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Sid": "PorterAssumeRoleWithExternalId",
+          "Effect": "Allow",
+          "Principal": { "AWS": "<porter-trust-role-arn>" },
+          "Action": "sts:AssumeRole",
+          "Condition": {
+            "StringEquals": {
+              "sts:ExternalId": "<porter-generated-external-id>"
+            }
+          }
+        }
+      ]
+    }
+    ```
 
     <Info>
     The IAM role must remain in your AWS account for Porter to manage your infrastructure. Deleting it will prevent Porter from making changes.
