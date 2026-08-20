@@ -189,7 +189,7 @@ For more information, see the [Claude custom connectors documentation](https://s
 
 You ask for things in plain language, so it's easier to think in terms of tasks than tools:
 
-- **[Deploy an app](/applications/deploy/deploy-from-github-repo).** Create an application and get it running without leaving your agent. If you're deploying a pre-built image, the agent can take it all the way. If you're deploying from a GitHub repo, the agent creates the app and opens a pull request with the build workflow, and you merge it to deploy your code. For the complete setup flow, see the [Quickstart](/getting-started/quickstart#step-4:-create-your-first-application).
+- **[Deploy an app](/applications/deploy/deploy-from-github-repo).** Create an application and get it running without leaving your agent. If you're deploying a pre-built image, the agent can take it all the way. If you're deploying from a GitHub repo, the agent checks the repository's GitHub connection first and gives you a link if anything is missing. Once connected, it creates the app and opens a pull request with the build workflow, and you merge it to deploy your code. For the complete setup flow, see the [Quickstart](/getting-started/quickstart#step-4:-create-your-first-application).
 - **Update an app.** Change services, resources, or domains on an existing app and redeploy. Updates can be validated with a dry run first, so you can see the resulting config before anything deploys.
 - **Troubleshoot your app.** Read logs, metrics, and notifications, or check nodes, node groups, pods, and load balancers to find what's broken. From there you can go back to the config that caused it, fix it, and redeploy.
 - **Rightsize a service.** Compare requested CPU and memory against what the service actually uses, then adjust the requests.
@@ -231,7 +231,7 @@ Recommendations:
 - **Use non-production environments first.** Validate changes in a dev or staging project before applying them to production.
 - **Review the agent's plan before approving it**, particularly for operations that modify production resources.
 - **Disable auto-approval against production.** It is reasonable on a test project and unsafe everywhere else.
-- **Account for prompt injection.** The agent reads your application logs, notifications, and pull request bodies, all of which can carry attacker-controlled text. The server cannot distinguish injected instructions from your own, so a compromised agent can call `create_app`, `update_application`, or `redeploy_application` and change or restart a running service. Read tools exclude environment variables and secrets, and redact token-shaped values in logs, so the exposure is to your application's configuration and availability rather than its credentials.
+- **Account for prompt injection.** The agent reads your application logs, notifications, and pull request bodies, all of which can carry attacker-controlled text. The server cannot distinguish injected instructions from your own, so a compromised agent can call `create_app`, `update_application`, or `redeploy_application` and change or restart a running service. It can also call `create_github_workflow` to open a pull request and configure GitHub Actions secrets in a connected repository. Read tools exclude environment variables and secrets, and redact token-shaped values in logs, so the exposure is to your application's configuration and availability rather than its credentials.
 
 ## Revoke access
 

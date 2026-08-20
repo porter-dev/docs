@@ -5,13 +5,13 @@ description: "The following tools are exposed by the MCP server so agents can in
 
 import AgentHintMcp from "/snippets/agent-hint-mcp.mdx";
 
-All tools are read-only unless otherwise specified.
+Use these tools to discover projects, inspect applications and infrastructure, connect GitHub repositories, and create or update deployments. Tools that make changes are called out where they appear.
 
 <Visibility for="agents">
   <AgentHintMcp />
 </Visibility>
 
-Every tool except `get_projects` requires a project, given as either its ID or its exact name. Application arguments accept an app name or UUID, and cluster arguments accept a cluster ID, exact name, or vanity name. Start with `get_projects` to resolve the project, then `get_applications` or `get_clusters` from there.
+Most tools require a project, given as either its ID or exact name. `get_projects` takes no arguments, while `connect_github` takes only a repository. Application arguments accept an app name or UUID, and cluster arguments accept a cluster ID, exact name, or vanity name. Start with `get_projects` to resolve the project, then `get_applications` or `get_clusters` from there.
 
 ### Projects & Discovery
 
@@ -30,7 +30,7 @@ Every tool except `get_projects` requires a project, given as either its ID or i
 | `get_application_revisions` | List an application's revisions.                                                         |
 | `get_application_metrics`   | Read CPU, memory, and request metrics for an application.                                |
 | `get_app_logs`              | Read an application's logs. Bearer tokens and secret-shaped values are redacted.         |
-| `get_notifications`         | List a project's notifications.                                                          |
+| `get_notifications`         | List an application's runtime notifications. Requires an app name or UUID.               |
 
 ### Clusters & Infrastructure
 
@@ -38,24 +38,52 @@ Every tool except `get_projects` requires a project, given as either its ID or i
 | ------------------------- | --------------------------------------------------------- |
 | `get_cluster_nodes`       | List the nodes in a cluster.                              |
 | `get_cluster_node_groups` | List the node groups in a cluster.                        |
-| `get_cluster_pods`        | List pods in a cluster, optionally filtered by namespace. |
-| `get_cluster_pod`         | Read a single pod's spec. Excludes environment variables. |
+| `get_cluster_pods`        | List pods in a cluster.                                   |
+| `get_cluster_pod`         | Read a pod's owning controller, resource usage, restart count, recent events, Kubernetes metadata, extended status, and spec. Excludes environment variables. |
 | `get_load_balancers`      | List load balancers for a cluster.                        |
 | `get_node_group_metrics`  | Read metrics for a node group.                            |
 
-### Mutating tools
+### GitHub
+
+| Tool                     | Description                                                                                              |
+| ------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `connect_github`         | Check whether Porter can reach a GitHub repository and return the browser action required to connect it. |
+| `create_github_workflow` | Recover a missing GitHub Actions workflow pull request for a Porter application.                         |
+
+#### `connect_github`
+
+Check whether Porter can reach a repository before inspecting or deploying its code. The tool takes only `repository`, in `owner/name` form. Each call returns one complete connection state. If the user completes a returned browser action, call the tool again to check the new state.
+
+| `next_step`           | Meaning                                                                                      | What the user does                                                                      |
+| --------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `none`                | The repository is reachable through the Porter GitHub App.                                   | Nothing; proceed.                                                                       |
+| `authorize_oauth`     | No GitHub OAuth connection exists for this Porter user.                                      | Open the returned URL while signed into the same Porter account and authorize GitHub.   |
+| `install_app`         | OAuth is connected but the Porter GitHub App is not installed on that account.               | Install it at the returned URL.                                                         |
+| `add_repository`      | The App is installed on the account but this repository is not in its selected repositories. | Add the repository in the installation settings at the returned URL.                    |
+| `request_org_install` | No installation covers the organization that owns the repository.                           | An organization owner has to approve the installation; the user cannot self-serve this. |
+
+#### `create_github_workflow`
+
+Use this recovery tool only when [`create_app`](#create_app) returned a placeholder application without a pull request URL, or when an existing application is missing its workflow pull request. It takes `project` and `app`, then creates or re-creates the GitHub Actions workflow pull request and returns its URL. Do not call it after `create_app` successfully returns a pull request URL.
+
+### Create, update, and redeploy applications
 
 <Warning>
-  These tools can modify or redeploy your applications and may have unintended
-  side effects. Review the agent's plan before approving any call to
-  `create_app`, `update_application`, or `redeploy_application`.
+  `update_application` and `redeploy_application` can replace configuration or
+  redeploy an application and may have unintended side effects. Review the
+  agent's plan before approving either call.
 </Warning>
+
+<Note>
+  `create_app` and `create_github_workflow` create an application or workflow
+  pull request rather than overwrite deployed state.
+</Note>
 
 #### `create_app`
 
 Create a new application. The behavior depends on which inputs you pass:
 
-Before using the recommended GitHub `source` and `build` flow, [install the Porter GitHub App](/applications/deploy/connect-github) on the repository.
+Before using the recommended GitHub `source` and `build` flow, call [`connect_github`](#connect_github) with the repository and proceed only when it returns `next_step: none`.
 
 | Input            | Behavior                                                                                                                       |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
@@ -65,7 +93,7 @@ Before using the recommended GitHub `source` and `build` flow, [install the Port
 
 `image` is mutually exclusive with `source` and `build`. Creation fails if an application with the same name already exists in the target project or cluster. Use `update_application` instead.
 
-For `source` and `build`, review and merge the pull request returned by `create_app`. The merge triggers the workflow that builds the application's code and runs the first real deployment. See [Deploy from a GitHub repository](/applications/deploy/deploy-from-github-repo) for the full flow.
+For `source` and `build`, review and merge the pull request returned by `create_app`. The merge triggers the workflow that builds the application's code and runs the first real deployment. If the placeholder application has no pull request URL, recover it with [`create_github_workflow`](#create_github_workflow). See [Deploy from a GitHub repository](/applications/deploy/deploy-from-github-repo) for the full flow.
 
 #### `update_application`
 
