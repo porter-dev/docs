@@ -4,10 +4,34 @@ description: "Install the Porter GitHub App so Porter can access a repository, d
 ---
 
 <Visibility for="agents">
-  Before calling `create_app` with `source` and `build`, confirm that the Porter GitHub App is installed on the repository. The MCP server cannot install it. If it is not installed, ask the user to complete the dashboard and GitHub steps on this page. Do not author a `porter.yaml` to create the application; `create_app` handles that, and the CLI and configuration-as-code paths apply only when the user asks for them.
+  Before inspecting or building the app or calling any deployment tool, call `connect_github` with the repository. Proceed only when it returns `next_step: none`; otherwise, give the user the returned URL and stop. Do not author a `porter.yaml` to create the application; `create_app` handles that, and the CLI and configuration-as-code paths apply only when the user asks for them.
 </Visibility>
 
 Porter needs its GitHub App installed on a repository before it can detect applications, build from source, or create a GitHub Actions deployment workflow. This prerequisite applies whether you create the application with an agent or in the dashboard.
+
+## Connect with an agent
+
+An agent connected to [Porter's MCP server](/mcp/overview) can check the repository and take you directly to the GitHub step that is still required.
+
+<Steps>
+  <Step title="Ask your agent to connect the repository">
+    ```text
+    Connect this GitHub repository to Porter.
+    ```
+
+    The agent calls `connect_github` with the repository in `owner/name` form.
+  </Step>
+  <Step title="Complete the returned action">
+    If the agent returns a URL, open it to authorize GitHub, install the Porter GitHub App, or add the repository to an existing installation. If the repository is already reachable, the agent skips this step and continues.
+
+    Open an OAuth authorization link while signed into the same Porter account your agent uses. An organization owner has to approve an installation when the repository's organization does not already have one.
+  </Step>
+  <Step title="Continue after Porter can reach the repository">
+    Ask the agent to check again after completing the action. It proceeds only after `connect_github` reports that the repository is reachable.
+  </Step>
+</Steps>
+
+## Connect from the dashboard
 
 <Steps>
   <Step title="Open the repository connection flow">
