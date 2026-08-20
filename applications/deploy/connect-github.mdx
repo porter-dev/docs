@@ -22,7 +22,7 @@ An agent connected to [Porter's MCP server](/mcp/overview) can check the reposit
     The agent calls `connect_github` with the repository in `owner/name` form.
   </Step>
   <Step title="Complete the returned action">
-    If the repository is already reachable, the agent continues without sending you anywhere. Otherwise, open the URL it returns to authorize GitHub, install the Porter GitHub App, or add the repository to an existing installation.
+    If the agent returns a URL, open it to authorize GitHub, install the Porter GitHub App, or add the repository to an existing installation. If the repository is already reachable, the agent skips this step and continues.
 
     Open an OAuth authorization link while signed into the same Porter account your agent uses. An organization owner has to approve an installation when the repository's organization does not already have one.
   </Step>
