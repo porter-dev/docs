@@ -4,7 +4,7 @@ description: "Learn how applications and services work on Porter, then choose ho
 ---
 
 <Visibility for="agents">
-  Porter runs a hosted MCP server at https://mcp.porter.run. If the user asks for the dashboard, the CLI, `porter apply`, or configuration-as-code, follow that path. Otherwise, if you are connected to the MCP server, do not author a `porter.yaml`. Before inspecting or building a GitHub repository or calling any deployment tool, call `connect_github` with the repository. Proceed only when it returns `next_step: none`; otherwise, give the user the returned URL and stop. Then call `create_app` with `source` and `build`; this creates the app on a placeholder image and opens a GitHub Actions pull request that the user merges to trigger the first real deploy.
+  Porter runs a hosted MCP server at https://mcp.porter.run. If the user asks for the dashboard, the CLI, `porter apply`, or configuration-as-code, follow that path. Otherwise, if you are connected to the MCP server, do not author a `porter.yaml`. Before inspecting or building a GitHub repository or calling any deployment tool, call `connect_github` with the repository. Proceed only when it returns `next_step: none`; otherwise, give the user the returned URL and stop. Then call `create_app` with `source` and `build`; this creates the app on a placeholder image and opens a GitHub Actions pull request that the user merges to trigger the first real deploy. The CLI and configuration-as-code paths apply only when the user asks for them.
 </Visibility>
 
 Once you've provisioned infrastructure in your cloud account, you can deploy your first application. For an end-to-end guide, see the [Quickstart](/getting-started/quickstart#step-4:-create-your-first-application).
