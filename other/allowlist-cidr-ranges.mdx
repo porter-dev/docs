@@ -6,10 +6,6 @@ description: "Restrict application access to specific IP ranges using AWS ALB se
 
 ## AWS[](#aws "Direct link to heading")
 
-<Info>
-  This page covers swapping the cluster's NLB for an ALB, which is kept for clusters already running on it. To set up an ALB now, add one alongside the default load balancer instead, see [Application load balancer](/cloud-accounts/advanced-cluster-settings#application-load-balancer). Restricting access on that ALB is done with WAF rules rather than the CIDR list described here.
-</Info>
-
 The default Porter-managed Kubernetes cluster on AWS uses a Network Load Balancer (NLB) which forwards traffic to an on-cluster Nginx Ingress Controller.
 Whilst this provides the best performance, some users have a requirement to only provide access to the applications deployed on the Porter cluster from a set of allow-listed IP ranges.
 As an enterprise feature, Porter supports switching out the default NLB for an Application Load Balancer (ALB).

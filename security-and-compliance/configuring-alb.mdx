@@ -4,10 +4,6 @@ sidebarTitle: "Configuring AWS ALB"
 description: "Switch from NLB to AWS Application Load Balancer on Porter for IP allowlisting, WAFv2 integration, ACM certificates, and DNS validation"
 ---
 
-<Info>
-  This page covers swapping the cluster's NLB for an ALB, which is kept for clusters already running on it. To set up an ALB now, add one alongside the default load balancer instead, see [Application load balancer](/cloud-accounts/advanced-cluster-settings#application-load-balancer). The ACM validation steps below apply either way.
-</Info>
-
 The default Porter-managed Kubernetes cluster on AWS uses a Network Load Balancer (NLB) which forwards traffic to an on-cluster Nginx Ingress Controller.
 Whilst this provides the best performance, some users have extra requirements which require an ALB such as:
 

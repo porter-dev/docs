@@ -45,13 +45,13 @@ When **ALB** is selected, the following additional settings become available. Se
 | **WAFv2 enabled** | Attaches a Regional WAFv2 web ACL to the ALB. |
 | **WAFv2 ARN** | ARN of the Regional WAFv2 web ACL to attach. Only Regional WAFv2 is supported. |
 
-<Info>
-  If you are setting up an ALB now, use [Application load balancer](#application-load-balancer) below instead. This setting is kept for clusters already running on it. The two configure different load balancers, so nothing here carries over, and IP allowlisting on the additional ALB is done with WAF rules rather than a CIDR list.
-</Info>
+<Note>
+  If you are setting up an ALB now, use [Application load balancer](#application-load-balancer) below instead. This setting is kept for clusters already running on it.
+</Note>
 
 ### Application load balancer
 
-This is how to configure an ALB going forward. The setting adds an additional public ALB next to the cluster default, rather than replacing it. Each service picks which load balancer serves it, so you can move domains over one at a time.
+This setting adds an additional public ALB next to the cluster default, rather than replacing it. Each service picks which load balancer serves it, so you can move domains over one at a time.
 
 | Setting | Description |
 |---------|-------------|
