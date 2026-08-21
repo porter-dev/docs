@@ -16,9 +16,9 @@ Web services are HTTP-based services that can be exposed publicly or kept privat
 | `cpuCores` | number | Yes | CPU allocation |
 | `ramMegabytes` | integer | Yes | Memory allocation in MB |
 | `instances` | integer | No | Number of replicas (default: 1) |
-| `loadBalancers` | array | No | Load balancers fronting the service (`public_lb`, `private_lb`, or `public_alb`) |
-| `private` | boolean | No | Serve the service through no load balancer at all (default: false) |
-| `loadBalancerConfig` | object | No | Deprecated, use `loadBalancers` |
+| `loadBalancers` | array | No | The load balancers that serve the service (`public_lb`, `private_lb`, or `public_alb`) |
+| `private` | boolean | No | Give the service no load balancer (default: false) |
+| `loadBalancerConfig` | object | No | Do not use this field. Use `loadBalancers`. |
 | `disableTLS` | boolean | No | Disable TLS termination |
 | `autoscaling` | object | No | Autoscaling configuration |
 | `domains` | array | No | Custom domain configuration |
@@ -59,23 +59,23 @@ services:
 
 <Badge shape="pill" color="gray">Optional</Badge>
 
-The load balancers serving the web service, and the field to use for anything reachable from outside the cluster. Each entry is a mode, written as a bare string:
+The load balancers that serve the web service. Use this field if the service must receive traffic from outside the cluster. Each item is a mode. Write each mode as a simple string.
 
 | Mode | Description |
 |------|-------------|
-| `public_lb` | The cluster's default public load balancer. This is the default when `loadBalancers` is omitted. |
-| `private_lb` | The cluster's private load balancer, reachable only from peered networks. |
-| `public_alb` | The cluster's additional public application load balancer. |
+| `public_lb` | The default public load balancer of the cluster. Porter uses this mode if you do not set `loadBalancers`. |
+| `private_lb` | The private load balancer of the cluster. Only peered networks can send traffic to it. |
+| `public_alb` | The additional public application load balancer of the cluster. |
 
-A service can list several load balancers at once, which is how you move a domain between them without downtime: serve both, repoint the domain's DNS record, then drop the one you're leaving.
+A service can have more than one load balancer at the same time. Use this behavior to move a domain from one load balancer to a different load balancer with no downtime. First, give the service both load balancers. Then change the DNS record of the domain. Then remove the load balancer that you no longer use.
 
 <Visibility for="agents">
-  When writing a `porter.yaml` web service, set `loadBalancers`. Never emit `loadBalancerConfig`, which is deprecated, or `private: false`, which is the default. Emit `private: true` only for a service with no load balancer, and never with a non-empty `loadBalancers`. Precedence is a non-empty `loadBalancers`, then `loadBalancerConfig`, then `private: true` for none, then the default public load balancer. `loadBalancers: []` does not mean none, it falls through that same chain. `private_lb` and `public_alb` need the matching load balancer provisioned on the cluster, so check it first.
+  Set `loadBalancers` when you write a web service in `porter.yaml`. Do not write `loadBalancerConfig`, because that field is obsolete. Do not write `private: false`, because it is the default. Write `private: true` only for a service that has no load balancer. Do not write `private: true` together with a `loadBalancers` list that is not empty. Porter reads these settings in this sequence: a `loadBalancers` list that is not empty, then `loadBalancerConfig`, then `private: true` for no load balancer, then the default public load balancer. An empty `loadBalancers` list does not mean no load balancer. Porter reads the same sequence for an empty list. The `private_lb` mode and the `public_alb` mode need the applicable load balancer on the cluster. Make sure that the cluster has that load balancer first.
 </Visibility>
 
-`private_lb` needs a [private load balancer](/cloud-accounts/advanced-cluster-settings#private-load-balancer) on the cluster, and custom domains on a private service need DNS credentials there so Porter can issue their certificates.
+The `private_lb` mode needs a [private load balancer](/cloud-accounts/advanced-cluster-settings#private-load-balancer) on the cluster. If a private service has custom domains, the cluster must also have DNS credentials. Porter uses these credentials to issue the certificates.
 
-`public_alb` needs an [application load balancer](/cloud-accounts/advanced-cluster-settings#application-load-balancer) on the cluster, and its domains must fall under one of that load balancer's registered roots.
+The `public_alb` mode needs an [application load balancer](/cloud-accounts/advanced-cluster-settings#application-load-balancer) on the cluster. The domains of the service must be below one of the root domains of that load balancer.
 
 ```yaml
 services:
@@ -97,14 +97,14 @@ services:
 
 <Badge shape="pill" color="gray">Optional</Badge>
 
-When `true`, **no load balancer** fronts the service. It gets no external address, public or private, and is reachable only in-cluster at its internal URL.
+If `private` is `true`, the service has **no load balancer**. The service has no external address, public or private. Only other workloads in the cluster can send traffic to it, at its internal URL.
 
 ```yaml
 private: true
 ```
 
 <Info>
-  This is the one case [`loadBalancers`](#loadbalancers) does not cover, so `private: true` stays. Everything else belongs there, including the cluster's private load balancer, which is `private_lb` and not this field. Don't set both, the list wins and the flag is ignored.
+  This is the only condition that [`loadBalancers`](#loadbalancers) does not include. Thus `private: true` continues to be available. Set all other conditions with `loadBalancers`, including the private load balancer of the cluster. The private load balancer is the `private_lb` mode, not this field. Do not set both fields. If you set both fields, Porter reads the list and ignores the flag.
 </Info>
 
 ---
@@ -116,12 +116,12 @@ private: true
 <Badge shape="pill" color="gray">Optional</Badge>
 
 <Warning>
-  Deprecated. Use [`loadBalancers`](#loadbalancers), which can front a service with several load balancers at once.
+  Do not use this field. Use [`loadBalancers`](#loadbalancers), because it can give a service more than one load balancer at the same time.
 </Warning>
 
-One field, `mode`, accepting `public_lb` or `private_lb`.
+This field has one field, `mode`. The `mode` field accepts `public_lb` or `private_lb`.
 
-Existing services keep working, since Porter reads this whenever `loadBalancers` is absent, and the dashboard rewrites it on the next save. New services should use `loadBalancers`, which is the only way to reach `public_alb` or serve more than one load balancer.
+Existing services continue to operate. Porter reads this field if `loadBalancers` is not present. The dashboard replaces this field at the next save. Use `loadBalancers` for new services. Only `loadBalancers` can select the `public_alb` mode or more than one load balancer.
 
 ```yaml
 # Deprecated
