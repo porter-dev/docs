@@ -92,7 +92,7 @@ services:
       - name: api.alb.example.com
 ```
 
-The domains of a service that the ALB serves must be below a registered root domain. A service can use **Public LB** and **Public ALB** at the same time. Use this behavior to move traffic with no downtime. First, select both options. Then move the DNS record of the domain to the ALB. Then clear **Public LB**. The service no longer serves traffic on the default load balancer after the next deployment.
+The domains of a service that the ALB serves must be below a registered root domain. When you change the load balancer of a service, the change takes effect at the next deployment. Move the DNS record of the domain to the address of the new load balancer.
 
 ### Private load balancer
 

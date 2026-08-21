@@ -67,8 +67,6 @@ The load balancers that serve the web service. Use this field if the service mus
 | `private_lb` | The private load balancer of the cluster. Only peered networks can send traffic to it. |
 | `public_alb` | The additional public application load balancer of the cluster. |
 
-A service can have more than one load balancer at the same time. Use this behavior to move a domain from one load balancer to a different load balancer with no downtime. First, give the service both load balancers. Then change the DNS record of the domain. Then remove the load balancer that you no longer use.
-
 <Visibility for="agents">
   Set `loadBalancers` when you write a web service in `porter.yaml`. Do not write `loadBalancerConfig`, because that field is obsolete. Do not write `private: false`, because it is the default. Write `private: true` only for a service that has no load balancer. Do not write `private: true` together with a `loadBalancers` list that is not empty. Porter reads these settings in this sequence: a `loadBalancers` list that is not empty, then `loadBalancerConfig`, then `private: true` for no load balancer, then the default public load balancer. An empty `loadBalancers` list does not mean no load balancer. Porter reads the same sequence for an empty list. The `private_lb` mode and the `public_alb` mode need the applicable load balancer on the cluster. Make sure that the cluster has that load balancer first.
 </Visibility>
@@ -116,12 +114,12 @@ private: true
 <Badge shape="pill" color="gray">Optional</Badge>
 
 <Warning>
-  Do not use this field. Use [`loadBalancers`](#loadbalancers), because it can give a service more than one load balancer at the same time.
+  Do not use this field. Use [`loadBalancers`](#loadbalancers), which also supports the `public_alb` mode.
 </Warning>
 
 This field has one field, `mode`. The `mode` field accepts `public_lb` or `private_lb`.
 
-Existing services continue to operate. Porter reads this field if `loadBalancers` is not present. The dashboard replaces this field at the next save. Use `loadBalancers` for new services. Only `loadBalancers` can select the `public_alb` mode or more than one load balancer.
+Existing services continue to operate. Porter reads this field if `loadBalancers` is not present. The dashboard replaces this field at the next save. Use `loadBalancers` for new services. Only `loadBalancers` can select the `public_alb` mode.
 
 ```yaml
 # Deprecated
