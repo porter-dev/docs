@@ -17,7 +17,8 @@ Web services are HTTP-based services that can be exposed publicly or kept privat
 | `ramMegabytes` | integer | Yes | Memory allocation in MB |
 | `instances` | integer | No | Number of replicas (default: 1) |
 | `private` | boolean | No | Route the service through the cluster's private load balancer (default: false) |
-| `loadBalancerConfig` | object | No | Load balancer configuration (`public_lb` or `private_lb`) |
+| `loadBalancers` | array | No | Load balancers fronting the service (`public_lb`, `private_lb`, or `public_alb`) |
+| `loadBalancerConfig` | object | No | Deprecated. Single load balancer fronting the service |
 | `disableTLS` | boolean | No | Disable TLS termination |
 | `autoscaling` | object | No | Autoscaling configuration |
 | `domains` | array | No | Custom domain configuration |
@@ -67,8 +68,42 @@ private: true
 ```
 
 <Info>
-`private` is shorthand for `loadBalancerConfig.mode: private_lb`. Prefer `loadBalancerConfig` for new services — setting both on the same service is not supported.
+`private` is shorthand for `loadBalancers: [private_lb]`. Prefer `loadBalancers` for new services, and note that setting both on the same service is not supported.
 </Info>
+
+---
+
+## `loadBalancers`
+
+`array`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+Lists the load balancers that serve the web service. Each entry is a mode, written as a bare string:
+
+| Mode | Description |
+|------|-------------|
+| `public_lb` | The cluster's default public load balancer. This is the default when `loadBalancers` is omitted. |
+| `private_lb` | The cluster's private load balancer, reachable only from peered networks. |
+| `public_alb` | The cluster's additional public application load balancer. |
+
+A service can list several load balancers at once, which is how you move a domain between them without downtime: serve both, repoint the domain's DNS record, then drop the one you're leaving. An empty list means the service is only reachable in-cluster.
+
+`private_lb` requires the cluster to have a private load balancer provisioned (see [advanced cluster settings](/cloud-accounts/advanced-cluster-settings#private-load-balancer)), and custom domains on a private service need DNS provider credentials configured on the cluster so Porter can issue their certificates.
+
+`public_alb` requires the cluster to have an [application load balancer](/cloud-accounts/advanced-cluster-settings#application-load-balancer) provisioned. Domains served by it must fall under one of the root domains registered on that load balancer.
+
+```yaml
+services:
+  - name: api
+    type: web
+    run: node server.js
+    port: 8080
+    loadBalancers:
+      - public_alb
+    domains:
+      - name: api.alb.example.com
+```
 
 ---
 
@@ -78,7 +113,11 @@ private: true
 
 <Badge shape="pill" color="gray">Optional</Badge>
 
-Configures the load balancer that fronts the web service. Use this to explicitly route the service through the cluster's public or private load balancer.
+<Warning>
+  Deprecated. Use `loadBalancers`, which can front a service with several load balancers at once.
+</Warning>
+
+Configures the single load balancer that fronts the web service. Use this to explicitly route the service through the cluster's public or private load balancer.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|

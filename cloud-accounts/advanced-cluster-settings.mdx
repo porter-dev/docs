@@ -45,6 +45,55 @@ When **ALB** is selected, the following additional settings become available. Se
 | **WAFv2 enabled** | Attaches a Regional WAFv2 web ACL to the ALB. |
 | **WAFv2 ARN** | ARN of the Regional WAFv2 web ACL to attach. Only Regional WAFv2 is supported. |
 
+### Application load balancer
+
+Separately from the load balancer type above, you can provision a public Application Load Balancer (ALB) **alongside** the cluster's default load balancer rather than replacing it. Services opt in individually, so traffic moves onto the ALB one domain at a time while the default load balancer keeps serving everything else.
+
+<Note>
+  This is rolled out per cluster. If the **Application load balancer** section does not appear in your cluster's **Advanced** settings, reach out to Porter support to have it enabled.
+</Note>
+
+| Setting | Description |
+|---------|-------------|
+| **Add application load balancer** | Provisions a public layer 7 ALB in front of the cluster. It listens on ports 80 and 443, terminates TLS at the ALB edge, and does not redirect HTTP to HTTPS. |
+| **Root domains** | The root domains served by this load balancer, one per row (for example, `alb.example.com`). Porter requests an ACM certificate covering each root and its `*.<root>` wildcard, so any subdomain of a registered root can be served. At least one is required. |
+| **DNS provider** | The provider hosting the root domains, used to validate the ALB's certificate. **Cloudflare** and **AWS Route53** are supported. |
+| **Web application firewall** | Provisions a Regional WAFv2 web ACL under a Porter-managed name (`porter-alb-waf-<hash>`) and associates it with the ALB. |
+
+#### Certificate validation
+
+ACM validates the ALB's certificate through DNS, and the ALB cannot serve traffic until that certificate reaches `ISSUED`. While it is pending, the cluster update keeps retrying, and the error lists the records ACM is still waiting on.
+
+With **Route53**, Porter writes the validation records for you. Each root domain must resolve to a hosted zone in the cluster's AWS account.
+
+With **Cloudflare**, you create the validation records yourself. Find the `CNAME name` and `CNAME value` for the certificate in the AWS Certificate Manager console, in the cluster's region, then add them to your zone as described in [DNS validation](/security-and-compliance/configuring-alb#dns-validation).
+
+#### Pointing DNS at the ALB
+
+The ALB has its own address, separate from the cluster's default load balancer, so records already pointing at the default one are untouched. For each root domain, add a wildcard record (for example, `*.alb.example.com`) targeting the ALB. On AWS the ALB address is a hostname, so use a `CNAME`, or a Route53 alias record. The address is shown under **Custom domains** in a service's **Networking** tab once the ALB is provisioned.
+
+#### Web application firewall
+
+When the firewall is enabled, Porter creates the web ACL and attaches it to the ALB with a default action of allow, then leaves the rules to you. Add managed rule groups, rate-based rules, or IP sets in the AWS WAF console and Porter will not overwrite them. Only Regional WAFv2 is supported.
+
+Turning the setting off detaches the web ACL from the ALB but does not delete it, so any rules you wrote survive if you re-enable the firewall later.
+
+#### Routing a service through the ALB
+
+Once the ALB is serving, a **Public ALB** option appears alongside **Public LB** in each web service's **Networking** tab. In `porter.yaml`, set it with [`loadBalancers`](/applications/configuration-as-code/services/web-service#loadbalancers):
+
+```yaml
+services:
+  - name: api
+    type: web
+    loadBalancers:
+      - public_alb
+    domains:
+      - name: api.alb.example.com
+```
+
+Domains on a service served by the ALB must fall under one of the registered root domains. A service can serve both **Public LB** and **Public ALB** at once, which is how you cut over without downtime: keep both selected, move the domain's DNS record to the ALB, then unselect **Public LB**. It stops serving on the next deploy.
+
 ### Private load balancer
 
 In addition to the default public cluster load balancer, you can provision an **internal load balancer** that only accepts traffic from inside your VPC (or networks peered to it). Use this when you want to expose services to internal clients, for example an internal admin tool, a service consumed only by other VPCs, or a workload that must not be reachable from the public internet.
