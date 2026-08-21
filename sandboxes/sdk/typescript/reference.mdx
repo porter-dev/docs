@@ -157,11 +157,11 @@ Volume methods:
 | Method | Description |
 | ------ | ----------- |
 | `porter.volumes.list()` | Lists volumes as handles. |
-| `porter.volumes.create(body)` | Creates a volume and returns its handle. Pass a name when you need stable lookup later. |
+| `porter.volumes.create(body)` | Creates a volume and returns its handle. A body with `type: "object"` and `object` makes an object volume; the default is a disk volume. |
 | `porter.volumes.get(name)` | Fetches a volume handle by name. |
 | `porter.volumes.delete(name)` | Deletes a volume by name. |
 
-`create`, `get`, and `list` return a `Volume` handle with `id`, `name`, `phase`, `path`, `attachedTo`, and `createdAt`, plus:
+`create`, `get`, and `list` return `Volume | ObjectVolume`; the `type` getter discriminates the union. A `Volume` (disk) has `id`, `name`, `type`, `phase`, `path`, `attachedTo`, and `createdAt`, plus:
 
 | Method | Description |
 | ------ | ----------- |
@@ -176,6 +176,8 @@ Volume methods:
 | `volume.moveFile(from, to)` | Moves or renames a file or directory; `to` is the full new path. Fails if the destination is occupied. |
 | `volume.refresh()` | Refetches the underlying volume record. |
 | `volume.delete()` | Deletes this volume. |
+
+An `ObjectVolume` shares `id`, `name`, `type`, `phase`, `attachedTo`, `createdAt`, `refresh()`, and `delete()`, and adds `object` (the bucket, key prefix, and access mode). It has no file methods: an object volume's contents live in its bucket.
 
 ## Low-level client
 

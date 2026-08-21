@@ -32,7 +32,37 @@ with Porter() as porter:
 
 `volume_mounts` is a dictionary keyed by the absolute mount path inside the sandbox. Each value is a volume ID.
 
-Create [object volumes](/sandboxes/volumes#object-volumes), which expose a registered S3 bucket, from the [CLI](/sandboxes/cli#porter-sandbox-volume-create) for now: `volumes.create` always makes a disk volume. An existing object volume mounts like any other volume through `volume_mounts`.
+## Object volumes
+
+Passing `type` and `object` to `create` makes an [object volume](/sandboxes/volumes#object-volumes), which exposes a registered S3 bucket. It mounts like any other volume through `volume_mounts`.
+
+```python
+from porter_sandbox import Porter, VolumeObjectSpec, VolumeObjectSpecAccess, VolumeSpecType
+
+with Porter() as porter:
+    datasets = porter.volumes.create(
+        name="datasets",
+        type=VolumeSpecType.OBJECT,
+        object=VolumeObjectSpec(
+            bucket="my-bucket",
+            prefix="training/v1",
+            access=VolumeObjectSpecAccess.READ_ONLY,
+        ),
+    )
+    print(datasets.object.bucket, datasets.object.access)
+```
+
+Object volumes get their own `ObjectVolume` handle (`AsyncObjectVolume` on the async client). It carries the shared surface — `id`, `name`, `type`, `phase`, `attached_to`, `created_at`, `refresh`, and `delete` — plus the `object` spec, and none of the file methods: an object volume's contents live in its bucket. `create`, `get`, and `list` can return either handle, so narrow with `isinstance` before touching files:
+
+```python
+from porter_sandbox import ObjectVolume
+
+for volume in porter.volumes.list():
+    if isinstance(volume, ObjectVolume):
+        print(volume.name, "exposes bucket", volume.object.bucket)
+    else:
+        checkpoints = [file.path for file in volume.listdir("/checkpoints")]
+```
 
 ## List volumes
 

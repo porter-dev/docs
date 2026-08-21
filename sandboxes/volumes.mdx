@@ -74,12 +74,47 @@ Register with `--read-only` to forbid all writes through Porter. A read-only buc
 
 ### Create and mount an object volume
 
-Create the volume by naming the registered bucket. Creation is CLI-only for now, since the SDKs and dashboard create disk volumes. Mounting works exactly like any other volume.
+Create the volume by naming the registered bucket. Mounting works exactly like any other volume; the dashboard creates disk volumes only.
 
-```bash
+<CodeGroup>
+```python Python
+from porter_sandbox import Porter, VolumeObjectSpec, VolumeObjectSpecAccess, VolumeSpecType
+
+with Porter() as porter:
+    datasets = porter.volumes.create(
+        name="datasets",
+        type=VolumeSpecType.OBJECT,
+        object=VolumeObjectSpec(
+            bucket="my-bucket",
+            prefix="training/v1",
+            access=VolumeObjectSpecAccess.READ_ONLY,
+        ),
+    )
+    sandbox = porter.sandboxes.create(
+        image="python:3.12-slim",
+        volume_mounts={"/data": datasets.id},
+    )
+```
+
+```typescript TypeScript
+const datasets = await porter.volumes.create({
+  name: "datasets",
+  type: "object",
+  object: { bucket: "my-bucket", prefix: "training/v1", access: "read_only" },
+});
+const sandbox = await porter.sandboxes.create({
+  image: "python:3.12-slim",
+  volume_mounts: { "/data": datasets.id },
+});
+```
+
+```bash CLI
 porter sandbox volume create datasets --bucket my-bucket --prefix training/v1 --access read-only
 porter sandbox create python:3.12-slim --volume /data=datasets -- python train.py
 ```
+</CodeGroup>
+
+In the SDKs, an object volume gets its own `ObjectVolume` handle without the file methods; the SDK volumes pages show how to handle both kinds.
 
 `--prefix` scopes the volume to keys under a prefix: sandboxes see only objects under it, at paths relative to it. Omit it to expose the whole bucket. Several volumes can expose the same bucket with different prefixes and access modes.
 
