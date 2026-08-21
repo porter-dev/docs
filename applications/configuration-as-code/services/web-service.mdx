@@ -16,8 +16,9 @@ Web services are HTTP-based services that can be exposed publicly or kept privat
 | `cpuCores` | number | Yes | CPU allocation |
 | `ramMegabytes` | integer | Yes | Memory allocation in MB |
 | `instances` | integer | No | Number of replicas (default: 1) |
-| `private` | boolean | No | Route the service through the cluster's private load balancer (default: false) |
-| `loadBalancerConfig` | object | No | Load balancer configuration (`public_lb` or `private_lb`) |
+| `loadBalancers` | array | No | The load balancers that serve the service (`public_lb`, `private_lb`, or `public_alb`) |
+| `private` | boolean | No | Give the service no load balancer (default: false) |
+| `loadBalancerConfig` | object | No | Do not use this field. Use `loadBalancers`. |
 | `disableTLS` | boolean | No | Disable TLS termination |
 | `autoscaling` | object | No | Autoscaling configuration |
 | `domains` | array | No | Custom domain configuration |
@@ -52,22 +53,56 @@ services:
 
 ---
 
+## `loadBalancers`
+
+`array`
+
+<Badge shape="pill" color="gray">Optional</Badge>
+
+The load balancers that serve the web service. Use this field if the service must receive traffic from outside the cluster. Each item is a mode. Write each mode as a simple string.
+
+| Mode | Description |
+|------|-------------|
+| `public_lb` | The default public load balancer of the cluster. Porter uses this mode if you do not set `loadBalancers`. |
+| `private_lb` | The private load balancer of the cluster. Only peered networks can send traffic to it. |
+| `public_alb` | The additional public application load balancer of the cluster. |
+
+<Visibility for="agents">
+  Set `loadBalancers` when you write a web service in `porter.yaml`. Do not write `loadBalancerConfig`, because that field is obsolete. Do not write `private: false`, because it is the default. Write `private: true` only for a service that has no load balancer. Do not write `private: true` together with a `loadBalancers` list that is not empty. Porter reads these settings in this sequence: a `loadBalancers` list that is not empty, then `loadBalancerConfig`, then `private: true` for no load balancer, then the default public load balancer. An empty `loadBalancers` list does not mean no load balancer. Porter reads the same sequence for an empty list. The `private_lb` mode and the `public_alb` mode need the applicable load balancer on the cluster. Make sure that the cluster has that load balancer first.
+</Visibility>
+
+The `private_lb` mode needs a [private load balancer](/cloud-accounts/advanced-cluster-settings#private-load-balancer) on the cluster. If a private service has custom domains, the cluster must also have DNS credentials. Porter uses these credentials to issue the certificates.
+
+The `public_alb` mode needs an [application load balancer](/cloud-accounts/advanced-cluster-settings#application-load-balancer) on the cluster. The domains of the service must be below one of the root domains of that load balancer.
+
+```yaml
+services:
+  - name: api
+    type: web
+    run: node server.js
+    port: 8080
+    loadBalancers:
+      - public_alb
+    domains:
+      - name: api.alb.example.com
+```
+
+---
+
 ## `private`
 
 `boolean`
 
 <Badge shape="pill" color="gray">Optional</Badge>
 
-When `true`, the service is fronted by the cluster's **private load balancer** instead of the default public one. The service is reachable only from networks peered to your VPC (PrivateLink, VPC peering, transit gateway) — not from the public internet.
-
-This requires the cluster to have a private load balancer provisioned. See [advanced cluster settings](/cloud-accounts/advanced-cluster-settings#private-load-balancer) to enable one.
+If `private` is `true`, the service has **no load balancer**. The service has no external address, public or private. Only other workloads in the cluster can send traffic to it, at its internal URL.
 
 ```yaml
 private: true
 ```
 
 <Info>
-`private` is shorthand for `loadBalancerConfig.mode: private_lb`. Prefer `loadBalancerConfig` for new services — setting both on the same service is not supported.
+  This is the only condition that [`loadBalancers`](#loadbalancers) does not include, so `private: true` continues to be available. Set all other conditions with `loadBalancers`, including the private load balancer of the cluster. The private load balancer is the `private_lb` mode, not this field. Do not set both fields. If you set both fields, Porter reads the list and ignores the flag.
 </Info>
 
 ---
@@ -78,28 +113,22 @@ private: true
 
 <Badge shape="pill" color="gray">Optional</Badge>
 
-Configures the load balancer that fronts the web service. Use this to explicitly route the service through the cluster's public or private load balancer.
+<Warning>
+  Do not use this field. Use [`loadBalancers`](#loadbalancers), which also supports the `public_alb` mode.
+</Warning>
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `mode` | string | Yes | `public_lb` (default) or `private_lb` |
+This field has one field, `mode`. The `mode` field accepts `public_lb` or `private_lb`.
 
-When `mode` is `private_lb`, the service is fronted by the cluster's private load balancer and is reachable only from peered networks. The cluster must have a private load balancer provisioned (see [advanced cluster settings](/cloud-accounts/advanced-cluster-settings#private-load-balancer)). Custom domains attached to a private service must have DNS provider credentials configured on the cluster so Porter can provision certificates for custom domains.
-
-When `mode` is `public_lb` or `loadBalancerConfig` is omitted, the service is fronted by the cluster's default public load balancer.
+Existing services continue to operate. Porter reads this field if `loadBalancers` is not present. The dashboard replaces this field at the next save. Use `loadBalancers` for new services. Only `loadBalancers` can select the `public_alb` mode.
 
 ```yaml
-services:
-  - name: internal-admin
-    type: web
-    run: node server.js
-    port: 8080
-    cpuCores: 0.5
-    ramMegabytes: 512
-    loadBalancerConfig:
-      mode: private_lb
-    domains:
-      - name: admin.internal.example.com
+# Deprecated
+loadBalancerConfig:
+  mode: private_lb
+
+# Use instead
+loadBalancers:
+  - private_lb
 ```
 
 ---

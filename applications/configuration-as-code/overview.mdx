@@ -108,7 +108,8 @@ services:
       maxInstances: 3
       memoryThresholdPercent: 60
       cpuThresholdPercent: 60
-    private: false
+    loadBalancers:
+      - public_lb
     domains:
       - name: test1.example.com
     healthCheck:
