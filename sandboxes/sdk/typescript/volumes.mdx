@@ -39,6 +39,30 @@ try {
 
 `volume_mounts` is an object keyed by the absolute mount path inside the sandbox. Each value is a volume ID.
 
+## Object volumes
+
+Passing `type` and `object` to `create` makes an [object volume](/sandboxes/volumes#object-volumes), which exposes a registered S3 bucket. It mounts like any other volume through `volume_mounts`.
+
+```typescript
+const datasets = await porter.volumes.create({
+  name: "datasets",
+  type: "object",
+  object: { bucket: "my-bucket", prefix: "training/v1", access: "read_only" },
+});
+```
+
+Object volumes get their own `ObjectVolume` handle. It carries the shared surface — `id`, `name`, `type`, `phase`, `attachedTo`, `createdAt`, `refresh`, and `delete` — plus the `object` spec, and none of the file methods: an object volume's contents live in its bucket. `create`, `get`, and `list` return `Volume | ObjectVolume`, and the `type` getter discriminates the union, so a check narrows it (`instanceof ObjectVolume` works too):
+
+```typescript
+for (const volume of await porter.volumes.list()) {
+  if (volume.type === "object") {
+    console.log(volume.name, "exposes bucket", volume.object.bucket);
+  } else {
+    const checkpoints = await volume.listdir("/checkpoints");
+  }
+}
+```
+
 ## List volumes
 
 `list()` returns volume handles:
