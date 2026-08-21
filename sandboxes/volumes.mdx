@@ -55,9 +55,7 @@ porter sandbox create python:3.12-slim --volume /workspace=agent-workspace -- sl
 A volume is a disk volume by default: file storage on your cluster's disks. An object volume exposes an S3 bucket in your cloud account instead, so sandboxes work with the bucket's objects as files at the mount path. Like all storage Porter provisions, both kinds live in your account and belong to you. Object volumes are AWS-only today.
 
 <Warning>
-A `read-write` object volume isn't a general-purpose filesystem. Mountpoint for S3 writes whole objects sequentially: it can't edit a file in place or append to it, so changing an existing file means writing a full replacement.
-
-Inside a sandbox, writes to existing files often fail outright. The gVisor file proxy (the gofer) first opens the file read-only and caches that handle, and Mountpoint refuses writes to a file that's already open, so the write that follows fails even on a `read-write` volume.
+A `read-write` object volume isn't a general-purpose filesystem. Sandboxes can't edit a file in place or append to one, and writes that replace an existing file often fail as well. Write each file once, with its complete contents.
 
 Treat object volumes as read-mostly: read datasets in, write results out as new files. For workloads that edit files, use a disk volume.
 </Warning>
