@@ -49,10 +49,6 @@ When **ALB** is selected, the following additional settings become available. Se
 
 Separately from the load balancer type above, you can provision a public Application Load Balancer (ALB) **alongside** the cluster's default load balancer rather than replacing it. Services opt in individually, so traffic moves onto the ALB one domain at a time while the default load balancer keeps serving everything else.
 
-<Note>
-  This is rolled out per cluster. If the **Application load balancer** section does not appear in your cluster's **Advanced** settings, reach out to Porter support to have it enabled.
-</Note>
-
 | Setting | Description |
 |---------|-------------|
 | **Add application load balancer** | Provisions a public layer 7 ALB in front of the cluster. It listens on ports 80 and 443, terminates TLS at the ALB edge, and does not redirect HTTP to HTTPS. |
