@@ -104,7 +104,7 @@ private: true
 ```
 
 <Info>
-  This is the only condition that [`loadBalancers`](#loadbalancers) does not include. Thus `private: true` continues to be available. Set all other conditions with `loadBalancers`, including the private load balancer of the cluster. The private load balancer is the `private_lb` mode, not this field. Do not set both fields. If you set both fields, Porter reads the list and ignores the flag.
+  This is the only condition that [`loadBalancers`](#loadbalancers) does not include, so `private: true` continues to be available. Set all other conditions with `loadBalancers`, including the private load balancer of the cluster. The private load balancer is the `private_lb` mode, not this field. Do not set both fields. If you set both fields, Porter reads the list and ignores the flag.
 </Info>
 
 ---

@@ -51,12 +51,12 @@ When **ALB** is selected, the following additional settings become available. Se
 
 ### Application load balancer
 
-This setting adds one more public ALB to the cluster. It does not replace the default load balancer of the cluster. Each service selects the load balancer that serves it. Thus you can move the domains one at a time.
+This setting adds one more public ALB to the cluster. It does not replace the default load balancer of the cluster. Because each service selects the load balancer that serves it, you can move the domains one at a time.
 
 | Setting | Description |
 |---------|-------------|
 | **Add application load balancer** | Porter provisions a public layer 7 ALB in front of the cluster. The ALB listens on port 80 and port 443. The ALB terminates TLS at the edge. The ALB does not redirect HTTP traffic to HTTPS. |
-| **Root domains** | The domains that this load balancer serves. Write one domain in each row, for example `alb.example.com`. Porter requests one ACM certificate for each root domain. Each certificate includes `*.<root>`. Thus the load balancer can serve all subdomains of that root domain. You must give a minimum of one root domain. |
+| **Root domains** | The domains that this load balancer serves. Write one domain in each row, for example `alb.example.com`. Porter requests one ACM certificate for each root domain. Each certificate includes `*.<root>`, so the load balancer can serve all subdomains of that root domain. You must give a minimum of one root domain. |
 | **DNS provider** | The provider that hosts the root domains. ACM uses this provider to validate the certificate. Porter supports **Cloudflare** and **AWS Route53**. |
 | **Web application firewall** | Porter provisions a Regional WAFv2 web ACL with a Porter-managed name (`porter-alb-waf-<hash>`). Porter then associates the web ACL with the ALB. |
 
@@ -70,13 +70,13 @@ If you use **Cloudflare**, you must write these records. Find the `CNAME name` a
 
 #### Point DNS at the ALB
 
-The ALB has its own address. Thus the records that point at the default load balancer do not change. For each root domain, point a wildcard record at the ALB, for example `*.alb.example.com`. On AWS, this address is a hostname. Thus you must use a `CNAME` record or a Route53 alias record. After Porter provisions the ALB, the address shows in the **Custom domains** area of the **Networking** tab of a service.
+The ALB has its own address, so the records that point at the default load balancer do not change. For each root domain, point a wildcard record at the ALB, for example `*.alb.example.com`. On AWS, this address is a hostname, so you must use a `CNAME` record or a Route53 alias record. After Porter provisions the ALB, the address shows in the **Custom domains** area of the **Networking** tab of a service.
 
 #### Web application firewall
 
 Porter creates the web ACL with a default action of allow. Porter does not add rules. Add managed rule groups, rate-based rules, or IP sets in the AWS WAF console. Porter does not change these rules. Porter supports only Regional WAFv2.
 
-If you turn off this setting, Porter detaches the web ACL but does not delete it. Thus your rules remain if you turn on the setting again.
+If you turn off this setting, Porter detaches the web ACL but does not delete it, so your rules remain if you turn on the setting again.
 
 #### Route a service through the ALB
 
