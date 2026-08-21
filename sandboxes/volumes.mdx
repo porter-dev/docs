@@ -50,9 +50,60 @@ porter sandbox create python:3.12-slim --volume /workspace=agent-workspace -- sl
 ```
 </CodeGroup>
 
+## Object volumes
+
+A volume is a disk volume by default: persistent file storage that Porter provisions and owns. An object volume instead exposes an S3 bucket you already own, so sandboxes work with the bucket's objects as files at the mount path. Object volumes are AWS-only today.
+
+### Register the bucket
+
+A bucket must be registered with your project, with sandbox access enabled, before object volumes can reference it. Porter manages access to the bucket, never the bucket itself: registration grants workloads on the connected clusters access, and removing the registration removes only those grants.
+
+From the CLI, register the bucket once with the `sandboxes` capability:
+
+```bash
+porter storage bucket register my-bucket \
+  --cloud-account-id <account-id> \
+  --region us-east-1 \
+  --connected-cluster-ids <cluster-id> \
+  --capabilities sandboxes
+```
+
+In the dashboard, open **Add-ons** and choose **Object storage**, then pick **Register an existing bucket**. After the bucket registers, enable the **Sandbox access** toggle on its page.
+
+Register with `--read-only` to forbid all writes through Porter. A read-only bucket accepts only read-only volumes. To change an existing registration, use `porter storage bucket update` or the bucket's dashboard page.
+
+### Create and mount an object volume
+
+Create the volume by naming the registered bucket. Creation is CLI-only for now, since the SDKs and dashboard create disk volumes. Mounting works exactly like any other volume.
+
+```bash
+porter sandbox volume create datasets --bucket my-bucket --prefix training/v1 --access read-only
+porter sandbox create python:3.12-slim --volume /data=datasets -- python train.py
+```
+
+`--prefix` scopes the volume to keys under a prefix: sandboxes see only objects under it, at paths relative to it. Omit it to expose the whole bucket. Several volumes can expose the same bucket with different prefixes and access modes.
+
+### Access modes
+
+Pick the mode with `--access` when creating the volume:
+
+| Mode | What sandboxes can do |
+|------|----------------------|
+| `read-write` (default) | Read, create, overwrite, and delete objects |
+| `read-only` | Read only |
+| `write-only-new-files` | Read and create new objects; overwriting or deleting existing objects fails |
+
+### Behavior and limits
+
+An object volume's contents live in the bucket. Writes from a sandbox are visible to anything else with bucket access, and objects written outside Porter appear in the sandbox. Deleting the volume removes only the volume itself, never the bucket or its objects.
+
+Any number of sandboxes can mount the same object volume at once, on any sandbox cluster. Sandboxes reach the bucket through [Mountpoint for Amazon S3](https://github.com/awslabs/mountpoint-s3), which supports streaming reads and sequential writes of whole files but not partial edits: to change an existing file, write a full replacement.
+
+The file operations below work on disk volumes only. Manage an object volume's contents with your usual S3 tooling instead.
+
 ## Work with files
 
-Reads and writes target the volume itself, so you can browse, read, and write a volume's files whether or not a sandbox has it mounted. This lets you stage inputs before a run and collect outputs after the sandbox exits.
+Reads and writes target the volume itself, so you can browse, read, and write a volume's files whether or not a sandbox has it mounted. This lets you stage inputs before a run and collect outputs after the sandbox exits. These operations apply to disk volumes. An [object volume](#object-volumes)'s contents live in its bucket.
 
 ### Browse
 

@@ -39,6 +39,8 @@ try {
 
 `volume_mounts` is an object keyed by the absolute mount path inside the sandbox. Each value is a volume ID.
 
+Create [object volumes](/sandboxes/volumes#object-volumes), which expose a registered S3 bucket, from the [CLI](/sandboxes/cli#porter-sandbox-volume-create) for now: `volumes.create` always makes a disk volume. An existing object volume mounts like any other volume through `volume_mounts`.
+
 ## List volumes
 
 `list()` returns volume handles:

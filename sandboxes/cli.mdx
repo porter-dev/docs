@@ -440,6 +440,8 @@ Volumes start in the `pending` phase. Sandboxes that mount them wait for the und
 
 Volume names must be unique within a cluster for the lifetime of the volume. After a volume is deleted, its name can be used again.
 
+With `--bucket`, the volume is an [object volume](/sandboxes/volumes#object-volumes) exposing an S3 bucket registered with `porter storage bucket register`. Use `--prefix` to scope it to keys under a prefix and `--access` to restrict how sandboxes can use it.
+
 **Usage:**
 ```bash
 porter sandbox volume create [name] [flags]
@@ -450,6 +452,9 @@ porter sandbox volume create [name] [flags]
 | Flag | Description |
 |------|-------------|
 | `--json` | Print the created volume as JSON |
+| `--bucket` | Create an object volume exposing this registered S3 bucket |
+| `--prefix` | Scope an object volume to keys under this prefix. Requires `--bucket` |
+| `--access` | Access mode for an object volume: `read-write` (default), `read-only`, or `write-only-new-files`. Requires `--bucket` |
 
 <CodeGroup>
 ```bash Create Named Volume
@@ -458,6 +463,10 @@ porter sandbox volume create my-data
 
 ```bash Create Generated Name
 porter sandbox volume create
+```
+
+```bash Create Object Volume
+porter sandbox volume create datasets --bucket my-bucket --prefix training/v1 --access read-only
 ```
 
 ```bash JSON Output
