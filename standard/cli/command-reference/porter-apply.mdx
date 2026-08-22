@@ -75,8 +75,9 @@ You can pass environment variables and secrets directly via command-line flags w
 
 | Flag | Description |
 |------|-------------|
-| `--validate` | Check that the `porter.yaml` file is valid YAML syntax |
 | `--dry-run` | Perform server-side validation to confirm the configuration is valid without applying changes |
+
+To check a `porter.yaml` locally without building or deploying, use the [`porter apply validate`](#porter-apply-validate) subcommand.
 
 ### Advanced Options
 
@@ -117,9 +118,9 @@ porter apply -f porter.yaml --wait
 porter apply -f porter.yaml --preview
 ```
 
-```bash Validate YAML Syntax
-# Check that porter.yaml is valid YAML
-porter apply -f porter.yaml --validate
+```bash Validate Locally
+# Check porter.yaml against the schema without building or deploying
+porter apply validate -f porter.yaml
 ```
 
 ```bash Dry Run
@@ -145,6 +146,23 @@ porter apply -f porter.yaml --no-build --tag v1.2.3
 porter apply -f porter.yaml --variables LOG_LEVEL=debug,NODE_ENV=production --secrets API_KEY=secret123
 ```
 </CodeGroup>
+
+## `porter apply validate`
+
+Validate a `porter.yaml` file against the schema locally. This command does not build, push, or deploy, and does not contact the Porter API.
+
+**Usage:**
+```bash
+porter apply validate -f porter.yaml
+```
+
+**Options:**
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--file` | `-f` | Path to the `porter.yaml` file (defaults to `porter.yaml` in the current directory) |
+
+On success the command prints `✓ porter.yaml is valid`. On failure it prints the validation error and exits non-zero. For server-side validation of the full configuration against your project, use `porter apply --dry-run`.
 
 ## Workflow
 
